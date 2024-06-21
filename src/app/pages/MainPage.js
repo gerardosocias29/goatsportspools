@@ -6,6 +6,8 @@ import NotFound from "./NotFound";
 import Page from "./screens/Page";
 
 const MainPage = () => {
+  console.log("MainPage rendered");
+
   const location = useLocation();
   const currentPage = new URLSearchParams(location.search).get("page") || "dashboard";
   const { logout, isLoggedIn, apiToken} = useContext(AuthContext);

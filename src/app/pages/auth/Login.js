@@ -22,7 +22,7 @@ const Login = () => {
 
   useEffect(() => {
     if (isLoggedIn && apiToken) {
-      window.location.replace('/main');
+      window.location.replace('/main?page=dashboard');
     }
   }, [isLoggedIn, apiToken]);
 
