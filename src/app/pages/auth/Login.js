@@ -81,7 +81,7 @@ const Login = () => {
               </div>
               <div className="flex flex-col gap-1">
                 <label htmlFor="password" className="font-semibold">Password</label>
-                <Password required id="password" inputClassName="w-full text-sm" value={password} placeholder="Password" feedback={false} tabIndex={1} toggleMask onChange={(e) => setPassword(e.target.value)} className="text-sm" autoComplete="new-password"/>
+                <Password required id="password" inputClassName="w-full text-sm" value={password} placeholder="Password" feedback={false} tabIndex={1} onChange={(e) => setPassword(e.target.value)} className="text-sm" autoComplete="new-password"/>
               </div>
               <div className="flex justify-between gap-1">
                 <div className="flex items-center">

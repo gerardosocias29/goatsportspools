@@ -104,11 +104,11 @@ const Signup = () => {
               </div>
               <div className="flex flex-col gap-1 lg:col-span-4">
                 <label htmlFor="password" className="font-semibold">Password</label>
-                <Password id="password" inputClassName="w-full text-sm" value={user.password} placeholder="Password" feedback={false} toggleMask onChange={(e) => handleInputChange(e, 'password')} className="text-sm" autoComplete="new-password"/>
+                <Password id="password" inputClassName="w-full text-sm" value={user.password} placeholder="Password" feedback={false} onChange={(e) => handleInputChange(e, 'password')} className="text-sm" autoComplete="new-password"/>
               </div>
               <div className="flex flex-col gap-1 lg:col-span-4">
                 <label htmlFor="passwordc" className="font-semibold">Confirm Password</label>
-                <Password id="passwordc" inputClassName="w-full text-sm" value={user.password_confirmation} placeholder="Confirm Password" feedback={false} toggleMask onChange={(e) => handleInputChange(e, 'password_confirmation')} className="text-sm" autoComplete="new-password"/>
+                <Password id="passwordc" inputClassName="w-full text-sm" value={user.password_confirmation} placeholder="Confirm Password" feedback={false} onChange={(e) => handleInputChange(e, 'password_confirmation')} className="text-sm" autoComplete="new-password"/>
               </div>
               <div className="lg:col-span-4">
                 <Button type="submit" className="w-full bg-background border-none hover:bg-primaryS hover:border:border-primaryS text-sm" label="Register"/>
