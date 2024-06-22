@@ -10,7 +10,7 @@ const Layout = ({ children }) => {
   };
 
   return (
-    <div className="w-full relative">
+    <main className="w-full relative">
       <Navbar />
       <div className='h-screen pt-[64px]'>
         <div className="flex flex-no-wrap overflow-x-hidden h-full">
@@ -23,7 +23,7 @@ const Layout = ({ children }) => {
         </div>
       </div>
       
-    </div>
+    </main>
   );
 };
 

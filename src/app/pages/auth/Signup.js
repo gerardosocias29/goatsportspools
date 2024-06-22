@@ -4,19 +4,42 @@ import { Password } from "primereact/password";
 import { useContext, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { AuthContext } from "../../contexts/AuthContext";
+import { useAxios } from "../../contexts/AxiosContext";
 
 const Signup = () => {
-  const [name, setName] = useState('');
-  const [password, setPassword] = useState('');
-  const [email, setEmail] = useState('');
-  const [username, setUsername] = useState('');
-  const [phone, setPhone] = useState('');
+  const axiosService = useAxios();
   const {isLoggedIn, apiToken} = useContext(AuthContext); 
+
+  const data = {
+    first_name: '',
+    last_name: '',
+    email: '',
+    phone: '',
+    username: '',
+    password: '',
+    password_confirmation: '',
+    address: '',
+    city: '',
+    state: '',
+    zipcode: '',
+  }
+
+  const [user, setUser] = useState(data);
 
   const handleOnSubmit = (e) => {
     e.preventDefault();
 
-    console.log(name, email, password, username, phone);
+    axiosService.post('/api/register', user).then((response) => {
+      if(response.data.status){
+        // account successfully created
+        setUser(data);
+        // redirect to login page
+      }
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+
   }
 
   useEffect(() => {
@@ -24,41 +47,73 @@ const Signup = () => {
       window.location.replace('/main');
     }
   }, [isLoggedIn, apiToken]);
+
+  const handleInputChange = (e, target) => {
+    setUser((prevUser) => ({
+      ...prevUser,
+      [target]: e.target.value
+    }));
+  }
+
   return (
     <div className='flex justify-center items-center min-h-screen w-screen text-sm p-4 bg-[#fff]'>
       <div className="w-full xl:w-1/3 lg:w-1/2 rounded-[56px] min-h-[500px] p-1" style={{background: 'linear-gradient(180deg, rgb(16 12 68) 100%, rgba(33, 150, 243, 0) 30%)'}}>
-        <div className="rounded-[53px] bg-white border-5 border-transparent w-full h-full lg:p-[5rem] p-5">
+        <div className="rounded-[53px] bg-white border-5 border-transparent w-full h-full lg:p-[5rem] p-[3rem]">
           <div className="flex flex-col items-center justify-center gap-1 mb-[2rem]">
             <img src="https://goatsportspools.com/img/favicon.png" width={100} height={100}/>
             <p className="text-2xl text-center font-bold">Create GoatSportsPools account</p>
             <p className="text-center">Fill out your credentials</p>
           </div>
           <form method="POST" onSubmit={handleOnSubmit}>
-            <div className="grid lg:grid-cols-1 gap-4">
-              <div className="flex flex-col gap-1">
-                <label htmlFor="name" className="font-semibold">Name</label>
-                <InputText id="name" value={name} placeholder="Name" onChange={(e) => setName(e.target.value)} className="text-sm" autoComplete="off"/>
+            <div className="grid lg:grid-cols-4 gap-4">
+              <div className="flex flex-col gap-1 lg:col-span-2">
+                <label htmlFor="firstname" className="font-semibold">First Name</label>
+                <InputText id="firstname" value={user.first_name} placeholder="First name" onChange={(e) => handleInputChange(e, 'first_name')} className="text-sm" autoComplete="off"/>
               </div>
-              <div className="flex flex-col gap-1">
-                <label htmlFor="email" className="font-semibold">Email Address</label>
-                <InputText id="email" keyfilter="email" value={email} placeholder="Email address" onChange={(e) => setEmail(e.target.value)} className="text-sm" autoComplete="new-email"/>
+              <div className="flex flex-col gap-1 lg:col-span-2">
+                <label htmlFor="lastname" className="font-semibold">Last Name</label>
+                <InputText id="lastname" value={user.last_name} placeholder="Last name" onChange={(e) => handleInputChange(e, 'last_name')} className="text-sm" autoComplete="off"/>
               </div>
-              <div className="flex flex-col gap-1">
-                <label htmlFor="phone" className="font-semibold">Phone Number</label>
-                <InputText id="phone" value={phone} placeholder="Phone number" onChange={(e) => setPhone(e.target.value)} className="text-sm" autoComplete="off"/>
-              </div>
-              <div className="flex flex-col gap-1">
+              <div className="flex flex-col gap-1 lg:col-span-2">
                 <label htmlFor="username" className="font-semibold">Username</label>
-                <InputText id="username" value={username} placeholder="Username" onChange={(e) => setUsername(e.target.value)} className="text-sm" autoComplete="new-username"/>
+                <InputText id="username" value={user.username} placeholder="Username" onChange={(e) => handleInputChange(e, 'username')} className="text-sm" autoComplete="new-username"/>
               </div>
-              <div className="flex flex-col gap-1">
+              <div className="flex flex-col gap-1 lg:col-span-2">
+                <label htmlFor="phone" className="font-semibold">Phone Number</label>
+                <InputText id="phone" value={user.phone} placeholder="Phone number" onChange={(e) => handleInputChange(e, 'phone')} className="text-sm" autoComplete="off"/>
+              </div>
+              <div className="flex flex-col gap-1 lg:col-span-4">
+                <label htmlFor="email" className="font-semibold">Email Address</label>
+                <InputText id="email" type="email" keyfilter="email" value={user.email} placeholder="Email address" onChange={(e) => handleInputChange(e, 'email')} className="text-sm" autoComplete="new-email"/>
+              </div>
+              <div className="flex flex-col gap-1 lg:col-span-4">
+                <label htmlFor="email" className="font-semibold">Your Address</label>
+                <InputText id="email" value={user.address} placeholder="Your address" onChange={(e) => handleInputChange(e, 'address')} className="text-sm" autoComplete="new-email"/>
+              </div>
+              <div className="flex flex-col gap-1 lg:col-span-2">
+                <label htmlFor="email" className="font-semibold">City</label>
+                <InputText id="email" value={user.city} placeholder="City" onChange={(e) => handleInputChange(e, 'city')} className="text-sm" autoComplete="new-email"/>
+              </div>
+              <div className="flex flex-col gap-1 lg:col-span-1">
+                <label htmlFor="email" className="font-semibold">State</label>
+                <InputText id="email" value={user.state} placeholder="State" onChange={(e) => handleInputChange(e, 'state')} className="text-sm" autoComplete="new-email"/>
+              </div>
+              <div className="flex flex-col gap-1 lg:col-span-1">
+                <label htmlFor="email" className="font-semibold">Zip Code</label>
+                <InputText id="email" value={user.zipcode} placeholder="xxxx" onChange={(e) => handleInputChange(e, 'zipcode')} className="text-sm" autoComplete="new-email"/>
+              </div>
+              <div className="flex flex-col gap-1 lg:col-span-4">
                 <label htmlFor="password" className="font-semibold">Password</label>
-                <Password id="password" inputClassName="w-full text-sm" value={password} placeholder="Password" feedback={false} tabIndex={1} toggleMask onChange={(e) => setPassword(e.target.value)} className="text-sm" autoComplete="new-password"/>
+                <Password id="password" inputClassName="w-full text-sm" value={user.password} placeholder="Password" feedback={false} toggleMask onChange={(e) => handleInputChange(e, 'password')} className="text-sm" autoComplete="new-password"/>
               </div>
-              <div>
+              <div className="flex flex-col gap-1 lg:col-span-4">
+                <label htmlFor="passwordc" className="font-semibold">Confirm Password</label>
+                <Password id="passwordc" inputClassName="w-full text-sm" value={user.password_confirmation} placeholder="Confirm Password" feedback={false} toggleMask onChange={(e) => handleInputChange(e, 'password_confirmation')} className="text-sm" autoComplete="new-password"/>
+              </div>
+              <div className="lg:col-span-4">
                 <Button type="submit" className="w-full bg-background border-none hover:bg-primaryS hover:border:border-primaryS text-sm" label="Register"/>
               </div>
-              <div>
+              <div className="lg:col-span-4">
                 Already have an account? <Link to="/login" className="text-semibold hover:underline hover:text-background">Login</Link>
               </div>
             </div> 

@@ -16,6 +16,10 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-label, div, a {
+label, .main, a {
   color: #453f65 !important;
+}
+
+.p-toast .p-toast-message .p-toast-message-content {
+  border-width: 0px;
 }
