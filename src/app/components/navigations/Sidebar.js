@@ -39,7 +39,7 @@ const Sidebar = ({ onToggleSidebar, callback = null, currentUser }) => {
           <li
             key={index}
             onClick={() => navigateToPage(e.page)}
-            className={`${currentPage === e.page ? 'bg-backgroundS text-white rounded-lg' : ''}
+            className={`${currentPage === e.page ? 'bg-background text-white rounded-lg' : ''}
                 m-2 py-2 px-4 cursor-pointer flex gap-2 items-center text-sm
             `}
           >
@@ -50,7 +50,7 @@ const Sidebar = ({ onToggleSidebar, callback = null, currentUser }) => {
           onClick={() => logout()}
           className={`
             m-2 py-2 px-4 cursor-pointer flex gap-2 items-center text-sm
-            hover:bg-backgroundS hover:text-white rounded-lg`}
+            hover:bg-background hover:text-white rounded-lg`}
         >
           <IoIosLogOut />{collapsed ? null : 'Logout'}
         </li>
