@@ -99,20 +99,20 @@ const Signup = () => {
                 <InputText id="email" type="email" keyfilter="email" value={user.email} placeholder="Email address" onChange={(e) => handleInputChange(e, 'email')} className="text-sm" autoComplete="new-email"/>
               </div>
               <div className="flex flex-col gap-1 lg:col-span-4">
-                <label htmlFor="email" className="font-semibold">Your Address</label>
-                <InputText id="email" value={user.address} placeholder="Your address" onChange={(e) => handleInputChange(e, 'address')} className="text-sm" autoComplete="new-email"/>
+                <label htmlFor="address" className="font-semibold">Your Address</label>
+                <InputText id="address" value={user.address} placeholder="Your address" onChange={(e) => handleInputChange(e, 'address')} className="text-sm" autoComplete="new-email"/>
               </div>
               <div className="flex flex-col gap-1 lg:col-span-2">
-                <label htmlFor="email" className="font-semibold">City</label>
-                <InputText id="email" value={user.city} placeholder="City" onChange={(e) => handleInputChange(e, 'city')} className="text-sm" autoComplete="new-email"/>
+                <label htmlFor="city" className="font-semibold">City</label>
+                <InputText id="city" value={user.city} placeholder="City" onChange={(e) => handleInputChange(e, 'city')} className="text-sm" autoComplete="new-email"/>
               </div>
               <div className="flex flex-col gap-1 lg:col-span-1">
-                <label htmlFor="email" className="font-semibold">State</label>
-                <InputText id="email" value={user.state} placeholder="State" onChange={(e) => handleInputChange(e, 'state')} className="text-sm" autoComplete="new-email"/>
+                <label htmlFor="state" className="font-semibold">State</label>
+                <InputText id="state" value={user.state} placeholder="State" onChange={(e) => handleInputChange(e, 'state')} className="text-sm" autoComplete="new-email"/>
               </div>
               <div className="flex flex-col gap-1 lg:col-span-1">
-                <label htmlFor="email" className="font-semibold">Zip Code</label>
-                <InputText id="email" value={user.zipcode} placeholder="xxxx" onChange={(e) => handleInputChange(e, 'zipcode')} className="text-sm" autoComplete="new-email"/>
+                <label htmlFor="zipcode" className="font-semibold">Zip Code</label>
+                <InputText id="zipcode" value={user.zipcode} placeholder="xxxx" onChange={(e) => handleInputChange(e, 'zipcode')} className="text-sm" autoComplete="new-email"/>
               </div>
               <div className="flex flex-col gap-1 lg:col-span-4">
                 <label htmlFor="password" className="font-semibold">Password</label>

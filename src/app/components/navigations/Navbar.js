@@ -51,7 +51,7 @@ const Navbar = ({ currentUser }) => {
                   <Avatar color="white" icon="pi pi-user" size="medium" shape="circle" style={{ backgroundColor: '#CDCECF' }} />
                   <TieredMenu model={items} popup ref={menu}/>
                   <span className="hidden lg:block leading-[1.5rem]">
-                    <span>{currentUser.name}</span>
+                    <span>{currentUser && currentUser.name || ''}</span>
                   </span>
                 </div>
               </div>

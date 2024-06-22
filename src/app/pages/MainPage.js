@@ -40,7 +40,7 @@ const MainPage = () => {
       case 'dashboard': 
         return <Dashboard/>
       case 'profile': 
-        return <Profile/>
+        return <Profile currentUser={currentUser} setCurrentUser={setCurrentUser}/>
       case 'nfl': 
         return <NFL/>
       default:
