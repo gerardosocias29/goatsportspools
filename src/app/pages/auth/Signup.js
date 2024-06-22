@@ -2,13 +2,17 @@ import { Button } from "primereact/button";
 import { InputText } from "primereact/inputtext";
 import { Password } from "primereact/password";
 import { useContext, useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "../../contexts/AuthContext";
 import { useAxios } from "../../contexts/AxiosContext";
+import { useToast } from "../../contexts/ToastContext";
 
 const Signup = () => {
+  const navigate = useNavigate();
   const axiosService = useAxios();
   const {isLoggedIn, apiToken} = useContext(AuthContext); 
+  const [signUpLoading, setSignUpLoading] = useState(false);
+  const showToast = useToast();
 
   const data = {
     first_name: '',
@@ -28,23 +32,31 @@ const Signup = () => {
 
   const handleOnSubmit = (e) => {
     e.preventDefault();
-
+    setSignUpLoading(true);
     axiosService.post('/api/register', user).then((response) => {
       if(response.data.status){
         // account successfully created
+
         setUser(data);
         // redirect to login page
       }
+      setSignUpLoading(false);
     })
     .catch((error) => {
       console.log(error);
+      setSignUpLoading(false);
+      showToast({
+        severity: 'error',
+        summary: 'Failed!',
+        detail: 'Please fill up all fields!'
+      });
     });
 
   }
 
   useEffect(() => {
     if (isLoggedIn && apiToken) {
-      window.location.replace('/main');
+      navigate('/main?page=dashboard');
     }
   }, [isLoggedIn, apiToken]);
 
@@ -111,7 +123,7 @@ const Signup = () => {
                 <Password id="passwordc" inputClassName="w-full text-sm" value={user.password_confirmation} placeholder="Confirm Password" feedback={false} onChange={(e) => handleInputChange(e, 'password_confirmation')} className="text-sm" autoComplete="new-password"/>
               </div>
               <div className="lg:col-span-4">
-                <Button type="submit" className="w-full bg-background border-none hover:bg-primaryS hover:border:border-primaryS text-sm" label="Register"/>
+                <Button loading={signUpLoading} type="submit" className="w-full bg-background border-none hover:bg-primaryS hover:border:border-primaryS text-sm" label="Register"/>
               </div>
               <div className="lg:col-span-4">
                 Already have an account? <Link to="/login" className="text-semibold hover:underline hover:text-background">Login</Link>

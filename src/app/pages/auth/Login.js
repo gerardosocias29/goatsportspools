@@ -17,6 +17,7 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const showToast = useToast();
+  const [loginLoading, setLoginLoading] = useState(false);
 
   const handleOnSubmit = (e) => {
     e.preventDefault();
@@ -28,12 +29,13 @@ const Login = () => {
       password: password,
       rememberMe: rememberMe
     }
-
+    setLoginLoading(true);
     axiosService.post('/api/login', data).then((response) => {
       const token = response.data.token;
       login(token);
     }).catch((error) => {
       console.log(error);
+      setLoginLoading(false);
     });
   }
 
@@ -47,11 +49,13 @@ const Login = () => {
         });
         const t = setTimeout(() => {
           clearTimeout(t);
+          setLoginLoading(false);
           navigate('/main?page=dashboard');
         }, 2000)
       }
     }).catch((error) => {
       console.log(error);
+      setLoginLoading(false);
     });
   }
 
@@ -94,7 +98,7 @@ const Login = () => {
               </div>
               
               <div>
-                <Button type="submit" className="w-full bg-background border-none hover:bg-primaryS hover:border:border-primaryS text-sm" label="Login"/>
+                <Button type="submit" loading={loginLoading} className="w-full bg-background border-none hover:bg-primaryS hover:border:border-primaryS text-sm" label="Login"/>
               </div>
 
               <div>
