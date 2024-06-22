@@ -5,6 +5,9 @@ import { AuthContext } from "../contexts/AuthContext";
 import NotFound from "./NotFound";
 import Page from "./screens/Page";
 import { useAxios } from "../contexts/AxiosContext";
+import Dashboard from "./screens/Dashboard";
+import Profile from "./screens/Profile";
+import NFL from "./screens/NFL";
 
 const MainPage = () => {
   const axiosService = useAxios();  
@@ -35,7 +38,11 @@ const MainPage = () => {
   const renderPage = () => {
     switch (currentPage) {
       case 'dashboard': 
-        return <Page/>
+        return <Dashboard/>
+      case 'profile': 
+        return <Profile/>
+      case 'nfl': 
+        return <NFL/>
       default:
         return (
           <NotFound/>
@@ -44,7 +51,7 @@ const MainPage = () => {
   };
 
   return(
-    <Layout children={renderPage()} />
+    <Layout children={renderPage()} currentUser={currentUser} />
   )
 }
 

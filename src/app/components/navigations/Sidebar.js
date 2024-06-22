@@ -3,8 +3,9 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { IoIosLogOut } from "react-icons/io";
 import { AiOutlineDashboard } from "react-icons/ai";
 import { AuthContext } from "../../contexts/AuthContext";
+import { FaFootballBall, FaUser } from 'react-icons/fa';
 
-const Sidebar = ({ onToggleSidebar, callback = null }) => {
+const Sidebar = ({ onToggleSidebar, callback = null, currentUser }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const currentPage = new URLSearchParams(location.search).get("page") || "";
@@ -12,6 +13,8 @@ const Sidebar = ({ onToggleSidebar, callback = null }) => {
 
   const modules = [
     {label: 'Dashboard', page: 'dashboard', icon: <AiOutlineDashboard /> },
+    {label: 'NFL', page: 'nfl', icon: <FaFootballBall /> },
+    {label: 'Profile', page: 'profile', icon: <FaUser/> },
   ];
 
   const [collapsed, setCollapsed] = useState(false);
@@ -31,14 +34,14 @@ const Sidebar = ({ onToggleSidebar, callback = null }) => {
 
   return (
     <div id="Sidebar">
-      <ul>
+      <ul className="py-2">
         {modules.map((e, index) => (
           <li
             key={index}
             onClick={() => navigateToPage(e.page)}
-            className={`${currentPage === e.page ? 'bg-BrandGreen border-BrandGreen border-l-2' : ''}
-                p-4 cursor-pointer flex gap-2 items-center text-sm
-                hover:border-l-2 hover:border-BrandGreen hover:bg-BrandGreen hover:bg-opacity-20`}
+            className={`${currentPage === e.page ? 'bg-backgroundS text-white rounded-lg' : ''}
+                m-2 py-2 px-4 cursor-pointer flex gap-2 items-center text-sm
+            `}
           >
             {e.icon} {collapsed ? null : e.label}
           </li>
@@ -46,18 +49,18 @@ const Sidebar = ({ onToggleSidebar, callback = null }) => {
         <li
           onClick={() => logout()}
           className={`
-            p-4 cursor-pointer flex gap-2 items-center text-sm
-            hover:border-l-2 hover:border-BrandGreen hover:bg-BrandGreen hover:bg-opacity-20`}
+            m-2 py-2 px-4 cursor-pointer flex gap-2 items-center text-sm
+            hover:bg-backgroundS hover:text-white rounded-lg`}
         >
           <IoIosLogOut />{collapsed ? null : 'Logout'}
         </li>
-        <li
+        {/* <li
           className='p-4 cursor-pointer flex gap-2 items-center text-sm
             border-t border-[rgba(255,255,255,0.1)] border-solid'
           onClick={toggleSidebar}
         >
-          {collapsed? <i className="pi pi-caret-right" /> : <i className="pi pi-caret-left" />} {collapsed ? null : 'Collapse'}
-        </li>
+          {collapsed? <i className="pi pi-caret-right text-sm" /> : <i className="pi pi-caret-left text-sm" />}
+        </li> */}
       </ul>
     </div>
   );
