@@ -48,7 +48,7 @@ const Navbar = ({ currentUser }) => {
               </div>
               <div className="flex items-center">
                 <div className="hover:cursor-pointer select-none gap-2 flex flex-column items-center" onClick={(e) => menu.current.toggle(e)}>
-                  <Avatar color="white" icon="pi pi-user" size="medium" shape="circle" style={{ backgroundColor: '#CDCECF' }} />
+                  <Avatar image={currentUser && currentUser.avatar} className="border" color="white" icon="pi pi-user" size="large" shape="circle" style={{ backgroundColor: '#CDCECF' }} />
                   <TieredMenu model={items} popup ref={menu}/>
                   <span className="hidden lg:block leading-[1.5rem]">
                     <span>{currentUser && currentUser.name || ''}</span>

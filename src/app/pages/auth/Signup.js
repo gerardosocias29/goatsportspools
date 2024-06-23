@@ -35,21 +35,19 @@ const Signup = () => {
     setSignUpLoading(true);
     axiosService.post('/api/register', user).then((response) => {
       if(response.data.status){
-        // account successfully created
-
         setUser(data);
-        // redirect to login page
+      } else {
+        showToast({
+          severity: 'error',
+          summary: 'Failed!',
+          detail: response.data.message
+        });
       }
       setSignUpLoading(false);
     })
     .catch((error) => {
       console.log(error);
       setSignUpLoading(false);
-      showToast({
-        severity: 'error',
-        summary: 'Failed!',
-        detail: 'Please fill up all fields!'
-      });
     });
 
   }
