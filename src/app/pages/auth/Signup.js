@@ -35,12 +35,13 @@ const Signup = () => {
     setSignUpLoading(true);
     axiosService.post('/api/register', user).then((response) => {
       if(response.data.status){
-        setUser(data);
+        // setUser(data);
         showToast({
           severity: 'success',
           summary: 'Sucess!',
           detail: response.data.message
         });
+        navigate('/login');
       } else {
         showToast({
           severity: 'error',
