@@ -36,6 +36,11 @@ const Signup = () => {
     axiosService.post('/api/register', user).then((response) => {
       if(response.data.status){
         setUser(data);
+        showToast({
+          severity: 'success',
+          summary: 'Sucess!',
+          detail: response.data.message
+        });
       } else {
         showToast({
           severity: 'error',
