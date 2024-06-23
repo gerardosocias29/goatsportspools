@@ -29,7 +29,7 @@ const NFL = () => {
         </div>
 
         <div>
-          <div className="font-bold mb-2 mt-5">Teams</div>
+          <div className="font-bold mb-2 mt-5">Games</div>
           <div className="w-full rounded-lg bg-background text-white font-bold">
             <div className="grid grid-cols-10">
               <div className="col-span-4 p-4 text-center">Team</div>
