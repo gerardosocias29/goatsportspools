@@ -33,6 +33,11 @@ const Login = () => {
     axiosService.post('/api/login', data).then((response) => {
       const token = response.data.token;
       login(token);
+      showToast({
+        severity: 'success',
+        summary: 'Authenticated!',
+        detail: 'Login Successful!'
+      });
     }).catch((error) => {
       console.log(error);
       setLoginLoading(false);
@@ -42,11 +47,6 @@ const Login = () => {
   const verifyToken = () => {
     axiosService.get('/api/validate_token').then((response) => {
       if(response.data.status){
-        showToast({
-          severity: 'success',
-          summary: 'Authenticated!',
-          detail: 'Login Successful!'
-        });
         const t = setTimeout(() => {
           clearTimeout(t);
           setLoginLoading(false);
