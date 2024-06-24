@@ -14,7 +14,7 @@ const Sidebar = ({ onToggleSidebar, callback = null, currentUser }) => {
   const modules = [
     {label: 'Dashboard', page: 'dashboard', icon: <AiOutlineDashboard /> },
     {label: 'NFL', page: 'nfl', icon: <FaFootballBall /> },
-    {label: 'Profile', page: 'profile', icon: <FaUser/> },
+    // {label: 'Profile', page: 'profile', icon: <FaUser/> },
   ];
 
   const [collapsed, setCollapsed] = useState(false);
@@ -46,14 +46,14 @@ const Sidebar = ({ onToggleSidebar, callback = null, currentUser }) => {
             {e.icon} {collapsed ? null : e.label}
           </li>
         ))}
-        <li
+        {/* <li
           onClick={() => logout()}
           className={`
             m-2 py-2 px-4 cursor-pointer flex gap-2 items-center text-sm
             hover:bg-background hover:text-white rounded-lg`}
         >
           <IoIosLogOut />{collapsed ? null : 'Logout'}
-        </li>
+        </li> */}
         {/* <li
           className='p-4 cursor-pointer flex gap-2 items-center text-sm
             border-t border-[rgba(255,255,255,0.1)] border-solid'

@@ -4,13 +4,16 @@ import SignUp from "../pages/auth/Signup";
 import LogIn from "../pages/auth/Login";
 import MainPage from "../pages/MainPage";
 import NotFound from "../pages/NotFound";
+import ClerkLogin from "../pages/auth/ClerkLogin";
 
 const AppRouter = () => {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<LogIn />} />
-        <Route path="/login" element={<LogIn />} />
+        {/* <Route path="/" element={<LogIn />} /> */}
+        {/* <Route path="/login" element={<LogIn />} /> */}
+        <Route path="/" element={<ClerkLogin />} />
+        <Route path="/login" element={<ClerkLogin />} />
         <Route path="/signup" element={<SignUp />} />
         <Route path="/main" element={<MainPage />} />
 

@@ -11,14 +11,24 @@ import { twMerge } from 'tailwind-merge';
 import { AuthProvider } from './app/contexts/AuthContext';
 import { AxiosProvider } from './app/contexts/AxiosContext';
 import { ToastProvider } from './app/contexts/ToastContext';
+import { ClerkProvider } from '@clerk/clerk-react'
+
+const PUBLISHABLE_KEY = process.env.REACT_APP_VITE_CLERK_PUBLISHABLE_KEY;
+
+if (!PUBLISHABLE_KEY) {
+  console.log("Missing Publishable Key");
+}
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
+
 root.render(
   <PrimeReactProvider value={{ ripple: true, unstyled: false, pt: {}, ptOptions: { mergeSections: true, mergeProps: true, classNameMergeFunction: twMerge } }}>
     <ToastProvider>
       <AuthProvider>
         <AxiosProvider>
-          <App />
+          <ClerkProvider publishableKey={PUBLISHABLE_KEY}>
+            <App />
+          </ClerkProvider>
         </AxiosProvider>
       </AuthProvider>
     </ToastProvider>

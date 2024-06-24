@@ -17,23 +17,23 @@ const MainPage = () => {
 
   const [currentUser, setCurrentUser] = useState();
 
-  useEffect(() => {
-    if (!isLoggedIn && !apiToken) {
-      logout();
-    }
-  }, [isLoggedIn, apiToken, logout]); 
+  // useEffect(() => {
+  //   if (!isLoggedIn && !apiToken) {
+  //     logout();
+  //   }
+  // }, [isLoggedIn, apiToken, logout]); 
 
-  useEffect(() => {
-    axiosService.get('/api/me_user').then((response) => {
-      if(response.data.status){
-        setCurrentUser(response.data.user);
-      } else {
-        logout();
-      }
-    }).catch((error) => {
-      logout();
-    });
-  }, [])
+  // useEffect(() => {
+  //   axiosService.get('/api/me_user').then((response) => {
+  //     if(response.data.status){
+  //       setCurrentUser(response.data.user);
+  //     } else {
+  //       logout();
+  //     }
+  //   }).catch((error) => {
+  //     logout();
+  //   });
+  // }, [])
 
   const renderPage = () => {
     switch (currentPage) {
