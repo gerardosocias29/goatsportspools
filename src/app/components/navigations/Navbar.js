@@ -1,13 +1,20 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Sidebar as PrimeSidebar } from 'primereact/sidebar';
 import { Button } from 'primereact/button';
 import Sidebar from '../navigations/Sidebar';
-import { SignedIn, UserButton } from "@clerk/clerk-react";
+import { UserButton } from "@clerk/clerk-react";
 import { useUser } from "@clerk/clerk-react";
+import { useNavigate } from "react-router-dom";
 
 const Navbar = () => {
   const { isSignedIn, user, isLoaded } = useUser();
   const [visible, setVisible] = useState(false);
+  const navigate = useNavigate();
+  useEffect(() => {
+    if(!isSignedIn && isLoaded){
+      navigate('/login');
+    }
+  }, [isSignedIn, isLoaded])
 
   return (
     <>
@@ -37,13 +44,14 @@ const Navbar = () => {
                     <span>{currentUser && currentUser.name || ''}</span>
                   </span>
                 </div> */}
-                <SignedIn>
-                  <div className="flex items-center gap-4">
-                    { isLoaded && <p>{user.fullName}</p>}
-                    <UserButton afterSignOutUrl='/login' />
-                  </div>
-                  
-                </SignedIn>
+                {
+                  isSignedIn && (
+                    <div className="flex items-center gap-4">
+                      { isLoaded && <p className="select-none">{user.fullName}</p>}
+                      <UserButton afterSignOutUrl='/login' />
+                    </div>
+                  )
+                }
               </div>
             </div>
           </div>

@@ -8,6 +8,7 @@ import { useAxios } from "../contexts/AxiosContext";
 import Dashboard from "./screens/Dashboard";
 import Profile from "./screens/Profile";
 import NFL from "./screens/NFL";
+import { useUser } from "@clerk/clerk-react";
 
 const MainPage = () => {
   const axiosService = useAxios();  
@@ -16,31 +17,37 @@ const MainPage = () => {
   const { logout, isLoggedIn, apiToken} = useContext(AuthContext);
 
   const [currentUser, setCurrentUser] = useState();
+  const { isSignedIn, user, isLoaded } = useUser();
 
-  // useEffect(() => {
-  //   if (!isLoggedIn && !apiToken) {
-  //     logout();
-  //   }
-  // }, [isLoggedIn, apiToken, logout]); 
-
-  // useEffect(() => {
-  //   axiosService.get('/api/me_user').then((response) => {
-  //     if(response.data.status){
-  //       setCurrentUser(response.data.user);
-  //     } else {
-  //       logout();
-  //     }
-  //   }).catch((error) => {
-  //     logout();
-  //   });
-  // }, [])
+  useEffect(() => {
+    if(isSignedIn && isLoaded){
+      console.log('user::', user);
+      const newUser = {
+        name: user.fullName,
+        first_name: user.firstName,
+        last_name: user.lastName,
+        id: user.id,
+        avatar: user.imageUrl,
+        username: user.username,
+        email: user.primaryEmailAddress.emailAddress
+      }
+      axiosService.get('/api/user-details', newUser).then((response) => {
+        // if(response.data.status){
+        //   setCurrentUser(response.data.user);
+        // } else {
+        //   logout();
+        // }
+        console.log(response.data);
+      }).catch((error) => {
+        // logout();
+      });
+    }
+  }, [isSignedIn, isLoaded])
 
   const renderPage = () => {
     switch (currentPage) {
       case 'dashboard': 
         return <Dashboard/>
-      case 'profile': 
-        return <Profile currentUser={currentUser} setCurrentUser={setCurrentUser}/>
       case 'nfl': 
         return <NFL/>
       default:

@@ -25,11 +25,13 @@ root.render(
   <PrimeReactProvider value={{ ripple: true, unstyled: false, pt: {}, ptOptions: { mergeSections: true, mergeProps: true, classNameMergeFunction: twMerge } }}>
     <ToastProvider>
       <AuthProvider>
-        <AxiosProvider>
-          <ClerkProvider publishableKey={PUBLISHABLE_KEY}>
+        <ClerkProvider publishableKey={PUBLISHABLE_KEY}>
+
+          <AxiosProvider>
             <App />
-          </ClerkProvider>
-        </AxiosProvider>
+          </AxiosProvider>
+        </ClerkProvider>
+        
       </AuthProvider>
     </ToastProvider>
   </PrimeReactProvider>

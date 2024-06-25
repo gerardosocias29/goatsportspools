@@ -17,8 +17,8 @@ const NFL = () => {
         <div>
           <div className="font-bold mb-2">Bet Type</div>
           <div className="grid grid-cols-1 lg:grid-cols-6 gap-4">
-            {wageType.map(wt => (
-              <div key={wt.id} 
+            {wageType.map((wt, i) => (
+              <div key={i} 
                 className={`cursor-pointer select-none rounded-lg shadow-lg border p-4 text-center hover:bg-primaryS hover:text-white ${activeWagerType.value == wt.value ? 'bg-primaryS text-white' : 'bg-white'}`}
                 onClick={() => setActiveWagerType(wt)}
               >
