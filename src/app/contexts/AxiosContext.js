@@ -1,7 +1,6 @@
 import React, { createContext, useContext } from 'react';
 import axios from 'axios';
 import { AuthContext } from './AuthContext'; // Assuming you have an AuthContext
-import { useSession } from '@clerk/clerk-react';
 import Cookies from 'js-cookie';
 
 const AxiosContext = createContext();
@@ -14,7 +13,6 @@ export const AxiosProvider = ({ children }) => {
   const session = Cookies.get('__session');
 
   const { apiToken } = useContext(AuthContext);
-  console.log("session::", session);
 
   const axiosInstance = axios.create({
     baseURL: process.env.REACT_APP_API_URL,

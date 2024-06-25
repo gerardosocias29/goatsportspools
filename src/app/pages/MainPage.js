@@ -9,40 +9,26 @@ import Dashboard from "./screens/Dashboard";
 import Profile from "./screens/Profile";
 import NFL from "./screens/NFL";
 import { useUser } from "@clerk/clerk-react";
+import Users from "./screens/Users";
 
 const MainPage = () => {
   const axiosService = useAxios();  
   const location = useLocation();
   const currentPage = new URLSearchParams(location.search).get("page") || "dashboard";
-  const { logout, isLoggedIn, apiToken} = useContext(AuthContext);
+  const { logout, isLoggedIn, login} = useContext(AuthContext);
 
   const [currentUser, setCurrentUser] = useState();
-  const { isSignedIn, user, isLoaded } = useUser();
+  const { isSignedIn, isLoaded } = useUser();
 
   useEffect(() => {
-    if(isSignedIn && isLoaded){
-      console.log('user::', user);
-      const newUser = {
-        name: user.fullName,
-        first_name: user.firstName,
-        last_name: user.lastName,
-        id: user.id,
-        avatar: user.imageUrl,
-        username: user.username,
-        email: user.primaryEmailAddress.emailAddress
-      }
-      axiosService.get('/api/user-details', newUser).then((response) => {
-        // if(response.data.status){
-        //   setCurrentUser(response.data.user);
-        // } else {
-        //   logout();
-        // }
-        console.log(response.data);
+    if(isSignedIn && isLoaded && !isLoggedIn){
+      axiosService.get('/api/user-details').then((response) => {
+        login(response.data.token);
       }).catch((error) => {
-        // logout();
+        logout();
       });
     }
-  }, [isSignedIn, isLoaded])
+  }, [isSignedIn, isLoaded, isLoggedIn])
 
   const renderPage = () => {
     switch (currentPage) {
@@ -50,6 +36,8 @@ const MainPage = () => {
         return <Dashboard/>
       case 'nfl': 
         return <NFL/>
+      case 'users': 
+        return <Users/>
       default:
         return (
           <NotFound/>
