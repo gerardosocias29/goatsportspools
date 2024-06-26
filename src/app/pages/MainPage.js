@@ -3,50 +3,51 @@ import Layout from "../components/layout/Layout";
 import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../contexts/AuthContext";
 import NotFound from "./NotFound";
-import Dashboard from "./screens/Dashboard";
-import NFL from "./screens/NFL";
-import Users from "./screens/Users";
-import Cookies from "js-cookie";
+import Page from "./screens/Page";
 import { useAxios } from "../contexts/AxiosContext";
+import Dashboard from "./screens/Dashboard";
+import Profile from "./screens/Profile";
+import NFL from "./screens/NFL";
+import { useUser } from "@clerk/clerk-react";
+import Users from "./screens/Users";
 
 const MainPage = () => {
-  const axiosService = useAxios();
+  const axiosService = useAxios();  
   const location = useLocation();
   const currentPage = new URLSearchParams(location.search).get("page") || "dashboard";
-  const { logout, isLoggedIn, login, apiToken } = useContext(AuthContext);
-  const [currentUser, setCurrentUser] = useState(null);
+  const { isLoggedIn, login, apiToken} = useContext(AuthContext);
+
+  const [currentUser, setCurrentUser] = useState();
+  const { isSignedIn, isLoaded } = useUser();
 
   useEffect(() => {
-    const session = Cookies.get('__session');
-    if (session && apiToken === null) {
-      axiosService.get('/api/user-details')
-        .then((response) => {
-          login(response.data.token);
-          setCurrentUser(response.data.user);
-        })
-        .catch((error) => {
-          console.error('Error fetching user details:', error);
-          // logout();
-        });
+    if(isSignedIn && isLoaded && !isLoggedIn){
+      axiosService.get('/api/user-details').then((response) => {
+        login(response.data.token);
+      }).catch((error) => {
+        // logout();
+      });
     }
-  }, []);
+  }, [isSignedIn, isLoaded, isLoggedIn, axiosService, login])
 
   const renderPage = () => {
     switch (currentPage) {
-      case 'dashboard':
-        return <Dashboard />;
-      case 'nfl':
-        return <NFL />;
-      case 'users':
-        return <Users />;
+      case 'dashboard': 
+        return <Dashboard/>
+      case 'nfl': 
+        return <NFL/>
+      case 'users': 
+        return <Users/>
       default:
-        return <NotFound />;
+        return (
+          <NotFound/>
+        );
     }
   };
 
-  return (
+  return(
     <Layout children={renderPage()} currentUser={currentUser} />
-  );
-};
+  )
+}
 
 export default MainPage;

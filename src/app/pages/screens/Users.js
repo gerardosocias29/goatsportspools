@@ -1,7 +1,10 @@
 import { Button } from "primereact/button";
 import LazyTable from "../../components/tables/LazyTable";
+import { useEffect, useState } from "react";
+import { useAxios } from "../../contexts/AxiosContext";
 
 const Users = () => {
+  const axiosService = useAxios();
 
   const userColumns = [
     { field: 'name', header: 'Name' },
@@ -17,6 +20,19 @@ const Users = () => {
     );
   }
 
+  const [cardData, setCardData] = useState();
+  const getCardData = () => {
+    axiosService.get('/api/users/card-data').then((response) => {
+      setCardData(response.data);
+    }).catch((error) => {
+      // logout();
+    });
+  }
+  
+  useEffect(() => {
+    getCardData();
+  }, []);
+
   return (
     <div className="flex flex-col gap-5">
       <div className="flex items-center gap-2 text-primary text-3xl font-semibold">Users</div>
@@ -29,7 +45,7 @@ const Users = () => {
                 <div className="flex gap-4 w-full justify-center px-2">
                   <div>
                     <div className="flex flex-col items-center">
-                      <p className="text-4xl text-center">87</p>
+                      <p className="text-4xl text-center">{cardData && cardData.active_league_admin || 0}</p>
                       <span className="text-sm min-w-[60px] text-center font-bold">Members</span>
                     </div>
                   </div>
@@ -50,7 +66,7 @@ const Users = () => {
                 <div className="flex gap-4 w-full justify-center px-2">
                   <div>
                     <div className="flex flex-col items-center">
-                      <p className="text-4xl text-center">87</p>
+                      <p className="text-4xl text-center">{cardData && cardData.active_users || 0}</p>
                       <span className="text-sm min-w-[60px] text-center font-bold">Members</span>
                     </div>
                   </div>
