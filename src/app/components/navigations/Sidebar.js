@@ -1,7 +1,5 @@
-import { useContext, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { AiOutlineDashboard } from "react-icons/ai";
-import { AuthContext } from "../../contexts/AuthContext";
 import { FaFootballBall, FaUsers } from 'react-icons/fa';
 
 const Sidebar = ({ onToggleSidebar, callback = null, currentUser }) => {

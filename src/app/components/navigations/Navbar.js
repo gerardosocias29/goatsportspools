@@ -48,7 +48,7 @@ const Navbar = () => {
                   isSignedIn && (
                     <div className="flex items-center gap-4">
                       { isLoaded && <p className="select-none">{user.fullName}</p>}
-                      <UserButton afterSignOutUrl='/login' />
+                      <UserButton afterSignOutUrl='/logout' sign />
                     </div>
                   )
                 }

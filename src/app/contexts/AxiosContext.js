@@ -1,6 +1,6 @@
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import axios from 'axios';
-import { AuthContext } from './AuthContext'; // Assuming you have an AuthContext
+import { AuthContext } from './AuthContext';
 import Cookies from 'js-cookie';
 
 const AxiosContext = createContext();
@@ -10,18 +10,40 @@ export const useAxios = () => {
 };
 
 export const AxiosProvider = ({ children }) => {
-  const session = Cookies.get('__session');
-
   const { apiToken } = useContext(AuthContext);
+  const [session, setSession] = useState(Cookies.get('__session'));
+
+  useEffect(() => {
+    const checkSession = () => {
+      const sessionCookie = Cookies.get('__session');
+      if (sessionCookie) {
+        setSession(sessionCookie);
+      }
+    };
+
+    checkSession();
+    const interval = setInterval(checkSession, 1000); // Retry every second
+
+    return () => clearInterval(interval); // Cleanup on unmount
+  }, []);
 
   const axiosInstance = axios.create({
     baseURL: process.env.REACT_APP_API_URL,
     headers: {
-      Authorization: apiToken ? `Bearer ${apiToken}` : `Bearer ${session}`,
       'Content-Type': 'application/json',
     },
   });
 
+  // Interceptor to dynamically set the Authorization header
+  axiosInstance.interceptors.request.use((config) => {
+    const token = session && !apiToken ? session : apiToken;
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  }, (error) => {
+    return Promise.reject(error);
+  });
 
   const get = (url, config) => axiosInstance.get(url, config);
   const post = (url, data, config) => axiosInstance.post(url, data, config);

@@ -26,7 +26,6 @@ root.render(
     <ToastProvider>
       <AuthProvider>
         <ClerkProvider publishableKey={PUBLISHABLE_KEY}>
-
           <AxiosProvider>
             <App />
           </AxiosProvider>
