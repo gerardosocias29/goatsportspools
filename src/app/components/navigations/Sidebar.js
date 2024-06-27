@@ -1,6 +1,6 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { AiOutlineDashboard } from "react-icons/ai";
-import { FaFootballBall, FaUsers } from 'react-icons/fa';
+import { FaFootballBall, FaTrophy, FaUsers } from 'react-icons/fa';
 
 const Sidebar = ({ currentUser }) => {
   const navigate = useNavigate();
@@ -12,6 +12,7 @@ const Sidebar = ({ currentUser }) => {
       case 'icon-dashboard': return <AiOutlineDashboard />;
       case 'icon-nfl': return <FaFootballBall />;
       case 'icon-users': return <FaUsers />;
+      case 'icon-leagues': return <FaTrophy />;
 
     }
   }

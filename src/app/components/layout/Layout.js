@@ -17,7 +17,7 @@ const Layout = ({ children, currentUser }) => {
           <div className={`overflow-y-auto ${sidebarCollapsed ? 'w-30' : 'w-80'} transition-all transition-duration-300 ease-in bg-white text-black hidden lg:block`}>
             <Sidebar currentUser={currentUser} onToggleSidebar={handleToggleSidebar} /> 
           </div>
-          <div id="main-content" className="overflow-y-auto w-full p-5 bg-[#eee]">
+          <div id="main-content" className="overflow-y-auto w-full bg-[#eee]">
             {children}
           </div>
         </div>

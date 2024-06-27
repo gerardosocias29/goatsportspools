@@ -1,7 +1,7 @@
 import { Skeleton } from "primereact/skeleton";
 
 const SkeletonTable = () => {
-  const rows = Array.from({ length: 6 }, (_, index) => index + 1);
+  const rows = Array.from({ length: 7 }, (_, index) => index + 1);
   return (
     <>
       <div className="mb-4 flex flex-col md:flex-row gap-2 justify-between items-center">
@@ -33,12 +33,12 @@ const SkeletonTable = () => {
             <th className="bg-background text-white border-r-white border-l-white border h-[81px] p-[16px]">
               <Skeleton />
             </th>
-            {/* <th className="bg-background text-white border-r-white border-l-white border h-[81px] p-[16px]">
+            <th className="bg-background text-white border-r-white border-l-white border h-[81px] p-[16px]">
               <Skeleton />
             </th>
             <th className="bg-background text-white rounded-tr-lg rounded-br-lg border-none h-[81px] p-[16px] w-[100px]">
               <Skeleton />
-            </th> */}
+            </th>
           </tr>
         </thead>
         <tbody>

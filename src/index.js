@@ -12,6 +12,7 @@ import { AuthProvider } from './app/contexts/AuthContext';
 import { AxiosProvider } from './app/contexts/AxiosContext';
 import { ToastProvider } from './app/contexts/ToastContext';
 import { ClerkProvider } from '@clerk/clerk-react'
+import { classNames } from 'primereact/utils';
 
 const PUBLISHABLE_KEY = process.env.REACT_APP_VITE_CLERK_PUBLISHABLE_KEY;
 
@@ -22,7 +23,15 @@ if (!PUBLISHABLE_KEY) {
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
 root.render(
-  <PrimeReactProvider value={{ ripple: true, unstyled: false, pt: {}, ptOptions: { mergeSections: true, mergeProps: true, classNameMergeFunction: twMerge } }}>
+  <PrimeReactProvider value={{ 
+    ripple: true, 
+    unstyled: false, 
+    pt: {}, 
+    button: {
+      root: {className: 'border rounded-lg border-primaryS bg-primaryS' }
+    },
+    ptOptions: { mergeSections: true, mergeProps: true, classNameMergeFunction: twMerge } 
+  }}>
     <ToastProvider>
       <AuthProvider>
         <ClerkProvider publishableKey={PUBLISHABLE_KEY}>

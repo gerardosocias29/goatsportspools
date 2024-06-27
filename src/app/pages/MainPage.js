@@ -10,6 +10,7 @@ import Profile from "./screens/Profile";
 import NFL from "./screens/NFL";
 import { useUser } from "@clerk/clerk-react";
 import Users from "./screens/Users";
+import Leagues from "./screens/Leagues";
 
 const MainPage = () => {
   const axiosService = useAxios();  
@@ -42,6 +43,13 @@ const MainPage = () => {
   }, [apiToken, isLoggedIn])
 
   const renderPage = () => {
+    const modules = currentUser && currentUser.modules.map((e) => e.page);
+    if(modules && modules.includes(currentPage)){
+      console.log(modules);
+    } else {
+      <NotFound/>
+    }
+
     switch (currentPage) {
       case 'dashboard': 
         return <Dashboard/>
@@ -49,6 +57,8 @@ const MainPage = () => {
         return <NFL/>
       case 'users': 
         return <Users/>
+      case 'leagues':
+        return <Leagues/>
       default:
         return (
           <NotFound/>
