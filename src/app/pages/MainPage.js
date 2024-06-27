@@ -30,6 +30,17 @@ const MainPage = () => {
     }
   }, [isSignedIn, isLoaded, isLoggedIn, axiosService, login])
 
+  useEffect(() => {
+    if(isLoggedIn && apiToken){
+      axiosService.get('/api/me_user').then((response) => {
+        // login(response.data.token);
+        setCurrentUser(response.data.user);
+      }).catch((error) => {
+        // logout();
+      });
+    }
+  }, [apiToken, isLoggedIn])
+
   const renderPage = () => {
     switch (currentPage) {
       case 'dashboard': 

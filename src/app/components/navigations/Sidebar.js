@@ -2,28 +2,28 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { AiOutlineDashboard } from "react-icons/ai";
 import { FaFootballBall, FaUsers } from 'react-icons/fa';
 
-const Sidebar = ({ onToggleSidebar, callback = null, currentUser }) => {
+const Sidebar = ({ currentUser }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const currentPage = new URLSearchParams(location.search).get("page") || "";
 
-  const modules = [
-    {label: 'Dashboard', page: 'dashboard', icon: <AiOutlineDashboard /> },
-    {label: 'NFL', page: 'nfl', icon: <FaFootballBall /> },
-    {label: 'Users', page: 'users', icon: <FaUsers /> },
-  ];
+  const changeIcon = (icon_name) => {
+    switch(icon_name) {
+      case 'icon-dashboard': return <AiOutlineDashboard />;
+      case 'icon-nfl': return <FaFootballBall />;
+      case 'icon-users': return <FaUsers />;
+
+    }
+  }
 
   const navigateToPage = (page) => {
     navigate(`/main?page=${page}`);
-    if(callback) {
-      callback();
-    }
   };
 
   return (
     <div id="Sidebar">
       <ul className="py-2">
-        {modules.map((e, index) => (
+        {currentUser && currentUser.modules.map((e, index) => (
           <li
             key={index}
             onClick={() => navigateToPage(e.page)}
@@ -31,7 +31,7 @@ const Sidebar = ({ onToggleSidebar, callback = null, currentUser }) => {
                 m-2 py-2 px-4 cursor-pointer flex gap-2 items-center
             `}
           >
-            {e.icon} {e.label}
+            {changeIcon(e.icon)} {e.name}
           </li>
         ))}
       </ul>

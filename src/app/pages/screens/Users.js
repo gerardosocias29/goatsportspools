@@ -2,22 +2,62 @@ import { Button } from "primereact/button";
 import LazyTable from "../../components/tables/LazyTable";
 import { useEffect, useState } from "react";
 import { useAxios } from "../../contexts/AxiosContext";
+import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
+import { useToast } from "../../contexts/ToastContext";
 
 const Users = () => {
   const axiosService = useAxios();
+  const [refreshTable, setRefreshTable] = useState(false);
+  const showToast = useToast();
+
+  const roleTemplate = (role) => {
+    return role && role.name || '';
+  }
 
   const userColumns = [
     { field: 'name', header: 'Name' },
     { field: 'email', header: 'Email' },
     { field: 'username', header: 'Username' },
+    { field: 'role', header: 'Role', template: roleTemplate, hasTemplate: true },
   ];
 
-  const customActions = (data) => {
-    return (
+  const makeLeagueAdmin = (user) => {
+    confirmDialog({
+      message: 'Are you sure you want to make this user a League Admin?',
+      header: 'Confirmation',
+      icon: 'pi pi-exclamation-triangle',
+      acceptClassName: 'rounded-lg bg-primaryS border-primaryS text-white',
+      accept: () => {
+        axiosService.post('/api/users/update-role/' + user.id).then((response) => {
+          console.log(response);
+          if(response.data.status){
+            showToast({
+              severity: 'success',
+              summary: 'Success',
+              detail: response.data.message,
+            });
+            setRefreshTable(true);
+
+          } else {
+            showToast({
+              severity: 'error',
+              summary: 'Failed!',
+              detail: response.data.message,
+            });
+          }
+        }).catch((error) => {
+          console.log(error);
+        });
+      }
+    });
+  }
+
+  const customActions = (user) => {
+    return user.role.id == 3 ? (
       <>
-        <Button label="Make League Admin"/>
+        <Button label="Make League Admin" className="text-sm rounded-lg bg-primaryS border-primaryS" onClick={() => makeLeagueAdmin(user)}/>
       </>
-    );
+    ) : null;
   }
 
   const [cardData, setCardData] = useState();
@@ -83,8 +123,14 @@ const Users = () => {
       </div>
       <div className="w-full p-5 bg-white rounded-lg flex flex-col gap-5">
 
-        <LazyTable api={'/api/users'} columns={userColumns} actions={true} customActions={customActions} hasOptions={true} />
+        <LazyTable api={'/api/users'} 
+          columns={userColumns}
+          refreshTable={refreshTable} setRefreshTable={setRefreshTable}
+          actions={true} customActions={customActions} 
+          hasOptions={true} 
+        />
       </div>
+      <ConfirmDialog />
     </div>
   );
 }
