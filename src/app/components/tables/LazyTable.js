@@ -38,6 +38,7 @@ const LazyTable = ({
     hasExport = false, exportOptions = {
       csv: true
     }, exportHeaders,
+    setTotal,
   }) => {
     
   const { showToast, clearToast } = useToast();
@@ -112,11 +113,11 @@ const LazyTable = ({
   const renderActions = (data) => {
     return (
       <div className="flex justify-center">
-        { action_types.view && <Button className="text-purple ring-0" icon="pi pi-eye" rounded text aria-label="View" onClick={(e) => actionsClicked && actionsClicked(data.id, 'view') }/> }
-        { action_types.edit && <Button className="text-blue-500 ring-0" icon="pi pi-pencil" rounded text aria-label="Edit" onClick={(e) => actionsClicked && actionsClicked(data.id, 'edit') }/> }
-        { action_types.settings && <Button className="text-blue-500 ring-0" icon="pi pi-cog" rounded text aria-label="Settings" onClick={(e) => actionsClicked && actionsClicked(data.id, 'settings') }/> }
-        { action_types.delete && <Button className="text-red-500 ring-0" icon="pi pi-trash" rounded text aria-label="Trash" onClick={(e) => actionsClicked && actionsClicked(data.id, 'trash') }/> }
-        { action_types.sign_in && <Button className="text-purple ring-0" icon="pi pi-sign-in" rounded text aria-label="Trash" onClick={(e) => actionsClicked && actionsClicked(data.id, 'login') }/> }
+        { action_types.view && <Button className="text-purple ring-0" icon="pi pi-eye" rounded text aria-label="View" onClick={(e) => actionsClicked && actionsClicked(data.id, 'view', data) }/> }
+        { action_types.edit && <Button className="text-blue-500 ring-0" icon="pi pi-pencil" rounded text aria-label="Edit" onClick={(e) => actionsClicked && actionsClicked(data.id, 'edit', data) }/> }
+        { action_types.settings && <Button className="text-blue-500 ring-0" icon="pi pi-cog" rounded text aria-label="Settings" onClick={(e) => actionsClicked && actionsClicked(data.id, 'settings', data) }/> }
+        { action_types.delete && <Button className="text-red-500 ring-0" icon="pi pi-trash" rounded text aria-label="Trash" onClick={(e) => actionsClicked && actionsClicked(data.id, 'trash', data) }/> }
+        { action_types.sign_in && <Button className="text-purple ring-0" icon="pi pi-sign-in" rounded text aria-label="Trash" onClick={(e) => actionsClicked && actionsClicked(data.id, 'login', data) }/> }
       </div>
     );
   }
@@ -183,6 +184,7 @@ const LazyTable = ({
           setLoadingState(false);
         }
 
+        setTotal(response.data.total)
         setLoading(false);
         setRefreshTable(false);
 
@@ -195,6 +197,9 @@ const LazyTable = ({
         }
       })
       .catch((error) => {
+        setTotalRecords(0);
+        setTableData([]);
+        setLoading(false);
         console.error('Error fetching data:', error);
       });
   }

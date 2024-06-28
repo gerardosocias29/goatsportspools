@@ -58,7 +58,7 @@ const MainPage = () => {
       case 'users': 
         return <Users/>
       case 'leagues':
-        return <Leagues/>
+        return <Leagues currentUser={currentUser}/>
       default:
         return (
           <NotFound/>
