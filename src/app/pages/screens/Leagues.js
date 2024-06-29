@@ -96,6 +96,13 @@ const Leagues = ({currentUser}) => {
     }
   }, []);
 
+  const handleSuccess = () => {
+    setRefreshTable(true);
+    if(currentUser && currentUser.role_id != 3){
+      getLeaguesJoined();
+    }
+  }
+
   return(
     <div className="flex flex-col gap-5 p-5">
       <div className="flex justify-between">
@@ -164,7 +171,7 @@ const Leagues = ({currentUser}) => {
       
 
       <LeagueModal header={`${leagueModalData && leagueModalData.id != '' ? 'Update League' : 'Create League'}`} visible={leagueModalVisible} onHide={onHide} currentUser={currentUser} onSuccess={() => setRefreshTable(true)} data={leagueModalData}/>
-      <LeagueJoin visible={leagueJoinModalVisible} onHide={onJoinHide} currentUser={currentUser} data={leagueJoinData} onSuccess={() => setRefreshTable(true)} />
+      <LeagueJoin visible={leagueJoinModalVisible} onHide={onJoinHide} currentUser={currentUser} data={leagueJoinData} onSuccess={handleSuccess} />
     </div>
   );
 }
