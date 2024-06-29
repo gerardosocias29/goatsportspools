@@ -2,7 +2,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { AiOutlineDashboard } from "react-icons/ai";
 import { FaFootballBall, FaTrophy, FaUsers } from 'react-icons/fa';
 
-const Sidebar = ({ currentUser }) => {
+const Sidebar = ({ currentUser, callback }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const currentPage = new URLSearchParams(location.search).get("page") || "";
@@ -19,6 +19,9 @@ const Sidebar = ({ currentUser }) => {
 
   const navigateToPage = (page) => {
     navigate(`/main?page=${page}`);
+    if(callback){
+      callback();
+    }
   };
 
   return (

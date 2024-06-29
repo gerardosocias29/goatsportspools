@@ -6,7 +6,7 @@ import { UserButton } from "@clerk/clerk-react";
 import { useUser } from "@clerk/clerk-react";
 import { useNavigate } from "react-router-dom";
 
-const Navbar = () => {
+const Navbar = ({currentUser}) => {
   const { isSignedIn, user, isLoaded } = useUser();
   const [visible, setVisible] = useState(false);
   const navigate = useNavigate();
@@ -28,7 +28,8 @@ const Navbar = () => {
               <div className="flex flex-shrink-0 items-center gap-3">
                 <div className="lg:hidden">
                   <PrimeSidebar visible={visible} onHide={() => setVisible(false)}>
-                    <Sidebar callback={() => setVisible(false)}/>
+                    <Sidebar currentUser={currentUser} callback={() => setVisible(false)}/>
+
                   </PrimeSidebar>
                   <Button className="bg-transparent text-primary border-none" icon="pi pi-bars" onClick={() => setVisible(true)} />
                 </div>
@@ -47,7 +48,7 @@ const Navbar = () => {
                 {
                   isSignedIn && (
                     <div className="flex items-center gap-4">
-                      { isLoaded && <p className="select-none">{user.fullName}</p>}
+                      { isLoaded && <p className="select-none hidden lg:block">{user.fullName}</p>}
                       <UserButton afterSignOutUrl='/logout' sign />
                     </div>
                   )
