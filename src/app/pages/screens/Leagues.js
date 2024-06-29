@@ -91,14 +91,14 @@ const Leagues = ({currentUser}) => {
   }
 
   useEffect(() => {
-    if(currentUser && currentUser.role_id != 3){
+    if(currentUser && currentUser.role_id != 1){
       getLeaguesJoined();
     }
   }, []);
 
   const handleSuccess = () => {
     setRefreshTable(true);
-    if(currentUser && currentUser.role_id != 3){
+    if(currentUser && currentUser.role_id != 1){
       getLeaguesJoined();
     }
   }
