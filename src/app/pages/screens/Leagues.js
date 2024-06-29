@@ -100,7 +100,9 @@ const Leagues = ({currentUser}) => {
     <div className="flex flex-col gap-5 p-5">
       <div className="flex justify-between">
         <div className="text-primary text-3xl font-semibold">Leagues</div>
-        <Button label="Create League" icon="pi pi-trophy" className="rounded-lg border-primaryS bg-primaryS" onClick={() => setModalLeagueVisible(true)}/>
+        {
+          currentUser && currentUser.role_id != 3 && <Button label="Create League" icon="pi pi-trophy" className="rounded-lg border-primaryS bg-primaryS" onClick={() => setModalLeagueVisible(true)}/>
+        }
       </div>
       <div className="w-full p-5 bg-white rounded-lg flex flex-col gap-5">
         <div className="grid lg:grid-cols-4 gap-4">
