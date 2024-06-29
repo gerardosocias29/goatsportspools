@@ -184,7 +184,10 @@ const LazyTable = ({
           setLoadingState(false);
         }
 
-        setTotal(response.data.total)
+        if(setTotal) {
+          setTotal(response.data.total)
+        }
+        
         setLoading(false);
         setRefreshTable(false);
 
