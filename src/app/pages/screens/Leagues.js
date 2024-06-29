@@ -54,7 +54,7 @@ const Leagues = ({currentUser}) => {
       
       setLeagueJoinData(data);
       setModalLeagueJoinVisible(true);
-       
+
     }
   }
 
@@ -127,7 +127,7 @@ const Leagues = ({currentUser}) => {
             </div>
           }
 
-          { currentUser && currentUser.role_id != 3 && 
+          { currentUser && currentUser.role_id != 1 && 
             <div className="border rounded-lg p-4 border-lightgray shadow-lg border-[1px]">
               <div className="flex justify-between mb-3">
                 <div className="w-full">
