@@ -23,3 +23,9 @@ label, .main, a {
 .p-toast .p-toast-message .p-toast-message-content {
   border-width: 0px;
 }
+
+.p-column-header-content {
+  text-align: center !important;
+  display: flex;
+  justify-content: center;
+}

@@ -39,7 +39,10 @@ const LazyTable = ({
       csv: true
     }, exportHeaders,
     setTotal,
-    customActionsWidth = '200px'
+    customActionsWidth = '200px',
+    rowLimit = null,
+    scrollable = false,
+    scrollHeight = '400px'
   }) => {
     
   const { showToast, clearToast } = useToast();
@@ -90,7 +93,7 @@ const LazyTable = ({
 
   const [lazyState, setlazyState] = useState({
     first: 0,
-    rows: pageItem.value,
+    rows: rowLimit && rowLimit || pageItem.value,
     page: 0,
     sortField: '',
     sortOrder: '',
@@ -451,7 +454,7 @@ const LazyTable = ({
     }
     {
       !loading && 
-      <DataTable ref={dt} value={tableData} paginator={paginator} rows={(paginator ? pageItem.value : undefined)}
+      <DataTable ref={dt} value={tableData} paginator={paginator} rows={(paginator ? (rowLimit && rowLimit || pageItem.value) : undefined)}
         lazy first={lazyState.first} totalRecords={totalRecords} onPage={onPage} onSort={onSort} sortField={lazyState.sortField} sortOrder={lazyState.sortOrder}
         onFilter={onFilter} filters={lazyState.filters} loading={loading}
         selectionMode={!checkbox ? null : 'checkbox'} rowHover={true} selection={selectedData} onSelectionChange={onSelectionChange} selectAll={selectAll} onSelectAllChange={onSelectAllChange}
@@ -459,18 +462,19 @@ const LazyTable = ({
         onRowToggle={(e) => setExpandedRows(e.data)} expandedRows={expandedRows} onRowExpand={onRowExpand} onRowCollapse={onRowCollapse} rowExpansionTemplate={rowExpansionTemplate}
         emptyMessage={(<>
           <div className="flex flex-col items-center gap-4 text-center justify-center">
-            <p className="text-3xl">No Results Found</p>
+            <p className="text-3xl">No Data Found</p>
           </div>
         </>)}
         loadingIcon={<i className="pi pi-spin pi-spinner text-purple" style={{ fontSize: '3rem' }}></i>}
         pt={{root: {className: 'rounded-lg'}, loadingOverlay: {className: 'bg-purple bg-opacity-10 rounded-lg'}}}
+        scrollable={scrollable} scrollHeight={scrollHeight}
       >
-        {checkbox && <Column headerClassName="bg-background text-white rounded-tl-lg rounded-bl-lg border-none" selectionMode="multiple" headerStyle={{ width: '3rem' }} />}
+        {checkbox && <Column headerClassName="bg-background text-white rounded-tl-xl rounded-bl-xl border-none" selectionMode="multiple" headerStyle={{ width: '3rem' }} />}
         {
           columns.map((col, i) => {
             const column1 = (<Column 
               key={i} 
-              headerClassName={`${col.headerClassName? col.headerClassName:''} bg-background text-white ${(i==0 && !checkbox ? 'rounded-tl-lg rounded-bl-lg' : '' )} ${(i === (columns.length-1) && !actions)? 'rounded-tr-lg rounded-br-lg' : ''} ${ expandableRow && col.has_expander ? '' : 'border-white border'} font-normal text-white`}
+              headerClassName={`${col.headerClassName? col.headerClassName:''} text-center bg-background text-white ${(i==0 && !checkbox ? 'rounded-tl-xl rounded-bl-xl' : '' )} ${(i === (columns.length-1) && !actions)? 'rounded-tr-xl rounded-br-xl' : ''} ${ expandableRow && col.has_expander ? '' : 'border-white border'} font-normal text-white`}
               field={col.field} 
               header={col.header}
               body={(data) => col.hasTemplate ? renderTemplate(data[col.field], col.template, data, col.field) : data[col.field]}

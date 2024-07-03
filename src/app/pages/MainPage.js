@@ -7,10 +7,10 @@ import Page from "./screens/Page";
 import { useAxios } from "../contexts/AxiosContext";
 import Dashboard from "./screens/Dashboard";
 import Profile from "./screens/Profile";
-import NFL from "./screens/NFL";
 import { useUser } from "@clerk/clerk-react";
 import Users from "./screens/Users";
 import Leagues from "./screens/Leagues";
+import NFL from "./screens/games/NFL";
 
 const MainPage = () => {
   const axiosService = useAxios();  
@@ -53,7 +53,7 @@ const MainPage = () => {
     switch (currentPage) {
       case 'dashboard': 
         return <Dashboard/>
-      case 'nfl': 
+      case 'games/nfl': 
         return <NFL/>
       case 'users': 
         return <Users/>
