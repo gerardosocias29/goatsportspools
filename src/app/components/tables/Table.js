@@ -109,12 +109,13 @@ const Table = ({
               headerClassName={`${col.headerClassName? col.headerClassName:''} text-center bg-background text-white ${(i==0 && !checkbox ? 'rounded-tl-xl rounded-bl-xl' : '' )} ${(i === (columns.length-1) && !actions)? 'rounded-tr-xl rounded-br-xl' : ''} ${ expandableRow && col.has_expander ? '' : 'border-white border'} font-normal text-white`}
               field={col.field} 
               header={col.header}
+              style={col.headerStyle}
               body={(data) => col.hasTemplate ? renderTemplate(data[col.field], col.template, data, col.field) : data[col.field]}
             />;
           })
         }
-        {actions && !customActions && <Column headerClassName="bg-background text-white rounded-tr-xl rounded-br-xl font-normal text-white border-t" header={'Actions'} headerStyle={{ width: '3rem' }} body={renderActions}/>}
-        {actions && customActions && <Column headerClassName="bg-background text-white rounded-tr-xl rounded-br-xl font-normal text-white border-t" header={'Actions'} headerStyle={{ width: customActionsWidth }} body={customActions}/>}
+        {actions && !customActions && <Column headerClassName="bg-background text-white rounded-tr-xl rounded-br-xl font-normal text-white border-t" header={'Actions'} headerStyle={{ minWidth: '3rem' }} body={renderActions}/>}
+        {actions && customActions && <Column headerClassName="bg-background text-white rounded-tr-xl rounded-br-xl font-normal text-white border-t" header={'Actions'} headerStyle={{ minWidth: customActionsWidth }} body={customActions}/>}
     </DataTable>
   </>
   );

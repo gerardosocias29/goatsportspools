@@ -7,7 +7,9 @@ import { Dropdown } from "primereact/dropdown";
 import { useAxios } from "../../../contexts/AxiosContext";
 import { Dialog } from "primereact/dialog";
 import Table from "../../../components/tables/Table";
+import { InputText } from "primereact/inputtext";
 import moment from "moment";
+import { InputNumber } from "primereact/inputnumber";
 
 const NFL = () => {
   const axiosService = useAxios();
@@ -21,9 +23,12 @@ const NFL = () => {
   ];
 
   const [activeWagerType, setActiveWagerType] = useState(wagerTypes[0]);
+  const [sameAmountBet, setSameAmountBet] = useState(0);
+
   const BetTypeTemplate = () => {
     return <div className="text-center">{activeWagerType.name}</div>
   }
+
   const WagerTypeTemplate = (data) => {
     let type = data;
     switch(data) {
@@ -33,20 +38,65 @@ const NFL = () => {
     }
     return <div className="text-center">{type}</div>
   }
+
   const BetDateTemplate = (value, game) => {
     return <div className="text-center">{moment(game.data?.game_datetime).format('MMM DD')}</div>
   }
+
+  const BetTeamTemplate = (value, bet, field) => {
+    const { type, team, points, bet_amount, data, ml } =  bet || {};
+    // console.log(type, team, points, bet_amount, data);
+    
+    const gameID = data.id;
+    const pointsLabel = type === 'total' ? ( data && data.team === 'over' ? `TOTAL o${points}` : `TOTAL u${points}`) : type === 'moneyline' ? `[${ml}]` : `[${points}]`;
+    const totalLabel = type === "total" ? (data && `(${data.odd.favored_team.nickname} vs. ${data.odd.underdog_team.nickname})`) : '';
+    return <div>NFL [{gameID}] {team.name} {pointsLabel} {totalLabel}</div>;
+  }
+
+  const BetAmountTemplate = (value, bet) => {
+    return (
+      <InputNumber 
+        inputId="currency-us" 
+        currency="USD" mode="currency" locale="en-US"
+        className="w-full"
+        inputClassName="rounded-lg ring-0"
+        value={bet.bet_amount}
+        min={1}
+        onChange={(e) => handleBetAmountChange(e.value, bet)} 
+      />
+    );
+  }
+
+  const handleBetAmountChange = (value, bet) => {
+    setBets((prevBets) => {
+      return prevBets.map((b) => {
+        if (b.type === bet.type && b.team === bet.team && b.points === bet.points && b.ml === bet.ml) {
+          return { ...b, bet_amount: value };
+        }
+        return b;
+      });
+    });
+  };
+
+  const handleGlobalBetAmountChange = (globalValue) => {
+    const updatedBets = bets.map((b) => {
+      return { ...b, bet_amount: globalValue };
+    });
+    console.log("updatedBets", updatedBets);
+    setBets(updatedBets);
+  };
+
   const betsColumn = [
-    { field: 'type', header: 'Bet Type', headerClassName: 'w-[120px]', template: BetTypeTemplate, hasTemplate: true},
-    { field: 'type', header: 'Wager Type', headerClassName: 'w-[150px]', template: WagerTypeTemplate, hasTemplate: true},
-    { field: 'type', header: 'Game Date', headerClassName: 'w-[150px]', template: BetDateTemplate, hasTemplate: true},
-    { field: '', header: 'Team'},
-    { field: '', header: 'Bet Amount'},
+    { field: 'type', header: 'Bet Type', headerClassName: 'w-[120px]', template: BetTypeTemplate, hasTemplate: true },
+    { field: 'type', header: 'Wager Type', headerClassName: 'w-[150px]', template: WagerTypeTemplate, hasTemplate: true },
+    { field: 'type', header: 'Game Date', headerClassName: 'w-[100px]', template: BetDateTemplate, hasTemplate: true },
+    { field: '', header: 'Team', headerClassName: 'w-[420px]', template: BetTeamTemplate, hasTemplate: true },
+    { field: 'bet_amount', header: 'Bet Amount', template: BetAmountTemplate, hasTemplate: true },
   ]
 
-  const handleBetActionsClick = (value, type, betData) =>{
+  const handleBetActionsClick = (value, type, betData) => {
     console.log(betData, type);
-    if(type == "trash"){
+    if (type == "trash") {
       handleBetClick(betData);
     }
   }
@@ -124,18 +174,18 @@ const NFL = () => {
   }
 
   const gamesColumn = [
-    { field: 'game_datetime', header: 'Date', template: BetDateTemplate, hasTemplate: true, headerClassName: 'w-[120px]' },
-    { field: 'team', header: 'Team', template: TeamTemplate, hasTemplate: true },
-    { field: 'spread', header: 'Spread', headerClassName: 'w-[290px]', template: SpreadTemplate, hasTemplate: true },
-    { field: 'tp', header: 'Total Points', headerClassName: 'w-[290px]', template: TotalTemplate, hasTemplate: true },
-    { field: 'ml', header: 'Money Line', headerClassName: 'w-[290px]', template: MoneyLineTemplate, hasTemplate: true },
+    { field: 'game_datetime', header: 'Date', template: BetDateTemplate, hasTemplate: true, headerClassName: 'w-[120px]', headerStyle: { minWidth: '120px' } },
+    { field: 'team', header: 'Team', template: TeamTemplate, hasTemplate: true, headerStyle: { minWidth: '400px' } },
+    { field: 'spread', header: 'Spread', headerClassName: 'w-[290px]', template: SpreadTemplate, hasTemplate: true, headerStyle: { minWidth: '150px' } },
+    { field: 'tp', header: 'Total Points', headerClassName: 'w-[290px]', template: TotalTemplate, hasTemplate: true, headerStyle: { minWidth: '150px' } },
+    { field: 'ml', header: 'Money Line', headerClassName: 'w-[290px]', template: MoneyLineTemplate, hasTemplate: true, headerStyle: { minWidth: '150px' } },
   ];
 
   const [selectedLeague, setSelectedLeague] = useState();
   const [joinedLeagues, setJoinedLeagues] = useState();
   const getJoinedLeagues = () => {
     axiosService.get('/api/leagues/joined').then((response) => {
-      if(response.data.status){
+      if (response.data.status) {
         setJoinedLeagues(response.data.leagues_joined);
         setSelectedLeague(response.data.leagues_joined[0] || []);
       }
@@ -145,7 +195,6 @@ const NFL = () => {
   }
 
   const [modalWagerVisible, setModalWagerVisisble] = useState(false);
-
 
   useEffect(() => {
     getJoinedLeagues();
@@ -200,32 +249,40 @@ const NFL = () => {
           />
         </div>
         <div className="flex items-center justify-end ">
-          <Button label="Continue" className="mt-5 rounded-lg bg-background text-white border-background ring-0 w-[200px]" onClick={() => setModalWagerVisisble(true)}/>
+          <Button label="Continue" className="mt-5 rounded-lg bg-background text-white border-background ring-0 w-[200px]" onClick={() => setModalWagerVisisble(true)} />
         </div>
-
-        {/* <div className="">
-          <div className="font-bold mb-2">Your Bets</div>
-          <ul>
-            {bets.map((bet, index) => (
-              <li key={index} className="flex justify-between items-center border-b py-2">
-                <span>{bet.type}: {bet.points}</span>
-                <Button icon="pi pi-times" className="p-button-danger p-button-rounded p-button-sm" onClick={() => handleBetClick(bet)} />
-              </li>
-            ))}
-          </ul>
-          <div className="font-bold mt-5">Total Bets: {bets.length}</div>
-          <Button label="Place Bet" className="w-full mt-5 bg-primaryS text-white" onClick={() => alert('Bet placed!')} />
-        </div> */}
       </div>
-      <Dialog header="Your Bets" visible={modalWagerVisible} draggable={false} maximizable={false} className="w-2/3" onHide={() => setModalWagerVisisble(false)}>
+      <Dialog header="Your Bets" footer={() => {
+        return <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-2 justify-end">
+            <label>Use same amount for all bets</label>
+            <InputNumber 
+              inputId="currency-us" 
+              currency="USD" mode="currency" locale="en-US"
+              className=""
+              inputClassName="rounded-lg ring-0"
+              value={sameAmountBet} 
+              useGrouping={false}
+              min={1}
+              onChange={(e) => {
+                setSameAmountBet(e.value); 
+                handleGlobalBetAmountChange(e.value);
+              }} 
+            />
+          </div>
+          
+          <Button label="Place Your Bets" className="w-full bg-primaryS rounded-lg border-primaryS ring-0 text-white" onClick={() => alert('Bet placed!')} />
+        </div>
+      }}
+        visible={modalWagerVisible} 
+        draggable={false} maximizable={false} 
+        className="w-[95%] lg:w-2/3" onHide={() => setModalWagerVisisble(false)}>
         <Table data={bets} 
           columns={betsColumn} 
-          actions={true} action_types={{delete: true}} actionsClicked={handleBetActionsClick}
+          actions={true} action_types={{ delete: true }} actionsClicked={handleBetActionsClick}
           paginator={false}
           scrollable={true} scrollHeight="450px"
         />
-        <Button label="Place Your Bets" className="w-full mt-5 bg-primaryS rounded-lg border-primaryS ring-0 text-white" onClick={() => alert('Bet placed!')} />
-        
       </Dialog>
     </div>
   );
