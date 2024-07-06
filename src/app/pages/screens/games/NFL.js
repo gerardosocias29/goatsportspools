@@ -17,9 +17,9 @@ const NFL = () => {
   const [refreshTable, setRefreshTable] = useState(false);
   const [bets, setBets] = useState([]);
   const wagerTypes = [
-    { name: 'Parlay', value: 'parlay' },
-    { name: 'Straight', value: 'straight' },
-    { name: 'Teaser', value: 'teaser' },
+    { name: 'Straight', value: 'straight', status: true },
+    { name: 'Parlay', value: 'parlay', status: false },
+    { name: 'Teaser', value: 'teaser', status: false },
   ];
 
   const [activeWagerType, setActiveWagerType] = useState(wagerTypes[0]);
@@ -32,9 +32,17 @@ const NFL = () => {
   const WagerTypeTemplate = (data) => {
     let type = data;
     switch(data) {
-      case 'total': type = 'Total Points'; break;
-      case 'moneyline': type = 'Money Line'; break;
-      case 'spread': type = 'Spread'; break;
+      case 'total': 
+        type = 'Total Points';
+      break;
+      case 'moneyline': 
+        type = 'Money Line';
+      break;
+      case 'spread': 
+        type = 'Spread';
+      break;
+      default:
+      break;
     }
     return <div className="text-center">{type}</div>
   }
@@ -44,13 +52,12 @@ const NFL = () => {
   }
 
   const BetTeamTemplate = (value, bet, field) => {
-    const { type, team, points, bet_amount, data, ml } =  bet || {};
-    // console.log(type, team, points, bet_amount, data);
+    const { type, team, points, data, ml } =  bet || {};
     
     const gameID = data.id;
     const pointsLabel = type === 'total' ? ( data && data.team === 'over' ? `TOTAL o${points}` : `TOTAL u${points}`) : type === 'moneyline' ? `[${ml}]` : `[${points}]`;
     const totalLabel = type === "total" ? (data && `(${data.odd.favored_team.nickname} vs. ${data.odd.underdog_team.nickname})`) : '';
-    return <div>NFL [{gameID}] {team.name} {pointsLabel} {totalLabel}</div>;
+    return <div className="flex items-center gap-2">NFL [{gameID}] <p className="font-bold">{team.name} {pointsLabel}</p> {totalLabel}</div>;
   }
 
   const BetAmountTemplate = (value, bet) => {
@@ -63,7 +70,21 @@ const NFL = () => {
         value={bet.bet_amount}
         min={1}
         onChange={(e) => handleBetAmountChange(e.value, bet)} 
+        minFractionDigits={2}
+        useGrouping={false}
       />
+    );
+  }
+
+  const RiskingWinTemplate = (value, bet) => {
+    const { data, bet_amount } = bet;
+    const win_amount = bet_amount * (100 / data.standard_odd);
+    return (
+      <>
+        <div className="flex gap-2 justify-center">
+          <p className="text-green-500 font-bold">${Number(bet_amount || 0).toFixed(2)}</p>/<p className="text-green-500 font-bold">${Number(win_amount || 0).toFixed(2) }</p>
+        </div>
+      </>
     );
   }
 
@@ -88,10 +109,11 @@ const NFL = () => {
 
   const betsColumn = [
     { field: 'type', header: 'Bet Type', headerClassName: 'w-[120px]', template: BetTypeTemplate, hasTemplate: true },
-    { field: 'type', header: 'Wager Type', headerClassName: 'w-[150px]', template: WagerTypeTemplate, hasTemplate: true },
-    { field: 'type', header: 'Game Date', headerClassName: 'w-[100px]', template: BetDateTemplate, hasTemplate: true },
-    { field: '', header: 'Team', headerClassName: 'w-[420px]', template: BetTeamTemplate, hasTemplate: true },
-    { field: 'bet_amount', header: 'Bet Amount', template: BetAmountTemplate, hasTemplate: true },
+    { field: 'type', header: 'Wager Type', headerClassName: 'w-[130px]', template: WagerTypeTemplate, hasTemplate: true },
+    { field: 'type', header: 'Game', headerClassName: 'w-[100px]', template: BetDateTemplate, hasTemplate: true },
+    { field: '', header: 'Team', headerClassName: 'w-[450px]', template: BetTeamTemplate, hasTemplate: true },
+    { field: 'bet_amount', header: 'Bet Amount',headerClassName: 'w-[50px]', template: BetAmountTemplate, hasTemplate: true },
+    { field: '', header: 'Risking/Win', headerClassName: 'w-[100px]', template: RiskingWinTemplate, hasTemplate: true},
   ]
 
   const handleBetActionsClick = (value, type, betData) => {
@@ -196,6 +218,45 @@ const NFL = () => {
 
   const [modalWagerVisible, setModalWagerVisisble] = useState(false);
 
+  const getWagerTypeId = (wager_type) => {
+    let wager_type_id = 0;
+    switch(wager_type){
+      case 'spread': 
+        wager_type_id = 1;
+      break;
+      case 'total': 
+        wager_type_id = 2;
+      break;
+      case 'moneyline': 
+        wager_type_id = 3;
+      break;
+      default:
+      break;
+    }
+    return wager_type_id;
+  }
+
+  const handlePlaceBets = () => {
+    const updatedBets = bets.map((b) => ({
+      league_id: selectedLeague.id,
+      pool_id: 1,
+      wager_type_id: getWagerTypeId(b.type),
+      odd_id: b.data.odd.id,
+      game_id: b.data.id,
+      team_id: b.team.id,
+      team_name: b.team.name,
+      pick_odd: b.type === "moneyline" ? b.ml : b.points,
+      wager_amount: b.bet_amount,
+      bet_type: activeWagerType.value
+    }));
+    axiosService.post('/api/bets/wager', {bets: updatedBets}).then((response) => {
+      console.log(response);
+    }).catch((error) => {
+      console.log(error);
+    });
+
+  }
+
   useEffect(() => {
     getJoinedLeagues();
   }, []);
@@ -223,10 +284,13 @@ const NFL = () => {
           <div className="grid grid-cols-1 lg:grid-cols-6 gap-4">
             {wagerTypes.map((wt, i) => (
               <div key={i}
-                className={`cursor-pointer select-none rounded-lg shadow-lg border p-4 text-center hover:bg-primaryS hover:text-white ${activeWagerType.value === wt.value ? 'bg-primaryS text-white' : 'bg-white'}`}
+                aria-disabled={!wt.status}
+                className={`${wt.status ? 'cursor-pointer' : 'cursor-not-allowed'} select-none rounded-lg shadow-lg border p-4 text-center hover:bg-primaryS hover:text-white ${activeWagerType.value === wt.value ? 'bg-primaryS text-white' : 'bg-white'}`}
                 onClick={() => {
-                  setActiveWagerType(wt); 
-                  setBets([]);
+                  if(wt.status){
+                    setActiveWagerType(wt); 
+                    setBets([]);
+                  }
                 }}
               >
                 <h2 className="text-xl font-semibold">{wt.name}</h2>
@@ -268,10 +332,11 @@ const NFL = () => {
                 setSameAmountBet(e.value); 
                 handleGlobalBetAmountChange(e.value);
               }} 
+              minFractionDigits={2}
             />
           </div>
           
-          <Button label="Place Your Bets" className="w-full bg-primaryS rounded-lg border-primaryS ring-0 text-white" onClick={() => alert('Bet placed!')} />
+          <Button label="Place Your Bets" className="w-full bg-primaryS rounded-lg border-primaryS ring-0 text-white" onClick={handlePlaceBets} />
         </div>
       }}
         visible={modalWagerVisible} 
