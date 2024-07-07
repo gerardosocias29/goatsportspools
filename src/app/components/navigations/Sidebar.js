@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { AiOutlineDashboard } from "react-icons/ai";
 import { FaFootballBall, FaRunning, FaTrophy, FaUsers } from 'react-icons/fa';
-import { AiOutlineDown, AiOutlineUp } from "react-icons/ai"; // Importing icons for angle down and up
+import { FaCircleDollarToSlot } from "react-icons/fa6";
 
 const Sidebar = ({ currentUser, callback }) => {
   const navigate = useNavigate();
@@ -17,6 +17,8 @@ const Sidebar = ({ currentUser, callback }) => {
       case 'icon-users': return <FaUsers />;
       case 'icon-leagues': return <FaTrophy />;
       case 'icon-running': return <FaRunning />;
+      case 'icon-bet-history': return <FaCircleDollarToSlot />;
+      default: return null;
     }
   };
 

@@ -10,9 +10,11 @@ import Table from "../../../components/tables/Table";
 import { InputText } from "primereact/inputtext";
 import moment from "moment";
 import { InputNumber } from "primereact/inputnumber";
+import { useToast } from "../../../contexts/ToastContext";
 
 const NFL = () => {
   const axiosService = useAxios();
+  const showToast = useToast();
 
   const [refreshTable, setRefreshTable] = useState(false);
   const [bets, setBets] = useState([]);
@@ -236,7 +238,9 @@ const NFL = () => {
     return wager_type_id;
   }
 
+  const [placeBetButton, setPlaceBetButton] = useState(false);
   const handlePlaceBets = () => {
+    setPlaceBetButton(true);
     const updatedBets = bets.map((b) => ({
       league_id: selectedLeague.id,
       pool_id: 1,
@@ -250,9 +254,20 @@ const NFL = () => {
       bet_type: activeWagerType.value
     }));
     axiosService.post('/api/bets/wager', {bets: updatedBets}).then((response) => {
-      console.log(response);
+      if(response.data.status){
+        setModalWagerVisisble(false)
+        setBets([]);
+        setSameAmountBet(0);
+      }
+      showToast({
+        severity: response.data.status ? 'success' : 'danger',
+        summary: response.data.status ? 'Success!' : 'Failed!',
+        detail: response.data.message,
+      });
+      setPlaceBetButton(false);
     }).catch((error) => {
       console.log(error);
+      setPlaceBetButton(false);
     });
 
   }
@@ -336,12 +351,15 @@ const NFL = () => {
             />
           </div>
           
-          <Button label="Place Your Bets" className="w-full bg-primaryS rounded-lg border-primaryS ring-0 text-white" onClick={handlePlaceBets} />
+          <Button label="Place Your Bets" loading={placeBetButton} className="w-full bg-primaryS rounded-lg border-primaryS ring-0 text-white" onClick={handlePlaceBets} />
         </div>
       }}
         visible={modalWagerVisible} 
         draggable={false} maximizable={false} 
-        className="w-[95%] lg:w-2/3" onHide={() => setModalWagerVisisble(false)}>
+        className="w-[95%] lg:w-2/3" onHide={() => {
+          setModalWagerVisisble(false)
+          setSameAmountBet();
+        }}>
         <Table data={bets} 
           columns={betsColumn} 
           actions={true} action_types={{ delete: true }} actionsClicked={handleBetActionsClick}

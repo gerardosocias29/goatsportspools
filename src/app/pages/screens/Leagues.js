@@ -90,9 +90,22 @@ const Leagues = ({currentUser}) => {
     });
   }
 
+  const [leaguesCreated, setLeaguesCreated] = useState(0);
+  const getLeaguesCreated = () => {
+    axiosService.get('/api/leagues/leagues-created').then((response) => {
+      setLeaguesCreated(response.data.leagues_created);
+    }).catch((error) => {
+      console.log(error);
+    });
+  }
+
   useEffect(() => {
-    if(currentUser && currentUser.role_id != 1){
+    if(currentUser && currentUser.role_id !== 1){
       getLeaguesJoined();
+    }
+
+    if(currentUser && currentUser.role_id === 2){
+      getLeaguesCreated();
     }
   }, []);
 
@@ -121,7 +134,7 @@ const Leagues = ({currentUser}) => {
                   <div className="flex gap-4 w-full justify-center px-2">
                     <div>
                       <div className="flex flex-col items-center">
-                        <p className="text-4xl text-center">{totalLeagues}</p>
+                        <p className="text-4xl text-center">{currentUser && currentUser.role_id === 1 ? totalLeagues : leaguesCreated}</p>
                         <span className="text-sm min-w-[60px] text-center font-bold">Created</span>
                       </div>
                     </div>
@@ -145,7 +158,7 @@ const Leagues = ({currentUser}) => {
                     <div>
                       <div className="flex flex-col items-center">
                         <p className="text-4xl text-center">{leaguesJoined}</p>
-                        <span className="text-sm min-w-[60px] text-center font-bold">Leagues</span>
+                        <span className="text-sm min-w-[60px] text-center font-bold">Joined</span>
                       </div>
                     </div>
                   </div>
