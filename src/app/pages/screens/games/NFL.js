@@ -11,6 +11,7 @@ import { InputText } from "primereact/inputtext";
 import moment from "moment";
 import { InputNumber } from "primereact/inputnumber";
 import { useToast } from "../../../contexts/ToastContext";
+import { decimalToMixedFraction } from "../../../utils/numberFormat";
 
 const NFL = () => {
   const axiosService = useAxios();
@@ -151,11 +152,11 @@ const NFL = () => {
     if (!odd) { return '' }
     return (
       <div className="flex flex-col gap-4">
-        <Button label={odd.favored_points}
+        <Button label={decimalToMixedFraction(odd.favored_points)}
           className={`border-primaryS ring-0 text-primary hover:text-white hover:bg-primaryS w-full bg-transparent rounded-lg ${isBetSelected({ type: 'spread', team: odd.favored_team, points: odd.favored_points }) ? 'bg-primaryS text-white' : ''}`}
           onClick={() => handleBetClick({ type: 'spread', team: odd.favored_team, points: odd.favored_points, bet_amount: 0, data: data })}
         />
-        <Button label={odd.underdog_points}
+        <Button label={decimalToMixedFraction(odd.underdog_points)}
           className={`border-primaryS ring-0 text-primary hover:text-white hover:bg-primaryS w-full bg-transparent rounded-lg ${isBetSelected({ type: 'spread', team: odd.underdog_team, points: odd.underdog_points }) ? 'bg-primaryS text-white' : ''}`}
           onClick={() => handleBetClick({ type: 'spread', team: odd.underdog_team, points: odd.underdog_points, bet_amount: 0, data: data })}
         />
@@ -168,11 +169,11 @@ const NFL = () => {
     if (!odd) { return '' }
     return (
       <div className="flex flex-col gap-4">
-        <Button label={'o' + odd.over_total}
+        <Button label={'o' + decimalToMixedFraction(odd.over_total)}
           className={`border-primaryS ring-0 text-primary hover:text-white hover:bg-primaryS w-full bg-transparent rounded-lg ${isBetSelected({ type: 'total', team: 'over', points: odd.over_total }) ? 'bg-primaryS text-white' : ''}`}
           onClick={() => handleBetClick({ type: 'total', team: 'over', points: odd.over_total, bet_amount: 0, data: data })}
         />
-        <Button label={'u' + odd.under_total}
+        <Button label={'u' + decimalToMixedFraction(odd.under_total)}
           className={`border-primaryS ring-0 text-primary hover:text-white hover:bg-primaryS w-full bg-transparent rounded-lg ${isBetSelected({ type: 'total', team: 'under', points: odd.under_total }) ? 'bg-primaryS text-white' : ''}`}
           onClick={() => handleBetClick({ type: 'total', team: 'under', points: odd.under_total, bet_amount: 0, data: data })}
         />
