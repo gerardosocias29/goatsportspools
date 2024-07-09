@@ -33,7 +33,7 @@ const BetHistory = () => {
     const { game, team } = rowData;
 
     const gameID = game.id;
-    const pointsLabel = rowData.wager_type_id === 2 ? ( rowData.team === 0 ? `TOTAL o${rowData.picked_odd}` : `TOTAL u${rowData.picked_odd}`) : rowData.wager_type_id === 3 ? `[${rowData.picked_odd}]` : `[${decimalToMixedFraction(rowData.picked_odd)}]`;
+    const pointsLabel = rowData.wager_type_id === 2 ? ( rowData.team_id === 0 ? `TOTAL o${rowData.picked_odd}` : `TOTAL u${rowData.picked_odd}`) : rowData.wager_type_id === 3 ? `[${rowData.picked_odd}]` : `[${decimalToMixedFraction(rowData.picked_odd)}]`;
     const totalLabel = rowData.wager_type_id === 2 ? ( `(${rowData.odd.favored_team.nickname} vs. ${rowData.odd.underdog_team.nickname})`) : '';
 
     return <p>NFL [{gameID}] <span className="font-bold">{team?.name} {pointsLabel}</span> {totalLabel}</p>
