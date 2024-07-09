@@ -58,7 +58,7 @@ const NFL = () => {
     const { type, team, points, data, ml } =  bet || {};
     
     const gameID = data.id;
-    const pointsLabel = type === 'total' ? ( data && data.team === 'over' ? `TOTAL o${points}` : `TOTAL u${points}`) : type === 'moneyline' ? `[${ml}]` : `[${points}]`;
+    const pointsLabel = type === 'total' ? ( data && data.team === 'over' ? `TOTAL o${points}` : `TOTAL u${points}`) : type === 'moneyline' ? `[${ml}]` : `[${decimalToMixedFraction(points)}]`;
     const totalLabel = type === "total" ? (data && `(${data.odd.favored_team.nickname} vs. ${data.odd.underdog_team.nickname})`) : '';
     return <div className="flex items-center gap-2">NFL [{gameID}] <p className="font-bold">{team.name} {pointsLabel}</p> {totalLabel}</div>;
   }
@@ -248,7 +248,7 @@ const NFL = () => {
       wager_type_id: getWagerTypeId(b.type),
       odd_id: b.data.odd.id,
       game_id: b.data.id,
-      team_id: b.team.id,
+      team_id: b.team === "under" ? -1 : (b.team === "over" ? 0 : b.team.id),
       team_name: b.team.name,
       pick_odd: b.type === "moneyline" ? b.ml : b.points,
       wager_amount: b.bet_amount,

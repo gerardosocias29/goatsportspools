@@ -42,7 +42,7 @@ const LazyTable = ({
     customActionsWidth = '200px',
     rowLimit = null,
     scrollable = false,
-    scrollHeight = '400px'
+    scrollHeight = null
   }) => {
     
   const { showToast, clearToast } = useToast();
@@ -385,6 +385,11 @@ const LazyTable = ({
     return (check === undefined || check === null || check === false) ? 'MdKeyboardDoubleArrowRight' : 'MdKeyboardDoubleArrowDown';
   }
 
+  const getNestedValue = (obj, path) => {
+    return path.split('.').reduce((acc, part) => acc && acc[part], obj);
+  };
+  
+
   return (
   <BlockUI blocked={blocked} className="flex items-start important-bg-white backdrop-blur-sm z-[0]" 
     // pt={{mask:{className:'bg-[rgba(0,0,0,0)]'}}}
@@ -478,7 +483,7 @@ const LazyTable = ({
               field={col.field} 
               header={col.header}
               style={col.headerStyle}
-              body={(data) => col.hasTemplate ? renderTemplate(data[col.field], col.template, data, col.field) : data[col.field]}
+              body={(data) => col.hasTemplate ? renderTemplate(getNestedValue(data, col.field), col.template, data, col.field) : getNestedValue(data, col.field)}
             />)
             return column1;
           })
