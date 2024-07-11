@@ -62,7 +62,7 @@ const Sidebar = ({ currentUser, callback }) => {
                 <i className={`pi pi-angle-up transition ${expandedItem === index ? 'rotate-180' : ''}`} />
                 
               </div>
-              {expandedItem === index && (
+              {(expandedItem === index || e.sub_modules.filter((e) => e.page === currentPage).length > 0) && (
                 <ul className="w-full">
                   {e.sub_modules.map((sub, i) => (
                     <li key={i} onClick={() => navigateToPage(sub.page)}

@@ -12,6 +12,7 @@ import moment from "moment";
 import { InputNumber } from "primereact/inputnumber";
 import { useToast } from "../../../contexts/ToastContext";
 import { decimalToMixedFraction } from "../../../utils/numberFormat";
+import convertUTCToTimeZone from "../../../utils/utcToTimezone";
 
 const NFL = () => {
   const axiosService = useAxios();
@@ -51,7 +52,7 @@ const NFL = () => {
   }
 
   const BetDateTemplate = (value, game) => {
-    return <div className="text-center">{moment(game.data?.game_datetime).format('MMM DD')}</div>
+    return <div className="text-center">{convertUTCToTimeZone(game.game_datetime, 'MMM DD hh:mmA')}</div>
   }
 
   const BetTeamTemplate = (value, bet, field) => {

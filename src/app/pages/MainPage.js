@@ -12,6 +12,7 @@ import Users from "./screens/Users";
 import Leagues from "./screens/Leagues";
 import NFL from "./screens/games/NFL";
 import BetHistory from "./screens/BetHistory";
+import ManageGames from "./screens/settings/ManageGames";
 
 const MainPage = () => {
   const axiosService = useAxios();  
@@ -62,6 +63,8 @@ const MainPage = () => {
         return <Leagues currentUser={currentUser}/>
       case 'bet-history':
         return <BetHistory currentUser={currentUser}/>
+      case 'settings/game-management':
+        return <ManageGames currentUser={currentUser}/>
       default:
         return (
           <NotFound/>
