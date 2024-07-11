@@ -62,7 +62,7 @@ const Leagues = ({currentUser}) => {
     return (
       <div className="flex justify-end gap-1">
         {
-          currentUser && currentUser.role_id != 3 && currentUser.id == data.user_id && (
+          currentUser && (currentUser.role_id != 3) && (
             <Button className="text-white bg-primary rounded-lg text-sm" icon="pi pi-pencil text-sm" tooltip="Edit" data-pr-position="top" onClick={(e) => handleActionsClick(data.id, 'edit', data) }/>
           )
         }
@@ -75,6 +75,7 @@ const Leagues = ({currentUser}) => {
         }
 
         {
+          currentUser.role_id != 1 &&
           data.has_joined && <Button className="text-white bg-green-700 border-green-700 rounded-lg text-sm w-[110px]" disabled label="Joined"/>
         }
       </div>

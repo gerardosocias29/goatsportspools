@@ -34,7 +34,7 @@ export default function LeagueModal({
         }
 
         if(data && data.id != ""){
-            axiosService.patch('/api/leagues/update/'+ (data && data.id || ''), {
+            axiosService.post('/api/leagues/update/'+ (data && data.id || ''), {
                 name: leagueName,
                 user_id: leagueAdmin && leagueAdmin.id || currentUser.id,
                 password: leaguePassword,
