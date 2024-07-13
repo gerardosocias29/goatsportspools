@@ -101,10 +101,7 @@ const Leagues = ({currentUser}) => {
   }
 
   useEffect(() => {
-    if(currentUser && currentUser.role_id !== 1){
-      getLeaguesJoined();
-    }
-
+    getLeaguesJoined();
     if(currentUser && currentUser.role_id === 2){
       getLeaguesCreated();
     }

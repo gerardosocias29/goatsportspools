@@ -9,7 +9,6 @@ export function decimalToMixedFraction(decimal) {
     "0.33": "⅓",
     "0.66": "⅔",
     "0.125": "⅛",
-    "0.75": "¾"
     // Add more fractions if needed
   };
 

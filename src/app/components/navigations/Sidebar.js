@@ -67,7 +67,7 @@ const Sidebar = ({ currentUser, callback }) => {
                   {e.sub_modules.map((sub, i) => (
                     <li key={i} onClick={() => navigateToPage(sub.page)}
                       className={`${currentPage === sub.page ? 'bg-background text-white' : ''}
-                        py-2 px-4 cursor-pointer flex gap-2 items-center ml-6 border-l hover:border-background rounded-lg hover:border transition
+                        m-2 py-2 px-4 cursor-pointer flex gap-2 items-center ml-6 border-l hover:border-background rounded-lg hover:border transition
                       `}
                     >
                       {changeIcon(sub.icon)} {sub.name}

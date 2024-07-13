@@ -1,6 +1,7 @@
 import moment from "moment";
 import LazyTable from "../../components/tables/LazyTable";
 import { decimalToMixedFraction } from "../../utils/numberFormat";
+import convertUTCToTimeZone from "../../utils/utcToTimezone";
 
 const BetHistory = () => {
 
@@ -9,7 +10,7 @@ const BetHistory = () => {
   }
 
   const GameDateTemplate = (value) => {
-    return <p className="text-center">{moment(value).format('MMM DD hh:mm A')}</p>
+    return <p className="text-center">{convertUTCToTimeZone(value, 'MMM DD hh:mmA')}</p>
   }
 
   const RiskWinTemplate = (value, rowData, field) => {
@@ -17,7 +18,7 @@ const BetHistory = () => {
   }
 
   const WinLossTemplate = (value, rowData, field) => {
-    const amount = rowData.status === "win" ? "$" + Number(rowData.wager_win_amount).toFixed(2) : (rowData.status === "lose" ? "$" +Number(rowData.wager_amount).toFixed(2) : '-')
+    const amount = rowData.wager_result === "win" ? "$" + Number(rowData.wager_win_amount).toFixed(2) : (rowData.wager_result === "lose" ? "-$" +Number(rowData.wager_amount).toFixed(2) : '-')
     return <p className="text-center font-bold">{amount}</p>
   }
 
@@ -33,19 +34,43 @@ const BetHistory = () => {
     const { game, team } = rowData;
 
     const gameID = game.id;
-    const pointsLabel = rowData.wager_type_id === 2 ? ( rowData.team_id === 0 ? `TOTAL o${rowData.picked_odd}` : `TOTAL u${rowData.picked_odd}`) : rowData.wager_type_id === 3 ? `[${rowData.picked_odd}]` : `[${decimalToMixedFraction(rowData.picked_odd)}]`;
-    const totalLabel = rowData.wager_type_id === 2 ? ( `(${rowData.odd.favored_team.nickname} vs. ${rowData.odd.underdog_team.nickname})`) : '';
 
+
+    let favoredTeamId = rowData.odd.favored_team.id;
+    let underdogTeamId = rowData.odd.underdog_team.id;
+    let favoredTeamNickname = '';
+    let favoredTeamScore = '';
+    let underdogTeamNickname = '';
+    let underdogTeamScore = '';
+
+    if (favoredTeamId === game.home_team_id) {
+      favoredTeamNickname = game.home_team.nickname;
+      favoredTeamScore = game.home_team_score;
+    } else if (favoredTeamId === game.visitor_team_id) {
+      favoredTeamNickname = game.visitor_team.nickname;
+      favoredTeamScore = game.visitor_team_score;
+    }
+    if (underdogTeamId === game.home_team_id) {
+      underdogTeamNickname = game.home_team.nickname;
+      underdogTeamScore = game.home_team_score;
+    } else if (underdogTeamId === game.visitor_team_id) {
+      underdogTeamNickname = game.visitor_team.nickname;
+      underdogTeamScore = game.visitor_team_score;
+    }
+
+    const pointsLabel = rowData.wager_type_id === 2 ? ( rowData.team_id === 0 ? `TOTAL o${rowData.picked_odd}` : `TOTAL u${rowData.picked_odd}`) : rowData.wager_type_id === 3 ? `[${rowData.picked_odd}]` : `[${decimalToMixedFraction(rowData.picked_odd)}]`;
+    const totalLabel = ( `(${favoredTeamNickname} - ${favoredTeamScore} vs. ${underdogTeamNickname} - ${underdogTeamScore})`);
     return <p>NFL [{gameID}] <span className="font-bold">{team?.name} {pointsLabel}</span> {totalLabel}</p>
   }
 
   const betsColumn = [
     { field: 'ticket_number', header: 'Ticket #', headerClassName: 'w-[120px]', template: TicketNumberTemplate, hasTemplate: true },
-    { field: 'game.game_datetime', header: 'Game Date', headerClassName: 'w-[130px]', template: GameDateTemplate, hasTemplate: true },
+    { field: 'wager_type.name', header: 'Type', headerClassName: 'w-[120px]', template: TicketNumberTemplate, hasTemplate: false },
+    { field: 'game.game_datetime', header: 'Game Date', headerClassName: 'w-[100px]', template: GameDateTemplate, hasTemplate: true },
     { field: 'team.name', header: 'Description', headerClassName: 'w-[450px]', template: DescriptionTemplate, hasTemplate: true },
     { field: 'wager_amount', header: 'Risk/Win', headerClassName: 'w-[130px]', template: RiskWinTemplate, hasTemplate: true },
-    { field: 'wager_amount', header: 'Win/Loss Amount', headerClassName: 'w-[120px]', template: WinLossTemplate, hasTemplate: true },
-    { field: 'status', header: 'Result', headerClassName: 'w-[130px]', template: ResultTemplate, hasTemplate: true },
+    { field: '', header: 'Win/Loss Amount', headerClassName: 'w-[120px]', template: WinLossTemplate, hasTemplate: true },
+    { field: 'wager_result', header: 'Result', headerClassName: 'w-[130px]', template: ResultTemplate, hasTemplate: true },
     { field: 'created_at', header: 'Date Placed', headerClassName: 'w-[130px]', template: DatePlaceTemplate, hasTemplate: true },
   ];
 

@@ -6,6 +6,7 @@ import moment from "moment";
 import { decimalToMixedFraction } from "../../../utils/numberFormat";
 import { TeamTemplate } from "../games/NFLTemplates";
 import convertUTCToTimeZone from "../../../utils/utcToTimezone";
+import AnnounceWinnerModal from "../../../components/modals/settings/AnnounceWinnerModal";
 
 const ManageGames = () => {
 
@@ -23,7 +24,7 @@ const ManageGames = () => {
     const { odd } = game;
     const { favored_team, favored_points, favored_ml } = odd;
 
-    return <div className="flex items-center gap-2 justify-center">
+    return <div className="flex items-center gap-2 justify-center select-none">
       <div className="flex flex-col items-center gap-2 p-4 rounded-lg">
         <div className="flex items-center gap-2">
           <img src={favored_team.image_url} alt={favored_team.name} className="w-[50px]"/>
@@ -43,7 +44,7 @@ const ManageGames = () => {
     const { odd } = game;
     const { underdog_team, underdog_points, underdog_ml } = odd;
 
-    return <div className="flex items-center gap-2 justify-center">
+    return <div className="flex items-center gap-2 justify-center select-none">
       <div className="flex flex-col items-center gap-2 p-4 rounded-lg">
         <div className="flex items-center gap-2">
           <img src={underdog_team.image_url} alt={underdog_team.name} className="w-[50px]"/>
@@ -63,7 +64,7 @@ const ManageGames = () => {
     const { odd } = game;
     const { over_total, under_total } = odd;
 
-    return <div className="flex items-center gap-2 justify-center">
+    return <div className="flex items-center gap-2 justify-center select-none">
       <div className="flex flex-col items-center gap-2 p-4 rounded-lg">
         <div className="flex gap-2 items-center py-1 px-4 border rounded-lg shadow-md w-[120px] justify-center">
           <span className="font-bold">Over: </span>{decimalToMixedFraction(over_total)}
@@ -76,7 +77,7 @@ const ManageGames = () => {
   }
 
   const GameOddTemplate = (value) => {
-    return <div className="flex items-center gap-2 justify-center">
+    return <div className="flex items-center gap-2 justify-center select-none">
       <div className="flex flex-col items-center gap-2 p-4 rounded-lg">
         <div className="flex gap-2 items-center py-1 px-4 border rounded-lg shadow-md w-[70px] justify-center">
           <span className="font-bold">{value}</span>
@@ -95,11 +96,18 @@ const ManageGames = () => {
     { field: 'standard_odd', header: 'Game Odd',template: GameOddTemplate,        hasTemplate: true, headerClassName: 'w-[120px]', headerStyle: { minWidth: '100px' } },
   ];
 
+  const [announceWinnerModal, setAnnounceWinnerModal] = useState(false);
+  const [announceWinnerData, setAnnounceWinnerData] = useState();
+
   const customActions = (data) => {
     return (
       <div className="flex justify-end gap-1">
         <Button className="text-white bg-primary rounded-lg text-sm" icon="pi pi-pencil text-sm" tooltip="Edit" data-pr-position="top" onClick={(e) => {}}/>
-        <Button className="text-white bg-primaryS border-primaryS rounded-lg text-sm" label="Announce Winner" onClick={(e) => {} }/>
+        <Button className="text-white bg-primaryS border-primaryS rounded-lg text-sm" label="Announce Winner" onClick={(e) => {
+          setAnnounceWinnerData(data);
+          setAnnounceWinnerModal(true);
+          console.log(data);
+        } }/>
       </div>
     );
   }
@@ -128,6 +136,12 @@ const ManageGames = () => {
           hasOptions={true}
         />
       </div>
+
+      <AnnounceWinnerModal 
+        visible={announceWinnerModal}
+        data={announceWinnerData}
+        onHide={() => setAnnounceWinnerModal(false)}
+      />
     </div>
   );
 }
