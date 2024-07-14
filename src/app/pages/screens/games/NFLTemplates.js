@@ -7,14 +7,22 @@ export const TeamTemplate = (value, data, field) => {
   if(!odd){ return '' }
   return (
     <div className="flex flex-col gap-1 justify-center text-center items-center select-none">
-      <div className="flex items-center gap-2 border rounded-lg shadow-md px-4">
+      <div className="flex items-center gap-2 border rounded-lg shadow-md px-4 min-w-[250px]" style={{
+        backgroundImage: `url(${odd.favored_team.background_url})`,
+        backgroundSize: 'cover', // Ensures the image covers the entire div
+        backgroundPosition: 'center', // Centers the image within the div
+      }}>
         <img src={odd.favored_team.image_url} alt={odd.favored_team.name} className="w-[50px]"/>
-        <p className="font-bold select-none">{odd.favored_team.name}</p>
+        <p className="font-bold text-white select-none">{odd.favored_team.name}</p>
       </div>
       <p className='text-sm font-bold'>vs</p>
-      <div className="flex items-center gap-2 border rounded-lg shadow-md px-4">
+      <div className="flex items-center gap-2 border rounded-lg shadow-md px-4 min-w-[250px]" style={{
+        backgroundImage: `url(${odd.underdog_team.background_url})`,
+        backgroundSize: 'cover', // Ensures the image covers the entire div
+        backgroundPosition: 'center', // Centers the image within the div
+      }}>
         <img src={odd.underdog_team.image_url} alt={odd.underdog_team.name} className="w-[50px]"/>
-        <p className="font-bold select-none">{odd.underdog_team.name}</p>
+        <p className="font-bold text-white select-none">{odd.underdog_team.name}</p>
       </div>
     </div>
   );
