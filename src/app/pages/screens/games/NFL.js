@@ -262,7 +262,7 @@ const NFL = () => {
         setSameAmountBet(0);
       }
       showToast({
-        severity: response.data.status ? 'success' : 'danger',
+        severity: response.data.status ? 'success' : 'error',
         summary: response.data.status ? 'Success!' : 'Failed!',
         detail: response.data.message,
       });
