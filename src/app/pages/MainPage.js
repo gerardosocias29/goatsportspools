@@ -44,6 +44,14 @@ const MainPage = () => {
     }
   }, [apiToken, isLoggedIn])
 
+  const refreshCurrentUser = () => {
+    axiosService.get('/api/me_user').then((response) => {
+      setCurrentUser(response.data.user);
+    }).catch((error) => {
+      // logout();
+    });
+  }
+
   const renderPage = () => {
     const modules = currentUser && currentUser.modules.map((e) => e.page);
     if(modules && modules.includes(currentPage)){
@@ -56,13 +64,13 @@ const MainPage = () => {
       case 'dashboard': 
         return <Dashboard/>
       case 'games/nfl': 
-        return <NFL/>
+        return <NFL refreshCurrentUser={refreshCurrentUser}/>
       case 'users': 
         return <Users/>
       case 'leagues':
-        return <Leagues currentUser={currentUser}/>
+        return <Leagues currentUser={currentUser} refreshCurrentUser={refreshCurrentUser}/>
       case 'bet-history':
-        return <BetHistory currentUser={currentUser}/>
+        return <BetHistory currentUser={currentUser} refreshCurrentUser={refreshCurrentUser}/>
       case 'settings/game-management':
         return <ManageGames currentUser={currentUser}/>
       default:

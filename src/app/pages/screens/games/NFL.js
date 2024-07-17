@@ -14,7 +14,7 @@ import { useToast } from "../../../contexts/ToastContext";
 import { decimalToMixedFraction } from "../../../utils/numberFormat";
 import convertUTCToTimeZone from "../../../utils/utcToTimezone";
 
-const NFL = () => {
+const NFL = ({refreshCurrentUser}) => {
   const axiosService = useAxios();
   const showToast = useToast();
 
@@ -28,6 +28,12 @@ const NFL = () => {
 
   const [activeWagerType, setActiveWagerType] = useState(wagerTypes[0]);
   const [sameAmountBet, setSameAmountBet] = useState(0);
+
+  const isFiveMinutesBeforeGame = (gameDatetime) => {
+    const currentUtcTime = moment.utc();
+    const gameTime = moment.utc(gameDatetime);
+    return currentUtcTime.isSameOrAfter(gameTime.subtract(5, 'minutes'));
+  }
 
   const BetTypeTemplate = () => {
     return <div className="text-center">{activeWagerType.name}</div>
@@ -153,11 +159,11 @@ const NFL = () => {
     if (!odd) { return '' }
     return (
       <div className="flex flex-col gap-4">
-        <Button label={decimalToMixedFraction(odd.favored_points)}
+        <Button disabled={isFiveMinutesBeforeGame(data.game_datetime)} label={decimalToMixedFraction(odd.favored_points)}
           className={`border-primaryS ring-0 text-primary hover:text-white hover:bg-primaryS w-full bg-transparent rounded-lg ${isBetSelected({ type: 'spread', team: odd.favored_team, points: odd.favored_points }) ? 'bg-primaryS text-white' : ''}`}
           onClick={() => handleBetClick({ type: 'spread', team: odd.favored_team, points: odd.favored_points, bet_amount: 0, data: data })}
         />
-        <Button label={decimalToMixedFraction(odd.underdog_points)}
+        <Button disabled={isFiveMinutesBeforeGame(data.game_datetime)} label={decimalToMixedFraction(odd.underdog_points)}
           className={`border-primaryS ring-0 text-primary hover:text-white hover:bg-primaryS w-full bg-transparent rounded-lg ${isBetSelected({ type: 'spread', team: odd.underdog_team, points: odd.underdog_points }) ? 'bg-primaryS text-white' : ''}`}
           onClick={() => handleBetClick({ type: 'spread', team: odd.underdog_team, points: odd.underdog_points, bet_amount: 0, data: data })}
         />
@@ -170,11 +176,11 @@ const NFL = () => {
     if (!odd) { return '' }
     return (
       <div className="flex flex-col gap-4">
-        <Button label={'o' + decimalToMixedFraction(odd.over_total)}
+        <Button disabled={isFiveMinutesBeforeGame(data.game_datetime)} label={'o' + decimalToMixedFraction(odd.over_total)}
           className={`border-primaryS ring-0 text-primary hover:text-white hover:bg-primaryS w-full bg-transparent rounded-lg ${isBetSelected({ type: 'total', team: 'over', points: odd.over_total }) ? 'bg-primaryS text-white' : ''}`}
           onClick={() => handleBetClick({ type: 'total', team: 'over', points: odd.over_total, bet_amount: 0, data: data })}
         />
-        <Button label={'u' + decimalToMixedFraction(odd.under_total)}
+        <Button disabled={isFiveMinutesBeforeGame(data.game_datetime)} label={'u' + decimalToMixedFraction(odd.under_total)}
           className={`border-primaryS ring-0 text-primary hover:text-white hover:bg-primaryS w-full bg-transparent rounded-lg ${isBetSelected({ type: 'total', team: 'under', points: odd.under_total }) ? 'bg-primaryS text-white' : ''}`}
           onClick={() => handleBetClick({ type: 'total', team: 'under', points: odd.under_total, bet_amount: 0, data: data })}
         />
@@ -187,11 +193,11 @@ const NFL = () => {
     if (!odd) { return '' }
     return (
       <div className="flex flex-col gap-4">
-        <Button label={odd.favored_ml}
+        <Button disabled={isFiveMinutesBeforeGame(data.game_datetime)} label={odd.favored_ml}
           className={`border-primaryS ring-0 text-primary hover:text-white hover:bg-primaryS w-full bg-transparent rounded-lg ${isBetSelected({ type: 'moneyline', team: odd.favored_team, ml: odd.favored_ml }) ? 'bg-primaryS text-white' : ''}`}
           onClick={() => handleBetClick({ type: 'moneyline', team: odd.favored_team, ml: odd.favored_ml, bet_amount: 0, data: data })}
         />
-        <Button label={odd.underdog_ml}
+        <Button disabled={isFiveMinutesBeforeGame(data.game_datetime)} label={odd.underdog_ml}
           className={`border-primaryS ring-0 text-primary hover:text-white hover:bg-primaryS w-full bg-transparent rounded-lg ${isBetSelected({ type: 'moneyline', team: odd.underdog_team, ml: odd.underdog_ml }) ? 'bg-primaryS text-white' : ''}`}
           onClick={() => handleBetClick({ type: 'moneyline', team: odd.underdog_team, ml: odd.underdog_ml, bet_amount: 0, data: data })}
         />
@@ -267,6 +273,7 @@ const NFL = () => {
         detail: response.data.message,
       });
       setPlaceBetButton(false);
+      refreshCurrentUser();
     }).catch((error) => {
       console.log(error);
       setPlaceBetButton(false);
@@ -330,7 +337,11 @@ const NFL = () => {
           />
         </div>
         <div className="flex items-center justify-end ">
-          <Button label="Continue" className="mt-5 rounded-lg bg-background text-white border-background ring-0 w-[200px]" onClick={() => setModalWagerVisisble(true)} />
+          <Button label="Continue" 
+            disabled={!selectedLeague}
+            className="mt-5 rounded-lg bg-background text-white border-background ring-0 w-[200px]" 
+            onClick={() => selectedLeague && setModalWagerVisisble(true)} 
+          />
         </div>
       </div>
       <Dialog header="Your Bets" footer={() => {

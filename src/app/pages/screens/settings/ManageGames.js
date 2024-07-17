@@ -93,7 +93,7 @@ const ManageGames = () => {
     { field: '', header: 'Favored Odd',         template: FavoredOddTemplate,     hasTemplate: true, headerClassName: 'w-[290px]', headerStyle: { minWidth: '150px' } },
     { field: '', header: 'Underdog Odd',        template: UnderdogOddTemplate,    hasTemplate: true, headerClassName: 'w-[290px]', headerStyle: { minWidth: '150px' } },
     { field: '', header: 'Total Points Odd',    template: TotalPointsOddTemplate, hasTemplate: true, headerClassName: 'w-[290px]', headerStyle: { minWidth: '150px' } },
-    { field: 'standard_odd', header: 'Game Odd',template: GameOddTemplate,        hasTemplate: true, headerClassName: 'w-[120px]', headerStyle: { minWidth: '100px' } },
+    // { field: 'standard_odd', header: 'Game Odd',template: GameOddTemplate,        hasTemplate: true, headerClassName: 'w-[120px]', headerStyle: { minWidth: '100px' } },
   ];
 
   const [announceWinnerModal, setAnnounceWinnerModal] = useState(false);

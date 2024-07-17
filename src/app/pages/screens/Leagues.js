@@ -5,7 +5,7 @@ import LazyTable from "../../components/tables/LazyTable";
 import LeagueJoin from "../../components/modals/LeagueJoin";
 import { useAxios } from "../../contexts/AxiosContext";
 
-const Leagues = ({currentUser}) => {
+const Leagues = ({currentUser, refreshCurrentUser}) => {
   const axiosService = useAxios();
   const [leagueModalVisible, setModalLeagueVisible] = useState(false);
 
@@ -111,6 +111,7 @@ const Leagues = ({currentUser}) => {
     setRefreshTable(true);
     if(currentUser && currentUser.role_id != 1){
       getLeaguesJoined();
+      refreshCurrentUser();
     }
   }
 

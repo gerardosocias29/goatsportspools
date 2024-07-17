@@ -33,21 +33,18 @@ const Navbar = ({currentUser}) => {
                   </PrimeSidebar>
                   <Button className="bg-transparent text-primary border-none" icon="pi pi-bars" onClick={() => setVisible(true)} />
                 </div>
-                <a href="https://goatsportspools.com" className="flex gap-2 items-center">
+                <a href="https://goatsportspools.com" target="_blank" className="flex gap-2 items-center">
                   <img className="h-8 w-auto" src="/assets/images/favicon.png" alt="GoatSportsPools" />
                   <div className="font-bold">GoatSportsPools</div>
                 </a>
                 
               </div>
+
+              <div>
+                <p>Balance: {Number(currentUser && currentUser.balance).toFixed(2)}</p>
+              </div>
              
               <div className="flex items-center">
-                {/* <div className="hover:cursor-pointer select-none gap-2 flex flex-column items-center" onClick={(e) => menu.current.toggle(e)}>
-                  <Avatar image={currentUser && currentUser.avatar} className="border" color="white" icon="pi pi-user" size="large" shape="circle" style={{ backgroundColor: '#CDCECF' }} />
-                  <TieredMenu model={items} popup ref={menu}/>
-                  <span className="hidden lg:block leading-[1.5rem]">
-                    <span>{currentUser && currentUser.name || ''}</span>
-                  </span>
-                </div> */}
                 {
                   isSignedIn && (
                     <div className="flex items-center gap-4">
