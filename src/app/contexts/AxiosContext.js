@@ -10,7 +10,7 @@ export const useAxios = () => {
 };
 
 export const AxiosProvider = ({ children }) => {
-  const { apiToken } = useContext(AuthContext);
+  const { apiToken, logout } = useContext(AuthContext);
   const [session, setSession] = useState(Cookies.get('__session'));
 
   useEffect(() => {
@@ -33,6 +33,21 @@ export const AxiosProvider = ({ children }) => {
       'Content-Type': 'application/json',
     },
   });
+
+  axiosInstance.interceptors.response.use(
+    (response) => response,
+    (error) => {
+      if (
+        error.response &&
+        error.response.status === 401 &&
+        error.response.data.message === 'Unauthenticated.'
+      ) {
+        logout();
+      }
+
+      return Promise.reject(error);
+    }
+  );
 
   // Interceptor to dynamically set the Authorization header
   axiosInstance.interceptors.request.use((config) => {
