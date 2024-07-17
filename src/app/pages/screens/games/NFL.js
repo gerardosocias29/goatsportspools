@@ -219,7 +219,7 @@ const NFL = ({refreshCurrentUser}) => {
     axiosService.get('/api/leagues/joined').then((response) => {
       if (response.data.status) {
         setJoinedLeagues(response.data.leagues_joined);
-        setSelectedLeague(response.data.leagues_joined[0] || []);
+        setSelectedLeague(response.data.leagues_joined[0] || null);
       }
     }).catch((error) => {
       console.log(error);
@@ -337,7 +337,7 @@ const NFL = ({refreshCurrentUser}) => {
           />
         </div>
         <div className="flex items-center justify-end ">
-          <Button label="Continue" 
+          <Button label={`Continue`}
             disabled={!selectedLeague}
             className="mt-5 rounded-lg bg-background text-white border-background ring-0 w-[200px]" 
             onClick={() => selectedLeague && setModalWagerVisisble(true)} 
