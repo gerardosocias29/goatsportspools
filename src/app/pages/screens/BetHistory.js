@@ -58,7 +58,7 @@ const BetHistory = () => {
       underdogTeamScore = game.visitor_team_score;
     }
 
-    const pointsLabel = rowData.wager_type_id === 2 ? ( rowData.team_id === 0 ? `TOTAL o${rowData.picked_odd}` : `TOTAL u${rowData.picked_odd}`) : rowData.wager_type_id === 3 ? `[${rowData.picked_odd}]` : `[${decimalToMixedFraction(rowData.picked_odd)}]`;
+    const pointsLabel = rowData.wager_type_id === 2 ? ( rowData.team_id === 0 ? `TOTAL o${decimalToMixedFraction(rowData.picked_odd)}` : `TOTAL u${decimalToMixedFraction(rowData.picked_odd)}`) : rowData.wager_type_id === 3 ? `[${decimalToMixedFraction(rowData.picked_odd, true)}]` : `[${decimalToMixedFraction(rowData.picked_odd, true)}]`;
     const totalLabel = ( `(${favoredTeamNickname} - ${favoredTeamScore} vs. ${underdogTeamNickname} - ${underdogTeamScore})`);
     return <p>NFL [{gameID}] <span className="font-bold">{team?.name} {pointsLabel}</span> {totalLabel}</p>
   }

@@ -31,10 +31,10 @@ const ManageGames = () => {
           <p className="font-bold select-none">{favored_team.nickname}</p>
         </div>
         <div className="flex gap-2 items-center py-1 px-4 border rounded-lg shadow-md">
-          <span className="font-bold">Spread: </span>{decimalToMixedFraction(favored_points)}
+          <span className="font-bold">Spread: </span>{decimalToMixedFraction(favored_points, true)}
         </div>
         <div className="flex gap-2 items-center py-1 px-4 border rounded-lg shadow-md">
-          <span className="font-bold">Money Line: </span>{decimalToMixedFraction(favored_ml)}
+          <span className="font-bold">Money Line: </span>{decimalToMixedFraction(favored_ml, true)}
         </div>
       </div>
     </div>
@@ -51,10 +51,10 @@ const ManageGames = () => {
           <p className="font-bold select-none">{underdog_team.nickname}</p>
         </div>
         <div className="flex gap-2 items-center py-1 px-4 border rounded-lg shadow-md">
-          <span className="font-bold">Spread: </span>{decimalToMixedFraction(underdog_points)}
+          <span className="font-bold">Spread: </span>{decimalToMixedFraction(underdog_points, true)}
         </div>
         <div className="flex gap-2 items-center py-1 px-4 border rounded-lg shadow-md">
-          <span className="font-bold">Money Line: </span>{decimalToMixedFraction(underdog_ml)}
+          <span className="font-bold">Money Line: </span>{decimalToMixedFraction(underdog_ml, true)}
         </div>
       </div>
     </div>
