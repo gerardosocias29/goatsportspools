@@ -289,6 +289,9 @@ const NFL = ({refreshCurrentUser}) => {
     <div className="flex flex-col gap-5 p-5" id="NFL">
       <div className="flex items-center gap-2 justify-between">
         <div className="text-primary text-3xl font-semibold">NFL</div>
+        <div>
+          <p className="font-bold text-primary">Balance: {Number(selectedLeague && selectedLeague.balance).toFixed(2)}</p>
+        </div> 
         <div className="flex items-center gap-4">
           <p className="font-bold text-primary">League: </p>
           <Dropdown 

@@ -26,15 +26,15 @@ const Leagues = ({currentUser, refreshCurrentUser}) => {
     });
   }
 
-  const createdByTemplate = (data) => {
-    return data.name
+  const LeagueBalanceTemplate = (data) => {
+    return <p className="text-center">{data}</p>
   }
 
   const [refreshTable, setRefreshTable] = useState(false);
   const leagueColumns = [
     { field: 'league_id', header: 'League ID' },
     { field: 'name', header: 'League Name' },
-    { field: 'location', header: 'League Location' },
+    { field: 'balance', header: 'Your League Balance', template: LeagueBalanceTemplate, hasTemplate: true },
     // { field: 'created_by', header: 'Created By', template:createdByTemplate, hasTemplate:true },
   ];
 

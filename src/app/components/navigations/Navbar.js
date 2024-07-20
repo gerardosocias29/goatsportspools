@@ -40,9 +40,9 @@ const Navbar = ({currentUser}) => {
                 
               </div>
 
-              <div>
+              {/* <div>
                 <p>Balance: {Number(currentUser && currentUser.balance).toFixed(2)}</p>
-              </div>
+              </div> */}
              
               <div className="flex items-center">
                 {
