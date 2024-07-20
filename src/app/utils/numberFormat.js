@@ -1,4 +1,4 @@
-export function decimalToMixedFraction(decimal) {
+export function decimalToMixedFraction(decimal, identifyPositive = false) {
   const wholeNumber = Math.floor(decimal);
   const fractionalPart = decimal - wholeNumber;
 
@@ -13,13 +13,13 @@ export function decimalToMixedFraction(decimal) {
   };
 
   if (fractionalPart === 0) {
-    return `${wholeNumber}`;
+    return `${wholeNumber > 0 && identifyPositive ? '+'+wholeNumber : wholeNumber}`;
   }
 
   const fractionString = fractionalPart.toFixed(2);
   const fractionSymbol = fractionSymbols[`${fractionString}`];
   if (fractionSymbol) {
-    return wholeNumber === 0 ? fractionSymbol : `${wholeNumber}${fractionSymbol}`;
+    return wholeNumber === 0 ? fractionSymbol : `${wholeNumber > 0 && identifyPositive ? '+'+wholeNumber : wholeNumber}${fractionSymbol}`;
   }
 
   // If no predefined fraction symbol is found, return decimal with fraction part
@@ -34,5 +34,5 @@ export function decimalToMixedFraction(decimal) {
     return `${simplifiedNumerator}/${simplifiedDenominator}`;
   }
 
-  return `${wholeNumber} ${simplifiedNumerator}/${simplifiedDenominator}`;
+  return `${wholeNumber > 0 && identifyPositive ? '+'+wholeNumber : wholeNumber} ${simplifiedNumerator}/${simplifiedDenominator}`;
 }

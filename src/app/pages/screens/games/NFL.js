@@ -159,11 +159,11 @@ const NFL = ({refreshCurrentUser}) => {
     if (!odd) { return '' }
     return (
       <div className="flex flex-col gap-4">
-        <Button disabled={isFiveMinutesBeforeGame(data.game_datetime)} label={decimalToMixedFraction(odd.favored_points)}
+        <Button disabled={isFiveMinutesBeforeGame(data.game_datetime)} label={decimalToMixedFraction(odd.favored_points, true)}
           className={`border-primaryS ring-0 text-primary hover:text-white hover:bg-primaryS w-full bg-transparent rounded-lg ${isBetSelected({ type: 'spread', team: odd.favored_team, points: odd.favored_points }) ? 'bg-primaryS text-white' : ''}`}
           onClick={() => handleBetClick({ type: 'spread', team: odd.favored_team, points: odd.favored_points, bet_amount: 0, data: data })}
         />
-        <Button disabled={isFiveMinutesBeforeGame(data.game_datetime)} label={decimalToMixedFraction(odd.underdog_points)}
+        <Button disabled={isFiveMinutesBeforeGame(data.game_datetime)} label={decimalToMixedFraction(odd.underdog_points, true)}
           className={`border-primaryS ring-0 text-primary hover:text-white hover:bg-primaryS w-full bg-transparent rounded-lg ${isBetSelected({ type: 'spread', team: odd.underdog_team, points: odd.underdog_points }) ? 'bg-primaryS text-white' : ''}`}
           onClick={() => handleBetClick({ type: 'spread', team: odd.underdog_team, points: odd.underdog_points, bet_amount: 0, data: data })}
         />
@@ -193,11 +193,11 @@ const NFL = ({refreshCurrentUser}) => {
     if (!odd) { return '' }
     return (
       <div className="flex flex-col gap-4">
-        <Button disabled={isFiveMinutesBeforeGame(data.game_datetime)} label={odd.favored_ml}
+        <Button disabled={isFiveMinutesBeforeGame(data.game_datetime)} label={decimalToMixedFraction(odd.favored_ml, true)}
           className={`border-primaryS ring-0 text-primary hover:text-white hover:bg-primaryS w-full bg-transparent rounded-lg ${isBetSelected({ type: 'moneyline', team: odd.favored_team, ml: odd.favored_ml }) ? 'bg-primaryS text-white' : ''}`}
           onClick={() => handleBetClick({ type: 'moneyline', team: odd.favored_team, ml: odd.favored_ml, bet_amount: 0, data: data })}
         />
-        <Button disabled={isFiveMinutesBeforeGame(data.game_datetime)} label={odd.underdog_ml}
+        <Button disabled={isFiveMinutesBeforeGame(data.game_datetime)} label={decimalToMixedFraction(odd.underdog_ml, true)}
           className={`border-primaryS ring-0 text-primary hover:text-white hover:bg-primaryS w-full bg-transparent rounded-lg ${isBetSelected({ type: 'moneyline', team: odd.underdog_team, ml: odd.underdog_ml }) ? 'bg-primaryS text-white' : ''}`}
           onClick={() => handleBetClick({ type: 'moneyline', team: odd.underdog_team, ml: odd.underdog_ml, bet_amount: 0, data: data })}
         />
