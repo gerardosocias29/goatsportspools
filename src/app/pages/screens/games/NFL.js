@@ -287,7 +287,7 @@ const NFL = ({refreshCurrentUser}) => {
         detail: response.data.message,
       });
       setPlaceBetButton(false);
-      refreshCurrentUser();
+      getJoinedLeagues();
     }).catch((error) => {
       console.log(error);
       setPlaceBetButton(false);

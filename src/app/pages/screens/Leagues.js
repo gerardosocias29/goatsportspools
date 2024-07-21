@@ -31,12 +31,12 @@ const Leagues = ({currentUser, refreshCurrentUser}) => {
   }
 
   const [refreshTable, setRefreshTable] = useState(false);
-  const leagueColumns = [
+  const [leagueColumns, setLeagueColumns] = useState([
     { field: 'league_id', header: 'League ID' },
     { field: 'name', header: 'League Name' },
     { field: 'balance', header: 'Your League Balance', template: LeagueBalanceTemplate, hasTemplate: true },
     // { field: 'created_by', header: 'Created By', template:createdByTemplate, hasTemplate:true },
-  ];
+  ]);
 
   const [totalLeagues, setTotalLeagues] = useState(0);
   const [leagueModalData, setLeagueModalData] = useState();
@@ -63,7 +63,10 @@ const Leagues = ({currentUser, refreshCurrentUser}) => {
       <div className="flex justify-end gap-1">
         {
           currentUser && (currentUser.role_id != 3) && (
-            <Button className="text-white bg-primary rounded-lg text-sm" icon="pi pi-pencil text-sm" tooltip="Edit" data-pr-position="top" onClick={(e) => handleActionsClick(data.id, 'edit', data) }/>
+            <>
+              <Button className="text-white border-primary bg-primary rounded-lg text-sm" icon="pi pi-pencil text-sm" tooltip="Edit" data-pr-position="top" onClick={(e) => handleActionsClick(data.id, 'edit', data) }/>
+              <Button className="text-white border-primaryS bg-primaryS rounded-lg text-sm" icon="pi pi-users text-sm" tooltip="Users" data-pr-position="top" onClick={(e) => handleActionsClick(data.id, 'users', data) }/>
+            </>
           )
         }
         {
@@ -104,6 +107,12 @@ const Leagues = ({currentUser, refreshCurrentUser}) => {
     getLeaguesJoined();
     if(currentUser && currentUser.role_id === 2){
       getLeaguesCreated();
+    }
+    if(currentUser && currentUser.role_id !== 3){
+      setLeagueColumns(prevColumns => [
+        ...prevColumns,
+        { field: 'total_users', header: 'Total Users', template: LeagueBalanceTemplate, hasTemplate: true }
+      ]);
     }
   }, []);
 
