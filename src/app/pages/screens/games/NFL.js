@@ -87,8 +87,12 @@ const NFL = ({refreshCurrentUser}) => {
   }
 
   const RiskingWinTemplate = (value, bet) => {
-    const { data, bet_amount } = bet;
-    const win_amount = bet_amount * (100 / data.standard_odd);
+    const { data, bet_amount, type, ml } = bet;
+    let win_amount = bet_amount;
+    if(type === "moneyline"){
+      win_amount = calculateMoneylineWinnings(bet_amount, ml);
+    }
+
     return (
       <>
         <div className="flex gap-2 justify-center">
@@ -97,6 +101,16 @@ const NFL = ({refreshCurrentUser}) => {
       </>
     );
   }
+
+  const calculateMoneylineWinnings = (betAmount, moneylineOdds) => {
+    let winnings = 0;
+    if (moneylineOdds > 0) {
+      winnings = betAmount * (moneylineOdds / 100);
+    } else {
+      winnings = betAmount * (100 / Math.abs(moneylineOdds));
+    }
+    return winnings;
+  };
 
   const handleBetAmountChange = (value, bet) => {
     setBets((prevBets) => {
