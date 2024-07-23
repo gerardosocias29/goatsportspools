@@ -4,10 +4,18 @@ import { Button } from "primereact/button";
 import LazyTable from "../../components/tables/LazyTable";
 import LeagueJoin from "../../components/modals/LeagueJoin";
 import { useAxios } from "../../contexts/AxiosContext";
+import LeagueUsersModal from "../../components/modals/LeagueUsersModal";
 
 const Leagues = ({currentUser, refreshCurrentUser}) => {
   const axiosService = useAxios();
   const [leagueModalVisible, setModalLeagueVisible] = useState(false);
+
+  const [leagueUsersData, setLeagueUsersData] = useState([]);
+  const [leagueUsersModalVisible, setLeagueUsersModalVisible] = useState(false);
+  const onUsersModalHide = () => {
+    setLeagueUsersModalVisible(false);
+    setLeagueUsersData([]);
+  }
 
   const [leagueJoinModalVisible, setModalLeagueJoinVisible] = useState(false);
   const [leagueJoinData, setLeagueJoinData] = useState();
@@ -42,7 +50,7 @@ const Leagues = ({currentUser, refreshCurrentUser}) => {
   const [leagueModalData, setLeagueModalData] = useState();
 
   const handleActionsClick = (id, type, data) => {
-    if(type == "edit"){
+    if(type === "edit"){
       setLeagueModalData({
         id: id,
         name: data.name,
@@ -50,11 +58,16 @@ const Leagues = ({currentUser, refreshCurrentUser}) => {
         user_id: data.user_id
       });
       setModalLeagueVisible(true);
-    } else if(type == 'join') {
+    } else if(type === 'join') {
       
       setLeagueJoinData(data);
       setModalLeagueJoinVisible(true);
 
+    } else if(type === "users"){
+      axiosService.get('/api/leagues/get/' + data.id).then((response) => {
+        setLeagueUsersData(response.data);
+        setLeagueUsersModalVisible(true);
+      });
     }
   }
 
@@ -115,6 +128,13 @@ const Leagues = ({currentUser, refreshCurrentUser}) => {
       ]);
     }
   }, []);
+
+  const handleLeagueUsersModalSuccess = () => {
+    axiosService.get('/api/leagues/get/' + leagueUsersData.id).then((response) => {
+      setLeagueUsersData(response.data);
+      setLeagueUsersModalVisible(true);
+    });
+  }
 
   const handleSuccess = () => {
     setRefreshTable(true);
@@ -193,6 +213,7 @@ const Leagues = ({currentUser, refreshCurrentUser}) => {
 
       <LeagueModal header={`${leagueModalData && leagueModalData.id != '' ? 'Update League' : 'Create League'}`} visible={leagueModalVisible} onHide={onHide} currentUser={currentUser} onSuccess={() => setRefreshTable(true)} data={leagueModalData}/>
       <LeagueJoin visible={leagueJoinModalVisible} onHide={onJoinHide} currentUser={currentUser} data={leagueJoinData} onSuccess={handleSuccess} />
+      <LeagueUsersModal visible={leagueUsersModalVisible} onHide={onUsersModalHide} data={leagueUsersData} onSuccess={handleLeagueUsersModalSuccess} />
     </div>
   );
 }
