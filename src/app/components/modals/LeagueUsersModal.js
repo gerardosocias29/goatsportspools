@@ -75,7 +75,7 @@ export default function LeagueUsersModal({
 
   const RebuyTemplate = (value = []) => {
     return <div className="flex items-center justify-center">
-      {value.length}
+      {value}
     </div>
   } 
 
