@@ -42,7 +42,7 @@ const NFL = ({refreshCurrentUser}) => {
     const hasExistingBet = bets.some((bet) => bet.game_id === gameID);
     if (hasExistingBet) {
       const isCurrentBet = bets.some((bet) => {
-        return bet.game_id === gameID && bet.points === points && ((team === 'under' || team === 'over') ? bet.team === team : bet.team.id === team);
+        return bet.game_id === gameID && (bet.points === points || bet.ml === points) && ((team === 'under' || team === 'over') ? bet.team === team : bet.team.id === team);
       });
       if (isCurrentBet) {
         return false;
@@ -149,14 +149,15 @@ const NFL = ({refreshCurrentUser}) => {
     setBets(updatedBets);
   };
 
-  const betsColumn = [
+  const betsColumns = [
     { field: 'type', header: 'Bet Type', headerClassName: 'w-[120px]', template: BetTypeTemplate, hasTemplate: true },
     { field: 'type', header: 'Wager Type', headerClassName: 'w-[130px]', template: WagerTypeTemplate, hasTemplate: true },
-    { field: 'type', header: 'Game', headerClassName: 'w-[100px]', template: BetDateTemplate, hasTemplate: true },
+    { field: 'bets_columns', header: 'Game', headerClassName: 'w-[100px]', template: BetDateTemplate, hasTemplate: true },
     { field: '', header: 'Team', headerClassName: 'w-[450px]', template: BetTeamTemplate, hasTemplate: true },
     { field: 'bet_amount', header: 'Bet Amount',headerClassName: 'w-[50px]', template: BetAmountTemplate, hasTemplate: true },
-    { field: '', header: 'Risking/Win', headerClassName: 'w-[100px]', template: RiskingWinTemplate, hasTemplate: true},
+    { field: 'riskingwin', header: 'Risking/Win', headerClassName: 'w-[100px]', template: RiskingWinTemplate, hasTemplate: true},
   ]
+  const [betsColumn, setBetsColumn] = useState(betsColumns);
 
   const handleBetActionsClick = (value, type, betData) => {
     console.log(betData, type);
@@ -352,6 +353,12 @@ const NFL = ({refreshCurrentUser}) => {
                   if(wt.status){
                     setActiveWagerType(wt); 
                     setBets([]);
+                    if(wt.value === "parlay"){
+                      const updatedBetsColumns = betsColumns.filter(column => column.field !== 'bet_amount' && column.field !== "riskingwin");
+                      setBetsColumn(updatedBetsColumns);
+                    } else {
+                      setBetsColumn(betsColumns);
+                    }
                   }
                 }}
               >

@@ -9,7 +9,7 @@ import { Sidebar } from "primereact/sidebar";
 import { FilterMatchMode } from "primereact/api";
 
 const Table = ({
-  checkbox = false, columns, data, actions = false, 
+  checkbox = false, columns, data = [], actions = false, 
   action_types = { view: true, edit: false, delete: false },
   customActions = null, customActionsWidth = '3rem', 
   expandableRow = false, onRowExpand, onRowCollapse, rowExpansionTemplate,
