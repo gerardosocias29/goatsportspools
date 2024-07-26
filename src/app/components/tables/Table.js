@@ -106,7 +106,7 @@ const Table = ({
           />
         ))}
         {actions && !customActions && <Column headerClassName="bg-background text-white rounded-tr-xl rounded-br-xl font-normal text-white border-t" 
-          header="Actions" headerStyle={{ minWidth: '3rem' }} body={renderActions} />}
+          header="Actions" headerStyle={{ minWidth: customActionsWidth }} body={renderActions} />}
         {actions && customActions && <Column headerClassName="bg-background text-white rounded-tr-xl rounded-br-xl font-normal text-white border-t" 
           header="Actions" headerStyle={{ minWidth: customActionsWidth }} body={customActions} />}
       </DataTable>
@@ -124,7 +124,7 @@ Table.propTypes = {
     hasTemplate: PropTypes.bool,
     template: PropTypes.func
   })).isRequired,
-  data: PropTypes.array.isRequired,
+  data: PropTypes.array,
   actions: PropTypes.bool,
   action_types: PropTypes.shape({
     view: PropTypes.bool,

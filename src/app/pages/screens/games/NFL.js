@@ -28,6 +28,7 @@ const NFL = ({refreshCurrentUser}) => {
 
   const [activeWagerType, setActiveWagerType] = useState(wagerTypes[0]);
   const [sameAmountBet, setSameAmountBet] = useState(0);
+  const [parlayBetAmount, setParlayBetAmount] = useState(0);
 
   const isFiveMinutesBeforeGame = (gameDatetime) => {
     const currentUtcTime = moment.utc();
@@ -322,6 +323,83 @@ const NFL = ({refreshCurrentUser}) => {
     getJoinedLeagues();
   }, []);
 
+
+  const [parlayWinnings, setParlayWinnings] = useState({
+    payout: 0,
+    return: 0
+  });
+
+  const calculateParlayPayout = (wager) => {
+    const parlayOdds = {
+      2: 2.6,
+      3: 6,
+      4: 11,
+      5: 22,
+      6: 45,
+      7: 90,
+      8: 180
+    };
+    
+    function americanToDecimal(americanOdds) {
+      if (americanOdds > 0) {
+        return (americanOdds / 100) + 1;
+      } else {
+        return (100 / Math.abs(americanOdds)) + 1;
+      }
+    }
+    const numBets = bets.length;
+
+    let combinedDecimalOdds = 1;
+    let totalOdds = parlayOdds[numBets];
+    let hasMoneyline = false;
+
+    bets.forEach(bet => {
+      if (bet.type === 'moneyline') {
+        combinedDecimalOdds *= americanToDecimal(bet.ml);
+        hasMoneyline = true;
+      }
+    });
+
+    let potentialPayout;
+    if (hasMoneyline) {
+      potentialPayout = wager * combinedDecimalOdds;
+    } else {
+      potentialPayout = wager * totalOdds;
+    }
+    const totalReturn = potentialPayout + wager;
+
+    setParlayWinnings((prevState) => ({
+      ...prevState,
+      payout: potentialPayout.toFixed(2),
+      return: totalReturn.toFixed(2)
+    }));
+  }
+
+  const handleParlayBetAmountChange = (e) => {
+    setParlayBetAmount(e.value);
+  }
+
+  useEffect(() => {
+    calculateParlayPayout(parlayBetAmount);
+  }, [parlayBetAmount])
+
+
+  const handleContinue = () => {
+    if(selectedLeague){
+      if(activeWagerType.value === "parlay"){
+        if(bets.length < 2 || bets.length > 8) {
+          showToast({
+            severity: 'error',
+            summary: 'Failed!',
+            life: 5000,
+            detail: 'Parlay bets require a minimum of 2 teams and a maximum of 8 teams.',
+          });
+          return;
+        }
+      }
+      setModalWagerVisisble(true);
+    }
+  }
   return (
     <div className="flex flex-col gap-5 p-5" id="NFL">
       <div className="flex items-center gap-2 justify-between">
@@ -391,7 +469,7 @@ const NFL = ({refreshCurrentUser}) => {
           <Button label={`Continue`}
             disabled={!selectedLeague}
             className="mt-5 rounded-lg bg-background text-white border-background ring-0 w-[200px]" 
-            onClick={() => selectedLeague && setModalWagerVisisble(true)} 
+            onClick={handleContinue} 
           />
         </div>
       </div>
@@ -408,19 +486,20 @@ const NFL = ({refreshCurrentUser}) => {
                       currency="USD" mode="currency" locale="en-US"
                       className=""
                       inputClassName="rounded-lg ring-0"
-                      value={sameAmountBet} 
+                      value={parlayBetAmount} 
                       useGrouping={false}
                       min={1}
-                      onChange={(e) => {
-                        setSameAmountBet(e.value); 
-                        handleGlobalBetAmountChange(e.value);
-                      }} 
+                      onChange={handleParlayBetAmountChange} 
                       minFractionDigits={2}
                     />
                   </div>
-                  <div className="flex items-center gap-1 justify-end">
-                    <span>Total Winnings:</span>
-                    <span>0.00</span>
+                  <div className="text-xl flex items-center gap-1 justify-end">
+                    <span>Potential Payout:</span>
+                    <span className="font-bold text-green-500">${parlayWinnings.payout || 0.00}</span>
+                  </div>
+                  <div className="text-xl flex items-center gap-1 justify-end">
+                    <span>Total Returns:</span>
+                    <span className="font-bold text-green-500">${parlayWinnings.return || 0.00}</span>
                   </div>
                 </>
               )
@@ -455,10 +534,11 @@ const NFL = ({refreshCurrentUser}) => {
         className="w-[95%] lg:w-2/3" onHide={() => {
           setModalWagerVisisble(false)
           setSameAmountBet();
+          setParlayBetAmount(0);
         }}>
         <Table data={bets} 
           columns={betsColumn} 
-          actions={true} action_types={{ delete: true }} actionsClicked={handleBetActionsClick}
+          actions={true} action_types={{ delete: true }} actionsClicked={handleBetActionsClick} customActionsWidth="1rem"
           paginator={false}
           scrollable={true} scrollHeight="450px"
         />
