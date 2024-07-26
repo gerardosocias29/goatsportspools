@@ -75,8 +75,9 @@ const NFL = ({refreshCurrentUser}) => {
     return <div className="text-center">{type}</div>
   }
 
-  const BetDateTemplate = (value, game) => {
-    return <div className="text-center">{convertUTCToTimeZone(game.game_datetime, 'MMM DD hh:mmA')}</div>
+  const BetDateTemplate = (value, game, field) => {
+    console.log(value, game, field);
+    return <div className="text-center">{convertUTCToTimeZone(value, 'MMM DD hh:mmA')}</div>
   }
 
   const BetTeamTemplate = (value, bet, field) => {
@@ -152,7 +153,7 @@ const NFL = ({refreshCurrentUser}) => {
   const betsColumns = [
     { field: 'type', header: 'Bet Type', headerClassName: 'w-[120px]', template: BetTypeTemplate, hasTemplate: true },
     { field: 'type', header: 'Wager Type', headerClassName: 'w-[130px]', template: WagerTypeTemplate, hasTemplate: true },
-    { field: 'bets_columns', header: 'Game', headerClassName: 'w-[100px]', template: BetDateTemplate, hasTemplate: true },
+    { field: 'data.game_datetime', header: 'Game', headerClassName: 'w-[100px]', template: BetDateTemplate, hasTemplate: true },
     { field: '', header: 'Team', headerClassName: 'w-[450px]', template: BetTeamTemplate, hasTemplate: true },
     { field: 'bet_amount', header: 'Bet Amount',headerClassName: 'w-[50px]', template: BetAmountTemplate, hasTemplate: true },
     { field: 'riskingwin', header: 'Risking/Win', headerClassName: 'w-[100px]', template: RiskingWinTemplate, hasTemplate: true},
@@ -396,23 +397,55 @@ const NFL = ({refreshCurrentUser}) => {
       </div>
       <Dialog header="Your Bets" footer={() => {
         return <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-2 justify-end">
-            <label>Use same amount for all bets</label>
-            <InputNumber 
-              inputId="currency-us" 
-              currency="USD" mode="currency" locale="en-US"
-              className=""
-              inputClassName="rounded-lg ring-0"
-              value={sameAmountBet} 
-              useGrouping={false}
-              min={1}
-              onChange={(e) => {
-                setSameAmountBet(e.value); 
-                handleGlobalBetAmountChange(e.value);
-              }} 
-              minFractionDigits={2}
-            />
-          </div>
+          {
+            activeWagerType.value === "parlay" && 
+              (
+                <>
+                  <div className="flex items-center gap-2 justify-end">
+                    <label>Bet Amount</label>
+                    <InputNumber 
+                      inputId="currency-us" 
+                      currency="USD" mode="currency" locale="en-US"
+                      className=""
+                      inputClassName="rounded-lg ring-0"
+                      value={sameAmountBet} 
+                      useGrouping={false}
+                      min={1}
+                      onChange={(e) => {
+                        setSameAmountBet(e.value); 
+                        handleGlobalBetAmountChange(e.value);
+                      }} 
+                      minFractionDigits={2}
+                    />
+                  </div>
+                  <div className="flex items-center gap-1 justify-end">
+                    <span>Total Winnings:</span>
+                    <span>0.00</span>
+                  </div>
+                </>
+              )
+              
+          }
+          {
+            activeWagerType.value === "straight" &&
+              <div className="flex items-center gap-2 justify-end">
+                <label>Use same amount for all bets</label>
+                <InputNumber 
+                  inputId="currency-us" 
+                  currency="USD" mode="currency" locale="en-US"
+                  className=""
+                  inputClassName="rounded-lg ring-0"
+                  value={sameAmountBet} 
+                  useGrouping={false}
+                  min={1}
+                  onChange={(e) => {
+                    setSameAmountBet(e.value); 
+                    handleGlobalBetAmountChange(e.value);
+                  }} 
+                  minFractionDigits={2}
+                />
+              </div>
+          }
           
           <Button label="Place Your Bets" loading={placeBetButton} className="w-full bg-primaryS rounded-lg border-primaryS ring-0 text-white" onClick={handlePlaceBets} />
         </div>
