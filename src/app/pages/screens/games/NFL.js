@@ -286,6 +286,15 @@ const NFL = ({refreshCurrentUser}) => {
 
   const [placeBetButton, setPlaceBetButton] = useState(false);
   const handlePlaceBets = () => {
+    if(activeWagerType.value === "parlay"){
+      showToast({
+        severity: 'info',
+        summary: 'Under Maintenance!',
+        detail: 'This type of bets is still under development.'
+      });
+      return ;
+    }
+    
     setPlaceBetButton(true);
     const updatedBets = bets.map((b) => ({
       league_id: selectedLeague.id,
@@ -299,6 +308,7 @@ const NFL = ({refreshCurrentUser}) => {
       wager_amount: b.bet_amount,
       bet_type: activeWagerType.value
     }));
+
     axiosService.post('/api/bets/wager', {bets: updatedBets}).then((response) => {
       if(response.data.status){
         setModalWagerVisisble(false)
