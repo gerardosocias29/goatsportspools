@@ -77,7 +77,7 @@ const NFL = ({refreshCurrentUser}) => {
   }
 
   const BetDateTemplate = (value, game, field) => {
-    console.log(value, game, field);
+    // console.log(value, game, field);
     return <div className="text-center">{convertUTCToTimeZone(value, 'MMM DD hh:mmA')}</div>
   }
 
@@ -286,14 +286,14 @@ const NFL = ({refreshCurrentUser}) => {
 
   const [placeBetButton, setPlaceBetButton] = useState(false);
   const handlePlaceBets = () => {
-    if(activeWagerType.value === "parlay"){
-      showToast({
-        severity: 'info',
-        summary: 'Under Maintenance!',
-        detail: 'This type of bets is still under development.'
-      });
-      return ;
-    }
+    // if(activeWagerType.value === "parlay"){
+    //   showToast({
+    //     severity: 'info',
+    //     summary: 'Under Maintenance!',
+    //     detail: 'This type of bets is still under development.'
+    //   });
+    //   return ;
+    // }
     
     setPlaceBetButton(true);
     const updatedBets = bets.map((b) => ({
@@ -309,7 +309,16 @@ const NFL = ({refreshCurrentUser}) => {
       bet_type: activeWagerType.value
     }));
 
-    axiosService.post('/api/bets/wager', {bets: updatedBets}).then((response) => {
+    let postData = {
+      bets: updatedBets,
+      wager_type: activeWagerType.value
+    }
+    if(activeWagerType.value === "parlay"){
+      postData.wager_amount = parlayBetAmount;
+      postData.wager_win_amount = (parlayWinnings.payout * 1);
+      postData.league_id = selectedLeague.id;
+    }
+    axiosService.post('/api/bets/wager', postData).then((response) => {
       if(response.data.status){
         setModalWagerVisisble(false)
         setBets([]);
@@ -545,6 +554,7 @@ const NFL = ({refreshCurrentUser}) => {
           setModalWagerVisisble(false)
           setSameAmountBet();
           setParlayBetAmount(0);
+          setPlaceBetButton(false);
         }}>
         <Table data={bets} 
           columns={betsColumn} 
