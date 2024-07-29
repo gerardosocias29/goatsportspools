@@ -2,27 +2,60 @@ import moment from "moment";
 import LazyTable from "../../components/tables/LazyTable";
 import { decimalToMixedFraction } from "../../utils/numberFormat";
 import convertUTCToTimeZone from "../../utils/utcToTimezone";
+import { Button } from "primereact/button";
 
 const BetHistory = () => {
 
-  const TicketNumberTemplate = (value) => {
-    return <p className="text-center">{value.toUpperCase()}</p>
+  const TicketNumberTemplate = (value, rowData) => {
+    if(rowData.bet_group != null){
+      return <p className="text-center">-</p>
+    }
+    
+    return <p className="text-center">{value}</p>
   }
 
-  const GameDateTemplate = (value) => {
+  const TypeTemplate = (value, rowData) => {
+    if(rowData.bet_group != null){
+      const { wager_type } = rowData.bet_group;
+      return <p className="text-center">{wager_type.name}</p>
+    }
+    
+    return <p className="text-center">{value}</p>
+  }
+
+  const GameDateTemplate = (value, rowData) => {
+    if(rowData.bet_group != null){
+      return <p className="text-center">-</p>
+    }
     return <p className="text-center">{convertUTCToTimeZone(value, 'MMM DD hh:mmA')}</p>
   }
 
   const RiskWinTemplate = (value, rowData, field) => {
+    if(rowData.bet_group != null){
+      const { wager_amount, wager_win_amount } = rowData.bet_group;
+      return <p className="text-center font-bold">${Number(wager_amount).toFixed(2)} / ${Number(wager_win_amount).toFixed(2)}</p>
+    }
+
     return <p className="text-center font-bold">${Number(rowData.wager_amount).toFixed(2)} / ${Number(rowData.wager_win_amount).toFixed(2)}</p>
   }
 
   const WinLossTemplate = (value, rowData, field) => {
+    if(rowData.bet_group != null){
+      const { wager_amount, wager_win_amount, wager_result } = rowData.bet_group;
+
+      const new_amount = wager_result === "win" ? "$" + Number(wager_win_amount).toFixed(2) : (wager_result === "lose" ? "-$" +Number(wager_amount).toFixed(2) : '-')
+      return <p className="text-center font-bold">{new_amount}</p>
+    }
+
     const amount = rowData.wager_result === "win" ? "$" + Number(rowData.wager_win_amount).toFixed(2) : (rowData.wager_result === "lose" ? "-$" +Number(rowData.wager_amount).toFixed(2) : '-')
     return <p className="text-center font-bold">{amount}</p>
   }
 
-  const ResultTemplate = (value) => {
+  const ResultTemplate = (value, rowData) => {
+    if(rowData.bet_group != null){
+      const { wager_result } = rowData.bet_group;
+      return <p className={`rounded-lg text-center text-sm tracking-wide p-2 ${wager_result === "win" ? 'text-green-500' : (wager_result === "lose" ? 'text-red-500' : 'bg-gray-200')}`}>{wager_result?.toUpperCase()}</p>
+    }
     return <p className={`rounded-lg text-center text-sm tracking-wide p-2 ${value === "win" ? 'text-green-500' : (value === "lose" ? 'text-red-500' : 'bg-gray-200')}`}>{value?.toUpperCase()}</p>
   }
 
@@ -31,10 +64,14 @@ const BetHistory = () => {
   }
 
   const DescriptionTemplate = (value, rowData, field) => {
+    if(rowData.bet_group != null){
+      const { wager_type } = rowData.bet_group;
+      return <p>{wager_type.description}</p>
+    }
+
     const { game, team } = rowData;
 
     const gameID = game.id;
-
 
     let favoredTeamId = rowData.odd.favored_team.id;
     let underdogTeamId = rowData.odd.underdog_team.id;
@@ -63,15 +100,25 @@ const BetHistory = () => {
     return <p>NFL [{gameID}] <span className="font-bold">{team?.name} {pointsLabel}</span> {totalLabel}</p>
   }
 
+  const ActionsTemplate = (value, rowData) => {
+    if(rowData.bet_group != null){
+      return <div className="flex justify-center">
+        <Button className="text-white bg-primaryS rounded-lg ring-0 text-sm" icon="pi pi-eye" text aria-label="View" label="View Bets" onClick={(e) => console.log("clicked") }/>
+      </div>
+    }
+    return "";    
+  }
+
   const betsColumn = [
     { field: 'ticket_number', header: 'Ticket #', headerClassName: 'w-[120px]', template: TicketNumberTemplate, hasTemplate: true },
-    { field: 'wager_type.name', header: 'Type', headerClassName: 'w-[120px]', template: TicketNumberTemplate, hasTemplate: false },
+    { field: 'wager_type.name', header: 'Type', headerClassName: 'w-[120px]', template: TypeTemplate, hasTemplate: true },
     { field: 'game.game_datetime', header: 'Game Date', headerClassName: 'w-[100px]', template: GameDateTemplate, hasTemplate: true },
     { field: 'team.name', header: 'Description', headerClassName: 'w-[450px]', template: DescriptionTemplate, hasTemplate: true },
     { field: 'wager_amount', header: 'Risk/Win', headerClassName: 'w-[130px]', template: RiskWinTemplate, hasTemplate: true },
     { field: '', header: 'Win/Loss Amount', headerClassName: 'w-[120px]', template: WinLossTemplate, hasTemplate: true },
     { field: 'wager_result', header: 'Result', headerClassName: 'w-[130px]', template: ResultTemplate, hasTemplate: true },
     { field: 'created_at', header: 'Date Placed', headerClassName: 'w-[130px]', template: DatePlaceTemplate, hasTemplate: true },
+    { field: 'actions', header: 'Actions', headerClassName: 'w-[200px]', template: ActionsTemplate, hasTemplate: true },
   ];
 
   return (
