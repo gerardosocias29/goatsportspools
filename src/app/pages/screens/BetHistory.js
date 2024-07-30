@@ -3,6 +3,8 @@ import LazyTable from "../../components/tables/LazyTable";
 import { decimalToMixedFraction } from "../../utils/numberFormat";
 import convertUTCToTimeZone from "../../utils/utcToTimezone";
 import { Button } from "primereact/button";
+import BetHistoryModal from "../../components/modals/BetHistoryModal";
+import { useState } from "react";
 
 const BetHistory = () => {
 
@@ -100,10 +102,25 @@ const BetHistory = () => {
     return <p>NFL [{gameID}] <span className="font-bold">{team?.name} {pointsLabel}</span> {totalLabel}</p>
   }
 
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalData, setModalData] = useState([]);
+  const handleModalOnHide = () => {
+    setModalVisible(false);
+    setModalData([]);
+  }
+
+  const handleViewBetsClick = (rowData) => {
+    // console.log(rowData.bet_group.bets);
+    setModalData(rowData.bet_group.bets);
+    setModalVisible(true);
+  }
+
   const ActionsTemplate = (value, rowData) => {
     if(rowData.bet_group != null){
       return <div className="flex justify-center">
-        <Button className="text-white bg-primaryS rounded-lg ring-0 text-sm" icon="pi pi-eye" text aria-label="View" label="View Bets" onClick={(e) => console.log("clicked") }/>
+        <Button className="text-white bg-primaryS rounded-lg ring-0 text-sm" icon="pi pi-eye" text aria-label="View" label="View Bets" 
+          onClick={(e) => handleViewBetsClick(rowData) }
+        />
       </div>
     }
     return "";    
@@ -155,6 +172,12 @@ const BetHistory = () => {
           hasOptions={true}
         />
       </div>
+
+      <BetHistoryModal 
+        visible={modalVisible} data={modalData}
+        
+        onHide={handleModalOnHide} columns={betsColumn.filter(d => d.field !== "actions" || d.field !== "wager_amount" || d.field !== "" )}
+      />
     </div>
   );
 }
