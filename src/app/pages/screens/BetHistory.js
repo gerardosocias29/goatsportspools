@@ -175,8 +175,7 @@ const BetHistory = () => {
 
       <BetHistoryModal 
         visible={modalVisible} data={modalData}
-        
-        onHide={handleModalOnHide} columns={betsColumn.filter(d => d.field !== "actions" || d.field !== "wager_amount" || d.field !== "" )}
+        onHide={handleModalOnHide} columns={betsColumn.filter(d => (d.field !== "actions" && d.field !== "wager_amount" && d.field !== "") )}
       />
     </div>
   );
