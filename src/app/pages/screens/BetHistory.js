@@ -58,7 +58,7 @@ const BetHistory = () => {
       const { wager_result } = rowData.bet_group;
       return <p className={`rounded-lg text-center text-sm tracking-wide p-2 ${wager_result === "win" ? 'text-green-500' : (wager_result === "lose" ? 'text-red-500' : 'bg-gray-200')}`}>{wager_result?.toUpperCase()}</p>
     }
-    return <p className={`rounded-lg text-center text-sm tracking-wide p-2 ${value === "win" ? 'text-green-500' : (value === "lose" ? 'text-red-500' : 'bg-gray-200')}`}>{value?.toUpperCase()}</p>
+    return <p className={`rounded-lg text-center text-sm tracking-wide p-2 ${value === "win" ? 'text-green-500' : (value === "lose" ? 'text-red-500' : (value === "push" ? '' : 'bg-gray-200'))}`}>{value?.toUpperCase()}</p>
   }
 
   const DatePlaceTemplate = (value) => {
