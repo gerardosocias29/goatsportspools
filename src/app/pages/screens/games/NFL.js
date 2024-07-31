@@ -171,7 +171,7 @@ const NFL = ({refreshCurrentUser}) => {
   const handleBetClick = (bet) => {
     setBets((prevBets) => {
       const existingBetIndex = prevBets.findIndex(
-        (b) => b.type === bet.type && b.team === bet.team && b.points === bet.points && b.ml === bet.ml
+        (b) => b.type === bet.type && b.team === bet.team && b.points === bet.points && b.ml === bet.ml && b.game_id === bet.game_id
       );
       if (existingBetIndex > -1) {
         // Remove existing bet
@@ -185,7 +185,7 @@ const NFL = ({refreshCurrentUser}) => {
 
   const isBetSelected = (bet) => {
     return bets.some(
-      (b) => b.type === bet.type && b.team === bet.team && b.points === bet.points && b.ml === bet.ml
+      (b) => b.type === bet.type && b.team === bet.team && b.points === bet.points && b.ml === bet.ml && b.game_id === bet.game_id
     );
   };
 
@@ -197,12 +197,12 @@ const NFL = ({refreshCurrentUser}) => {
       <div className="flex flex-col gap-4">
         <Button disabled={isFiveMinutesBeforeGame(data.game_datetime) || checkParlayBet(data.id, odd.favored_points, odd.favored_team.id) } 
           label={decimalToMixedFraction(odd.favored_points, true)}
-          className={`${checkParlayBet(data.id, odd.favored_points, odd.favored_team.id)} border-primaryS ring-0 text-primary hover:text-white hover:bg-primaryS w-full bg-transparent rounded-lg ${isBetSelected({ type: 'spread', team: odd.favored_team, points: odd.favored_points }) ? 'bg-primaryS text-white' : ''}`}
+          className={`${checkParlayBet(data.id, odd.favored_points, odd.favored_team.id)} border-primaryS ring-0 text-primary hover:text-white hover:bg-primaryS w-full bg-transparent rounded-lg ${isBetSelected({game_id: data.id,  type: 'spread', team: odd.favored_team, points: odd.favored_points }) ? 'bg-primaryS text-white' : ''}`}
           onClick={() => handleBetClick({ game_id: data.id, type: 'spread', team: odd.favored_team, points: odd.favored_points, bet_amount: 0, data: data })}
         />
         <Button disabled={isFiveMinutesBeforeGame(data.game_datetime) || checkParlayBet(data.id, odd.underdog_points, odd.underdog_team.id) } 
           label={decimalToMixedFraction(odd.underdog_points, true)}
-          className={`${checkParlayBet(data.id, odd.underdog_points, odd.underdog_team.id)} border-primaryS ring-0 text-primary hover:text-white hover:bg-primaryS w-full bg-transparent rounded-lg ${isBetSelected({ type: 'spread', team: odd.underdog_team, points: odd.underdog_points }) ? 'bg-primaryS text-white' : ''}`}
+          className={`${checkParlayBet(data.id, odd.underdog_points, odd.underdog_team.id)} border-primaryS ring-0 text-primary hover:text-white hover:bg-primaryS w-full bg-transparent rounded-lg ${isBetSelected({game_id: data.id,  type: 'spread', team: odd.underdog_team, points: odd.underdog_points }) ? 'bg-primaryS text-white' : ''}`}
           onClick={() => handleBetClick({ game_id: data.id, type: 'spread', team: odd.underdog_team, points: odd.underdog_points, bet_amount: 0, data: data })}
         />
       </div>
@@ -215,11 +215,11 @@ const NFL = ({refreshCurrentUser}) => {
     return (
       <div className="flex flex-col gap-4">
         <Button disabled={isFiveMinutesBeforeGame(data.game_datetime) || checkParlayBet(data.id, odd.over_total, "over")} label={'o' + decimalToMixedFraction(odd.over_total)}
-          className={`border-primaryS ring-0 text-primary hover:text-white hover:bg-primaryS w-full bg-transparent rounded-lg ${isBetSelected({ type: 'total', team: 'over', points: odd.over_total }) ? 'bg-primaryS text-white' : ''}`}
+          className={`border-primaryS ring-0 text-primary hover:text-white hover:bg-primaryS w-full bg-transparent rounded-lg ${isBetSelected({game_id: data.id,  type: 'total', team: 'over', points: odd.over_total }) ? 'bg-primaryS text-white' : ''}`}
           onClick={() => handleBetClick({ game_id: data.id, type: 'total', team: 'over', points: odd.over_total, bet_amount: 0, data: data })}
         />
         <Button disabled={isFiveMinutesBeforeGame(data.game_datetime) || checkParlayBet(data.id, odd.under_total, "under", odd.favored_team.id)} label={'u' + decimalToMixedFraction(odd.under_total)}
-          className={`border-primaryS ring-0 text-primary hover:text-white hover:bg-primaryS w-full bg-transparent rounded-lg ${isBetSelected({ type: 'total', team: 'under', points: odd.under_total }) ? 'bg-primaryS text-white' : ''}`}
+          className={`border-primaryS ring-0 text-primary hover:text-white hover:bg-primaryS w-full bg-transparent rounded-lg ${isBetSelected({game_id: data.id,  type: 'total', team: 'under', points: odd.under_total }) ? 'bg-primaryS text-white' : ''}`}
           onClick={() => handleBetClick({ game_id: data.id, type: 'total', team: 'under', points: odd.under_total, bet_amount: 0, data: data })}
         />
       </div>
@@ -232,11 +232,11 @@ const NFL = ({refreshCurrentUser}) => {
     return (
       <div className="flex flex-col gap-4">
         <Button disabled={isFiveMinutesBeforeGame(data.game_datetime) || checkParlayBet(data.id, odd.favored_ml, odd.favored_team.id) } label={decimalToMixedFraction(odd.favored_ml, true)}
-          className={`border-primaryS ring-0 text-primary hover:text-white hover:bg-primaryS w-full bg-transparent rounded-lg ${isBetSelected({ type: 'moneyline', team: odd.favored_team, ml: odd.favored_ml }) ? 'bg-primaryS text-white' : ''}`}
+          className={`border-primaryS ring-0 text-primary hover:text-white hover:bg-primaryS w-full bg-transparent rounded-lg ${isBetSelected({game_id: data.id,  type: 'moneyline', team: odd.favored_team, ml: odd.favored_ml }) ? 'bg-primaryS text-white' : ''}`}
           onClick={() => handleBetClick({ game_id: data.id, type: 'moneyline', team: odd.favored_team, ml: odd.favored_ml, bet_amount: 0, data: data })}
         />
         <Button disabled={isFiveMinutesBeforeGame(data.game_datetime) || checkParlayBet(data.id, odd.underdog_ml, odd.underdog_team.id) } label={decimalToMixedFraction(odd.underdog_ml, true)}
-          className={`border-primaryS ring-0 text-primary hover:text-white hover:bg-primaryS w-full bg-transparent rounded-lg ${isBetSelected({ type: 'moneyline', team: odd.underdog_team, ml: odd.underdog_ml }) ? 'bg-primaryS text-white' : ''}`}
+          className={`border-primaryS ring-0 text-primary hover:text-white hover:bg-primaryS w-full bg-transparent rounded-lg ${isBetSelected({game_id: data.id,  type: 'moneyline', team: odd.underdog_team, ml: odd.underdog_ml }) ? 'bg-primaryS text-white' : ''}`}
           onClick={() => handleBetClick({ game_id: data.id, type: 'moneyline', team: odd.underdog_team, ml: odd.underdog_ml, bet_amount: 0, data: data })}
         />
       </div>
