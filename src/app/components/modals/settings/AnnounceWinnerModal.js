@@ -3,6 +3,7 @@ import { Dialog } from "primereact/dialog";
 import { InputNumber } from "primereact/inputnumber";
 import { useState } from "react";
 import { useAxios } from "../../../contexts/AxiosContext";
+import { useToast } from "../../../contexts/ToastContext";
 
 const AnnounceWinnerModal = ({
   visible = false, 
@@ -11,6 +12,7 @@ const AnnounceWinnerModal = ({
   onSuccess,
   data,
 }) => {
+  const showToast = useToast();
   const axiosService = useAxios();
   const [homeTeamScore, setHomeTeamScore] = useState();
   const [visitorTeamScore, setVisitorTeamScore] = useState();
@@ -25,7 +27,12 @@ const AnnounceWinnerModal = ({
     }
 
     axiosService.post('/api/games/announce-winner', dataToSend).then((response) => {
-
+      showToast({
+        severity: response.data.status ? 'success' : 'error',
+        summary: response.data.status ? 'Success!' : 'Failed!',
+        detail: response.data.message
+      });
+      handleOnHide();
     }).catch((error) => {
       console.log(error);
     });
