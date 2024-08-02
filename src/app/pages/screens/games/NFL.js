@@ -23,12 +23,17 @@ const NFL = ({refreshCurrentUser}) => {
   const wagerTypes = [
     { name: 'Straight', value: 'straight', status: true },
     { name: 'Parlay', value: 'parlay', status: true },
-    { name: 'Teaser', value: 'teaser', status: false },
+    { name: 'Teaser 6', value: 'teaser_6', status: true, tooltip: '6-point teaser' },
+    { name: 'Teaser 6½', value: 'teaser_6_5', status: true, tooltip: '6.5-point teaser' },
+    { name: 'Teaser 7', value: 'teaser_7', status: true, tooltip: '7-point teaser' },
   ];
+
+  const [gamesApi, setGamesApi] = useState();
 
   const [activeWagerType, setActiveWagerType] = useState(wagerTypes[0]);
   const [sameAmountBet, setSameAmountBet] = useState(0);
   const [parlayBetAmount, setParlayBetAmount] = useState(0);
+  const [teaserBetAmount, setTeaserBetAmount] = useState(0);
 
   const isFiveMinutesBeforeGame = (gameDatetime) => {
     const currentUtcTime = moment.utc();
@@ -227,6 +232,8 @@ const NFL = ({refreshCurrentUser}) => {
   }
 
   const MoneyLineTemplate = (value, data, field) => {
+    if(activeWagerType.value == "teaser_6" || activeWagerType.value == "teaser_6_5" || activeWagerType.value == "teaser_7") { return ""; }
+
     const { odd } = data;
     if (!odd) { return '' }
     return (
@@ -317,7 +324,14 @@ const NFL = ({refreshCurrentUser}) => {
       postData.wager_amount = parlayBetAmount;
       postData.wager_win_amount = (parlayWinnings.payout * 1);
       postData.league_id = selectedLeague.id;
+    } 
+
+    if(activeWagerType.value.includes('teaser')){
+      postData.wager_amount = teaserBetAmount;
+      postData.wager_win_amount = (teaserWinnings.payout * 1);
+      postData.league_id = selectedLeague.id;
     }
+    
     axiosService.post('/api/bets/wager', postData).then((response) => {
       if(response.data.status){
         setModalWagerVisisble(false)
@@ -344,6 +358,11 @@ const NFL = ({refreshCurrentUser}) => {
 
 
   const [parlayWinnings, setParlayWinnings] = useState({
+    payout: 0,
+    return: 0
+  });
+
+  const [teaserWinnings, setTeaserWinnings] = useState({
     payout: 0,
     return: 0
   });
@@ -387,14 +406,75 @@ const NFL = ({refreshCurrentUser}) => {
       return: totalReturn.toFixed(2)
     }));
   }
+  
+  const calculateTeaserPayout = (wager) => {
+    let teaserPoints = activeWagerType.value === "teaser_7" ? 7 : (activeWagerType.value === "teaser_6_5" ? 6.5 : 6)
+
+    const teaserOdds = {
+      6: {
+        2: -110,
+        3: 160,
+        4: 260,
+        5: 400,
+        6: 600,
+        7: 900,
+        8: 1400
+      },
+      6.5: {
+        2: -120,
+        3: 150,
+        4: 240,
+        5: 360,
+        6: 550,
+        7: 800,
+        8: 1200
+      },
+      7: {
+        2: -130,
+        3: 140,
+        4: 200,
+        5: 320,
+        6: 450,
+        7: 700,
+        8: 1000
+      }
+    };
+
+    const odds = teaserOdds[teaserPoints][bets.length];
+    let potentialPayout;
+  
+    if (odds < 0) {
+      // Negative odds (e.g., -110): Wager to win a fixed amount
+      potentialPayout = wager * (100 / Math.abs(odds));
+    } else {
+      // Positive odds (e.g., +160): Wager to win odds amount
+      potentialPayout = wager * (odds / 100);
+    }
+  
+    const totalReturn = potentialPayout + wager;
+
+    setTeaserWinnings((prevState) => ({
+      ...prevState,
+      payout: potentialPayout.toFixed(2),
+      return: totalReturn.toFixed(2)
+    }));
+  }
 
   const handleParlayBetAmountChange = (e) => {
     setParlayBetAmount(e.value);
   }
 
+  const handleTeaserBetAmountChange = (e) => {
+    setTeaserBetAmount(e.value);
+  }
+
   useEffect(() => {
     calculateParlayPayout(parlayBetAmount);
   }, [parlayBetAmount])
+
+  useEffect(() => {
+    calculateTeaserPayout(teaserBetAmount);
+  }, [teaserBetAmount])
 
 
   const handleContinue = () => {
@@ -438,23 +518,29 @@ const NFL = ({refreshCurrentUser}) => {
           <div className="font-bold mb-2">Bet Type <i className="pi pi-question-circle"></i><Tooltip target={'.pi-question-circle'} /></div>
           <div className="grid grid-cols-1 lg:grid-cols-6 gap-4">
             {wagerTypes.map((wt, i) => (
-              <div key={i}
-                aria-disabled={!wt.status}
-                className={`${wt.status ? 'cursor-pointer' : 'cursor-not-allowed'} select-none rounded-lg shadow-lg border p-4 text-center hover:bg-primaryS hover:text-white ${activeWagerType.value === wt.value ? 'bg-primaryS text-white' : 'bg-white'}`}
-                onClick={() => {
-                  if(wt.status){
-                    setActiveWagerType(wt); 
-                    setBets([]);
-                    if(wt.value === "parlay"){
-                      const updatedBetsColumns = betsColumns.filter(column => column.field !== 'bet_amount' && column.field !== "riskingwin");
-                      setBetsColumn(updatedBetsColumns);
-                    } else {
-                      setBetsColumn(betsColumns);
+              <div key={i}>
+                <div key={i}
+                  data-pr-tooltip={wt.tooltip} data-pr-position="bottom"
+                  aria-disabled={!wt.status}
+                  className={`${wt.status ? 'cursor-pointer' : 'cursor-not-allowed'} ${wt.value} select-none rounded-lg shadow-lg border p-4 text-center hover:bg-primaryS hover:text-white ${activeWagerType.value === wt.value ? 'bg-primaryS text-white' : 'bg-white'}`}
+                  onClick={() => {
+                    if(wt.status){
+                      setActiveWagerType(wt); 
+                      setBets([]);
+                      if(wt.value === "parlay" || wt.value == "teaser_6" || wt.value == "teaser_6_5" || wt.value == "teaser_7"){
+                        const updatedBetsColumns = betsColumns.filter(column => column.field !== 'bet_amount' && column.field !== "riskingwin");
+                        setBetsColumn(updatedBetsColumns);
+                      } else {
+                        setBetsColumn(betsColumns);
+                      }
+                      setGamesApi(wt.value);
+                      setRefreshTable(true);
                     }
-                  }
-                }}
-              >
-                <h2 className="text-xl font-semibold">{wt.name}</h2>
+                  }}
+                >
+                  <h2 className="text-xl font-semibold">{wt.name}</h2>
+                </div>
+                <Tooltip target={`.${wt.value}`} />
               </div>
             ))}
           </div>
@@ -471,6 +557,7 @@ const NFL = ({refreshCurrentUser}) => {
             scrollable={true}
             scrollHeight="520px"
             paginator={false}
+            additionalApi={gamesApi}
           />
         </div>
         <div className="flex items-center justify-end gap-5">
@@ -516,7 +603,35 @@ const NFL = ({refreshCurrentUser}) => {
                   </div>
                 </>
               )
-              
+          }
+          {
+            activeWagerType.value.includes('teaser') && 
+              (
+                <>
+                  <div className="flex items-center gap-2 justify-end">
+                    <label>Teaser Bet Amount</label>
+                    <InputNumber 
+                      inputId="currency-us" 
+                      currency="USD" mode="currency" locale="en-US"
+                      className=""
+                      inputClassName="rounded-lg ring-0"
+                      value={teaserBetAmount} 
+                      useGrouping={false}
+                      min={1}
+                      onChange={handleTeaserBetAmountChange} 
+                      minFractionDigits={2}
+                    />
+                  </div>
+                  <div className="text-xl flex items-center gap-1 justify-end">
+                    <span>Potential Payout:</span>
+                    <span className="font-bold text-green-500">${teaserWinnings.payout || 0.00}</span>
+                  </div>
+                  <div className="text-xl flex items-center gap-1 justify-end">
+                    <span>Total Returns:</span>
+                    <span className="font-bold text-green-500">${teaserWinnings.return || 0.00}</span>
+                  </div>
+                </>
+              )
           }
           {
             activeWagerType.value === "straight" &&

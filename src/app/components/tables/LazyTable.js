@@ -42,7 +42,8 @@ const LazyTable = ({
     customActionsWidth = '200px',
     rowLimit = null,
     scrollable = false,
-    scrollHeight = null
+    scrollHeight = null,
+    additionalApi
   }) => {
     
   const { showToast, clearToast } = useToast();
@@ -171,7 +172,12 @@ const LazyTable = ({
     // setBulkItem(undefined);
     // setSelectedData([]);
     // setSelectAll(false);
-    axiosService.get(api + "?filter=" + JSON.stringify(lazyCopy))
+    let filter = "?filter=" + JSON.stringify(lazyCopy);
+    if(additionalApi){
+      filter += "&type=" + additionalApi
+    }
+
+    axiosService.get(api + filter)
       .then((response) => {
         setTotalRecords(response.data?.total);
         if (convertData) {
