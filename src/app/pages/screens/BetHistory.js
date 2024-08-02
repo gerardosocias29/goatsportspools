@@ -4,10 +4,11 @@ import { decimalToMixedFraction } from "../../utils/numberFormat";
 import convertUTCToTimeZone from "../../utils/utcToTimezone";
 import { Button } from "primereact/button";
 import BetHistoryModal from "../../components/modals/BetHistoryModal";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useAxios } from "../../contexts/AxiosContext";
 
 const BetHistory = () => {
-
+  const axiosService = useAxios();
   const TicketNumberTemplate = (value, rowData) => {
     if(rowData.bet_group != null){
       return <p className="text-center">-</p>
@@ -138,6 +139,17 @@ const BetHistory = () => {
     { field: 'actions', header: 'Actions', headerClassName: 'w-[200px]', template: ActionsTemplate, hasTemplate: true },
   ];
 
+  const [amountAtRisk, setAmountAtRisk] = useState(0);
+  const fetchAmountAtRisk = () => {
+    axiosService.get('/api/bets/amount-at-risks').then((response) => {
+      setAmountAtRisk(response.data.at_risk);
+    });
+  }
+
+  useEffect(() => {
+    fetchAmountAtRisk();
+  }, [])
+
   return (
     <div className="flex flex-col gap-5 p-5">
       <div className="text-primary text-3xl font-semibold">Bet History</div>
@@ -150,7 +162,7 @@ const BetHistory = () => {
                 <div className="flex gap-4 w-full justify-center px-2">
                   <div>
                     <div className="flex flex-col items-center text-red-500">
-                      <p className="text-4xl text-center">{0}</p>
+                      <p className="text-4xl text-center">{amountAtRisk || 0}</p>
                       <span className="text-sm min-w-[60px] text-center font-bold">Risking</span>
                     </div>
                   </div>
