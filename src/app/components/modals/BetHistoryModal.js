@@ -3,7 +3,7 @@ import Table from "../tables/Table";
 
 const BetHistoryModal = ({
   visible = false, 
-  header = "Parlay Bets",
+  header = "Bets",
   onHide,
   data,
   columns
