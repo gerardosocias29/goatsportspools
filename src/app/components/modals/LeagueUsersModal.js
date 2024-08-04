@@ -16,12 +16,13 @@ export default function LeagueUsersModal({
   const axiosService = useAxios();
   const [rebuyLoading, setRebuyLoading] = useState(false);
   const [buyinLoading, setBuyinLoading] = useState(false);
-  const acceptRebuy = (league_id, user_id) => {
+  const acceptRebuy = (league_id, user_id, amount = 'BGV03') => {
     setRebuyLoading(true);
     showToast({ severity: 'info', summary: 'Updating!', detail: 'Please wait!', life: 1000 });
     const postData = {
       league_id: league_id,
       user_id: user_id,
+      amount: amount
     }
     axiosService.post('/api/leagues/rebuy', postData).then((response) => {
       if(response.data.status){
@@ -72,14 +73,14 @@ export default function LeagueUsersModal({
     setBuyinLoading(false)
   }
 
-  const handleActionsClick = (id, type, data) => {
+  const handleActionsClick = (id, type, data, amount) => {
     if(type==="rebuy"){
       confirmPopup({
         tagKey: 'ASDKJAHSDKB',
-        message: `Are you sure you're rebuying 30,000.00 for ${data.user.name}?`,
+        message: `Are you sure you're rebuying ${amount === "BGV60" ? '6,000.00' : '30,000.00'} for ${data.user.name}?`,
         icon: 'pi pi-info-circle',
         acceptClassName: 'ring-0 bg-primary rounded-lg border-primary',
-        accept: () => { acceptRebuy(data.league_id, data.user.id) }
+        accept: () => { acceptRebuy(data.league_id, data.user.id, amount) }
       });
     } else if(type === "buyin") {
       confirmPopup({
@@ -96,7 +97,7 @@ export default function LeagueUsersModal({
     return (
       <div className="flex justify-end gap-1">
         <Button loading={rebuyLoading} className="text-white border-primaryS bg-primaryS ring-0 rounded-lg text-sm" tooltip="30K Rebuy" label="30K Rebuy" data-pr-position="top" onClick={(e) => handleActionsClick(data.id, 'rebuy', data) }/>
-        <Button loading={buyinLoading} className="text-white border-primaryS bg-primaryS ring-0 rounded-lg text-sm" tooltip="6K Rebuy" label="6K Rebuy" data-pr-position="top" onClick={(e) => handleActionsClick(data.id, 'rebuy', data) }/>
+        <Button loading={buyinLoading} className="text-white border-primaryS bg-primaryS ring-0 rounded-lg text-sm" tooltip="6K Rebuy" label="6K Rebuy" data-pr-position="top" onClick={(e) => handleActionsClick(data.id, 'rebuy', data, 'BGV60') }/>
         <Button loading={buyinLoading} className="text-white border-primaryS bg-primaryS ring-0 rounded-lg text-sm" tooltip="3K Buyin" label="3K Buyin" data-pr-position="top" onClick={(e) => handleActionsClick(data.id, 'buyin', data) }/>
       </div>
     )
