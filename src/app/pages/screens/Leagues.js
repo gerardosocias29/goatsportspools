@@ -59,8 +59,10 @@ const Leagues = ({currentUser, refreshCurrentUser}) => {
       });
       setModalLeagueVisible(true);
     } else if(type === 'join') {
-      
-      setLeagueJoinData(data);
+      setLeagueJoinData({
+        id: data.league_id,
+        name: data.name,
+      });
       setModalLeagueJoinVisible(true);
 
     } else if(type === "users"){
@@ -148,9 +150,15 @@ const Leagues = ({currentUser, refreshCurrentUser}) => {
     <div className="flex flex-col gap-5 p-5">
       <div className="flex justify-between">
         <div className="text-primary text-3xl font-semibold">Leagues</div>
-        {
-          currentUser && currentUser.role_id != 3 && <Button label="Create League" icon="pi pi-trophy" className="rounded-lg border-primaryS bg-primaryS" onClick={() => setModalLeagueVisible(true)}/>
-        }
+        <div className="flex gap-2">
+          {
+            currentUser && currentUser.role_id != 3 && <Button label="Create League" icon="pi pi-trophy" className="rounded-lg border-primaryS bg-primaryS" onClick={() => setModalLeagueVisible(true)}/>
+          }
+          {
+            currentUser && currentUser.role_id != 1 && <Button label="Join A League" icon="pi pi-trophy" className="rounded-lg border-background bg-background" onClick={() => handleActionsClick(null, 'join', { id: null, name: ''})}/>
+          }
+        </div>
+        
       </div>
       <div className="w-full p-5 bg-white rounded-lg flex flex-col gap-5">
         <div className="grid lg:grid-cols-4 gap-4">
