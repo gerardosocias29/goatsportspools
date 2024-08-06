@@ -7,6 +7,7 @@ import { decimalToMixedFraction } from "../../../utils/numberFormat";
 import { TeamTemplate } from "../games/NFLTemplates";
 import convertUTCToTimeZone from "../../../utils/utcToTimezone";
 import AnnounceWinnerModal from "../../../components/modals/settings/AnnounceWinnerModal";
+import GameModal from "../../../components/modals/settings/GameModal";
 
 const ManageGames = () => {
 
@@ -111,6 +112,9 @@ const ManageGames = () => {
       </div>
     );
   }
+
+  const [gameModalVisible, setGameModalVisible] = useState(false);
+
   return (
     <div className="flex flex-col gap-5 p-5">
       <div className="flex items-center gap-2 justify-between">
@@ -126,7 +130,7 @@ const ManageGames = () => {
             optionLabel="name"
           />
         </div>
-        <Button label="Create Game" icon="pi pi-plus" className="rounded-lg border-primaryS bg-primaryS" onClick={() => {}}/>
+        <Button label="Create Game" icon="pi pi-plus" className="rounded-lg border-primaryS bg-primaryS" onClick={() => setGameModalVisible(true)}/>
       </div>
       <div className="w-full p-5 bg-white rounded-lg flex flex-col gap-5">
         <LazyTable api={'/api/games'}
@@ -142,6 +146,7 @@ const ManageGames = () => {
         data={announceWinnerData}
         onHide={() => setAnnounceWinnerModal(false)}
       />
+      <GameModal visible={gameModalVisible} data={[]} onHide={() => setGameModalVisible(false)} onSuccess={() => setRefreshTable(true)} />
     </div>
   );
 }
