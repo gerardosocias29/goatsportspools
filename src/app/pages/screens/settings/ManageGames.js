@@ -103,8 +103,14 @@ const ManageGames = () => {
   const customActions = (data) => {
     return (
       <div className="flex justify-end gap-1">
-        <Button className="text-white bg-primary rounded-lg text-sm" icon="pi pi-pencil text-sm" tooltip="Edit" data-pr-position="top" onClick={(e) => {}}/>
+        <Button className="text-white bg-primary rounded-lg text-sm" icon="pi pi-pencil text-sm" tooltip="Edit" data-pr-position="top" onClick={(e) => {
+          setGameModalType("update");
+          setGameModalData(data);
+          setGameModalVisible(true);
+          console.log(data);
+        }}/>
         <Button className="text-white bg-primaryS border-primaryS rounded-lg text-sm" label="Announce Winner" onClick={(e) => {
+          setGameModalType("add");
           setAnnounceWinnerData(data);
           setAnnounceWinnerModal(true);
           console.log(data);
@@ -114,6 +120,13 @@ const ManageGames = () => {
   }
 
   const [gameModalVisible, setGameModalVisible] = useState(false);
+  const [gameModalData, setGameModalData] = useState();
+  const [gameModalType, setGameModalType] = useState("add");
+
+  const handleOnHide = () => {
+    setGameModalVisible(false);
+    setGameModalData();
+  }
 
   return (
     <div className="flex flex-col gap-5 p-5">
@@ -146,7 +159,7 @@ const ManageGames = () => {
         data={announceWinnerData}
         onHide={() => setAnnounceWinnerModal(false)}
       />
-      <GameModal visible={gameModalVisible} data={[]} onHide={() => setGameModalVisible(false)} onSuccess={() => setRefreshTable(true)} />
+      <GameModal visible={gameModalVisible} data={gameModalData} type={gameModalType} onHide={handleOnHide} onSuccess={() => setRefreshTable(true)} />
     </div>
   );
 }

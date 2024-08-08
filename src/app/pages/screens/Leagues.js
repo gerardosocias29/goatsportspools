@@ -155,7 +155,7 @@ const Leagues = ({currentUser, refreshCurrentUser}) => {
             currentUser && currentUser.role_id != 3 && <Button label="Create League" icon="pi pi-trophy" className="rounded-lg border-primaryS bg-primaryS" onClick={() => setModalLeagueVisible(true)}/>
           }
           {
-            currentUser && currentUser.role_id != 1 && <Button label="Join A League" icon="pi pi-trophy" className="rounded-lg border-background bg-background" onClick={() => handleActionsClick(null, 'join', { id: null, name: ''})}/>
+            // currentUser && currentUser.role_id != 1 && <Button label="Join A League" icon="pi pi-trophy" className="rounded-lg border-background bg-background" onClick={() => handleActionsClick(null, 'join', { id: null, name: ''})}/>
           }
         </div>
         

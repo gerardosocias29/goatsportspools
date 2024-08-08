@@ -16,7 +16,7 @@ const GameModal = ({
 }) => {
   const axiosService = useAxios();
   const showToast = useToast();
-  const gameData = {
+  const initialGameData = {
     game_datetime: null,
     home_team: '',
     visitor_team: '',
@@ -29,16 +29,16 @@ const GameModal = ({
     favored_team: '',
     underdog_team: '',
   }
-  const [game, setGame] = useState(gameData);
+  const [game, setGame] = useState(initialGameData);
   const [selectedTeams, setSelectedTeams] = useState([]);
 
   const handleOnHide = () => {
     onHide();
-    setGame(gameData);
+    setGame(initialGameData);
     setSaveLoading(false);
   }
 
-  const [saveLoding, setSaveLoading] = useState(false);
+  const [saveLoading, setSaveLoading] = useState(false);
   const handleSubmit = () => {
     setSaveLoading(true);
     axiosService.post('/api/games/create', game).then((response) => {
@@ -58,8 +58,27 @@ const GameModal = ({
       console.log(error);
       setSaveLoading(false);
     });
+  }
 
-
+  const handleUpdate = () => {
+    setSaveLoading(true);
+    axiosService.post('/api/games/update/' + data.id, game).then((response) => {
+      showToast({
+        severity: response.data.status ? 'success' : 'error',
+        summary: response.data.status ? 'Success!' : 'Failed!',
+        detail: response.data.message
+      });
+      if(response.data.status){
+        if(onSuccess){
+          onSuccess();
+        }
+      }
+      handleOnHide();
+      setSaveLoading(false);
+    }).catch((error) => {
+      console.log(error);
+      setSaveLoading(false);
+    });
   }
 
   const [teams, setTeams] = useState([]);
@@ -75,6 +94,26 @@ const GameModal = ({
     );
     setSelectedTeams(filteredTeams);
   }
+
+  useEffect(() => {
+    if (visible && type === 'update' && data) {
+      setGame({
+        game_datetime: new Date(data.game_datetime),
+        visitor_team: data.visitor_team,
+        favored_spread: data.odd.favored_points,
+        underdog_spread: data.odd.underdog_points,
+        favored_ml: data.odd.favored_ml,
+        underdog_ml: data.odd.underdog_ml,
+        over_total: data.odd.over_total,
+        under_total: data.odd.under_total,
+        favored_team: data.odd.favored_team,
+        underdog_team: data.odd.underdog_team,
+        home_team: data.home_team,
+      });
+    } else if (visible && type === 'add') {
+      setGame(initialGameData);
+    }
+  }, [visible, type, data]);
 
   useEffect(() => {
     updateSelectedTeams();
@@ -119,7 +158,11 @@ const GameModal = ({
     return (
       <>
         <div className="flex justify-end items-center">
-          <Button loading={saveLoding} label="Create Game" className="rounded-lg border-none ring-0 bg-primaryS text-white" onClick={handleSubmit}/>
+          {
+            type === "add" ? <Button loading={saveLoading} label="Create Game" className="rounded-lg border-none ring-0 bg-primaryS text-white" onClick={handleSubmit}/> :
+            <Button loading={saveLoading} label="Update Game" className="rounded-lg border-none ring-0 bg-primaryS text-white" onClick={handleUpdate}/>
+          }
+          
         </div>
       </>
     )

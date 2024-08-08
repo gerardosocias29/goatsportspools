@@ -139,10 +139,12 @@ const BetHistory = () => {
     { field: 'actions', header: 'Actions', headerClassName: 'w-[200px]', template: ActionsTemplate, hasTemplate: true },
   ];
 
-  const [amountAtRisk, setAmountAtRisk] = useState(0);
+  const [amountAtRisk, setAmountAtRisk] = useState(0.00);
+  const [totalBalance, setTotalBalance] = useState(0.00);
   const fetchAmountAtRisk = () => {
     axiosService.get('/api/bets/amount-at-risks').then((response) => {
       setAmountAtRisk(response.data.at_risk);
+      setTotalBalance(response.data.total_balance);
     });
   }
 
@@ -154,23 +156,42 @@ const BetHistory = () => {
     <div className="flex flex-col gap-5 p-5">
       <div className="text-primary text-3xl font-semibold">Bet History</div>
       <div className="w-full p-5 bg-white rounded-lg flex flex-col gap-5">
-        <div className="grid lg:grid-cols-4 gap-4">
-          <div className="border rounded-lg p-4 border-lightgray shadow-lg border-[1px] border-l-[5px] border-l-red-500">
-            <div className="flex justify-between mb-3">
-              <div className="w-full">
-                <span className="text-500 font-medium mb-3">Amount at Risk</span>
+        <div className="grid lg:grid-cols-6 gap-4">
+          <div className="border rounded-lg p-4 border-lightgray shadow-lg border-[1px]">
+            <div className="flex justify-between mb-3 relative">
+              <div className="w-full flex flex-col gap-1">
+                <span className="text-500 text-sm font-medium mb-3">Amount at Risk</span>
                 <div className="flex gap-4 w-full justify-center px-2">
                   <div>
                     <div className="flex flex-col items-center text-red-500">
-                      <p className="text-4xl text-center">{amountAtRisk || 0}</p>
-                      <span className="text-sm min-w-[60px] text-center font-bold">Risking</span>
+                      <p className="text-2xl text-center">{Number(amountAtRisk).toFixed(2) || 0}</p>
                     </div>
                   </div>
                 </div>
               </div>
-              <div>
+              <div className="absolute top-0 right-0">
                 <div className="flex flex-row items-center justify-center rounded-lg p-3 border-[2px]">
-                  <i className="pi pi-dollar text-xl"></i>
+                  <i className="pi pi-dollar text-sm"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="border rounded-lg p-4 border-lightgray shadow-lg border-[1px]">
+            <div className="flex justify-between mb-3 relative">
+              <div className="w-full flex flex-col gap-1">
+                <span className="text-500 text-sm font-medium mb-3">Total Balance</span>
+                <div className="flex gap-4 w-full justify-center px-2">
+                  <div>
+                    <div className="flex flex-col items-center text-green-500">
+                      <p className="text-2xl text-center">{Number(totalBalance).toFixed(2) || 0}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="absolute top-0 right-0">
+                <div className="flex flex-row items-center justify-center rounded-lg p-3 border-[2px]">
+                  <i className="pi pi-dollar text-sm"></i>
                 </div>
               </div>
             </div>
