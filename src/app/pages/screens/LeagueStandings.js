@@ -30,8 +30,8 @@ const LeagueStandings = ({currentUser}) => {
 
   const getLeagues = () => {
     axiosService.get('/api/leagues/active-leagues').then((response) => {
-      setLeagues(response.data.leagues);
       const sortedLeagues = sortLeagues(response.data.leagues);
+      setLeagues(sortedLeagues);
       setActiveLeague(sortedLeagues[0]);
     }).catch((error) => {
       console.log(error);
@@ -41,16 +41,6 @@ const LeagueStandings = ({currentUser}) => {
   useEffect(() => {
     getLeagues();
   }, []);
-
-  useEffect(() => {
-    if (activeLeague) {
-      const sortedParticipants = [...activeLeague.participants].sort((a, b) => a.rank - b.rank);
-      setActiveLeague(prevState => ({
-        ...prevState,
-        participants: sortedParticipants
-      }));
-    }
-  }, [activeLeague]);
 
   return (
     <div className="flex flex-col gap-5 p-5">
