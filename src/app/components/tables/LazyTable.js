@@ -485,7 +485,7 @@ const LazyTable = ({
           columns.map((col, i) => {
             const column1 = (<Column 
               key={i} 
-              headerClassName={`${col.headerClassName? col.headerClassName:''} text-center bg-background text-white ${(i==0 && !checkbox ? 'rounded-tl-xl rounded-bl-xl' : '' )} ${(i === (columns.length-1) && !actions)? 'rounded-tr-xl rounded-br-xl' : ''} ${ expandableRow && col.has_expander ? '' : 'border-white border'} font-normal text-white`}
+              headerClassName={`${col.headerClassName? col.headerClassName:''} text-sm text-center bg-background text-white ${(i==0 && !checkbox ? 'rounded-tl-xl rounded-bl-xl' : '' )} ${(i === (columns.length-1) && !actions)? 'rounded-tr-xl rounded-br-xl' : ''} ${ expandableRow && col.has_expander ? '' : 'border-white border'} font-normal text-white`}
               field={col.field} 
               header={col.header}
               style={col.headerStyle}

@@ -13,6 +13,7 @@ import Leagues from "./screens/Leagues";
 import NFL from "./screens/games/NFL";
 import BetHistory from "./screens/BetHistory";
 import ManageGames from "./screens/settings/ManageGames";
+import LeagueStandings from "./screens/LeagueStandings";
 
 const MainPage = () => {
   const axiosService = useAxios();  
@@ -69,6 +70,8 @@ const MainPage = () => {
         return <Users/>
       case 'leagues':
         return <Leagues currentUser={currentUser} refreshCurrentUser={refreshCurrentUser}/>
+      case 'league-standings':
+        return <LeagueStandings currentUser={currentUser}/>
       case 'bet-history':
         return <BetHistory currentUser={currentUser} refreshCurrentUser={refreshCurrentUser}/>
       case 'settings/game-management':

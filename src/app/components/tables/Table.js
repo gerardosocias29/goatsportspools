@@ -98,7 +98,7 @@ const Table = ({
         {checkbox && <Column headerClassName="bg-background text-white rounded-tl-xl rounded-bl-xl border-none" 
           selectionMode="multiple" headerStyle={{ width: '3rem' }} />}
         {columns.map((col, i) => (
-          <Column key={i} headerClassName={`${col.headerClassName ? col.headerClassName : ''} text-center bg-background text-white 
+          <Column key={i} headerClassName={`${col.headerClassName ? col.headerClassName : ''} text-center text-sm bg-background text-white 
             ${(i === 0 && !checkbox ? 'rounded-tl-xl rounded-bl-xl' : '')} ${(i === (columns.length - 1) && !actions ? 'rounded-tr-xl rounded-br-xl' : '')} 
             ${expandableRow && col.has_expander ? '' : 'border-white border'} font-normal text-white`}
             field={col.field} header={col.header} style={col.headerStyle}
@@ -142,6 +142,7 @@ Table.propTypes = {
   hasOptions: PropTypes.bool,
   scrollable: PropTypes.bool,
   scrollHeight: PropTypes.string,
+  bodyClassName: PropTypes.string
 };
 
 Table.defaultProps = {
