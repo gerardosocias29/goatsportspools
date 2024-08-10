@@ -59,7 +59,7 @@ const LeagueStandings = ({currentUser}) => {
         </div>
       </div>
       <div className="w-full p-5 bg-white rounded-lg flex flex-col gap-5">
-        <Table columns={columns} data={activeLeague && activeLeague.participants || []}/>
+        <Table columns={columns} data={activeLeague && activeLeague.participants || []} scrollHeight="100%" paginator={false}/>
       </div>
     </div>
   );

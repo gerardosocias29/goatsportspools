@@ -161,24 +161,23 @@ const Leagues = ({currentUser, refreshCurrentUser}) => {
         
       </div>
       <div className="w-full p-5 bg-white rounded-lg flex flex-col gap-5">
-        <div className="grid lg:grid-cols-4 gap-4">
+        <div className="grid lg:grid-cols-6 gap-4">
           { currentUser && currentUser.role_id != 3 && 
             <div className="border rounded-lg p-4 border-lightgray shadow-lg border-[1px]">
-              <div className="flex justify-between mb-3">
-                <div className="w-full">
-                  <span className="text-500 font-medium mb-3">Total Leagues</span>
+              <div className="flex justify-between mb-3 relative">
+                <div className="w-full flex flex-col gap-1">
+                  <span className="text-500 text-sm font-medium mb-3">Total Leagues</span>
                   <div className="flex gap-4 w-full justify-center px-2">
                     <div>
                       <div className="flex flex-col items-center">
-                        <p className="text-4xl text-center">{currentUser && currentUser.role_id === 1 ? totalLeagues : leaguesCreated}</p>
-                        <span className="text-sm min-w-[60px] text-center font-bold">Created</span>
+                        <p className="text-2xl text-center">{currentUser && currentUser.role_id === 1 ? totalLeagues : leaguesCreated}</p>
                       </div>
                     </div>
                   </div>
                 </div>
-                <div>
+                <div className="absolute top-0 right-0">
                   <div className="flex flex-row items-center justify-center rounded-lg p-3 border-[2px]">
-                    <i className="pi pi-trophy text-xl"></i>
+                    <i className="pi pi-trophy text-sm"></i>
                   </div>
                 </div>
               </div>
@@ -187,21 +186,20 @@ const Leagues = ({currentUser, refreshCurrentUser}) => {
 
           { currentUser && currentUser.role_id != 1 && 
             <div className="border rounded-lg p-4 border-lightgray shadow-lg border-[1px]">
-              <div className="flex justify-between mb-3">
-                <div className="w-full">
-                  <span className="text-500 font-medium mb-3">Joined Leagues</span>
+              <div className="flex justify-between mb-3 relative">
+                <div className="w-full flex flex-col gap-1">
+                  <span className="text-500 text-sm font-medium mb-3">Joined Leagues</span>
                   <div className="flex gap-4 w-full justify-center px-2">
                     <div>
                       <div className="flex flex-col items-center">
-                        <p className="text-4xl text-center">{leaguesJoined}</p>
-                        <span className="text-sm min-w-[60px] text-center font-bold">Joined</span>
+                        <p className="text-2xl text-center">{leaguesJoined}</p>
                       </div>
                     </div>
                   </div>
                 </div>
-                <div>
+                <div className="absolute top-0 right-0">
                   <div className="flex flex-row items-center justify-center rounded-lg p-3 border-[2px]">
-                    <i className="pi pi-trophy text-xl"></i>
+                    <i className="pi pi-trophy text-sm"></i>
                   </div>
                 </div>
               </div>

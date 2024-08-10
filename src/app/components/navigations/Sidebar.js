@@ -5,6 +5,7 @@ import { FaFootballBall, FaRunning, FaTrophy, FaUsers, FaCogs } from 'react-icon
 import { FaCircleDollarToSlot } from "react-icons/fa6";
 import { TbPlayFootball } from "react-icons/tb";
 import { GiPodiumWinner } from "react-icons/gi";
+import { PiUsersFour } from "react-icons/pi";
 
 const Sidebar = ({ currentUser, callback }) => {
   const navigate = useNavigate();
@@ -23,6 +24,7 @@ const Sidebar = ({ currentUser, callback }) => {
       case 'icon-settings': return <FaCogs />;
       case 'icon-game-management': return <TbPlayFootball />;
       case 'icon-league-standings': return <GiPodiumWinner />;
+      case 'icon-teams': return <PiUsersFour />;
       default: return null;
     }
   };
