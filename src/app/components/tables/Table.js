@@ -106,9 +106,9 @@ const Table = ({
           />
         ))}
         {actions && !customActions && <Column headerClassName="bg-background text-white rounded-tr-xl rounded-br-xl font-normal text-white border-t" 
-          header="Actions" headerStyle={{ minWidth: customActionsWidth }} body={renderActions} />}
+          header="" headerStyle={{ minWidth: customActionsWidth }} body={renderActions} />}
         {actions && customActions && <Column headerClassName="bg-background text-white rounded-tr-xl rounded-br-xl font-normal text-white border-t" 
-          header="Actions" headerStyle={{ minWidth: customActionsWidth }} body={customActions} />}
+          header="" headerStyle={{ minWidth: customActionsWidth }} body={customActions} />}
       </DataTable>
     </>
   );

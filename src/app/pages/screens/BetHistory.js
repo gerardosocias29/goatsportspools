@@ -143,7 +143,7 @@ const BetHistory = () => {
     { field: '', header: 'Win/Loss Dollar Amount', headerClassName: 'w-[120px]', template: WinLossTemplate, hasTemplate: true },
     { field: 'wager_result', header: 'Result', headerClassName: 'w-[130px]', template: ResultTemplate, hasTemplate: true },
     { field: 'created_at', header: 'Date Placed', headerClassName: 'w-[130px]', template: DatePlaceTemplate, hasTemplate: true },
-    { field: 'actions', header: 'Actions', headerClassName: 'w-[200px]', template: ActionsTemplate, hasTemplate: true },
+    { field: 'actions', header: '', headerClassName: 'w-[200px]', template: ActionsTemplate, hasTemplate: true },
   ];
 
   const [amountAtRisk, setAmountAtRisk] = useState(0.00);

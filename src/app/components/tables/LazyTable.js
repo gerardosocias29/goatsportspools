@@ -494,8 +494,8 @@ const LazyTable = ({
             return column1;
           })
         }
-        {actions && !customActions && <Column headerClassName="bg-background text-white rounded-tr-lg rounded-br-lg font-normal text-white" header={'Actions'} headerStyle={{ width: '3rem' }} body={renderActions}/>}
-        {actions && customActions && <Column headerClassName="bg-background text-white rounded-tr-lg rounded-br-lg font-normal text-white" header={'Actions'} headerStyle={{ width: customActionsWidth }} body={customActions}/>}
+        {actions && !customActions && <Column headerClassName="bg-background text-white rounded-tr-lg rounded-br-lg font-normal text-white" header={''} headerStyle={{ width: '3rem' }} body={renderActions}/>}
+        {actions && customActions && <Column headerClassName="bg-background text-white rounded-tr-lg rounded-br-lg font-normal text-white" header={''} headerStyle={{ width: customActionsWidth }} body={customActions}/>}
       </DataTable>
     }
     <ConfirmDialog tagKey="lazyTableKey" />
