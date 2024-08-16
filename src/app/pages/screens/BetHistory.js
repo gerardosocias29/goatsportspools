@@ -35,7 +35,10 @@ const BetHistory = () => {
 
   const RiskWinTemplate = (value, rowData, field) => {
     if(rowData.bet_group != null){
-      const { wager_amount, wager_win_amount } = rowData.bet_group;
+      const { wager_amount, wager_win_amount, wager_result } = rowData.bet_group;
+      if(wager_result !== "pending"){
+        return <p className="text-center font-bold">-</p>
+      }
       return <p className="text-center font-bold">${Number(wager_amount).toFixed(2)} / ${Number(wager_win_amount).toFixed(2)}</p>
     }
 
@@ -100,7 +103,7 @@ const BetHistory = () => {
 
     const pointsLabel = rowData.wager_type_id === 2 ? ( rowData.team_id === 0 ? `TOTAL o${decimalToMixedFraction(rowData.picked_odd)}` : `TOTAL u${decimalToMixedFraction(rowData.picked_odd)}`) : rowData.wager_type_id === 3 ? `[${decimalToMixedFraction(rowData.picked_odd, true)}]` : `[${decimalToMixedFraction(rowData.picked_odd, true)}]`;
     const totalLabel = ( `(${favoredTeamNickname} - ${favoredTeamScore} vs. ${underdogTeamNickname} - ${underdogTeamScore})`);
-    return <p>NFL [{gameID}] <span className="font-bold">{team?.name} {pointsLabel}</span> {totalLabel}</p>
+    return <p><span className="font-bold">{team?.name} {pointsLabel}</span> {totalLabel}</p>
   }
 
   const [modalVisible, setModalVisible] = useState(false);
@@ -133,7 +136,7 @@ const BetHistory = () => {
     { field: 'game.game_datetime', header: 'Game Date', headerClassName: 'w-[100px]', template: GameDateTemplate, hasTemplate: true },
     { field: 'team.name', header: 'Description', headerClassName: 'w-[450px]', template: DescriptionTemplate, hasTemplate: true },
     { field: 'wager_amount', header: 'Risk/Win', headerClassName: 'w-[130px]', template: RiskWinTemplate, hasTemplate: true },
-    { field: '', header: 'Win/Loss Amount', headerClassName: 'w-[120px]', template: WinLossTemplate, hasTemplate: true },
+    { field: '', header: 'Win/Loss Dollar Amount', headerClassName: 'w-[120px]', template: WinLossTemplate, hasTemplate: true },
     { field: 'wager_result', header: 'Result', headerClassName: 'w-[130px]', template: ResultTemplate, hasTemplate: true },
     { field: 'created_at', header: 'Date Placed', headerClassName: 'w-[130px]', template: DatePlaceTemplate, hasTemplate: true },
     { field: 'actions', header: 'Actions', headerClassName: 'w-[200px]', template: ActionsTemplate, hasTemplate: true },

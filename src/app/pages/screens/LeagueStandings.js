@@ -12,9 +12,10 @@ const LeagueStandings = ({currentUser}) => {
     { field: 'rank', header: 'Rank' },
     { field: 'name', header: 'Name' },
     { field: 'email', header: 'Email' },
-    { field: 'win_bets.length', header: 'Wins', headerStyle: { textAlign: "center" } },
-    { field: 'lose_bets.length', header: 'Losses', headerStyle: { textAlign: "center" }},
-    { field: 'tie_bets.length', header: 'Ties', headerStyle: {textAlign: "center"}},
+    { field: 'pivot.balance', header: 'Balance', headerStyle: { textAlign: "right" } }
+    // { field: 'win_bets.length', header: 'Wins', headerStyle: { textAlign: "center" } },
+    // { field: 'lose_bets.length', header: 'Losses', headerStyle: { textAlign: "center" }},
+    // { field: 'tie_bets.length', header: 'Ties', headerStyle: {textAlign: "center"}},
   ]
   
   const sortLeagues = (leagues) => {

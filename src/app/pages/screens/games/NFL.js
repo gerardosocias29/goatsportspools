@@ -92,7 +92,7 @@ const NFL = ({refreshCurrentUser}) => {
     const gameID = data.id;
     const pointsLabel = type === 'total' ? ( data && data.team === 'over' ? `TOTAL o${points}` : `TOTAL u${points}`) : type === 'moneyline' ? `[${ml}]` : `[${decimalToMixedFraction(points)}]`;
     const totalLabel = type === "total" ? (data && `(${data.odd.favored_team.nickname} vs. ${data.odd.underdog_team.nickname})`) : '';
-    return <div className="flex items-center gap-2">NFL [{gameID}] <p className="font-bold">{team.name} {pointsLabel}</p> {totalLabel}</div>;
+    return <div className="flex items-center gap-2"><p className="font-bold">{team.name} {pointsLabel}</p> {totalLabel}</div>;
   }
 
   const BetAmountTemplate = (value, bet) => {
