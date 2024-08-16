@@ -2,15 +2,20 @@ import { useEffect, useState } from "react";
 import { useAxios } from "../../contexts/AxiosContext";
 import { Dropdown } from "primereact/dropdown";
 import Table from "../../components/tables/Table";
+import { Badge } from "primereact/badge";
 
 const LeagueStandings = ({currentUser}) => {
   const axiosService = useAxios();
   const [activeLeague, setActiveLeague] = useState();
   const [leagues, setLeagues] = useState();
 
+  const NameTemplate = (value, data) => {
+    return <div className="flex items-center gap-1">{value} {data.you ? <Badge severity="success" value="You"></Badge> : ''}</div>
+  }
+
   const columns = [
-    { field: 'rank', header: 'Rank' },
-    { field: 'name', header: 'Name' },
+    { field: 'rank', header: 'Rank', headerStyle: { textAlign: "center" } },
+    { field: 'name', header: 'Name', template: NameTemplate, hasTemplate: true },
     { field: 'email', header: 'Email' },
     { field: 'pivot.balance', header: 'Balance', headerStyle: { textAlign: "right" } }
     // { field: 'win_bets.length', header: 'Wins', headerStyle: { textAlign: "center" } },
