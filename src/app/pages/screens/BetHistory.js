@@ -42,6 +42,10 @@ const BetHistory = () => {
       return <p className="text-center font-bold">${Number(wager_amount).toFixed(2)} / ${Number(wager_win_amount).toFixed(2)}</p>
     }
 
+    if(rowData.wager_result !== "pending"){
+      return <p className="text-center font-bold">-</p>
+    }
+
     return <p className="text-center font-bold">${Number(rowData.wager_amount).toFixed(2)} / ${Number(rowData.wager_win_amount).toFixed(2)}</p>
   }
 

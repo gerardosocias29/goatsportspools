@@ -109,12 +109,16 @@ const ManageGames = () => {
           setGameModalVisible(true);
           console.log(data);
         }}/>
-        <Button className="text-white bg-primaryS border-primaryS rounded-lg text-sm" label="Announce Winner" onClick={(e) => {
-          setGameModalType("add");
-          setAnnounceWinnerData(data);
-          setAnnounceWinnerModal(true);
-          console.log(data);
-        } }/>
+        {
+          data.home_team_score != 0 && data.visitor_team_score != 0 ? null : 
+          <Button className="text-white bg-primaryS border-primaryS rounded-lg text-sm" label="Announce Winner" onClick={(e) => {
+            setGameModalType("add");
+            setAnnounceWinnerData(data);
+            setAnnounceWinnerModal(true);
+            console.log(data);
+          } }/>
+        }
+        
       </div>
     );
   }
