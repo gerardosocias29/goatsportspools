@@ -43,7 +43,9 @@ const LazyTable = ({
     rowLimit = null,
     scrollable = false,
     scrollHeight = null,
-    additionalApi
+    additionalApi,
+    selectionMode = 'checkbox',
+    handleOnSelect
   }) => {
     
   const { showToast, clearToast } = useToast();
@@ -289,6 +291,9 @@ const LazyTable = ({
     const value = event.value;
     setSelectedData(value);
     setSelectAll(value.length === totalRecords);
+    if(handleOnSelect){
+      handleOnSelect();
+    }
   };
 
   const onSelectAllChange = (event) => {
@@ -468,7 +473,7 @@ const LazyTable = ({
       <DataTable ref={dt} value={tableData} paginator={paginator} rows={(paginator ? (rowLimit && rowLimit || pageItem.value) : undefined)}
         lazy first={lazyState.first} totalRecords={totalRecords} onPage={onPage} onSort={onSort} sortField={lazyState.sortField} sortOrder={lazyState.sortOrder}
         onFilter={onFilter} filters={lazyState.filters} loading={loading}
-        selectionMode={!checkbox ? null : 'checkbox'} rowHover={true} selection={selectedData} onSelectionChange={onSelectionChange} selectAll={selectAll} onSelectAllChange={onSelectAllChange}
+        selectionMode={checkbox ? 'checkbox' : selectionMode} rowHover={true} selection={selectedData} onSelectionChange={onSelectionChange} selectAll={selectAll} onSelectAllChange={onSelectAllChange}
         dataKey="id"
         onRowToggle={(e) => setExpandedRows(e.data)} expandedRows={expandedRows} onRowExpand={onRowExpand} onRowCollapse={onRowCollapse} rowExpansionTemplate={rowExpansionTemplate}
         emptyMessage={(<>

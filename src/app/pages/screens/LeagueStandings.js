@@ -51,7 +51,7 @@ const LeagueStandings = ({currentUser}) => {
 
   const getUserBets = (user_id) => {
     axiosService.get('/api/bets/get-one/'+user_id).then((response) => {
-      console.log(response.data);
+      console.log("response::", response.data);
       handleViewBetsClick(response.data);
     }).catch((error) => {
       console.log(error);
@@ -226,6 +226,21 @@ const LeagueStandings = ({currentUser}) => {
     getLeagues();
   }, []);
 
+  const handleOnSelect = (e) => {
+    getUserBets(e && e.id);
+    console.log("e::::", e);
+    // handleViewBetsClick(e.bets);
+    // setModalVisible(true);
+  }
+
+  const handleOnSelect1 = (e) => {
+    console.log("handleOnSelect1::", e);
+    if(e.bet_group != null){
+      handleViewBetsClick1(e);
+      setModalVisible1(true);
+    }
+  }
+
   return (
     <div className="flex flex-col gap-5 p-5">
       <div className="flex items-center gap-2 justify-between">
@@ -244,20 +259,21 @@ const LeagueStandings = ({currentUser}) => {
       </div>
       <div className="w-full p-5 bg-white rounded-lg flex flex-col gap-5">
         <Table columns={columns} data={activeLeague && activeLeague.participants || []} scrollHeight="100%" paginator={false}
-          actions={currentUser && currentUser.role_id != 3} customActions={customActions}
+          actions={false} customActions={customActions}
+          selectionMode="single" handleOnSelect={handleOnSelect}
         />
 
       <BetHistoryModal 
         visible={modalVisible} data={modalData}
         onHide={handleModalOnHide} columns={betsColumn}
-        scrollable={false} scrollHeight="100%"
+        scrollable={false} scrollHeight="100%" handleOnSelect={handleOnSelect1}
       />
 
       <BetHistoryModal 
         visible={modalVisible1} data={modalData1}
         onHide={handleModalOnHide1} columns={betsColumn.filter(d => (d.field !== "actions" && d.field !== "wager_amount" && d.field !== "") )}
         scrollable={false} scrollHeight="100%"
-        classname="lg:w-1/2"
+        classname="lg:w-1/2" handleOnSelect={handleOnSelect1}
       />
       
       </div>

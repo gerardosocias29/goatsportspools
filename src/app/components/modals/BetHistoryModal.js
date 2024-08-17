@@ -9,9 +9,14 @@ const BetHistoryModal = ({
   columns,
   scrollable = true,
   scrollHeight = "450px",
-  classname = ""
+  classname = "",
+  handleOnSelect = () => {}
 }) => {
 
+  const onSelect = (e) => {
+    console.log('HANDLEONSELECT!!!!!!', e)
+    handleOnSelect(e);
+  }
 
   return (
     <>
@@ -21,6 +26,7 @@ const BetHistoryModal = ({
           columns={columns}
           paginator={false}
           scrollable={scrollable} scrollHeight={scrollHeight}
+          selectionMode="single" handleOnSelect={onSelect}
         />
       </Dialog>
     </>

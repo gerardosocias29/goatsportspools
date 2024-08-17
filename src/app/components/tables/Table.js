@@ -14,7 +14,9 @@ const Table = ({
   customActions = null, customActionsWidth = '3rem', 
   expandableRow = false, onRowExpand, onRowCollapse, rowExpansionTemplate,
   paginator = true, actionsClicked, hasOptions = false,
-  scrollable = false, scrollHeight = "400px"
+  scrollable = false, scrollHeight = "400px",
+  selectionMode = 'checkbox',
+  handleOnSelect
 }) => {
 
   const [selectedData, setSelectedData] = useState([]);
@@ -56,6 +58,14 @@ const Table = ({
 
   const getNestedValue = (obj, path) => path.split('.').reduce((acc, part) => acc && acc[part], obj);
 
+  const onSelectionChange = (event) => {
+    const value = event.value;
+    setSelectedData(value);
+    if(handleOnSelect){
+      handleOnSelect(value);
+    }
+  };
+
   useEffect(() => {
     // fetch api then set the data
   }, []);
@@ -89,8 +99,8 @@ const Table = ({
         emptyMessage={<div className="flex flex-col items-center gap-4 text-center justify-center">
           <p className="text-3xl">No Data Found</p>
         </div>}
-        selectionMode={checkbox ? 'checkbox' : null} rowHover selection={selectedData} 
-        onSelectionChange={(e) => setSelectedData(e.value)} dataKey="id"
+        selectionMode={checkbox ? 'checkbox' : selectionMode} rowHover selection={selectedData} 
+        onSelectionChange={onSelectionChange} dataKey="id"
         onRowToggle={(e) => setExpandedRows(e.data)} expandedRows={expandedRows} 
         onRowExpand={onRowExpand} onRowCollapse={onRowCollapse} rowExpansionTemplate={rowExpansionTemplate}
         scrollable={scrollable} scrollHeight={scrollHeight}
