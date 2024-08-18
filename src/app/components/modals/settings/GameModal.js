@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useAxios } from "../../../contexts/AxiosContext";
 import { Calendar } from "primereact/calendar";
 import { Dropdown } from "primereact/dropdown";
-import { InputNumber minFractionDigits={1} } from "primereact/inputnumber";
+import { InputNumber } from "primereact/inputnumber";
 import { Button } from "primereact/button";
 import { useToast } from "../../../contexts/ToastContext";
 
