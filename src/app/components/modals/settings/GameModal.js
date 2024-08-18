@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useAxios } from "../../../contexts/AxiosContext";
 import { Calendar } from "primereact/calendar";
 import { Dropdown } from "primereact/dropdown";
-import { InputNumber } from "primereact/inputnumber";
+import { InputNumber minFractionDigits={1} } from "primereact/inputnumber";
 import { Button } from "primereact/button";
 import { useToast } from "../../../contexts/ToastContext";
 
@@ -191,11 +191,11 @@ const GameModal = ({
           </div>
           <div className="flex flex-col gap-1">
             <label className="font-semibold">Spread</label>
-            <InputNumber value={game.favored_spread} onValueChange={(e) => handleInputChange(e.value, 'favored_spread')} useGrouping={false} placeholder="e.g 8 or -8"/>
+            <InputNumber minFractionDigits={1} value={game.favored_spread} onValueChange={(e) => handleInputChange(e.value, 'favored_spread')} useGrouping={false} placeholder="e.g 8 or -8"/>
           </div>
           <div className="flex flex-col gap-1">
             <label className="font-semibold">Money Line</label>
-            <InputNumber value={game.favored_ml} onValueChange={(e) => handleInputChange(e.value, 'favored_ml')} useGrouping={false} placeholder="e.g 150 or -120"/>
+            <InputNumber minFractionDigits={1} value={game.favored_ml} onValueChange={(e) => handleInputChange(e.value, 'favored_ml')} useGrouping={false} placeholder="e.g 150 or -120"/>
           </div>
         </div>
         
@@ -213,23 +213,23 @@ const GameModal = ({
           
           <div className="flex flex-col gap-1">
             <label className="font-semibold">Underdog Spread</label>
-            <InputNumber value={game.underdog_spread} onValueChange={(e) => handleInputChange(e.value, 'underdog_spread')} useGrouping={false} placeholder="e.g 8 or -8"/>
+            <InputNumber minFractionDigits={1} value={game.underdog_spread} onValueChange={(e) => handleInputChange(e.value, 'underdog_spread')} useGrouping={false} placeholder="e.g 8 or -8"/>
           </div>
 
           <div className="flex flex-col gap-1">
             <label className="font-semibold">Underdog Money Line</label>
-            <InputNumber value={game.underdog_ml} onValueChange={(e) => handleInputChange(e.value, 'underdog_ml')} useGrouping={false} placeholder="e.g 120 or -150"/>
+            <InputNumber minFractionDigits={1} value={game.underdog_ml} onValueChange={(e) => handleInputChange(e.value, 'underdog_ml')} useGrouping={false} placeholder="e.g 120 or -150"/>
           </div>
         </div>
         
         <div className="flex flex-col gap-1">
           <label className="font-semibold">Total Points Over</label>
-          <InputNumber value={game.over_total} onValueChange={(e) => handleInputChange(e.value, 'over_total')} useGrouping={false} placeholder="e.g 45"/>
+          <InputNumber minFractionDigits={1} value={game.over_total} onValueChange={(e) => handleInputChange(e.value, 'over_total')} useGrouping={false} placeholder="e.g 45"/>
         </div>
 
         <div className="flex flex-col gap-1">
           <label className="font-semibold">Total Points Under</label>
-          <InputNumber value={game.under_total} onValueChange={(e) => handleInputChange(e.value, 'under_total')} useGrouping={false} placeholder="e.g 45"/>
+          <InputNumber minFractionDigits={1} value={game.under_total} onValueChange={(e) => handleInputChange(e.value, 'under_total')} useGrouping={false} placeholder="e.g 45"/>
         </div>
 
         <div className="flex flex-col gap-1">
