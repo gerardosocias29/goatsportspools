@@ -9,7 +9,7 @@ export default function ClerkLogin() {
         <div className="flex text-white text-3xl lg:text-5xl xl:text-7xl text-center font-sans font-black m-auto z-[1]">Welcome to GoatSportsPools!</div>
       </div>
       <div className="p-5 flex flex-col m-auto w-full h-full bg-cover flex items-center justify-center bg-center bg-no-repeat bg-[url('https://goatsportspools.com/img/logo_expanded.png')] md:w-full md:bg-none bg-background md:bg-white">
-        <SignIn fallbackRedirectUrl={'main?page=dashboard'} signUpUrl="/signup" />
+        <SignIn fallbackRedirectUrl={'main?page=how-it-works'} signUpUrl="/signup" />
       </div>
     </div>
   )
