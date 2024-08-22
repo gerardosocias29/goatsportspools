@@ -23,9 +23,9 @@ const NFL = ({refreshCurrentUser}) => {
   const wagerTypes = [
     { name: 'Straight', value: 'straight', status: true },
     { name: 'Parlay', value: 'parlay', status: true },
-    { name: 'Teaser 6', value: 'teaser_6', status: true, tooltip: '6-point teaser' },
-    { name: 'Teaser 6½', value: 'teaser_6_5', status: true, tooltip: '6.5-point teaser' },
-    { name: 'Teaser 7', value: 'teaser_7', status: true, tooltip: '7-point teaser' },
+    { name: 'Teaser 6', value: 'teaser_6', status: true, tooltip: '6 point Teaser' },
+    { name: 'Teaser 6½', value: 'teaser_6_5', status: true, tooltip: '6.5 point Teaser' },
+    { name: 'Teaser 7', value: 'teaser_7', status: true, tooltip: '7 point teaser' },
   ];
 
   const [gamesApi, setGamesApi] = useState();
@@ -522,7 +522,7 @@ const NFL = ({refreshCurrentUser}) => {
                 <div key={i}
                   data-pr-tooltip={wt.tooltip} data-pr-position="bottom"
                   aria-disabled={!wt.status}
-                  className={`${wt.status ? 'cursor-pointer' : 'cursor-not-allowed'} ${wt.value} select-none rounded-lg shadow-lg border p-4 text-center hover:bg-primaryS hover:text-white ${activeWagerType.value === wt.value ? 'bg-primaryS text-white' : 'bg-white'}`}
+                  className={`${wt.status ? 'cursor-pointer' : 'cursor-not-allowed'} ${wt.value} select-none rounded-lg shadow-lg border px-4 py-2 text-center hover:bg-primaryS hover:text-white ${activeWagerType.value === wt.value ? 'bg-primaryS text-white' : 'bg-white'}`}
                   onClick={() => {
                     if(wt.status){
                       setActiveWagerType(wt); 
@@ -538,7 +538,7 @@ const NFL = ({refreshCurrentUser}) => {
                     }
                   }}
                 >
-                  <h2 className="text-xl font-semibold">{wt.name}</h2>
+                  <h2 className="text-lg font-semibold">{wt.name}</h2>
                 </div>
                 <Tooltip target={`.${wt.value}`} />
               </div>

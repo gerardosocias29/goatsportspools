@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { AiOutlineDashboard } from "react-icons/ai";
-import { FaFootballBall, FaRunning, FaTrophy, FaUsers, FaCogs } from 'react-icons/fa';
+import { FaFootballBall, FaRunning, FaTrophy, FaUsers, FaCogs, FaRegQuestionCircle, FaQuestionCircle } from 'react-icons/fa';
 import { FaCircleDollarToSlot } from "react-icons/fa6";
 import { TbPlayFootball } from "react-icons/tb";
 import { GiPodiumWinner } from "react-icons/gi";
@@ -25,6 +25,7 @@ const Sidebar = ({ currentUser, callback }) => {
       case 'icon-game-management': return <TbPlayFootball />;
       case 'icon-league-standings': return <GiPodiumWinner />;
       case 'icon-teams': return <PiUsersFour />;
+      case 'icon-hiw': return <FaQuestionCircle />;
       default: return null;
     }
   };
