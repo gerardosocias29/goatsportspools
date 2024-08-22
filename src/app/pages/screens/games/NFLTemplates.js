@@ -13,7 +13,7 @@ export const TeamTemplate = (value, data, field) => {
         backgroundPosition: 'center', // Centers the image within the div
       }}>
         <img src={odd.favored_team.image_url} alt={odd.favored_team.name} className="w-[50px]"/>
-        <p className="font-bold text-white select-none drop-shadow-md">{odd.favored_team.name}</p>
+        <p className="font-bold text-white select-none">{odd.favored_team.name}</p>
       </div>
       <p className='text-sm font-bold'>vs</p>
       <div className="flex items-center gap-2 border rounded-lg shadow-md px-4 min-w-[250px]" style={{
@@ -22,7 +22,7 @@ export const TeamTemplate = (value, data, field) => {
         backgroundPosition: 'center', // Centers the image within the div
       }}>
         <img src={odd.underdog_team.image_url} alt={odd.underdog_team.name} className="w-[50px]"/>
-        <p className="font-bold text-white select-none drop-shadow-md">{odd.underdog_team.name}</p>
+        <p className="font-bold text-white select-none">{odd.underdog_team.name}</p>
       </div>
     </div>
   );
