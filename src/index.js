@@ -12,7 +12,6 @@ import { AuthProvider } from './app/contexts/AuthContext';
 import { AxiosProvider } from './app/contexts/AxiosContext';
 import { ToastProvider } from './app/contexts/ToastContext';
 import { ClerkProvider } from '@clerk/clerk-react'
-import { classNames } from 'primereact/utils';
 
 const PUBLISHABLE_KEY = process.env.REACT_APP_VITE_CLERK_PUBLISHABLE_KEY;
 

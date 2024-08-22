@@ -30,7 +30,8 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build",
+    "build": "BUILD_PATH='./build2' react-scripts build",
+    "build-and-rename": "npm run build && mv ./build2 ./build && rm -rf ./build2",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
