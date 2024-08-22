@@ -19,7 +19,7 @@ import Teams from "./screens/settings/Teams";
 const MainPage = () => {
   const axiosService = useAxios();  
   const location = useLocation();
-  const currentPage = new URLSearchParams(location.search).get("page") || "dashboard";
+  const currentPage = new URLSearchParams(location.search).get("page") || "games/nfl";
   const { isLoggedIn, login, apiToken} = useContext(AuthContext);
 
   const [currentUser, setCurrentUser] = useState();
