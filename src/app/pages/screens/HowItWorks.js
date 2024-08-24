@@ -3,7 +3,7 @@ const HowItWorks = () => {
     <>
       <div className="flex flex-col gap-5 p-5">
         <div className="text-primary text-3xl font-semibold">How It Works</div>
-        <div className="w-full bg-white rounded-lg flex flex-col gap-5">
+        <div className="w-full p-5 bg-white rounded-lg flex flex-col gap-5">
           <p className="text-lg font-medium">
             All players helping with our inaugural season will have a chance to win $200. Enter this wager league, and whoever has the highest balance after week 8 will receive $200.
           </p>

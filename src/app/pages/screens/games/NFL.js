@@ -99,7 +99,6 @@ const NFL = ({refreshCurrentUser}) => {
     return (
       <InputNumber 
         inputId="currency-us" 
-        currency="USD" mode="currency" locale="en-US"
         className="w-full"
         inputClassName="rounded-lg ring-0"
         value={bet.bet_amount}
@@ -583,7 +582,6 @@ const NFL = ({refreshCurrentUser}) => {
                     <label>Bet Amount</label>
                     <InputNumber 
                       inputId="currency-us" 
-                      currency="USD" mode="currency" locale="en-US"
                       className=""
                       inputClassName="rounded-lg ring-0"
                       value={parlayBetAmount} 
@@ -612,7 +610,6 @@ const NFL = ({refreshCurrentUser}) => {
                     <label>Teaser Bet Amount</label>
                     <InputNumber 
                       inputId="currency-us" 
-                      currency="USD" mode="currency" locale="en-US"
                       className=""
                       inputClassName="rounded-lg ring-0"
                       value={teaserBetAmount} 
@@ -639,7 +636,6 @@ const NFL = ({refreshCurrentUser}) => {
                 <label>Use same amount for all bets</label>
                 <InputNumber 
                   inputId="currency-us" 
-                  currency="USD" mode="currency" locale="en-US"
                   className=""
                   inputClassName="rounded-lg ring-0"
                   value={sameAmountBet} 
