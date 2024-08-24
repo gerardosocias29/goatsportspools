@@ -33,10 +33,10 @@ export default function LeagueModal({
             return;
         }
 
-        if(data && data.id != ""){
-            axiosService.post('/api/leagues/update/'+ (data && data.id || ''), {
+        if(data && data.id !== ""){
+            axiosService.post('/api/leagues/update/'+ ((data && data.id) ? data.id : ''), {
                 name: leagueName,
-                user_id: leagueAdmin && leagueAdmin.id || currentUser.id,
+                user_id: (leagueAdmin && leagueAdmin.id) ? leagueAdmin.id : currentUser.id,
                 password: leaguePassword,
             }).then((response) => {
                 if(response.data.status){
@@ -53,7 +53,7 @@ export default function LeagueModal({
         } else {
             axiosService.post('/api/leagues/store', {
                 name: leagueName,
-                user_id: leagueAdmin && leagueAdmin.id || currentUser.id,
+                user_id: (leagueAdmin && leagueAdmin.id) ? leagueAdmin.id : currentUser.id,
                 password: leaguePassword,
             }).then((response) => {
                 if(response.data.status){
@@ -83,11 +83,11 @@ export default function LeagueModal({
     }
 
     useEffect(() => {
-        if(visible && currentUser && currentUser.role_id == 1){
+        if(visible && currentUser && currentUser.role_id === 1){
             getUsers();
         }
-        setLeagueName(data && data.name || '');
-    }, [visible]);
+        setLeagueName((data && data.name) ? data.name : '');
+    }, [visible, data]);
 
     const handleOnHide  = () => {
         setLeagueAdmin(null);
@@ -106,7 +106,7 @@ export default function LeagueModal({
             <form onSubmit={handleSubmit}>
                 <div className="grid lg:grid-cols-1 gap-4">
                     {
-                        currentUser && currentUser.role_id == 1 && (
+                        currentUser && currentUser.role_id === 1 && (
                             <div className="flex flex-col gap-1">
                                 <label htmlFor="league_admin" className="font-semibold">League Admin</label>
                                 <Dropdown required value={leagueAdmin} options={users} optionLabel="name" onChange={(e) => setLeagueAdmin(e.value)} placeholder="Select League Admin"/>

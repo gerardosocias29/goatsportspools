@@ -2,7 +2,6 @@ import { Button } from "primereact/button";
 import { Dropdown } from "primereact/dropdown";
 import { useState } from "react";
 import LazyTable from "../../../components/tables/LazyTable";
-import moment from "moment";
 import { decimalToMixedFraction } from "../../../utils/numberFormat";
 import { TeamTemplate } from "../games/NFLTemplates";
 import convertUTCToTimeZone from "../../../utils/utcToTimezone";
@@ -11,9 +10,10 @@ import GameModal from "../../../components/modals/settings/GameModal";
 
 const ManageGames = () => {
 
-  const [gameTypes, setGameTypes] = useState([
+  const gameTypes = [
     { name: 'NFL (National Football League)', value: 'nfl' }
-  ]);
+  ];
+
   const [selectedGameType, setSelectedGameType] = useState(gameTypes[0].value);
   const [refreshTable, setRefreshTable] = useState(false);
 
@@ -110,7 +110,7 @@ const ManageGames = () => {
           console.log(data);
         }}/>
         {
-          data.home_team_score != 0 && data.visitor_team_score != 0 ? null : 
+          data.home_team_score !== 0 && data.visitor_team_score !== 0 ? null : 
           <Button className="text-white bg-primaryS border-primaryS rounded-lg text-sm" label="Announce Winner" onClick={(e) => {
             setGameModalType("add");
             setAnnounceWinnerData(data);

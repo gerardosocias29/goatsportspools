@@ -30,7 +30,7 @@ export default function LeagueJoin({
     e.preventDefault();
     const postData = {
       password: password,
-      league_id: data && data.id || leagueId
+      league_id: (data && data.id) ? data.id : leagueId
     }
     axiosService.post('/api/leagues/join', postData).then((response) => {
       if(response.data.status){
@@ -58,7 +58,7 @@ export default function LeagueJoin({
 
   return (
     <>
-      <Dialog className="lg:w-1/4 w-[95%]" header={data && data.name && `Joining ${data.name}` || header} visible={visible} draggable={false} maximizable={false} onHide={handleOnHide}>
+      <Dialog className="lg:w-1/4 w-[95%]" header={(data && data.name) ? `Joining ${data.name}` : header} visible={visible} draggable={false} maximizable={false} onHide={handleOnHide}>
         <form onSubmit={handleSubmit}>
           <div className="grid lg:grid-cols-1 gap-4">
             { 
