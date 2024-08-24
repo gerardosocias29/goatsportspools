@@ -23,9 +23,9 @@ const NFL = ({refreshCurrentUser}) => {
   const wagerTypes = [
     { name: 'Straight', value: 'straight', status: true },
     { name: 'Parlay', value: 'parlay', status: true },
-    { name: 'Teaser 6', value: 'teaser_6', status: true, tooltip: '6 point Teaser' },
-    { name: 'Teaser 6½', value: 'teaser_6_5', status: true, tooltip: '6.5 point Teaser' },
-    { name: 'Teaser 7', value: 'teaser_7', status: true, tooltip: '7 point teaser' },
+    { name: '6 point Teaser', value: 'teaser_6', status: true, tooltip: '6 point Teaser' },
+    { name: '6.5 point Teaser', value: 'teaser_6_5', status: true, tooltip: '6.5 point Teaser' },
+    { name: '7 point Teaser', value: 'teaser_7', status: true, tooltip: '7 point teaser' },
   ];
 
   const [gamesApi, setGamesApi] = useState();
