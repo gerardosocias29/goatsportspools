@@ -15,7 +15,7 @@ export default function ClerkLogin() {
       <div className={`rounded-tr-[100px] rounded-br-[100px] relative hidden bg-background bg-cover bg-center bg-no-repeat bg-[url(https://goatsportspools.com/img/logo_expanded.png)] h-full flex-col md:flex md:shrink md:w-full m-auto`}>
         <div className="absolute w-full h-full bg-black bg-opacity-50 rounded-tr-[100px] rounded-br-[100px]"></div>
         <div className="flex text-white text-3xl lg:text-5xl xl:text-7xl text-center font-sans font-black m-auto z-[1]">Welcome to GoatSportsPools!</div>
-        <div className="flex mb-8 text-white z-[1] justify-center flex-col items-center">
+        <div className="flex mb-8 text-white z-[1] justify-center flex-col items-center absolute w-full bottom-0">
           <div className="bg-white/30 backdrop-blur-sm rounded-lg shadow-lg border border-white/20 p-4 max-w-sm mx-auto">
             <p className="text-md font-bold">Welcome to the inaugural GOAT Wagers league</p>
             <p className="text-sm">Completely FREE to enter - WIN $200</p>
