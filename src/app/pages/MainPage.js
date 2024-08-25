@@ -3,10 +3,8 @@ import Layout from "../components/layout/Layout";
 import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../contexts/AuthContext";
 import NotFound from "./NotFound";
-import Page from "./screens/Page";
 import { useAxios } from "../contexts/AxiosContext";
 import Dashboard from "./screens/Dashboard";
-import Profile from "./screens/Profile";
 import { useUser } from "@clerk/clerk-react";
 import Users from "./screens/Users";
 import Leagues from "./screens/Leagues";
@@ -26,16 +24,20 @@ const MainPage = () => {
   const [currentUser, setCurrentUser] = useState();
   const { isSignedIn, isLoaded } = useUser();
 
+  const [isLoading, setIsLoading] = useState(false);
+
   useEffect(() => {
-    console.log(isSignedIn, isLoaded, isLoggedIn);
     if(isSignedIn && isLoaded && !isLoggedIn){
+      setIsLoading(true);
       axiosService.get('/api/user-details').then((response) => {
         login(response.data.token);
+        setIsLoading(false);
       }).catch((error) => {
         // logout();
+        setIsLoading(false);
       });
     }
-  }, [isSignedIn, isLoaded, isLoggedIn])
+  }, [isSignedIn, isLoaded])
 
   useEffect(() => {
     if(isLoggedIn && apiToken){
@@ -91,7 +93,7 @@ const MainPage = () => {
   };
 
   return(
-    <Layout children={renderPage()} currentUser={currentUser} />
+    <Layout children={isLoggedIn && apiToken ? renderPage() : null} currentUser={currentUser} />
   )
 }
 
