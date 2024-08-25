@@ -1,3 +1,5 @@
+import { useNavigate } from "react-router-dom";
+
 const HowItWorks = () => {
   return (
     <>
@@ -7,7 +9,7 @@ const HowItWorks = () => {
           <p className="text-lg">
             All players participating in our inaugural season have a chance to win $200. Enter this wager league for FREE, and the player with the highest balance after Week 8 will receive $200.
           </p>
-          <p className="text-lg font-semibold">Register for free now!</p>
+          <p className="text-lg font-semibold"><a href="/signup">Register for free now!</a></p>
           
           <p className="text-lg">Here’s how it works:</p>
           <ol className="list-decimal list-inside space-y-2">
