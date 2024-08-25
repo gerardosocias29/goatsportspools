@@ -27,6 +27,7 @@ const MainPage = () => {
   const { isSignedIn, isLoaded } = useUser();
 
   useEffect(() => {
+    console.log(isSignedIn, isLoaded, isLoggedIn);
     if(isSignedIn && isLoaded && !isLoggedIn){
       axiosService.get('/api/user-details').then((response) => {
         login(response.data.token);
