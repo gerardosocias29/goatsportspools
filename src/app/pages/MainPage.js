@@ -34,7 +34,7 @@ const MainPage = () => {
         // logout();
       });
     }
-  }, [isSignedIn, isLoaded, isLoggedIn, axiosService, login])
+  }, [isSignedIn, isLoaded, isLoggedIn])
 
   useEffect(() => {
     if(isLoggedIn && apiToken){

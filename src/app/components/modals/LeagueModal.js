@@ -87,7 +87,7 @@ export default function LeagueModal({
             getUsers();
         }
         setLeagueName((data && data.name) ? data.name : '');
-    }, [visible, data]);
+    }, [visible]);
 
     const handleOnHide  = () => {
         setLeagueAdmin(null);
