@@ -8,7 +8,12 @@ export default function ClerkLogin() {
   const handleHowItWorks = () => {
     navigate('/how-it-works');
   }
-  
+  // games, how it works
+  // page 2 in bet history
+  // limit wager if balance is not 
+  // open bets above bet history
+  // show scores when win but not on pending
+  // total balance = available balance
   return (
     // <SignIn />
     <div className="grid md:grid-cols-2 items-center gap-1 min-h-screen">

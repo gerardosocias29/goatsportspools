@@ -210,6 +210,7 @@ const BetHistory = () => {
           api={'/api/bets'}
           columns={betsColumn} 
           hasOptions={true}
+          rowLimit={100000}
         />
       </div>
 
