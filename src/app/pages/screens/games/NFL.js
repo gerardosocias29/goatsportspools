@@ -15,6 +15,9 @@ import { decimalToMixedFraction } from "../../../utils/numberFormat";
 import convertUTCToTimeZone from "../../../utils/utcToTimezone";
 
 const NFL = ({refreshCurrentUser}) => {
+  const mainDisabled = process.env.REACT_APP_ENV === "production";
+  console.log(mainDisabled)
+
   const axiosService = useAxios();
   const showToast = useToast();
 
@@ -199,12 +202,12 @@ const NFL = ({refreshCurrentUser}) => {
     
     return (
       <div className="flex flex-col gap-4">
-        <Button disabled={isFiveMinutesBeforeGame(data.game_datetime) || checkParlayBet(data.id, odd.favored_points, odd.favored_team.id, 'spread') } 
+        <Button disabled={isFiveMinutesBeforeGame(data.game_datetime) || checkParlayBet(data.id, odd.favored_points, odd.favored_team.id, 'spread') || mainDisabled } 
           label={decimalToMixedFraction(odd.favored_points, true)}
           className={`${checkParlayBet(data.id, odd.favored_points, odd.favored_team.id)} border-primaryS ring-0 text-primary hover:text-white hover:bg-primaryS w-full bg-transparent rounded-lg ${isBetSelected({game_id: data.id,  type: 'spread', team: odd.favored_team, points: odd.favored_points }) ? 'bg-primaryS text-white' : ''}`}
           onClick={() => handleBetClick({ game_id: data.id, type: 'spread', team: odd.favored_team, points: odd.favored_points, bet_amount: 0, data: data })}
         />
-        <Button disabled={isFiveMinutesBeforeGame(data.game_datetime) || checkParlayBet(data.id, odd.underdog_points, odd.underdog_team.id, 'spread') } 
+        <Button disabled={isFiveMinutesBeforeGame(data.game_datetime) || checkParlayBet(data.id, odd.underdog_points, odd.underdog_team.id, 'spread') || mainDisabled } 
           label={decimalToMixedFraction(odd.underdog_points, true)}
           className={`${checkParlayBet(data.id, odd.underdog_points, odd.underdog_team.id)} border-primaryS ring-0 text-primary hover:text-white hover:bg-primaryS w-full bg-transparent rounded-lg ${isBetSelected({game_id: data.id,  type: 'spread', team: odd.underdog_team, points: odd.underdog_points }) ? 'bg-primaryS text-white' : ''}`}
           onClick={() => handleBetClick({ game_id: data.id, type: 'spread', team: odd.underdog_team, points: odd.underdog_points, bet_amount: 0, data: data })}
@@ -218,11 +221,11 @@ const NFL = ({refreshCurrentUser}) => {
     if (!odd) { return '' }
     return (
       <div className="flex flex-col gap-4">
-        <Button disabled={isFiveMinutesBeforeGame(data.game_datetime) || checkParlayBet(data.id, odd.over_total, "over", 'total')} label={'o' + decimalToMixedFraction(odd.over_total)}
+        <Button disabled={isFiveMinutesBeforeGame(data.game_datetime) || checkParlayBet(data.id, odd.over_total, "over", 'total') || mainDisabled} label={'o' + decimalToMixedFraction(odd.over_total)}
           className={`border-primaryS ring-0 text-primary hover:text-white hover:bg-primaryS w-full bg-transparent rounded-lg ${isBetSelected({game_id: data.id,  type: 'total', team: 'over', points: odd.over_total }) ? 'bg-primaryS text-white' : ''}`}
           onClick={() => handleBetClick({ game_id: data.id, type: 'total', team: 'over', points: odd.over_total, bet_amount: 0, data: data })}
         />
-        <Button disabled={isFiveMinutesBeforeGame(data.game_datetime) || checkParlayBet(data.id, odd.under_total, "under", 'total')} label={'u' + decimalToMixedFraction(odd.under_total)}
+        <Button disabled={isFiveMinutesBeforeGame(data.game_datetime) || checkParlayBet(data.id, odd.under_total, "under", 'total') || mainDisabled} label={'u' + decimalToMixedFraction(odd.under_total)}
           className={`border-primaryS ring-0 text-primary hover:text-white hover:bg-primaryS w-full bg-transparent rounded-lg ${isBetSelected({game_id: data.id,  type: 'total', team: 'under', points: odd.under_total }) ? 'bg-primaryS text-white' : ''}`}
           onClick={() => handleBetClick({ game_id: data.id, type: 'total', team: 'under', points: odd.under_total, bet_amount: 0, data: data })}
         />
@@ -237,11 +240,11 @@ const NFL = ({refreshCurrentUser}) => {
     if (!odd) { return '' }
     return (
       <div className="flex flex-col gap-4">
-        <Button disabled={isFiveMinutesBeforeGame(data.game_datetime) || checkParlayBet(data.id, odd.favored_ml, odd.favored_team.id, 'moneyline') } label={decimalToMixedFraction(odd.favored_ml, true)}
+        <Button disabled={isFiveMinutesBeforeGame(data.game_datetime) || checkParlayBet(data.id, odd.favored_ml, odd.favored_team.id, 'moneyline') || mainDisabled } label={decimalToMixedFraction(odd.favored_ml, true)}
           className={`border-primaryS ring-0 text-primary hover:text-white hover:bg-primaryS w-full bg-transparent rounded-lg ${isBetSelected({game_id: data.id,  type: 'moneyline', team: odd.favored_team, ml: odd.favored_ml }) ? 'bg-primaryS text-white' : ''}`}
           onClick={() => handleBetClick({ game_id: data.id, type: 'moneyline', team: odd.favored_team, ml: odd.favored_ml, bet_amount: 0, data: data })}
         />
-        <Button disabled={isFiveMinutesBeforeGame(data.game_datetime) || checkParlayBet(data.id, odd.underdog_ml, odd.underdog_team.id, 'moneyline') } label={decimalToMixedFraction(odd.underdog_ml, true)}
+        <Button disabled={isFiveMinutesBeforeGame(data.game_datetime) || checkParlayBet(data.id, odd.underdog_ml, odd.underdog_team.id, 'moneyline') || mainDisabled } label={decimalToMixedFraction(odd.underdog_ml, true)}
           className={`border-primaryS ring-0 text-primary hover:text-white hover:bg-primaryS w-full bg-transparent rounded-lg ${isBetSelected({game_id: data.id,  type: 'moneyline', team: odd.underdog_team, ml: odd.underdog_ml }) ? 'bg-primaryS text-white' : ''}`}
           onClick={() => handleBetClick({ game_id: data.id, type: 'moneyline', team: odd.underdog_team, ml: odd.underdog_ml, bet_amount: 0, data: data })}
         />
@@ -566,7 +569,7 @@ const NFL = ({refreshCurrentUser}) => {
             onClick={() => selectedLeague && setBets([])} 
           />
           <Button label={`Continue`}
-            disabled={!selectedLeague}
+            disabled={(!selectedLeague || mainDisabled)}
             className="mt-5 rounded-lg bg-background text-white border-background ring-0 w-[200px]" 
             onClick={handleContinue} 
           />
