@@ -17,9 +17,9 @@ export default function ClerkLogin() {
   return (
     // <SignIn />
     <div className="grid md:grid-cols-2 items-center gap-1 min-h-screen">
-      <div className={`rounded-tr-[100px] rounded-br-[100px] relative hidden bg-background bg-cover bg-center bg-no-repeat bg-[url(https://goatsportspools.com/img/logo_expanded.png)] h-full flex-col md:flex md:shrink md:w-full m-auto`}>
-        <div className="absolute w-full h-full bg-black bg-opacity-50 rounded-tr-[100px] rounded-br-[100px]"></div>
-        <div className="flex text-[#f7975d] text-3xl lg:text-5xl xl:text-7xl text-center font-sans font-black m-auto z-[1]">Welcome to GoatSportsPools!</div>
+      <div className={`rounded-tr-[100px] rounded-br-[100px] relative hidden bg-background bg-cover bg-center bg-no-repeat bg-[url(https://goatsportspools.com/img/newlogo.png)] h-full flex-col md:flex md:shrink md:w-full m-auto`}>
+        {/* <div className="absolute w-full h-full bg-black bg-opacity-50 rounded-tr-[100px] rounded-br-[100px]"></div> */}
+        {/* <div className="flex text-[#f7975d] text-3xl lg:text-5xl xl:text-7xl text-center font-sans font-black m-auto z-[1]">Welcome to GoatSportsPools!</div> */}
         <div className="flex mb-8 text-white z-[1] flex-col p-4 absolute w-full top-0">
           <div className="bg-white/30 backdrop-blur-sm rounded-lg shadow-lg border border-white/20 p-4 max-w-lg">
             <p className="text-xl font-bold">Welcome to the inaugural Goat Sports Pools!</p>
@@ -33,7 +33,7 @@ export default function ClerkLogin() {
           
         </div>
       </div>
-      <div className="p-5 flex flex-col m-auto w-full h-full bg-cover flex items-center justify-center bg-center bg-no-repeat bg-[url('https://goatsportspools.com/img/logo_expanded.png')] md:w-full md:bg-none bg-background md:bg-white">
+      <div className="p-5 flex flex-col m-auto w-full h-full bg-cover flex items-center justify-center bg-center bg-no-repeat bg-[url('https://goatsportspools.com/img/newlogo.png')] md:w-full md:bg-none bg-background md:bg-white">
         <div className="flex text-white z-[1] flex-col p-4 w-full top-0 md:hidden">
           <div className="bg-white/30 backdrop-blur-sm rounded-lg shadow-lg border border-white/20 p-2">
             <p className="text-sm font-bold">Welcome to the inaugural Goat Sports Pools!</p>
