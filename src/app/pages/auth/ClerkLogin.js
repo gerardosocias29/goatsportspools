@@ -46,7 +46,7 @@ export default function ClerkLogin() {
           </div>
           
         </div>
-        <SignIn fallbackRedirectUrl={'main?page='} signUpUrl="/signup" />
+        <SignIn fallbackRedirectUrl={'main?page='} signUpUrl="/signup" forceRedirectUrl={'main?page=games/nfl'}/>
       </div>
     </div>
   )
