@@ -562,18 +562,21 @@ const NFL = ({refreshCurrentUser}) => {
             additionalApi={gamesApi}
           />
         </div>
-        <div className="flex items-center justify-end gap-5">
-          <Button label={`Clear Bets`}
-            disabled={bets && bets.length < 1}
-            className="mt-5 rounded-lg text-primaryS border-primaryS bg-transparent ring-0 w-[200px] hover:bg-primaryS hover:text-white" 
-            onClick={() => selectedLeague && setBets([])} 
-          />
-          <Button label={`Continue`}
-            disabled={(!selectedLeague || mainDisabled)}
-            className="mt-5 rounded-lg bg-background text-white border-background ring-0 w-[200px]" 
-            onClick={handleContinue} 
-          />
-        </div>
+        {
+          !mainDisabled && <div className="flex items-center justify-end gap-5">
+            <Button label={`Clear Bets`}
+              disabled={bets && bets.length < 1}
+              className="mt-5 rounded-lg text-primaryS border-primaryS bg-transparent ring-0 w-[200px] hover:bg-primaryS hover:text-white" 
+              onClick={() => selectedLeague && setBets([])} 
+            />
+            <Button label={`Continue`}
+              disabled={(!selectedLeague || mainDisabled)}
+              className="mt-5 rounded-lg bg-background text-white border-background ring-0 w-[200px]" 
+              onClick={handleContinue} 
+            />
+          </div>
+        }
+        
       </div>
       <Dialog header="Your Bets" footer={() => {
         return <div className="flex flex-col gap-2">
