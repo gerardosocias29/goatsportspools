@@ -1,8 +1,12 @@
 import { SignIn } from "@clerk/clerk-react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAxios } from "../../contexts/AxiosContext";
 
 export default function ClerkLogin() {
+  const axiosService = useAxios();
 
+  
   const navigate = useNavigate();
 
   const handleHowItWorks = () => {
@@ -14,6 +18,20 @@ export default function ClerkLogin() {
   // open bets above bet history
   // show scores when win but not on pending
   // total balance = available balance
+
+  const [data, setData] = useState();
+  const getData = () => {
+    axiosService.get('/api/d').then((response) => {
+      console.log(response.data);
+      setData(response.data);
+    }).catch((error) => {
+      console.log(error);
+    });
+  }
+
+  useEffect(()=> {
+    getData();
+  }, []);
   return (
     // <SignIn />
     <div className="grid md:grid-cols-2 items-center gap-1 min-h-screen">
@@ -21,11 +39,20 @@ export default function ClerkLogin() {
         {/* <div className="absolute w-full h-full bg-black bg-opacity-50 rounded-tr-[100px] rounded-br-[100px]"></div> */}
         {/* <div className="flex text-[#f7975d] text-3xl lg:text-5xl xl:text-7xl text-center font-sans font-black m-auto z-[1]">Welcome to GoatSportsPools!</div> */}
         <div className="flex mb-8 text-white z-[1] flex-col p-4 absolute w-full top-0">
-          <div className="bg-white/30 backdrop-blur-sm rounded-lg shadow-lg border border-white/20 p-4 max-w-lg">
+          <div className="bg-white/30 backdrop-blur-sm rounded-lg shadow-lg border border-white/20 p-4 max-w-md">
             <p className="text-xl font-bold">Welcome to the inaugural Goat Sports Pools!</p>
-            <p className="text-md">FREE to enter - WIN $200</p>
+            <p className="text-md mt-4">FREE to enter - WIN $200</p>
             <p className="text-md">Initial $10 - 6000 for wagering</p>
             <p className="text-md">Rebuys will cost $40 for 30000 wagering</p>
+
+            <p className="text-xs mt-4">{data && data.p} - Total GOAT Players</p>
+            <p className="text-xs">{data && data.b} - Number of $10 GOAT buyins</p>
+            <p className="text-xs">{data && data.r} - Number rebuys</p>
+
+            <p className="text-xs mt-4 font-bold">October Prize pool is $200</p>
+            <p className="text-xs font-bold">End of Season Prize pool is $200</p>
+
+
             <p className="hover:underline mt-4 inline-block cursor-pointer text-primaryS" onClick={handleHowItWorks}>
               CLICK Here to see how it works
             </p>
