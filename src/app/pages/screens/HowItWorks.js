@@ -6,7 +6,7 @@ const HowItWorks = () => {
       <div className="text-primary text-3xl font-semibold">How It Works</div>
       <div className="w-full p-5 bg-white rounded-lg flex flex-col gap-5">
         <p className="text-lg">
-          All players participating in our inaugural season have a chance to win $200. Enter this wager league for FREE, and the player with the highest balance after Week 8 will receive $200.
+          All players participating in our inaugural season have a chance to win $200. Enter this wager league for FREE, and the player with the highest balance after Week 8 will receive $200. Example.
         </p>
         <p className="text-lg font-semibold">
           <a href="/signup">Register for free now!</a>
