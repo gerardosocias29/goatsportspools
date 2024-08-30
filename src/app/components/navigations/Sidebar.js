@@ -42,7 +42,7 @@ const Sidebar = ({ currentUser, callback }) => {
   };
 
   return (
-    <div id="Sidebar">
+    <div id="Sidebar" className="h-full relative flex flex-col justify-between">
       <ul className="py-2">
         {currentUser && currentUser.modules.map((e, index) => (
           e.sub_modules.length < 1 ? 
@@ -83,6 +83,12 @@ const Sidebar = ({ currentUser, callback }) => {
             </li>
         ))}
       </ul>
+
+      <div className="flex items-center justify-center gap-3 p-4">
+        <p className="text-sm font-bold text-primary cursor-pointer" onClick={() => navigateToPage('contactus')}>Contact Us</p>
+        <p>|</p>
+        <p className="text-sm font-bold text-primary cursor-pointer" onClick={() => navigateToPage('faq')}>FAQ</p>
+      </div>
     </div>
   );
 };

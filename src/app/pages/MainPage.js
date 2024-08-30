@@ -14,6 +14,8 @@ import ManageGames from "./screens/settings/ManageGames";
 import LeagueStandings from "./screens/LeagueStandings";
 import Teams from "./screens/settings/Teams";
 import HowItWorks from "./screens/HowItWorks";
+import FAQ from "./FAQ";
+import ContactUs from "./screens/ContactUs";
 
 const MainPage = () => {
   const axiosService = useAxios();  
@@ -86,6 +88,10 @@ const MainPage = () => {
         return <Teams currentUser={currentUser}/>
       case 'how-it-works':
         return <HowItWorks currentUser={currentUser}/>
+      case 'contactus':
+        return <ContactUs currentUser={currentUser}/>
+      case 'faq':
+        return <FAQ currentUser={currentUser}/>
       default:
         return (
           <NotFound/>
