@@ -45,9 +45,9 @@ export default function ClerkLogin() {
             <p className="text-md">Initial $10 - 6000 for wagering</p>
             <p className="text-md">Rebuys will cost $40 for 30000 wagering</p>
 
-            <p className="text-xs mt-4">{data && data.p} - Total GOAT Players</p>
-            <p className="text-xs">{data && data.b} - Number of $10 GOAT buyins</p>
-            <p className="text-xs">{data && data.r} - Number rebuys</p>
+            <p className="text-xs mt-4">1 - Total GOAT Players</p>
+            <p className="text-xs">1 - Number of $10 GOAT buyins</p>
+            <p className="text-xs">1 - Number rebuys</p>
 
             <p className="text-xs mt-4 font-bold">October Prize pool is $200</p>
             <p className="text-xs font-bold">End of Season Prize pool is $200</p>
@@ -60,13 +60,21 @@ export default function ClerkLogin() {
           
         </div>
       </div>
-      <div className="p-5 flex flex-col m-auto w-full h-full bg-cover flex items-center justify-center bg-center bg-no-repeat bg-[url('https://goatsportspools.com/img/newlogo.png')] md:w-full md:bg-none bg-background md:bg-white">
-        <div className="flex text-white z-[1] flex-col p-4 w-full top-0 md:hidden">
+      <div className="p-5 flex flex-col m-auto w-full h-full bg-cover gap-2 flex items-center justify-center bg-center bg-no-repeat bg-[url('https://goatsportspools.com/img/newlogo.png')] md:w-full md:bg-none bg-background md:bg-white">
+        <div className="flex text-white z-[1] flex-col w-full top-0 md:hidden">
           <div className="bg-white/30 backdrop-blur-sm rounded-lg shadow-lg border border-white/20 p-2">
             <p className="text-sm font-bold">Welcome to the inaugural Goat Sports Pools!</p>
             <p className="text-xs">FREE to enter - WIN $200</p>
             <p className="text-xs">Initial $10 - 6000 for wagering</p>
             <p className="text-xs">Rebuys will cost $40 for 30000 wagering</p>
+            
+            <p className="text-xs mt-4">1 - Total GOAT Players</p>
+            <p className="text-xs">1 - Number of $10 GOAT buyins</p>
+            <p className="text-xs">1 - Number rebuys</p>
+
+            <p className="text-xs mt-4 font-bold">October Prize pool is $200</p>
+            <p className="text-xs font-bold">End of Season Prize pool is $200</p>
+
             <p className="text-xs hover:underline mt-1 inline-block cursor-pointer text-primaryS" onClick={handleHowItWorks}>
               CLICK Here to see how it works
             </p>
