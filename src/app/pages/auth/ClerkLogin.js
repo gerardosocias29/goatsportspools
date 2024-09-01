@@ -58,7 +58,7 @@ export default function ClerkLogin() {
             <p className="text-xs">0 - Number rebuys</p>
 
             <p className="text-xs mt-4 font-bold">October Prize pool is $200</p>
-            <p className="text-xs font-bold">End of Season Prize pool is $100</p>
+            <p className="text-xs font-bold">January Prize pool is $100</p>
 
 
             {/* <p className="hover:underline mt-4 inline-block cursor-pointer text-primaryS" onClick={handleHowItWorks}>
@@ -78,10 +78,10 @@ export default function ClerkLogin() {
             
             <p className="text-xs mt-4">1 - Total GOAT Players</p>
             <p className="text-xs">1 - Number of $10 GOAT buyins</p>
-            <p className="text-xs">1 - Number rebuys</p>
+            <p className="text-xs">0 - Number rebuys</p>
 
             <p className="text-xs mt-4 font-bold">October Prize pool is $200</p>
-            <p className="text-xs font-bold">End of Season Prize pool is $200</p>
+            <p className="text-xs font-bold">January Prize pool is $100</p>
 
             <p className="text-xs hover:underline mt-1 inline-block cursor-pointer text-primaryS" onClick={handleHowItWorks}>
               CLICK Here to see how it works

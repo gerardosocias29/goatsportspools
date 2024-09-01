@@ -8,6 +8,8 @@ import ClerkLogin from "../pages/auth/ClerkLogin";
 import Logout from "../pages/auth/Logout";
 import ClerkSignup from "../pages/auth/ClerkSignUp";
 import HowItWorks from "../pages/screens/HowItWorks";
+import FAQ from "../pages/FAQ";
+import ContactUs from "../pages/screens/ContactUs";
 
 const AppRouter = () => {
   return (
@@ -19,6 +21,8 @@ const AppRouter = () => {
         <Route path="/login" element={<ClerkLogin />} />
         <Route path="/signup" element={<ClerkSignup />} />
         <Route path="/how-it-works" element={<HowItWorks />} />
+        <Route path="/faq" element={<FAQ />} />
+        <Route path="/contactus" element={<ContactUs />} />
         <Route path="/logout" element={<Logout />} />
         <Route path="/main" element={<MainPage />} />
 

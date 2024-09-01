@@ -103,6 +103,11 @@ const HowItWorks = () => {
           <p className="text-lg text-gray-600 mt-5">
             <b>Note:</b> Timelines and rules are subject to change at any time without prior notice. Please visit our website for the latest updates.
           </p>
+
+          <div className="flex gap-4">
+            <a href="/contactus">Contact Us</a>
+            <a href="/faq">FAQ</a>
+          </div>
         </div>
       </div>
     </>
