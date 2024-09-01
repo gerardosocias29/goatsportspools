@@ -1,6 +1,6 @@
 export function decimalToMixedFraction(decimal, identifyPositive = false) {
-  const wholeNumber = Math.floor(decimal);
-  const fractionalPart = decimal - wholeNumber;
+  const wholeNumber = Math.trunc(decimal); // Use Math.trunc instead of Math.floor
+  const fractionalPart = Math.abs(decimal - wholeNumber); // Use absolute value to handle the fractional part correctly
 
   const fractionSymbols = {
     "0.50": "½",
