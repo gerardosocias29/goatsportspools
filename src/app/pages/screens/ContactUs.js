@@ -15,10 +15,7 @@ const ContactUs = () => {
 
           <div className="flex items-center gap-2">
             <p className="text-lg font-semibold">Email:</p>
-            <p>support@goatsportspools.com</p>
-
-            <p className="text-lg font-semibold">Phone:</p>
-            <p>+1 (123) 456-7890</p>
+            <p>admin@goatsportspools.com</p>
           </div>
 
           {/* Contact Form */}
