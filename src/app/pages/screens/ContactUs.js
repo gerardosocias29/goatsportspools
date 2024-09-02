@@ -32,7 +32,7 @@ const ContactUs = () => {
           summary: 'Sucess!',
           detail: response.data.message
         });
-        navigate('/login');
+        setContactUs(data);
       } else {
         showToast({
           severity: 'error',
