@@ -105,8 +105,8 @@ const HowItWorks = () => {
           </p>
 
           <div className="flex gap-4">
-            <a href="/contactus">Contact Us</a>
-            <a href="/faq">FAQ</a>
+            <a href="/contactus" target="_blank">Contact Us</a>
+            <a href="/faq" target="_blank">FAQ</a>
           </div>
         </div>
       </div>
