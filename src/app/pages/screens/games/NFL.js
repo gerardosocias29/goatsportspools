@@ -360,7 +360,6 @@ const NFL = ({currentUser, refreshCurrentUser}) => {
   const [leagueJoinData, setLeagueJoinData] = useState();
   const onJoinHide = () => {
     setModalLeagueJoinVisible(false);
-    setLeagueJoinData();
   }
 
   const handleSuccess = () => {
