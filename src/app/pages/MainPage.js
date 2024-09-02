@@ -73,7 +73,7 @@ const MainPage = () => {
       case 'dashboard': 
         return <Dashboard/>
       case 'games/nfl': 
-        return <NFL refreshCurrentUser={refreshCurrentUser}/>
+        return <NFL currentUser={currentUser} refreshCurrentUser={refreshCurrentUser}/>
       case 'users': 
         return <Users/>
       case 'leagues':

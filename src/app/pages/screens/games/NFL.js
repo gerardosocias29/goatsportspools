@@ -13,8 +13,10 @@ import { InputNumber } from "primereact/inputnumber";
 import { useToast } from "../../../contexts/ToastContext";
 import { decimalToMixedFraction } from "../../../utils/numberFormat";
 import convertUTCToTimeZone from "../../../utils/utcToTimezone";
+import LeagueJoin from "../../../components/modals/LeagueJoin";
+import axios from "axios";
 
-const NFL = ({refreshCurrentUser}) => {
+const NFL = ({currentUser, refreshCurrentUser}) => {
   const mainDisabled = process.env.REACT_APP_ENV === "production";
   console.log(mainDisabled)
 
@@ -354,8 +356,31 @@ const NFL = ({refreshCurrentUser}) => {
 
   }
 
+  const [leagueJoinModalVisible, setModalLeagueJoinVisible] = useState(false);
+  const [leagueJoinData, setLeagueJoinData] = useState();
+  const onJoinHide = () => {
+    setModalLeagueJoinVisible(false);
+    setLeagueJoinData();
+  }
+
+  const handleSuccess = () => {
+    setRefreshTable(true);
+    if(currentUser && currentUser.role_id != 1){
+      getJoinedLeagues();
+    }
+  }
+
+  const getDefaultLeague = () => {
+    axiosService.get('/api/leagues/default').then((response) => {
+      setLeagueJoinData(response.data);
+    }).catch((error) => {
+      console.log(error);
+    });
+  }
+
   useEffect(() => {
     getJoinedLeagues();
+    getDefaultLeague();
   }, []);
 
 
@@ -495,6 +520,7 @@ const NFL = ({refreshCurrentUser}) => {
       setModalWagerVisisble(true);
     }
   }
+
   return (
     <div className="flex flex-col gap-5 p-5" id="NFL">
       <div className="flex items-center gap-2 justify-between">
@@ -503,15 +529,22 @@ const NFL = ({refreshCurrentUser}) => {
           <p className="font-bold text-primary">Balance: {Number(selectedLeague && selectedLeague.balance).toFixed(2)}</p>
         </div> 
         <div className="flex items-center gap-4">
-          <p className="font-bold text-primary">League: </p>
-          <Dropdown 
-            placeholder="Select League"
-            className="rounded-lg w-[300px]"
-            value={selectedLeague}
-            onChange={(e) => setSelectedLeague(e.value)}
-            options={joinedLeagues}
-            optionLabel="name"
-          />
+          {
+            (joinedLeagues && joinedLeagues.length > 0) ? (
+              <>
+                <p className="font-bold text-primary">League: </p>
+                <Dropdown 
+                  placeholder="Select League"
+                  className="rounded-lg w-[300px]"
+                  value={selectedLeague}
+                  onChange={(e) => setSelectedLeague(e.value)}
+                  options={joinedLeagues}
+                  optionLabel="name"
+                />
+              </>
+            ) : <Button onClick={() => setModalLeagueJoinVisible(true)} className="rounded-lg ring-0 border-none bg-primaryS" label="Join League"/>
+          }
+          
         </div>
       </div>
 
@@ -674,6 +707,10 @@ const NFL = ({refreshCurrentUser}) => {
           scrollable={true} scrollHeight="450px"
         />
       </Dialog>
+
+      <LeagueJoin visible={leagueJoinModalVisible} onHide={onJoinHide} currentUser={currentUser} data={leagueJoinData} onSuccess={handleSuccess} />
+
+
     </div>
   );
 }
