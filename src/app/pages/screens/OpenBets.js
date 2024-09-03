@@ -7,7 +7,7 @@ import BetHistoryModal from "../../components/modals/BetHistoryModal";
 import { useEffect, useState } from "react";
 import { useAxios } from "../../contexts/AxiosContext";
 
-const BetHistory = () => {
+const OpenBets = () => {
   const axiosService = useAxios();
   const TicketNumberTemplate = (value, rowData) => {
     if(rowData.bet_group != null){
@@ -187,11 +187,11 @@ const BetHistory = () => {
           <div className="border rounded-lg p-4 border-lightgray shadow-lg border-[1px]">
             <div className="flex justify-between mb-3 relative">
               <div className="w-full flex flex-col gap-1">
-                <span className="text-500 text-sm font-medium mb-3">Current Balance</span>
+                <span className="text-500 text-sm font-medium mb-3">Available Balance</span>
                 <div className="flex gap-4 w-full justify-center px-2">
                   <div>
                     <div className="flex flex-col items-center text-green-500">
-                      <p className="text-2xl text-center">{Number(totalBalance).toFixed(2) || 0}</p>
+                      <p className="text-2xl text-center">{Number(totalBalance + amountAtRisk).toFixed(2) || 0}</p>
                     </div>
                   </div>
                 </div>
@@ -207,7 +207,7 @@ const BetHistory = () => {
       </div>
       <div className="w-full p-5 bg-white rounded-lg flex flex-col gap-5">
         <LazyTable
-          api={'/api/bets/get/history'}
+          api={'/api/bets/get/open'}
           columns={betsColumn} 
           hasOptions={true}
           rowLimit={100000}
@@ -222,4 +222,4 @@ const BetHistory = () => {
   );
 }
 
-export default BetHistory;
+export default OpenBets;

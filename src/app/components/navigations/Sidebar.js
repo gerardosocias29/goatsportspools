@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { AiOutlineDashboard } from "react-icons/ai";
 import { FaFootballBall, FaRunning, FaTrophy, FaUsers, FaCogs, FaRegQuestionCircle, FaQuestionCircle } from 'react-icons/fa';
@@ -6,9 +6,13 @@ import { FaCircleDollarToSlot } from "react-icons/fa6";
 import { TbPlayFootball } from "react-icons/tb";
 import { GiPodiumWinner } from "react-icons/gi";
 import { PiUsersFour } from "react-icons/pi";
+import { Button } from "primereact/button";
+import { useAxios } from "../../contexts/AxiosContext";
+import LeagueJoin from "../modals/LeagueJoin";
 
 const Sidebar = ({ currentUser, callback }) => {
   const navigate = useNavigate();
+  const axiosService = useAxios();
   const location = useLocation();
   const currentPage = new URLSearchParams(location.search).get("page") || "";
   const [expandedItem, setExpandedItem] = useState(null); // State to track expanded item
@@ -40,6 +44,45 @@ const Sidebar = ({ currentUser, callback }) => {
   const toggleExpand = (index) => {
     setExpandedItem(expandedItem === index ? null : index);
   };
+
+  const [leagueJoinModalVisible, setModalLeagueJoinVisible] = useState(false);
+  const [leagueJoinData, setLeagueJoinData] = useState();
+  const onJoinHide = () => {
+    setModalLeagueJoinVisible(false);
+  }
+
+  const handleSuccess = () => {
+    if(currentUser && currentUser.role_id != 1){
+      window.location.reload();
+    }
+  }
+
+  const getDefaultLeague = () => {
+    axiosService.get('/api/leagues/default').then((response) => {
+      setLeagueJoinData({
+        id: response.data.league_id,
+        name: response.data.name,
+      });
+    }).catch((error) => {
+      console.log(error);
+    });
+  }
+
+  const [joinedLeagues, setJoinedLeagues] = useState();
+  const getJoinedLeagues = () => {
+    axiosService.get('/api/leagues/joined').then((response) => {
+      if (response.data.status) {
+        setJoinedLeagues(response.data.leagues_joined);
+      }
+    }).catch((error) => {
+      console.log(error);
+    });
+  }
+
+  useEffect(() => {
+    getJoinedLeagues();
+    getDefaultLeague();
+  }, []);
 
   return (
     <div id="Sidebar" className="h-full relative flex flex-col justify-between">
@@ -84,11 +127,20 @@ const Sidebar = ({ currentUser, callback }) => {
         ))}
       </ul>
 
-      <div className="flex items-center justify-center gap-3 p-4">
-        <p className="text-sm font-bold text-primary cursor-pointer" onClick={() => navigateToPage('contactus')}>Contact Us</p>
-        <p>|</p>
-        <p className="text-sm font-bold text-primary cursor-pointer" onClick={() => navigateToPage('faq')}>FAQ</p>
+      <div className="flex flex-col gap-4 px-5">
+        {
+          joinedLeagues && joinedLeagues.length < 1 && <Button onClick={() => setModalLeagueJoinVisible(true)} className="rounded-lg ring-0 border-none bg-primaryS" label="Join League"/>
+        }
+        
+        <div className="flex items-center justify-center gap-3 p-4">
+          <p className="text-sm font-bold text-primary cursor-pointer" onClick={() => navigateToPage('contactus')}>Contact Us</p>
+          <p>|</p>
+          <p className="text-sm font-bold text-primary cursor-pointer" onClick={() => navigateToPage('faq')}>FAQ</p>
+        </div>
+        
       </div>
+
+      <LeagueJoin visible={leagueJoinModalVisible} onHide={onJoinHide} currentUser={currentUser} data={leagueJoinData} onSuccess={handleSuccess} />
     </div>
   );
 };

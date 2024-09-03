@@ -356,33 +356,9 @@ const NFL = ({currentUser, refreshCurrentUser}) => {
 
   }
 
-  const [leagueJoinModalVisible, setModalLeagueJoinVisible] = useState(false);
-  const [leagueJoinData, setLeagueJoinData] = useState();
-  const onJoinHide = () => {
-    setModalLeagueJoinVisible(false);
-  }
-
-  const handleSuccess = () => {
-    setRefreshTable(true);
-    if(currentUser && currentUser.role_id != 1){
-      getJoinedLeagues();
-    }
-  }
-
-  const getDefaultLeague = () => {
-    axiosService.get('/api/leagues/default').then((response) => {
-      setLeagueJoinData({
-        id: response.data.league_id,
-        name: response.data.name,
-      });
-    }).catch((error) => {
-      console.log(error);
-    });
-  }
 
   useEffect(() => {
     getJoinedLeagues();
-    getDefaultLeague();
   }, []);
 
 
@@ -528,7 +504,7 @@ const NFL = ({currentUser, refreshCurrentUser}) => {
       <div className="flex items-center gap-2 justify-between">
         <div className="text-primary text-3xl font-semibold">NFL</div>
         <div>
-          <p className="font-bold text-primary">Balance: {Number(selectedLeague && selectedLeague.balance).toFixed(2)}</p>
+          <p className="font-bold text-primary">Current Balance: {Number(selectedLeague && selectedLeague.balance).toFixed(2)}</p>
         </div> 
         <div className="flex items-center gap-4">
           {
@@ -544,7 +520,7 @@ const NFL = ({currentUser, refreshCurrentUser}) => {
                   optionLabel="name"
                 />
               </>
-            ) : <Button onClick={() => setModalLeagueJoinVisible(true)} className="rounded-lg ring-0 border-none bg-primaryS" label="Join League"/>
+            ) : ""
           }
           
         </div>
@@ -613,7 +589,16 @@ const NFL = ({currentUser, refreshCurrentUser}) => {
         }
         
       </div>
-      <Dialog header="Your Bets" footer={() => {
+      <Dialog header={
+        () => {
+          return (
+            <div className="flex justify-between">
+              <p className="font-bold">Your Bets</p>
+              <p className="font-bold text-primary mr-5">Current Balance: {Number(selectedLeague && selectedLeague.balance).toFixed(2)}</p>
+            </div>
+          )
+        }
+      } footer={() => {
         return <div className="flex flex-col gap-2">
           {
             activeWagerType.value === "parlay" && 
@@ -709,9 +694,6 @@ const NFL = ({currentUser, refreshCurrentUser}) => {
           scrollable={true} scrollHeight="450px"
         />
       </Dialog>
-
-      <LeagueJoin visible={leagueJoinModalVisible} onHide={onJoinHide} currentUser={currentUser} data={leagueJoinData} onSuccess={handleSuccess} />
-
 
     </div>
   );

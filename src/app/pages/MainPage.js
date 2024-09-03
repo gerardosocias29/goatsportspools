@@ -16,6 +16,7 @@ import Teams from "./screens/settings/Teams";
 import HowItWorks from "./screens/HowItWorks";
 import FAQ from "./FAQ";
 import ContactUs from "./screens/ContactUs";
+import OpenBets from "./screens/OpenBets";
 
 const MainPage = () => {
   const axiosService = useAxios();  
@@ -82,6 +83,8 @@ const MainPage = () => {
         return <LeagueStandings currentUser={currentUser}/>
       case 'bet-history':
         return <BetHistory currentUser={currentUser} refreshCurrentUser={refreshCurrentUser}/>
+      case 'open-bets':
+        return <OpenBets currentUser={currentUser} refreshCurrentUser={refreshCurrentUser}/>
       case 'settings/game-management':
         return <ManageGames currentUser={currentUser}/>
       case 'settings/teams':
