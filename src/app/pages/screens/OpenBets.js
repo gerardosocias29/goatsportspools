@@ -161,7 +161,7 @@ const OpenBets = () => {
 
   return (
     <div className="flex flex-col gap-5 p-5">
-      <div className="text-primary text-3xl font-semibold">Bet History</div>
+      <div className="text-primary text-3xl font-semibold">Open Bets</div>
       <div className="w-full p-5 bg-white rounded-lg flex flex-col gap-5">
         <div className="grid lg:grid-cols-6 gap-4">
           {/* <div className="border rounded-lg p-4 border-lightgray shadow-lg border-[1px]">
