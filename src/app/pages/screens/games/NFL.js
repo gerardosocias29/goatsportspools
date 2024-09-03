@@ -371,7 +371,10 @@ const NFL = ({currentUser, refreshCurrentUser}) => {
 
   const getDefaultLeague = () => {
     axiosService.get('/api/leagues/default').then((response) => {
-      setLeagueJoinData(response.data);
+      setLeagueJoinData({
+        id: response.data.league_id,
+        name: response.data.name,
+      });
     }).catch((error) => {
       console.log(error);
     });
