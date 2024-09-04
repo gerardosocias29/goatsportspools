@@ -110,7 +110,7 @@ const NFL = ({currentUser, refreshCurrentUser}) => {
         className="w-full"
         inputClassName="rounded-lg ring-0"
         value={bet.bet_amount}
-        min={1}
+        min={2}
         onChange={(e) => handleBetAmountChange(e.value, bet)} 
         minFractionDigits={2}
         useGrouping={false}
@@ -300,6 +300,16 @@ const NFL = ({currentUser, refreshCurrentUser}) => {
 
   const [placeBetButton, setPlaceBetButton] = useState(false);
   const handlePlaceBets = () => {
+    const invalidBets = bets.filter(b => b.bet_amount < 2);
+    if (invalidBets.length > 0) {
+      showToast({
+        severity: 'error',
+        summary: 'Invalid Bet Amount',
+        detail: 'The minimum bet amount is 2.',
+      });
+      return;
+    }
+
     // if(activeWagerType.value === "parlay"){
     //   showToast({
     //     severity: 'info',
@@ -615,7 +625,7 @@ const NFL = ({currentUser, refreshCurrentUser}) => {
                       inputClassName="rounded-lg ring-0"
                       value={parlayBetAmount} 
                       useGrouping={false}
-                      min={1}
+                      min={2}
                       onChange={handleParlayBetAmountChange} 
                       minFractionDigits={2}
                     />
@@ -643,7 +653,7 @@ const NFL = ({currentUser, refreshCurrentUser}) => {
                       inputClassName="rounded-lg ring-0"
                       value={teaserBetAmount} 
                       useGrouping={false}
-                      min={1}
+                      min={2}
                       onChange={handleTeaserBetAmountChange} 
                       minFractionDigits={2}
                     />
@@ -669,7 +679,7 @@ const NFL = ({currentUser, refreshCurrentUser}) => {
                   inputClassName="rounded-lg ring-0"
                   value={sameAmountBet} 
                   useGrouping={false}
-                  min={1}
+                  min={2}
                   onChange={(e) => {
                     setSameAmountBet(e.value); 
                     handleGlobalBetAmountChange(e.value);
