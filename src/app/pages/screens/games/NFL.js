@@ -47,7 +47,7 @@ const NFL = ({currentUser, refreshCurrentUser}) => {
   }
 
   const checkParlayBet = (gameID, points, team, type) => {
-    if(selectedLeague.balance === 0 ) {
+    if(selectedLeague && selectedLeague.balance === 0 ) {
       return true;
     }
     if (activeWagerType.value !== "parlay") {
