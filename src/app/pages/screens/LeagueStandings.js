@@ -22,7 +22,7 @@ const LeagueStandings = ({currentUser}) => {
     { field: 'rank', header: 'Rank', headerStyle: { textAlign: "center" } },
     { field: 'name', header: 'Name', template: NameTemplate, hasTemplate: true },
     { field: 'email', header: 'Email' },
-    { field: 'pivot.balance', header: 'Balance', headerStyle: { textAlign: "right" } }
+    { field: 'balance', header: 'Balance', headerStyle: { textAlign: "right" } }
     // { field: 'win_bets.length', header: 'Wins', headerStyle: { textAlign: "center" } },
     // { field: 'lose_bets.length', header: 'Losses', headerStyle: { textAlign: "center" }},
     // { field: 'tie_bets.length', header: 'Ties', headerStyle: {textAlign: "center"}},

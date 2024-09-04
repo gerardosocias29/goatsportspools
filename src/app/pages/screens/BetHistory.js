@@ -191,7 +191,7 @@ const BetHistory = () => {
                 <div className="flex gap-4 w-full justify-center px-2">
                   <div>
                     <div className="flex flex-col items-center text-green-500">
-                      <p className="text-2xl text-center">{Number(totalBalance).toFixed(2) || 0}</p>
+                      <p className="text-2xl text-center">{Number(totalBalance + amountAtRisk).toFixed(2) || 0}</p>
                     </div>
                   </div>
                 </div>
