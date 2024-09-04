@@ -47,6 +47,9 @@ const NFL = ({currentUser, refreshCurrentUser}) => {
   }
 
   const checkParlayBet = (gameID, points, team, type) => {
+    if(selectedLeague.balance === 0 ) {
+      return true;
+    }
     if (activeWagerType.value !== "parlay") {
       return false;
     }
@@ -574,7 +577,7 @@ const NFL = ({currentUser, refreshCurrentUser}) => {
           />
         </div>
         {
-          !mainDisabled && <div className="flex items-center justify-end gap-5">
+          ((selectedLeague && selectedLeague.balance !== 0)) ? <div className="flex items-center justify-end gap-5">
             <Button label={`Clear Bets`}
               disabled={bets && bets.length < 1}
               className="mt-5 rounded-lg text-primaryS border-primaryS bg-transparent ring-0 w-[200px] hover:bg-primaryS hover:text-white" 
@@ -585,7 +588,7 @@ const NFL = ({currentUser, refreshCurrentUser}) => {
               className="mt-5 rounded-lg bg-background text-white border-background ring-0 w-[200px]" 
               onClick={handleContinue} 
             />
-          </div>
+          </div> : null
         }
         
       </div>
