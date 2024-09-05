@@ -38,7 +38,7 @@ const MainPage = () => {
       }).catch((error) => {
         // logout();
         setIsLoading(false);
-        window.location.reload();
+        // window.location.reload();
       });
     }
   }, [isSignedIn, isLoaded])

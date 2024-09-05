@@ -18,11 +18,17 @@ const LeagueStandings = ({currentUser}) => {
     return <div className="flex items-center gap-1">{value} {data.you ? <Badge severity="success" value="You"></Badge> : ''}</div>
   }
 
+  const BalanceTemplate = (value) => {
+    const formattedValue = value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return <span className="text-right">{formattedValue}</span>;
+  };
+
+
   const columns = [
     { field: 'rank', header: 'Rank', headerStyle: { textAlign: "center" } },
     { field: 'name', header: 'Name', template: NameTemplate, hasTemplate: true },
     { field: 'email', header: 'Email' },
-    { field: 'balance', header: 'Balance', headerStyle: { textAlign: "right" } }
+    { field: 'balance', header: 'Balance', template: BalanceTemplate, hasTemplate: true, headerStyle: { textAlign: "right" } }
     // { field: 'win_bets.length', header: 'Wins', headerStyle: { textAlign: "center" } },
     // { field: 'lose_bets.length', header: 'Losses', headerStyle: { textAlign: "center" }},
     // { field: 'tie_bets.length', header: 'Ties', headerStyle: {textAlign: "center"}},
