@@ -37,25 +37,33 @@ export default function ClerkLogin() {
     <div className="grid md:grid-cols-2 items-center gap-1 min-h-screen">
       <div className={`rounded-tr-[100px] rounded-br-[100px] relative hidden bg-background bg-cover bg-center bg-no-repeat bg-[url(https://goatsportspools.com/assets/images/logo_expanded.png)] h-full flex-col flex justify-end md:flex md:shrink md:w-full m-auto`}>
         <div className="absolute w-full h-full bg-black bg-opacity-50 rounded-tr-[100px] rounded-br-[100px]"></div>
-        <div className="text-white text-center flex flex-col z-[1] pb-[50px]">
+        <div className="text-white text-center flex flex-col z-[1] pb-[40px]">
           <p className="text-3xl lg:text-5xl xl:text-5xl text-center font-sans font-black">Welcome to GoatSportsPools!</p>
           <p className="text-md mt-4">FREE to enter - WIN $200</p>
           <p className="text-md">Initial $10 - 6000 for wagering</p>
           <p className="text-md">Rebuys will cost $40 for 30000 wagering</p>
-          <p className="hover:underline mt-4 inline-block cursor-pointer text-primaryS" onClick={handleHowItWorks}>
+          
+          <p className="hover:underline my-4 inline-block cursor-pointer text-primaryS" onClick={handleHowItWorks}>
             CLICK Here to see how it works
           </p>
+          
+          <div className="absolute bottom-0 left-0 mb-[25px]">
+            
+          </div>
+          <p className="text-xs text-left px-5 font-bold">2024 – Freeroll League for $300 in prizes<br/>To Join - Text (724)277-6787</p>
+          <p className="text-xs font-bold text-left px-5">In 2025 - We will open so you can host your own leagues</p>
+          
         </div>
         <div className="flex mb-8 text-white z-[1] flex-col p-4 absolute w-full top-0">
-          <div className="bg-white/30 backdrop-blur-sm rounded-lg shadow-lg border border-white/20 p-4 max-w-xs">
+          <div className="bg-white/30 backdrop-blur-sm rounded-lg shadow-lg border border-white/20 p-4 max-w-[220px]">
             {/* <p className="text-xl font-bold">Welcome to the inaugural Goat Sports Pools!</p>
             <p className="text-md mt-4">FREE to enter - WIN $200</p>
             <p className="text-md">Initial $10 - 6000 for wagering</p>
             <p className="text-md">Rebuys will cost $40 for 30000 wagering</p> */}
 
-            <p className="text-xs">1 - Total GOAT Players</p>
-            <p className="text-xs">1 - Number of $10 GOAT buyins</p>
-            <p className="text-xs">0 - Number rebuys</p>
+            <p className="text-xs">{data && data.p || 0} - Total GOAT Players</p>
+            <p className="text-xs">{data && data.b || 0} - Number of $10 GOAT buyins</p>
+            <p className="text-xs">{data && data.r || 0} - Number rebuys</p>
 
             <p className="text-xs mt-4 font-bold">October Prize pool is $200</p>
             <p className="text-xs font-bold">January Prize pool is $100</p>
