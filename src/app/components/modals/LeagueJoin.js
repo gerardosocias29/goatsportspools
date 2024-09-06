@@ -26,8 +26,14 @@ export default function LeagueJoin({
   const [password, setPassword] = useState();
   const [leagueId, setLeagueId] = useState(data && data.id);
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const handleSubmit = (e) => {
     e.preventDefault();
+    if(isSubmitting) {
+      return ;
+    }
+
+    setIsSubmitting(true);
     const postData = {
       password: password,
       league_id: (data && data.id) ? data.id : leagueId
@@ -43,15 +49,18 @@ export default function LeagueJoin({
           onSuccess();
         }
         handleOnHide();
+        setIsSubmitting(false);
       } else {
         showToast({
           severity: 'error',
           summary: 'Failed',
           detail: response.data.message,
         });
+        setIsSubmitting(false);
       }
     }).catch((error) => {
       console.log(error);
+      setIsSubmitting(false);
     });
     console.log(postData);
   }
@@ -90,7 +99,7 @@ export default function LeagueJoin({
             </div>
 
             <div className="flex justify-end">
-              <Button type="submit" label="Join League" icon="pi pi-trophy" className="rounded-lg border-primaryS bg-primaryS" />
+              <Button loading={isSubmitting} type="submit" label="Join League" icon="pi pi-trophy" className="rounded-lg border-primaryS bg-primaryS" />
             </div>
           </div>
         </form>
