@@ -68,9 +68,9 @@ const MainPage = () => {
   const renderPage = () => {
     const modules = currentUser && currentUser.modules.map((e) => e.page);
     if(modules && modules.includes(currentPage)){
-      // console.log(modules);
+      console.log(modules, currentPage);
     } else {
-      <NotFound/>
+      return <NotFound/>
     }
 
     switch (currentPage) {
