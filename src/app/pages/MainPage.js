@@ -18,6 +18,7 @@ import FAQ from "./FAQ";
 import ContactUs from "./screens/ContactUs";
 import OpenBets from "./screens/OpenBets";
 import Cookies from 'js-cookie';
+import GameHistory from "./screens/games/GameHistory";
 
 const MainPage = () => {
   const axiosService = useAxios();  
@@ -77,6 +78,8 @@ const MainPage = () => {
         return <Dashboard/>
       case 'games/nfl': 
         return <NFL currentUser={currentUser} refreshCurrentUser={refreshCurrentUser}/>
+      case 'games/history': 
+        return <GameHistory currentUser={currentUser}/>
       case 'users': 
         return <Users/>
       case 'leagues':

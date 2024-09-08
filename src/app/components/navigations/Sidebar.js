@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { AiOutlineDashboard } from "react-icons/ai";
-import { FaFootballBall, FaRunning, FaTrophy, FaUsers, FaCogs, FaRegQuestionCircle, FaQuestionCircle } from 'react-icons/fa';
+import { FaFootballBall, FaRunning, FaTrophy, FaUsers, FaCogs, FaRegQuestionCircle, FaQuestionCircle, FaHistory } from 'react-icons/fa';
 import { FaCircleDollarToSlot } from "react-icons/fa6";
 import { TbPlayFootball } from "react-icons/tb";
-import { GiPodiumWinner } from "react-icons/gi";
+import { GiAmericanFootballHelmet, GiPodiumWinner } from "react-icons/gi";
 import { PiUsersFour } from "react-icons/pi";
 import { Button } from "primereact/button";
 import { useAxios } from "../../contexts/AxiosContext";
@@ -20,7 +20,8 @@ const Sidebar = ({ currentUser, callback }) => {
   const changeIcon = (icon_name) => {
     switch(icon_name) {
       case 'icon-dashboard': return <AiOutlineDashboard />;
-      case 'icon-nfl': return <FaFootballBall />;
+      case 'icon-nfl': return <GiAmericanFootballHelmet />;
+      case 'icon-games': return <FaFootballBall />;
       case 'icon-users': return <FaUsers />;
       case 'icon-leagues': return <FaTrophy />;
       case 'icon-running': return <FaRunning />;
@@ -30,6 +31,7 @@ const Sidebar = ({ currentUser, callback }) => {
       case 'icon-league-standings': return <GiPodiumWinner />;
       case 'icon-teams': return <PiUsersFour />;
       case 'icon-hiw': return <FaQuestionCircle />;
+      case 'icon-history': return <FaHistory />
       default: return null;
     }
   };
