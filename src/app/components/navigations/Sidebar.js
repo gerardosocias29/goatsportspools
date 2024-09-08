@@ -53,7 +53,7 @@ const Sidebar = ({ currentUser, callback }) => {
 
   const handleSuccess = () => {
     if(currentUser && currentUser.role_id != 1){
-      // window.location.reload();
+      window.location.reload();
     }
   }
 
