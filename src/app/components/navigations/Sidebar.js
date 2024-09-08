@@ -53,7 +53,7 @@ const Sidebar = ({ currentUser, callback }) => {
 
   const handleSuccess = () => {
     if(currentUser && currentUser.role_id != 1){
-      window.location.reload();
+      // window.location.reload();
     }
   }
 
@@ -82,7 +82,7 @@ const Sidebar = ({ currentUser, callback }) => {
   useEffect(() => {
     getJoinedLeagues();
     getDefaultLeague();
-  }, []);
+  }, [currentUser]);
 
   return (
     <div id="Sidebar" className="h-full relative flex flex-col justify-between">
