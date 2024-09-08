@@ -87,6 +87,7 @@ export default function LeagueModal({
             getUsers();
         }
         setLeagueName((data && data.name) ? data.name : '');
+        setLeaguePassword((data && data.password) ? data.password : '')
     }, [visible]);
 
     const handleOnHide  = () => {
@@ -120,7 +121,7 @@ export default function LeagueModal({
                     </div>
                     <div className="flex flex-col gap-1">
                         <label htmlFor="password" className="font-semibold">Password</label>
-                        <Password required={!data} id="password" inputClassName="w-full text-sm" value={leaguePassword} placeholder="********" feedback={false} tabIndex={1} onChange={(e) => setLeaguePassword(e.target.value)} className="text-sm" autoComplete="new-password"/>
+                        <InputText required={!data} id="password" inputClassName="w-full text-sm" value={leaguePassword} placeholder="********" feedback={false} tabIndex={1} onChange={(e) => setLeaguePassword(e.target.value)} className="text-sm" autoComplete="new-password"/>
                     </div>
 
                     <div className="flex justify-end">

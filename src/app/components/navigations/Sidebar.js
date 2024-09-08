@@ -61,7 +61,7 @@ const Sidebar = ({ currentUser, callback }) => {
     axiosService.get('/api/leagues/default').then((response) => {
       setLeagueJoinData({
         id: response.data.league_id,
-        name: response.data.name,
+        name: response.data.name
       });
     }).catch((error) => {
       console.log(error);

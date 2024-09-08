@@ -54,7 +54,7 @@ const Leagues = ({currentUser, refreshCurrentUser}) => {
       setLeagueModalData({
         id: id,
         name: data.name,
-        password: '',
+        password: data.old_password,
         user_id: data.user_id
       });
       setModalLeagueVisible(true);
