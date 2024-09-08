@@ -173,9 +173,9 @@ const GameModal = ({
       <div className="grid lg:grid-cols-2 gap-4">
         <div className="flex flex-col gap-1">
           <label className="font-semibold">Game Date & Time</label>
-          <Calendar minDate={new Date} placeholder="MM/DD/YYYY HH:mm" value={game.game_datetime} 
+          <Calendar minDate={new Date(new Date().setMonth(new Date().getMonth() - 1))} placeholder="MM/DD/YYYY HH:mm" value={game.game_datetime} 
             onChange={(e) => handleInputChange(e.value, 'game_datetime')} showTime hourFormat="24"
-            showButtonBar stepMinute={5}
+            showButtonBar stepMinute={1}
           />
         </div>
         <div></div>
