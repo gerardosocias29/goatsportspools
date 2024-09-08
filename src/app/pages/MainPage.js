@@ -66,11 +66,19 @@ const MainPage = () => {
   }
 
   const renderPage = () => {
-    const modules = currentUser && currentUser.modules.map((e) => e.page);
-    if(modules && modules.includes(currentPage)){
+    const modules = currentUser && currentUser.modules.map((e) => {
+      let pages = [e.page];
+      if (e.sub_modules && e.sub_modules.length > 0) {
+        const subModulePages = e.sub_modules.map((sub) => sub.page);
+        pages = pages.concat(subModulePages);
+      }
+      return pages;  // Return an array of pages for this module
+    }).flat();  // Flatten the resulting array
+    
+    if (modules && modules.includes(currentPage)) {
       console.log(modules, currentPage);
     } else {
-      return <NotFound/>
+      return <NotFound/>;
     }
 
     switch (currentPage) {
