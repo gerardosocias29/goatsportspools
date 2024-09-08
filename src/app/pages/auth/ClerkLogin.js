@@ -50,8 +50,8 @@ export default function ClerkLogin() {
           <div className="absolute bottom-0 left-0 mb-[25px]">
             
           </div>
-          <p className="text-xs text-left px-5 font-bold">2024 – Freeroll League for $300 in prizes<br/>To Join - Text (724)277-6787</p>
-          <p className="text-xs font-bold text-left px-5">In 2025 - We will open so you can host your own leagues</p>
+          <p className="text-md text-left px-5 font-bold">2024 – Freeroll League for $300 in prizes<br/>To Join - Text (724)277-6787</p>
+          <p className="text-md font-bold text-left px-5">In 2025 - We will open so you can host your own leagues</p>
           
         </div>
         <div className="flex mb-8 text-white z-[1] flex-col p-4 absolute w-full top-0">
