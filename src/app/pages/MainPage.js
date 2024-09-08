@@ -33,7 +33,7 @@ const MainPage = () => {
   useEffect(() => {
     if(isSignedIn && isLoaded && !isLoggedIn){
       setIsLoading(true);
-      console.log("cookies::::", Cookies.get('__session'))
+      // console.log("cookies::::", Cookies.get('__session'))
       axiosService.get('/api/user-details', {token: Cookies.get('__session')}).then((response) => {
         login(response.data.token);
         setIsLoading(false);
