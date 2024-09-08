@@ -17,6 +17,7 @@ import HowItWorks from "./screens/HowItWorks";
 import FAQ from "./FAQ";
 import ContactUs from "./screens/ContactUs";
 import OpenBets from "./screens/OpenBets";
+import Cookies from 'js-cookie';
 
 const MainPage = () => {
   const axiosService = useAxios();  
@@ -25,14 +26,15 @@ const MainPage = () => {
   const { isLoggedIn, login, apiToken} = useContext(AuthContext);
 
   const [currentUser, setCurrentUser] = useState();
-  const { isSignedIn, isLoaded } = useUser();
+  const { isSignedIn, isLoaded, isLoggedIn: isLoggedInFromUser } = useUser();
 
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if(isSignedIn && isLoaded && !isLoggedIn){
       setIsLoading(true);
-      axiosService.get('/api/user-details').then((response) => {
+      console.log("cookies::::", Cookies.get('__session'))
+      axiosService.get('/api/user-details', {token: Cookies.get('__session')}).then((response) => {
         login(response.data.token);
         setIsLoading(false);
       }).catch((error) => {
@@ -41,7 +43,7 @@ const MainPage = () => {
         // window.location.reload();
       });
     }
-  }, [isSignedIn, isLoaded])
+  }, [isLoggedInFromUser, isLoaded])
 
   useEffect(() => {
     if(isLoggedIn && apiToken){

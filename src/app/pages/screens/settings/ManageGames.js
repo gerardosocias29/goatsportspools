@@ -150,7 +150,7 @@ const ManageGames = () => {
         <Button label="Create Game" icon="pi pi-plus" className="rounded-lg border-primaryS bg-primaryS" onClick={() => setGameModalVisible(true)}/>
       </div>
       <div className="w-full p-5 bg-white rounded-lg flex flex-col gap-5">
-        <LazyTable api={'/api/games'}
+        <LazyTable api={'/api/games/manage'}
           columns={gamesColumn}
           refreshTable={refreshTable} setRefreshTable={setRefreshTable}
           actions={true} customActions={customActions} customActionsWidth="300px"

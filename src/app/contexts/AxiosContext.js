@@ -51,7 +51,15 @@ export const AxiosProvider = ({ children }) => {
 
   // Interceptor to dynamically set the Authorization header
   axiosInstance.interceptors.request.use((config) => {
-    const token = session && !apiToken ? session : apiToken;
+    let token;
+
+    if(config.token){
+      token = config.token
+      setSession(token);
+    } else {
+      token = session && !apiToken ? session : apiToken;
+    }
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }

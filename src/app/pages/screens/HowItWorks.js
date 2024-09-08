@@ -93,15 +93,15 @@ const HowItWorks = () => {
 
           <div className="text-primary text-2xl font-semibold">Key Dates</div>
           <ul className="list-disc list-inside space-y-2">
-            <li><b>Join League:</b> September 4th, 10 p.m.</li>
-            <li><b>Straight Wagers Activated:</b> September 5th, 10 a.m.</li>
-            <li><b>Parlay Wagers Activated:</b> September 13th, 10 a.m.</li>
-            <li><b>6-Point Teaser Wagers Activated:</b> September 20th, 10 a.m.</li>
-            <li><b>6.5 and 7-Point Teaser Wagers Activated:</b> Sometime in October.</li>
+            <li><b>Join League:</b> September 8th, 1 p.m. PST</li>
+            <li><b>Straight Wagers Activated:</b> September 8th, 1 p.m. PST</li>
+            <li><b>Parlay Wagers Activated:</b> September 15th, 1 a.m. PST</li>
+            <li><b>6-Point Teaser Wagers Activated:</b> September 22nd, 1 a.m. PST</li>
+            <li><b>6.5 and 7-Point Teaser Wagers Activated:</b> Sometime in October</li>
           </ul>
 
           <p className="text-lg text-gray-600 mt-5">
-            <b>Note:</b> Timelines and rules are subject to change at any time without prior notice. Please visit our website for the latest updates.
+            <b>Note:</b> There will be weeks where College Football games will also be available for wagers. Timelines and rules are subject to change at any time without prior notice. Please visit our website for the latest updates.
           </p>
 
           <div className="flex gap-4">
