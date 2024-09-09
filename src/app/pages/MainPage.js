@@ -48,9 +48,11 @@ const MainPage = () => {
 
   useEffect(() => {
     if(isLoggedIn && apiToken){
+      setIsLoading(true);
       axiosService.get('/api/me_user').then((response) => {
         // login(response.data.token);
         setCurrentUser(response.data.user);
+        setIsLoading(false);
       }).catch((error) => {
         // logout();
       });
@@ -78,7 +80,7 @@ const MainPage = () => {
     if (modules && modules.includes(currentPage)) {
       console.log(modules, currentPage);
     } else {
-      return <NotFound/>;
+      return isLoading ? null : <NotFound/>;
     }
 
     switch (currentPage) {
