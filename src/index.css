@@ -11,9 +11,15 @@
 
 body {
   margin: 0;
-  font-family: 'Roboto';
+  font-family: 'Inter';
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  color: #080A0D;
+}
+
+*{
+  font-family: "Inter", sans-serif;
+  font-optical-sizing: auto;
 }
 
 label, .main, a {
