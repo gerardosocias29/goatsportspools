@@ -23,11 +23,15 @@ const LeagueStandings = ({currentUser}) => {
     return <span className="text-right">{formattedValue}</span>;
   };
 
+  const RankTemplate = (value) => {
+    return value === 1 ? '$200 October winner' : value  
+  }
 
   const columns = [
-    { field: 'rank', header: 'Rank', headerStyle: { textAlign: "center" } },
+    { field: 'rank', header: 'Rank', template: RankTemplate, hasTemplate: true, headerStyle: { textAlign: "center" } },
     { field: 'name', header: 'Name', template: NameTemplate, hasTemplate: true },
-    { field: 'email', header: 'Email' },
+    { field: 'email', header: 'Email', headerStyle: { textAlign: "center" } },
+    { field: 'phone', header: 'Phone', headerStyle: { textAlign: "center" } },
     { field: 'balance', header: 'Balance', template: BalanceTemplate, hasTemplate: true, headerStyle: { textAlign: "right" } }
     // { field: 'win_bets.length', header: 'Wins', headerStyle: { textAlign: "center" } },
     // { field: 'lose_bets.length', header: 'Losses', headerStyle: { textAlign: "center" }},
