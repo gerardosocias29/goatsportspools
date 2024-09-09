@@ -68,6 +68,7 @@ const MainPage = () => {
   }
 
   const renderPage = () => {
+    const defaultPages = ['faq', 'contactus']; // Define default pages
     const modules = currentUser && currentUser.modules.map((e) => {
       let pages = [e.page];
       if (e.sub_modules && e.sub_modules.length > 0) {
@@ -76,9 +77,9 @@ const MainPage = () => {
       }
       return pages;  // Return an array of pages for this module
     }).flat();  // Flatten the resulting array
-    
-    if (modules && modules.includes(currentPage)) {
-      console.log(modules, currentPage);
+    const allPages = modules ? [...modules, ...defaultPages] : defaultPages;
+    if (allPages.includes(currentPage)) {
+      console.log(allPages, currentPage);
     } else {
       return isLoading ? null : <NotFound/>;
     }
