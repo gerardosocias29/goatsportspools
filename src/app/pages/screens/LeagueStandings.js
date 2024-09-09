@@ -237,8 +237,11 @@ const LeagueStandings = ({currentUser}) => {
   }, []);
 
   const handleOnSelect = (e) => {
-    getUserBets(e && e.id);
-    console.log("e::::", e);
+    if(e) {
+      getUserBets(e && e.id);
+      console.log("e::::", e);  
+    }
+    return ;
     // handleViewBetsClick(e.bets);
     // setModalVisible(true);
   }
