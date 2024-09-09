@@ -25,7 +25,7 @@ const Teams = () => {
             backgroundPosition: 'center', // Centers the image within the div
           }}>
             <img src={data.team.image_url} alt={data.team.name} className="w-[50px]"/>
-            <p className="font-bold text-[#aeaaaa] select-none">{data.team.name}</p>
+            <p className="font-bold text-white select-none">{data.team.name}</p>
           </div>
         </div>
       </>
