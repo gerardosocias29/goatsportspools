@@ -155,6 +155,8 @@ const ManageGames = () => {
           refreshTable={refreshTable} setRefreshTable={setRefreshTable}
           actions={true} customActions={customActions} customActionsWidth="300px"
           hasOptions={true}
+          paginator={false}
+          rowLimit={1000} 
         />
       </div>
 
