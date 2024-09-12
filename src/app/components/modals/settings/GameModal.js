@@ -6,6 +6,7 @@ import { Dropdown } from "primereact/dropdown";
 import { InputNumber } from "primereact/inputnumber";
 import { Button } from "primereact/button";
 import { useToast } from "../../../contexts/ToastContext";
+import convertUTCToTimeZone from "../../../utils/utcToTimezone";
 
 const GameModal = ({
   visible = false, 
@@ -98,7 +99,7 @@ const GameModal = ({
   useEffect(() => {
     if (visible && type === 'update' && data) {
       setGame({
-        game_datetime: new Date(data.game_datetime),
+        game_datetime: new Date(convertUTCToTimeZone(data.game_datetime)),
         visitor_team: data.visitor_team,
         favored_spread: data.odd.favored_points,
         underdog_spread: data.odd.underdog_points,
