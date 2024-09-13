@@ -24,7 +24,7 @@ const LeagueStandings = ({currentUser}) => {
   };
 
   const RankTemplate = (value) => {
-    return value === 1 ? '$200 October winner' : value  
+    return value;  
   }
 
   const columns = [
