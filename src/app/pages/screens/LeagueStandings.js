@@ -28,7 +28,7 @@ const LeagueStandings = ({currentUser}) => {
   }
 
   const columns = [
-    { field: 'rank', header: 'Rank', template: RankTemplate, hasTemplate: true, headerStyle: { textAlign: "center" } },
+    { field: 'rankLabel', header: 'Rank', template: RankTemplate, hasTemplate: true, headerStyle: { textAlign: "center" } },
     { field: 'name', header: 'Name', template: NameTemplate, hasTemplate: true },
     { field: 'email', header: 'Email', headerStyle: { textAlign: "center" } },
     { field: 'phone', header: 'Phone', headerStyle: { textAlign: "center" } },
