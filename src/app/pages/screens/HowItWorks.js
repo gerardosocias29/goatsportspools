@@ -95,8 +95,8 @@ const HowItWorks = () => {
           <ul className="list-disc list-inside space-y-2">
             <li><b>Join League:</b> September 8th, 1 p.m. PST</li>
             <li><b>Straight Wagers Activated:</b> September 8th, 1 p.m. PST</li>
-            <li><b>Parlay Wagers Activated:</b> September 15th, 1 a.m. PST</li>
-            <li><b>6-Point Teaser Wagers Activated:</b> September 22nd, 1 a.m. PST</li>
+            <li><b>Parlay Wagers Activated:</b> September 20th, 1 a.m. PST</li>
+            <li><b>6-Point Teaser Wagers Activated:</b> September 27, 1 a.m. PST</li>
             <li><b>6.5 and 7-Point Teaser Wagers Activated:</b> Sometime in October</li>
           </ul>
 
