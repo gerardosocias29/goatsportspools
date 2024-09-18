@@ -33,7 +33,7 @@ const Navbar = ({currentUser}) => {
                   </PrimeSidebar>
                   <Button className="bg-transparent text-primary border-none" icon="pi pi-bars" onClick={() => setVisible(true)} />
                 </div>
-                <a href="https://goatsportspools.com" target="_blank" className="flex gap-2 items-center">
+                <a href="/main" className="flex gap-2 items-center">
                   <img className="h-8 w-auto" src="/assets/images/favicon.png" alt="GoatSportsPools" />
                   <div className="font-bold">GoatSportsPools</div>
                 </a>
