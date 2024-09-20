@@ -81,9 +81,9 @@ export default function ClerkLogin() {
             <p className="text-xs">Initial $10 - 6000 for wagering</p>
             <p className="text-xs">Rebuys will cost $40 for 30000 wagering</p>
             
-            <p className="text-xs mt-4">1 - Total GOAT Players</p>
-            <p className="text-xs">1 - Number of $10 GOAT buyins</p>
-            <p className="text-xs">0 - Number rebuys</p>
+            <p className="text-xs">{data && data.p || 0} - Total GOAT Players</p>
+            <p className="text-xs">{data && data.b || 0} - Number of $10 GOAT buyins</p>
+            <p className="text-xs">{data && data.r || 0} - Number rebuys</p>
 
             <p className="text-xs mt-4 font-bold">October Prize pool is $200</p>
             <p className="text-xs font-bold">January Prize pool is $100</p>
