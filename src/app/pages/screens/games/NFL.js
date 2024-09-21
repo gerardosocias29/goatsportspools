@@ -17,7 +17,7 @@ import LeagueJoin from "../../../components/modals/LeagueJoin";
 import axios from "axios";
 
 const NFL = ({currentUser, refreshCurrentUser}) => {
-  const mainDisabled = process.env.REACT_APP_ENV === "production";
+  const mainDisabled = false;
   console.log(mainDisabled)
 
   const axiosService = useAxios();
