@@ -17,9 +17,6 @@ import LeagueJoin from "../../../components/modals/LeagueJoin";
 import axios from "axios";
 
 const NFL = ({currentUser, refreshCurrentUser}) => {
-  const mainDisabled = false;
-  console.log(mainDisabled)
-
   const axiosService = useAxios();
   const showToast = useToast();
 
@@ -183,9 +180,10 @@ const NFL = ({currentUser, refreshCurrentUser}) => {
   }
 
   const handleBetClick = (bet) => {
+    console.log(bet);
     setBets((prevBets) => {
       const existingBetIndex = prevBets.findIndex(
-        (b) => b.type === bet.type && b.team === bet.team && b.points === bet.points && b.ml === bet.ml && b.game_id === bet.game_id
+        (b) => b.type === bet.type && b.points === bet.points && b.team === bet.team && b.points === bet.points && b.ml === bet.ml && b.game_id === bet.game_id
       );
       if (existingBetIndex > -1) {
         // Remove existing bet
@@ -198,9 +196,23 @@ const NFL = ({currentUser, refreshCurrentUser}) => {
   };
 
   const isBetSelected = (bet) => {
-    return bets.some(
-      (b) => b.type === bet.type && b.team === bet.team && b.points === bet.points && b.ml === bet.ml && b.game_id === bet.game_id
-    );
+    if(bet.type === "spread") {
+      console.log("bet", bet)
+      console.log(bets)
+      return bets.some(
+        (b) => b.type === bet.type && b.team.id === bet.team.id && b.points === bet.points && b.game_id === bet.game_id
+      );
+    } else if (bet.type === "total") {
+      return bets.some(
+        (b) => b.type === bet.type && b.team === bet.team && b.points === bet.points && b.game_id === bet.game_id
+      );
+    }
+    else {
+      return bets.some(
+        (b) => b.type === bet.type && b.team.id === bet.team.id && b.ml === bet.ml && b.game_id === bet.game_id
+      );
+    }
+
   };
 
   const SpreadTemplate = (value, data, field) => {
@@ -211,13 +223,13 @@ const NFL = ({currentUser, refreshCurrentUser}) => {
     let favored_team, underdog_team, favored_points, underdog_points;
 
     if (odd.favored_team.id === home_team.id) {
-      favored_team = home_team;  // home team is favored
-      underdog_team = visitor_team;  // visitor team is underdog
+      favored_team = visitor_team;  // home team is favored
+      underdog_team = home_team;  // visitor team is underdog
       favored_points = odd.underdog_points;
       underdog_points = odd.favored_points;
     } else {
-      favored_team = visitor_team;  // visitor team is favored
-      underdog_team = home_team;  // home team is underdog
+      favored_team = home_team;  // visitor team is favored
+      underdog_team = visitor_team;  // home team is underdog
       favored_points = odd.favored_points;
       underdog_points = odd.underdog_points;
     }
@@ -227,14 +239,14 @@ const NFL = ({currentUser, refreshCurrentUser}) => {
 
     return (
       <div className="flex flex-col gap-4">
-        <Button disabled={isFiveMinutesBeforeGame(data.game_datetime) || checkParlayBet(data.id, favored_points, favored_team.id, 'spread') || mainDisabled}
+        <Button disabled={isFiveMinutesBeforeGame(data.game_datetime) || checkParlayBet(data.id, favored_points, favored_team.id, 'spread')}
           label={decimalToMixedFraction(favored_points, true)}
-          className={`${checkParlayBet(data.id, odd.favored_points, odd.favored_team.id)} border-primaryS ring-0 text-primary hover:text-white hover:bg-primaryS w-full bg-transparent rounded-lg ${isBetSelected({game_id: data.id,  type: 'spread', team: odd.favored_team, points: odd.favored_points }) ? 'bg-primaryS text-white' : ''}`}
+          className={`${checkParlayBet(data.id, favored_points, favored_team.id)} border-primaryS ring-0 text-primary hover:text-white hover:bg-primaryS w-full bg-transparent rounded-lg ${isBetSelected({game_id: data.id,  type: 'spread', team: favored_team, points: favored_points }) ? 'bg-primaryS text-white' : ''}`}
           onClick={() => handleBetClick({ game_id: data.id, type: 'spread', team: favored_team, points: favored_points, bet_amount: 0, data: data })}
         />
-        <Button disabled={isFiveMinutesBeforeGame(data.game_datetime) || checkParlayBet(data.id, underdog_points, underdog_team.id, 'spread') || mainDisabled}
+        <Button disabled={isFiveMinutesBeforeGame(data.game_datetime) || checkParlayBet(data.id, underdog_points, underdog_team.id, 'spread')}
           label={decimalToMixedFraction(underdog_points, true)}
-          className={`${checkParlayBet(data.id, odd.underdog_points, odd.underdog_team.id)} border-primaryS ring-0 text-primary hover:text-white hover:bg-primaryS w-full bg-transparent rounded-lg ${isBetSelected({game_id: data.id,  type: 'spread', team: odd.underdog_team, points: odd.underdog_points }) ? 'bg-primaryS text-white' : ''}`}
+          className={`${checkParlayBet(data.id, underdog_points, underdog_team.id)} border-primaryS ring-0 text-primary hover:text-white hover:bg-primaryS w-full bg-transparent rounded-lg ${isBetSelected({game_id: data.id,  type: 'spread', team: underdog_team, points: underdog_points }) ? 'bg-primaryS text-white' : ''}`}
           onClick={() => handleBetClick({ game_id: data.id, type: 'spread', team: underdog_team, points: underdog_points, bet_amount: 0, data: data })}
         />
       </div>
@@ -246,11 +258,11 @@ const NFL = ({currentUser, refreshCurrentUser}) => {
     if (!odd) { return '' }
     return (
       <div className="flex flex-col gap-4">
-        <Button disabled={isFiveMinutesBeforeGame(data.game_datetime) || checkParlayBet(data.id, odd.over_total, "over", 'total') || mainDisabled} label={'o' + decimalToMixedFraction(odd.over_total)}
+        <Button disabled={isFiveMinutesBeforeGame(data.game_datetime) || checkParlayBet(data.id, odd.over_total, "over", 'total')} label={'o' + decimalToMixedFraction(odd.over_total)}
           className={`border-primaryS ring-0 text-primary hover:text-white hover:bg-primaryS w-full bg-transparent rounded-lg ${isBetSelected({game_id: data.id,  type: 'total', team: 'over', points: odd.over_total }) ? 'bg-primaryS text-white' : ''}`}
           onClick={() => handleBetClick({ game_id: data.id, type: 'total', team: 'over', points: odd.over_total, bet_amount: 0, data: data })}
         />
-        <Button disabled={isFiveMinutesBeforeGame(data.game_datetime) || checkParlayBet(data.id, odd.under_total, "under", 'total') || mainDisabled} label={'u' + decimalToMixedFraction(odd.under_total)}
+        <Button disabled={isFiveMinutesBeforeGame(data.game_datetime) || checkParlayBet(data.id, odd.under_total, "under", 'total')} label={'u' + decimalToMixedFraction(odd.under_total)}
           className={`border-primaryS ring-0 text-primary hover:text-white hover:bg-primaryS w-full bg-transparent rounded-lg ${isBetSelected({game_id: data.id,  type: 'total', team: 'under', points: odd.under_total }) ? 'bg-primaryS text-white' : ''}`}
           onClick={() => handleBetClick({ game_id: data.id, type: 'total', team: 'under', points: odd.under_total, bet_amount: 0, data: data })}
         />
@@ -270,13 +282,13 @@ const NFL = ({currentUser, refreshCurrentUser}) => {
 
     // Determine if the favored team is home or visitor
     if (odd.favored_team.id === home_team.id) {
-      favored_team = home_team;  // home team is favored
-      underdog_team = visitor_team;  // visitor team is underdog
+      favored_team = visitor_team;  // home team is favored
+      underdog_team = home_team;  // visitor team is underdog
       favored_ml = odd.underdog_ml;
       underdog_ml = odd.favored_ml;
     } else {
-      favored_team = visitor_team;  // visitor team is favored
-      underdog_team = home_team;  // home team is underdog
+      favored_team = home_team;  // visitor team is favored
+      underdog_team = visitor_team;  // home team is underdog
       favored_ml = odd.favored_ml;
       underdog_ml = odd.underdog_ml;
     }
@@ -285,7 +297,7 @@ const NFL = ({currentUser, refreshCurrentUser}) => {
       <div className="flex flex-col gap-4">
         {/* Button for the favored team */}
         <Button 
-          disabled={isFiveMinutesBeforeGame(data.game_datetime) || checkParlayBet(data.id, favored_ml, favored_team.id, 'moneyline') || mainDisabled}
+          disabled={isFiveMinutesBeforeGame(data.game_datetime) || checkParlayBet(data.id, favored_ml, favored_team.id, 'moneyline')}
           label={decimalToMixedFraction(favored_ml, true)}
           className={`border-primaryS ring-0 text-primary hover:text-white hover:bg-primaryS w-full bg-transparent rounded-lg ${isBetSelected({ game_id: data.id, type: 'moneyline', team: favored_team, ml: favored_ml }) ? 'bg-primaryS text-white' : ''}`}
           onClick={() => handleBetClick({ game_id: data.id, type: 'moneyline', team: favored_team, ml: favored_ml, bet_amount: 0, data })}
@@ -293,7 +305,7 @@ const NFL = ({currentUser, refreshCurrentUser}) => {
 
         {/* Button for the underdog team */}
         <Button 
-          disabled={isFiveMinutesBeforeGame(data.game_datetime) || checkParlayBet(data.id, underdog_ml, underdog_team.id, 'moneyline') || mainDisabled}
+          disabled={isFiveMinutesBeforeGame(data.game_datetime) || checkParlayBet(data.id, underdog_ml, underdog_team.id, 'moneyline')}
           label={decimalToMixedFraction(underdog_ml, true)}
           className={`border-primaryS ring-0 text-primary hover:text-white hover:bg-primaryS w-full bg-transparent rounded-lg ${isBetSelected({ game_id: data.id, type: 'moneyline', team: underdog_team, ml: underdog_ml }) ? 'bg-primaryS text-white' : ''}`}
           onClick={() => handleBetClick({ game_id: data.id, type: 'moneyline', team: underdog_team, ml: underdog_ml, bet_amount: 0, data })}
@@ -640,7 +652,7 @@ const NFL = ({currentUser, refreshCurrentUser}) => {
               onClick={() => selectedLeague && setBets([])} 
             />
             <Button label={`Continue`}
-              disabled={(!selectedLeague || mainDisabled)}
+              disabled={(!selectedLeague)}
               className="mt-5 rounded-lg bg-background text-white border-background ring-0 w-[200px]" 
               onClick={handleContinue} 
             />
