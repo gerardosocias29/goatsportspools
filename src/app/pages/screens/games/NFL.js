@@ -25,13 +25,15 @@ const NFL = ({currentUser, refreshCurrentUser}) => {
 
   const [refreshTable, setRefreshTable] = useState(false);
   const [bets, setBets] = useState([]);
-  const wagerTypes = [
-    { name: 'Straight', value: 'straight', status: true },
-    { name: 'Parlay', value: 'parlay', status: true },
-    { name: '6 point Teaser', value: 'teaser_6', status: true, tooltip: '6 point Teaser' },
-    { name: '6.5 point Teaser', value: 'teaser_6_5', status: true, tooltip: '6.5 point Teaser' },
-    { name: '7 point Teaser', value: 'teaser_7', status: true, tooltip: '7 point teaser' },
-  ];
+  const wagerTypes = process.env.REACT_APP_ENV === 'production' 
+    ? [{ name: 'Straight', value: 'straight', status: true }] 
+    : [
+      { name: 'Straight', value: 'straight', status: true },
+      { name: 'Parlay', value: 'parlay', status: true },
+      { name: '6 point Teaser', value: 'teaser_6', status: true, tooltip: '6 point Teaser' },
+      { name: '6.5 point Teaser', value: 'teaser_6_5', status: true, tooltip: '6.5 point Teaser' },
+      { name: '7 point Teaser', value: 'teaser_7', status: true, tooltip: '7 point teaser' }
+    ];
 
   const [gamesApi, setGamesApi] = useState();
 
