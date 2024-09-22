@@ -66,9 +66,16 @@ const NFL = ({currentUser, refreshCurrentUser}) => {
   };
   
 
-  const BetTypeTemplate = () => {
-    return <div className="text-center">{activeWagerType.name}</div>
-  }
+  const [wagerType, setWagerType] = useState();
+  useEffect(() => {
+    setBets([]);
+    console.log("activeWagerType updated:", activeWagerType.value);
+    setWagerType(activeWagerType);
+  }, [activeWagerType])
+
+  const BetTypeTemplate = (data) => {
+    return <div className="text-center">{data['name']}</div>;
+  };
 
   const WagerTypeTemplate = (data) => {
     let type = data;
@@ -163,7 +170,7 @@ const NFL = ({currentUser, refreshCurrentUser}) => {
   };
 
   const betsColumns = [
-    { field: 'type', header: 'Bet Type', headerClassName: 'w-[120px]', template: BetTypeTemplate, hasTemplate: true },
+    { field: 'wagerType', header: 'Bet Type', headerClassName: 'w-[120px]', template: BetTypeTemplate, hasTemplate: true },
     { field: 'type', header: 'Wager Type', headerClassName: 'w-[130px]', template: WagerTypeTemplate, hasTemplate: true },
     { field: 'data.game_datetime', header: 'Game', headerClassName: 'w-[100px]', template: BetDateTemplate, hasTemplate: true },
     { field: '', header: 'Team', headerClassName: 'w-[450px]', template: BetTeamTemplate, hasTemplate: true },
@@ -180,7 +187,7 @@ const NFL = ({currentUser, refreshCurrentUser}) => {
   }
 
   const handleBetClick = (bet) => {
-    console.log(bet);
+    console.log(activeWagerType.value);
     setBets((prevBets) => {
       const existingBetIndex = prevBets.findIndex(
         (b) => b.type === bet.type && b.points === bet.points && b.team === bet.team && b.points === bet.points && b.ml === bet.ml && b.game_id === bet.game_id
@@ -190,15 +197,18 @@ const NFL = ({currentUser, refreshCurrentUser}) => {
         return prevBets.filter((_, index) => index !== existingBetIndex);
       } else {
         // Add new bet
-        return [...prevBets, bet];
+        return [
+          ...prevBets,
+          { ...bet, wagerType: activeWagerType } // Add wagerType here
+        ];
       }
     });
   };
 
   const isBetSelected = (bet) => {
     if(bet.type === "spread") {
-      console.log("bet", bet)
-      console.log(bets)
+      // console.log("bet", bet)
+      // console.log(bets)
       return bets.some(
         (b) => b.type === bet.type && b.team.id === bet.team.id && b.points === bet.points && b.game_id === bet.game_id
       );
@@ -234,8 +244,8 @@ const NFL = ({currentUser, refreshCurrentUser}) => {
       underdog_points = odd.underdog_points;
     }
 
-    console.log(home_team.name, visitor_team.name)
-    console.log(favored_team.name, underdog_team.name)
+    // console.log(home_team.name, visitor_team.name)
+    // console.log(favored_team.name, underdog_team.name)
 
     return (
       <div className="flex flex-col gap-4">
@@ -358,15 +368,38 @@ const NFL = ({currentUser, refreshCurrentUser}) => {
 
   const [placeBetButton, setPlaceBetButton] = useState(false);
   const handlePlaceBets = () => {
-    const invalidBets = bets.filter(b => b.bet_amount < 1);
-    if (invalidBets.length > 0) {
-      showToast({
-        severity: 'error',
-        summary: 'Invalid Bet Amount',
-        detail: 'The minimum bet amount is 1.',
-      });
-      return;
+    console.log(wagerType.value, parlayBetAmount, teaserBetAmount);
+    
+
+
+    if(wagerType.value === "straight") {
+      const invalidBets = bets.filter(b => b.bet_amount < 1);
+      if (invalidBets.length > 0) {
+        showToast({
+          severity: 'error',
+          summary: 'Invalid Bet Amount',
+          detail: 'The minimum bet amount is 1.',
+        });
+        return;
+      }
+    } else {
+      if(wagerType.value === "parlay" && parlayBetAmount < 1) { 
+        showToast({
+          severity: 'error',
+          summary: 'Invalid Bet Amount for Parlay',
+          detail: 'The minimum bet amount is 1.',
+        });
+        return;
+      } else if(teaserBetAmount < 1 && wagerType.value.includes('teaser')){
+        showToast({
+          severity: 'error',
+          summary: 'Invalid Bet Amount for Teaser',
+          detail: 'The minimum bet amount is 1.',
+        });
+        return;
+      }
     }
+  
 
     // if(activeWagerType.value === "parlay"){
     //   showToast({
@@ -388,25 +421,25 @@ const NFL = ({currentUser, refreshCurrentUser}) => {
       team_name: b.team.name,
       pick_odd: b.type === "moneyline" ? b.ml : b.points,
       wager_amount: b.bet_amount,
-      bet_type: activeWagerType.value
+      bet_type: wagerType.value
     }));
 
     let postData = {
       bets: updatedBets,
-      wager_type: activeWagerType.value
+      wager_type: wagerType.value
     }
-    if(activeWagerType.value === "parlay"){
+    if(wagerType.value === "parlay"){
       postData.wager_amount = parlayBetAmount;
       postData.wager_win_amount = (parlayWinnings.payout * 1);
       postData.league_id = selectedLeague.id;
     } 
 
-    if(activeWagerType.value.includes('teaser')){
+    if(wagerType.value.includes('teaser')){
       postData.wager_amount = teaserBetAmount;
       postData.wager_win_amount = (teaserWinnings.payout * 1);
       postData.league_id = selectedLeague.id;
     }
-    
+        
     axiosService.post('/api/bets/wager', postData).then((response) => {
       if(response.data.status){
         setModalWagerVisisble(false)
@@ -552,6 +585,10 @@ const NFL = ({currentUser, refreshCurrentUser}) => {
     calculateTeaserPayout(teaserBetAmount);
   }, [teaserBetAmount])
 
+  useEffect(() => {
+    setBets([]);
+    console.log("activeWagerType updated:", activeWagerType.value);
+  }, [activeWagerType])
 
   const handleContinue = () => {
     if(selectedLeague){
@@ -601,17 +638,22 @@ const NFL = ({currentUser, refreshCurrentUser}) => {
         <div>
           <div className="font-bold mb-2">Bet Type <i className="pi pi-question-circle"></i><Tooltip target={'.pi-question-circle'} /></div>
           <div className="grid grid-cols-1 lg:grid-cols-6 gap-4">
-            {wagerTypes.map((wt, i) => (
+            {wagerTypes && wagerTypes.map((wt, i) => (
               <div key={i}>
                 <div key={i}
                   data-pr-tooltip={wt.tooltip} data-pr-position="bottom"
                   aria-disabled={!wt.status}
                   className={`${wt.status ? 'cursor-pointer' : 'cursor-not-allowed'} ${wt.value} select-none rounded-lg shadow-lg border px-4 py-2 text-center hover:bg-primaryS hover:text-white ${activeWagerType.value === wt.value ? 'bg-primaryS text-white' : 'bg-white'}`}
                   onClick={() => {
-                    if(wt.status){
+                    if (wt.status) {
+                      console.log("Before setting:", activeWagerType.value, wt.value);
+
                       setActiveWagerType(wt); 
+
+                      // Use useEffect or similar to check updated state, or pass in the value
                       setBets([]);
-                      if(wt.value === "parlay" || wt.value == "teaser_6" || wt.value == "teaser_6_5" || wt.value == "teaser_7"){
+
+                      if (wt.value === "parlay" || wt.value == "teaser_6" || wt.value == "teaser_6_5" || wt.value == "teaser_7") {
                         const updatedBetsColumns = betsColumns.filter(column => column.field !== 'bet_amount' && column.field !== "riskingwin");
                         setBetsColumn(updatedBetsColumns);
                       } else {
@@ -622,6 +664,7 @@ const NFL = ({currentUser, refreshCurrentUser}) => {
                     }
                   }}
                 >
+
                   <h2 className="text-lg font-semibold">{wt.name}</h2>
                 </div>
                 <Tooltip target={`.${wt.value}`} />
