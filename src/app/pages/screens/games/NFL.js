@@ -15,6 +15,7 @@ import { decimalToMixedFraction } from "../../../utils/numberFormat";
 import convertUTCToTimeZone from "../../../utils/utcToTimezone";
 import LeagueJoin from "../../../components/modals/LeagueJoin";
 import axios from "axios";
+import { ProgressSpinner } from "primereact/progressspinner";
 
 const NFL = ({currentUser, refreshCurrentUser}) => {
   const axiosService = useAxios();
@@ -38,6 +39,8 @@ const NFL = ({currentUser, refreshCurrentUser}) => {
   const [sameAmountBet, setSameAmountBet] = useState(0);
   const [parlayBetAmount, setParlayBetAmount] = useState(0);
   const [teaserBetAmount, setTeaserBetAmount] = useState(0);
+
+  const [loading, setIsLoading] = useState(false);
 
   const isFiveMinutesBeforeGame = (gameDatetime) => {
     const currentUtcTime = moment.utc();
@@ -646,6 +649,7 @@ const NFL = ({currentUser, refreshCurrentUser}) => {
                   className={`${wt.status ? 'cursor-pointer' : 'cursor-not-allowed'} ${wt.value} select-none rounded-lg shadow-lg border px-4 py-2 text-center hover:bg-primaryS hover:text-white ${activeWagerType.value === wt.value ? 'bg-primaryS text-white' : 'bg-white'}`}
                   onClick={() => {
                     if (wt.status) {
+                      setIsLoading(true);
                       console.log("Before setting:", activeWagerType.value, wt.value);
 
                       setActiveWagerType(wt); 
@@ -661,6 +665,11 @@ const NFL = ({currentUser, refreshCurrentUser}) => {
                       }
                       setGamesApi(wt.value);
                       setRefreshTable(true);
+
+                      const t = setTimeout(() => {
+                        setIsLoading(false);
+                        clearTimeout(t);
+                      }, 1000);
                     }
                   }}
                 >
@@ -674,18 +683,30 @@ const NFL = ({currentUser, refreshCurrentUser}) => {
           
         </div>
 
-        <div>
+        <div className="relative">
           <div className="font-bold mb-2 mt-5">Games</div>
-
-          <LazyTable api={'/api/games'}
-            columns={gamesColumn}
-            refreshTable={refreshTable} setRefreshTable={setRefreshTable}
-            rowLimit={1000}
-            scrollable={true}
-            scrollHeight="520px"
-            paginator={false}
-            additionalApi={gamesApi}
-          />
+          
+          <div className="relative">
+            {
+              loading && <div className="absolute top-0 w-full h-full z-[999]">
+                <div className="bg-white/50 flex items-center w-full h-full">
+                  <ProgressSpinner className="z-[999]" />
+                </div>
+                {/* <div className="flex items-center justify-center">
+                  <ProgressSpinner />
+                </div> */}
+              </div>
+            }
+            <LazyTable api={'/api/games'}
+              columns={gamesColumn}
+              refreshTable={refreshTable} setRefreshTable={setRefreshTable}
+              rowLimit={1000}
+              scrollable={true}
+              scrollHeight="520px"
+              paginator={false}
+              additionalApi={gamesApi}
+            />
+          </div>  
         </div>
         {
           ((selectedLeague && selectedLeague.balance !== 0)) ? <div className="flex items-center justify-end gap-5">
