@@ -105,9 +105,8 @@ const NFL = ({currentUser, refreshCurrentUser}) => {
 
   const BetTeamTemplate = (value, bet, field) => {
     const { type, team, points, data, ml } =  bet || {};
-    
     const gameID = data.id;
-    const pointsLabel = type === 'total' ? ( data && data.team === 'over' ? `TOTAL o${points}` : `TOTAL u${points}`) : type === 'moneyline' ? `[${ml}]` : `[${decimalToMixedFraction(points)}]`;
+    const pointsLabel = type === 'total' ? ( team === 'over' ? `TOTAL o${points}` : `TOTAL u${points}`) : type === 'moneyline' ? `[${ml}]` : `[${decimalToMixedFraction(points)}]`;
     const totalLabel = type === "total" ? (data && `(${data.odd.favored_team.nickname} vs. ${data.odd.underdog_team.nickname})`) : '';
     return <div className="flex items-center gap-2"><p className="font-bold">{team.name} {pointsLabel}</p> {totalLabel}</div>;
   }
@@ -190,7 +189,8 @@ const NFL = ({currentUser, refreshCurrentUser}) => {
   }
 
   const handleBetClick = (bet) => {
-    console.log(activeWagerType.value);
+    // console.log(activeWagerType.value);
+    // console.log(bet);
     setBets((prevBets) => {
       const existingBetIndex = prevBets.findIndex(
         (b) => b.type === bet.type && b.points === bet.points && b.team === bet.team && b.points === bet.points && b.ml === bet.ml && b.game_id === bet.game_id
@@ -508,7 +508,8 @@ const NFL = ({currentUser, refreshCurrentUser}) => {
       }
     });
 
-    let potentialPayout = wager * combinedOdds;
+    let potentialPayout = 0;
+    potentialPayout = wager * combinedOdds;
 
     const totalReturn = potentialPayout + wager;
 
@@ -552,8 +553,8 @@ const NFL = ({currentUser, refreshCurrentUser}) => {
       }
     };
 
-    const odds = teaserOdds[teaserPoints][bets.length];
-    let potentialPayout;
+    const odds = teaserOdds[teaserPoints][bets.length] ?? 0;
+    let potentialPayout = 0;
   
     if (odds < 0) {
       // Negative odds (e.g., -110): Wager to win a fixed amount
