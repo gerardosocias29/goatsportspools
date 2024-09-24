@@ -82,8 +82,10 @@ const Sidebar = ({ currentUser, callback }) => {
   }
 
   useEffect(() => {
-    getJoinedLeagues();
-    getDefaultLeague();
+    if(currentUser) {
+      getJoinedLeagues();
+      getDefaultLeague();
+    }
   }, [currentUser]);
 
   return (

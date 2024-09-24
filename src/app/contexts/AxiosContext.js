@@ -42,7 +42,7 @@ export const AxiosProvider = ({ children }) => {
         error.response.status === 401 &&
         error.response.data.message === 'Unauthenticated.'
       ) {
-        // logout();
+        logout();
       }
 
       return Promise.reject(error);
