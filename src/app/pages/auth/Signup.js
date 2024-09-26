@@ -45,7 +45,7 @@ const Signup = () => {
       } else {
         showToast({
           severity: 'error',
-          summary: 'Failed!',
+          summary: 'Unable to Complete!',
           detail: response.data.message
         });
       }

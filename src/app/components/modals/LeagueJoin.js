@@ -53,7 +53,7 @@ export default function LeagueJoin({
       } else {
         showToast({
           severity: 'error',
-          summary: 'Failed',
+          summary: 'Unable to Complete',
           detail: response.data.message,
         });
         setIsSubmitting(false);
