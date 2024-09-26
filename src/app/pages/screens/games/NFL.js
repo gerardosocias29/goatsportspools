@@ -464,7 +464,7 @@ const NFL = ({currentUser, refreshCurrentUser}) => {
       }
       showToast({
         severity: response.data.status ? 'success' : 'error',
-        summary: response.data.status ? 'Success!' : 'Failed!',
+        summary: response.data.status ? 'Success!' : 'Unable to Complete!',
         detail: response.data.message,
       });
       setPlaceBetButton(false);
@@ -613,7 +613,7 @@ const NFL = ({currentUser, refreshCurrentUser}) => {
         if(bets.length < 2 || bets.length > 8) {
           showToast({
             severity: 'error',
-            summary: 'Failed!',
+            summary: 'Unable to Complete!',
             life: 5000,
             detail: 'Parlay bets require a minimum of 2 teams and a maximum of 8 teams.',
           });

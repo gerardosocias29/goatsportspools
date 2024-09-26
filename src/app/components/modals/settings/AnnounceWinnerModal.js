@@ -29,7 +29,7 @@ const AnnounceWinnerModal = ({
     axiosService.post('/api/games/announce-winner', dataToSend).then((response) => {
       showToast({
         severity: response.data.status ? 'success' : 'error',
-        summary: response.data.status ? 'Success!' : 'Failed!',
+        summary: response.data.status ? 'Success!' : 'Unable to Complete!',
         detail: response.data.message
       });
       handleOnHide();

@@ -79,7 +79,7 @@ const Profile = ({currentUser, setCurrentUser}) => {
       } else {
         showToast({
           severity: 'error',
-          summary: 'Failed!',
+          summary: 'Unable to Complete!',
           detail: 'Please fill up all fields!'
         });
       }
@@ -111,7 +111,7 @@ const Profile = ({currentUser, setCurrentUser}) => {
         } else {
           showToast({
             severity: 'error',
-            summary: 'Failed!',
+            summary: 'Unable to Complete!',
             detail: 'Unable to update your password!'
           });
         }
@@ -124,7 +124,7 @@ const Profile = ({currentUser, setCurrentUser}) => {
     } else {
       showToast({
         severity: 'error',
-        summary: 'Failed!',
+        summary: 'Unable to Complete!',
         detail: 'Password must meet the requirements.'
       });
     }
@@ -157,7 +157,7 @@ const Profile = ({currentUser, setCurrentUser}) => {
       } else {
         showToast({
           severity: 'error',
-          summary: 'Failed!',
+          summary: 'Unable to Complete!',
           detail: response.data.message
         });
       }

@@ -45,7 +45,7 @@ const GameModal = ({
     axiosService.post('/api/games/create', game).then((response) => {
       showToast({
         severity: response.data.status ? 'success' : 'error',
-        summary: response.data.status ? 'Success!' : 'Failed!',
+        summary: response.data.status ? 'Success!' : 'Unable to Complete!',
         detail: response.data.message
       });
       if(response.data.status){
@@ -66,7 +66,7 @@ const GameModal = ({
     axiosService.post('/api/games/update/' + data.id, game).then((response) => {
       showToast({
         severity: response.data.status ? 'success' : 'error',
-        summary: response.data.status ? 'Success!' : 'Failed!',
+        summary: response.data.status ? 'Success!' : 'Unable to Complete!',
         detail: response.data.message
       });
       if(response.data.status){

@@ -27,7 +27,7 @@ export default function LeagueModal({
         if (!leaguePassword.trim() && !data) {
             showToast({
                 severity: 'error',
-                summary: 'Failed!',
+                summary: 'Unable to Complete!',
                 detail: 'Please enter league password.'
             });
             return;

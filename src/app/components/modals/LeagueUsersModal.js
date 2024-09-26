@@ -30,14 +30,14 @@ export default function LeagueUsersModal({
       }
       showToast({
         severity: response.data.status ? 'success' : 'error',
-        summary: response.data.status ? 'Success!' : 'Failed!',
+        summary: response.data.status ? 'Success!' : 'Unable to Complete!',
         detail: response.data.message
       });
       setRebuyLoading(false);
     }).catch((error) => {
       console.log(error);
       setRebuyLoading(false);
-      showToast({ severity: 'error', summary: 'Failed!', detail: 'Rebuy unsuccessful!' });
+      showToast({ severity: 'error', summary: 'Unable to Complete!', detail: 'Rebuy unsuccessful!' });
     });
     
   }
@@ -55,14 +55,14 @@ export default function LeagueUsersModal({
       }
       showToast({
         severity: response.data.status ? 'success' : 'error',
-        summary: response.data.status ? 'Success!' : 'Failed!',
+        summary: response.data.status ? 'Success!' : 'Unable to Complete!',
         detail: response.data.message
       });
       setBuyinLoading(false);
     }).catch((error) => {
       console.log(error);
       setBuyinLoading(false);
-      showToast({ severity: 'error', summary: 'Failed!', detail: 'Rebuy unsuccessful!' });
+      showToast({ severity: 'error', summary: 'Unable to Complete!', detail: 'Rebuy unsuccessful!' });
     });
     
   }
