@@ -48,13 +48,13 @@ const AnnounceWinnerModal = ({
     <form onSubmit={handleSubmit}>
       <div className="grid lg:grid-cols-1 gap-4">
         <div className="flex flex-col gap-1">
-          <label htmlFor="home_team_score" className="font-semibold">{data && data.home_team.name} Score</label>
-          <InputNumber required useGrouping={false} id="home_team_score" value={homeTeamScore} placeholder={`${data && data.home_team.name} Score`} onChange={(e) => setHomeTeamScore(e.value)} className="text-sm"/>
+          <label htmlFor="visitor_team_score" className="font-semibold">{data && data.visitor_team.name} Score</label>
+          <InputNumber required useGrouping={false} id="visitor_team_score" value={visitorTeamScore} placeholder={`${data && data.visitor_team.name} Score`} onChange={(e) => setVisitorTeamScore(e.value)} className="text-sm"/>
         </div>
 
         <div className="flex flex-col gap-1">
-          <label htmlFor="visitor_team_score" className="font-semibold">{data && data.visitor_team.name} Score</label>
-          <InputNumber required useGrouping={false} id="visitor_team_score" value={visitorTeamScore} placeholder={`${data && data.visitor_team.name} Score`} onChange={(e) => setVisitorTeamScore(e.value)} className="text-sm"/>
+          <label htmlFor="home_team_score" className="font-semibold">{data && data.home_team.name} Score</label>
+          <InputNumber required useGrouping={false} id="home_team_score" value={homeTeamScore} placeholder={`${data && data.home_team.name} Score`} onChange={(e) => setHomeTeamScore(e.value)} className="text-sm"/>
         </div>
 
         <div className="flex justify-end">

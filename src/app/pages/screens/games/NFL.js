@@ -185,6 +185,19 @@ const NFL = ({currentUser, refreshCurrentUser}) => {
     console.log(betData, type);
     if (type == "trash") {
       handleBetClick(betData);
+
+      const p = parlayBetAmount;
+      const t = teaserBetAmount;
+
+      setParlayBetAmount(0);
+      setTeaserBetAmount(0);
+
+      setTimeout(() => {
+        setParlayBetAmount(p);
+        setTeaserBetAmount(t);
+      }, 0);
+
+      
     }
   }
 
