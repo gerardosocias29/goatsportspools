@@ -362,6 +362,18 @@ const NFL = ({currentUser, refreshCurrentUser}) => {
     });
   }
 
+
+  const [weeklyGames, setWeeklyGames] = useState();
+  const [activeWeek, setActiveWeek] = useState('');
+  const getWeeklyGames = () => {
+    axiosService.get('/api/games/weekly').then((response) => {
+      setWeeklyGames(response.data);
+      console.log(response.data);
+    }).catch((error) => {
+      console.log(error);
+    });
+  }
+
   const [modalWagerVisible, setModalWagerVisisble] = useState(false);
 
   const getWagerTypeId = (wager_type) => {
@@ -479,6 +491,7 @@ const NFL = ({currentUser, refreshCurrentUser}) => {
 
   useEffect(() => {
     getJoinedLeagues();
+    getWeeklyGames();
   }, []);
 
 
@@ -651,7 +664,7 @@ const NFL = ({currentUser, refreshCurrentUser}) => {
         </div>
       </div>
 
-      <div className="w-full p-5 bg-white rounded-lg flex flex-col gap-1">
+      <div className="w-full p-5 bg-white rounded-lg flex flex-col gap-3">
         <div>
           <div className="font-bold mb-2">Bet Type <i className="pi pi-question-circle"></i><Tooltip target={'.pi-question-circle'} /></div>
           <div className="grid grid-cols-1 lg:grid-cols-6 gap-4">
@@ -695,6 +708,18 @@ const NFL = ({currentUser, refreshCurrentUser}) => {
             ))}
           </div>
           
+        </div>
+        <div>
+          <div className="flex gap-2 mb-4">
+            {weeklyGames && Object.keys(weeklyGames).map((week, index) => (
+              <Button
+                key={index}
+                label={week}
+                className={week === activeWeek ? 'p-button-primary' : 'p-button-secondary'}
+                onClick={() => setActiveWeek(week)}
+              />
+            ))}
+          </div>
         </div>
 
         <div className="relative">
