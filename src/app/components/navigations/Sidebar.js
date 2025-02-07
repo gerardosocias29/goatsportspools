@@ -43,7 +43,8 @@ const Sidebar = ({ currentUser, callback }) => {
     }
   };
 
-  const toggleExpand = (index) => {
+  const toggleExpand = (index, hasChildren) => {
+    console.log(index, hasChildren);
     setExpandedItem(expandedItem === index ? null : index);
   };
 
@@ -85,6 +86,15 @@ const Sidebar = ({ currentUser, callback }) => {
     if(currentUser) {
       getJoinedLeagues();
       getDefaultLeague();
+
+      const foundSubModule = currentUser.modules
+        .flatMap(({ sub_modules, id }) => sub_modules.map(sub => ({ ...sub, parent_id: id })))
+        .find(sub => sub.page === currentPage);
+
+      const index = foundSubModule
+        ? currentUser.modules.findIndex(module => module.id === foundSubModule.parent_id)
+        : -1;
+      setExpandedItem(index)
     }
   }, [currentUser]);
 
@@ -97,36 +107,34 @@ const Sidebar = ({ currentUser, callback }) => {
               key={index}
               onClick={() => navigateToPage(e.page)}
               className={`${currentPage === e.page ? 'bg-background text-white' : ''}
-                  m-2 py-2 px-4 cursor-pointer flex gap-2 items-center hover:border-background hover:border transition rounded-lg
+                  m-2 py-2 px-4 cursor-pointer flex gap-2 items-center border-transparent border hover:border-background transition rounded-lg
               `}
             >
               {changeIcon(e.icon)} {e.name}
             </li>
           : <li
             key={index}
-            className={`m-2 cursor-pointer flex flex-col gap-2 items-center`}
+            className={`m-2 cursor-pointer flex flex-col gap-1 items-center`}
             >
               <div 
-                className="flex items-center justify-between w-full hover:border-background hover:border rounded-lg py-2 px-4"
-                onClick={() => toggleExpand(index)}
+                className="flex items-center justify-between w-full border-transparent border hover:border-background rounded-lg py-2 px-4"
+                onClick={() => toggleExpand(index, e.sub_modules?.length > 0)}
               >
                 <span className="flex items-center gap-2">{changeIcon(e.icon)} {e.name}</span>
-                <i className={`pi pi-angle-up transition ${expandedItem === index ? 'rotate-180' : ''}`} />
+                <i className={`pi pi-angle-up transition-all duration-300 ${expandedItem === index ? 'rotate-180' : ''}`} />
                 
               </div>
-              {(expandedItem === index || e.sub_modules.filter((e) => e.page === currentPage).length > 0) && (
-                <ul className="w-full">
-                  {e.sub_modules.map((sub, i) => (
-                    <li key={i} onClick={() => navigateToPage(sub.page)}
-                      className={`${currentPage === sub.page ? 'bg-background text-white' : ''}
-                        m-2 py-2 px-4 cursor-pointer flex gap-2 items-center ml-6 border-l hover:border-background rounded-lg hover:border transition
-                      `}
-                    >
-                      {changeIcon(sub.icon)} {sub.name}
-                    </li>
-                  ))}
-                </ul>
-              )}
+              <ul className={`${expandedItem === index ? "h-auto max-h-[500px]" : "max-h-0"} transition-all overflow-hidden duration-300 w-full`}>
+                {e.sub_modules.map((sub, i) => (
+                  <li key={i} onClick={() => navigateToPage(sub.page)}
+                    className={`${currentPage === sub.page ? 'bg-background text-white' : ''}
+                      m-2 py-2 px-4 cursor-pointer flex gap-2 items-center ml-6 border-transparent border hover:border-background rounded-lg hover:border transition
+                    `}
+                  >
+                    {changeIcon(sub.icon)} {sub.name}
+                  </li>
+                ))}
+              </ul>
             </li>
         ))}
       </ul>

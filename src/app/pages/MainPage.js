@@ -19,6 +19,8 @@ import ContactUs from "./screens/ContactUs";
 import OpenBets from "./screens/OpenBets";
 import Cookies from 'js-cookie';
 import GameHistory from "./screens/games/GameHistory";
+import AdminBidding from "./screens/Bidding/AdminBidding";
+import Pusher from "pusher-js";
 
 const MainPage = () => {
   const axiosService = useAxios();  
@@ -30,6 +32,9 @@ const MainPage = () => {
   const { isSignedIn, isLoaded, isLoggedIn: isLoggedInFromUser } = useUser();
 
   const [isLoading, setIsLoading] = useState(false);
+  
+  const [pusher, setPusher] = useState(null);
+  const [channel, setChannel] = useState(null);
 
   useEffect(() => {
     if(isSignedIn && isLoaded && !isLoggedIn){
@@ -53,10 +58,25 @@ const MainPage = () => {
         // login(response.data.token);
         setCurrentUser(response.data.user);
         setIsLoading(false);
+
+        const pusherInstance = new Pusher(process.env.REACT_APP_PUSHER_KEY, {
+          cluster: process.env.REACT_APP_PUSHER_CLUSTER,
+        });
+  
+        const biddingChannel = pusherInstance.subscribe("bidding-channel");
+        setPusher(pusherInstance);
+        setChannel(biddingChannel);
+
       }).catch((error) => {
         // logout();
       });
     }
+
+    return () => {
+      if (pusher) {
+        pusher.unsubscribe("bidding-channel");
+      }
+    };
   }, [apiToken, isLoggedIn])
 
   const refreshCurrentUser = () => {
@@ -79,7 +99,7 @@ const MainPage = () => {
     }).flat();  // Flatten the resulting array
     const allPages = modules ? [...modules, ...defaultPages] : defaultPages;
     if (allPages.includes(currentPage)) {
-      console.log(allPages, currentPage);
+      // console.log(allPages, currentPage);
     } else {
       return isLoading ? null : <NotFound/>;
     }
@@ -111,6 +131,8 @@ const MainPage = () => {
         return <ContactUs currentUser={currentUser}/>
       case 'faq':
         return <FAQ currentUser={currentUser}/>
+      case 'ncaa-basketball-auction': 
+        return <AdminBidding pusher={pusher} channel={channel}/>
       default:
         return (
           <NotFound/>
