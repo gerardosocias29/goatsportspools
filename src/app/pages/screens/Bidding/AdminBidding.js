@@ -3,6 +3,7 @@ import Pusher from "pusher-js";
 import ReactPlayer from "react-player";
 import PlaceBid from "./PlaceBid";
 import { Button } from "primereact/button";
+import { InputText } from "primereact/inputtext";
 
 const AdminBidding = ({pusher, channel}) => {
   
@@ -50,20 +51,27 @@ const AdminBidding = ({pusher, channel}) => {
     <div className="p-6 min-h-screen">
       <div className="flex gap-4 mb-6">
         <div className="w-full lg:w-1/2 flex flex-col gap-5">
-          <div>
+          <div className="flex flex-col gap-4">
             <h2 className="text-2xl">Stream</h2>
-            <ReactPlayer 
-              ref={playerRef}
-              url={liveStreamUrl} playIcon={false} controls={false} playing width="100%" 
-              height="358px" 
-              style={{ aspectRatio: '16/9' }}
-              onPause={handlePause}
-            />
-            <input
-              type="text"
-              placeholder="Enter Live Stream URL"
-              className="w-full p-2 mt-2 text-black"
+            <div className="relative">
+              <ReactPlayer 
+                ref={playerRef}
+                url={liveStreamUrl} playIcon={false} controls={false} playing width="100%" 
+                height="358px" 
+                style={{ aspectRatio: '16/9' }}
+                onPause={handlePause}
+              />
+              <div
+                className="absolute top-0 left-0 w-full h-full"
+                onClick={(e) => e.stopPropagation()}
+              />
+            </div>
+            
+            <InputText
+              required 
               value={liveStreamUrl}
+              lassName="w-full text-sm" 
+              placeholder="Enter Live Stream URL"
               onChange={(e) => setLiveStreamUrl(e.target.value)}
             />
           </div>

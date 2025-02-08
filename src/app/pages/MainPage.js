@@ -21,6 +21,7 @@ import Cookies from 'js-cookie';
 import GameHistory from "./screens/games/GameHistory";
 import AdminBidding from "./screens/Bidding/AdminBidding";
 import Pusher from "pusher-js";
+import ManageBidding from "./screens/Bidding/ManageBidding";
 
 const MainPage = () => {
   const axiosService = useAxios();  
@@ -133,6 +134,8 @@ const MainPage = () => {
         return <FAQ currentUser={currentUser}/>
       case 'ncaa-basketball-auction': 
         return <AdminBidding pusher={pusher} channel={channel}/>
+      case 'settings/manage-bidding': 
+        return <ManageBidding />
       default:
         return (
           <NotFound/>
