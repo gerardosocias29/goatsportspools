@@ -19,8 +19,6 @@ import ContactUs from "./screens/ContactUs";
 import OpenBets from "./screens/OpenBets";
 import Cookies from 'js-cookie';
 import GameHistory from "./screens/games/GameHistory";
-<<<<<<< Updated upstream
-=======
 import AdminBidding from "./screens/Bidding/AdminBidding";
 import Pusher from "pusher-js";
 import ManageAuction from "./screens/Bidding/ManageAuction";
@@ -28,7 +26,6 @@ import { Avatar } from "primereact/avatar";
 import { Button } from "primereact/button";
 import { Toast } from "primereact/toast";
 import { useToast } from "../contexts/ToastContext";
->>>>>>> Stashed changes
 
 const MainPage = () => {
   const navigate = useNavigate();
@@ -78,8 +75,6 @@ const MainPage = () => {
         // login(response.data.token);
         setCurrentUser(response.data.user);
         setIsLoading(false);
-<<<<<<< Updated upstream
-=======
 
         const pusherInstance = new Pusher(process.env.REACT_APP_PUSHER_KEY, {
           cluster: process.env.REACT_APP_PUSHER_CLUSTER,
@@ -117,7 +112,6 @@ const MainPage = () => {
         setPusher(pusherInstance);
         setChannel(biddingChannel);
 
->>>>>>> Stashed changes
       }).catch((error) => {
         // logout();
       });
