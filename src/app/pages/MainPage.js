@@ -1,6 +1,6 @@
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import Layout from "../components/layout/Layout";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { AuthContext } from "../contexts/AuthContext";
 import NotFound from "./NotFound";
 import { useAxios } from "../contexts/AxiosContext";
@@ -19,12 +19,26 @@ import ContactUs from "./screens/ContactUs";
 import OpenBets from "./screens/OpenBets";
 import Cookies from 'js-cookie';
 import GameHistory from "./screens/games/GameHistory";
+<<<<<<< Updated upstream
+=======
+import AdminBidding from "./screens/Bidding/AdminBidding";
+import Pusher from "pusher-js";
+import ManageAuction from "./screens/Bidding/ManageAuction";
+import { Avatar } from "primereact/avatar";
+import { Button } from "primereact/button";
+import { Toast } from "primereact/toast";
+import { useToast } from "../contexts/ToastContext";
+>>>>>>> Stashed changes
 
 const MainPage = () => {
+  const navigate = useNavigate();
   const axiosService = useAxios();  
   const location = useLocation();
   const currentPage = new URLSearchParams(location.search).get("page") || "games/nfl";
   const { isLoggedIn, login, apiToken} = useContext(AuthContext);
+  const showToast = useToast();
+
+  const toastBC = useRef(null);
 
   const [currentUser, setCurrentUser] = useState();
   const { isSignedIn, isLoaded, isLoggedIn: isLoggedInFromUser } = useUser();
@@ -46,6 +60,17 @@ const MainPage = () => {
     }
   }, [isLoggedInFromUser, isLoaded])
 
+  const updateQueryParam = (key, value) => {
+    const location = window.location;
+    const searchParams = new URLSearchParams(location.search);
+  
+    // Update or add the parameter
+    searchParams.set(key, value);
+  
+    // Replace state without navigation
+    window.history.replaceState(null, "", `${location.pathname}?${searchParams.toString()}`);
+  };
+
   useEffect(() => {
     if(isLoggedIn && apiToken){
       setIsLoading(true);
@@ -53,6 +78,46 @@ const MainPage = () => {
         // login(response.data.token);
         setCurrentUser(response.data.user);
         setIsLoading(false);
+<<<<<<< Updated upstream
+=======
+
+        const pusherInstance = new Pusher(process.env.REACT_APP_PUSHER_KEY, {
+          cluster: process.env.REACT_APP_PUSHER_CLUSTER,
+        });
+  
+        const biddingChannel = pusherInstance.subscribe("bidding-channel");
+
+        biddingChannel.bind("auction-started", (data) => {
+          if (response.data.user?.role_id != 3) {
+            showToast({ severity: 'info', summary: 'Please wait!', detail: 'Starting to go live now', sticky: true, life: 3000, });
+            setTimeout(() => {
+              console.log("data::::", data)
+              updateQueryParam("auction_id", data.auction_id)
+              // navigate("/?page=settings/manage-bidding&auction_id" + data.auction_id); // Admin goes to bidding page
+            }, 3000);
+          } else {
+            toastBC.current.show({
+              severity: 'info',
+              summary: "Auction is now live!",
+              sticky: true,
+              content: () => (
+                <div className="flex flex-column align-items-left" style={{ flex: '1' }}>
+                  <div className="flex align-items-center gap-2">
+                    <Avatar image="/images/avatar/auction.png" shape="circle" />
+                    <span className="font-bold text-900">Auction Live</span>
+                  </div>
+                  <div className="font-medium text-lg my-3 text-900">Click below to join the bidding.</div>
+                  <Button className="p-button-sm flex" label="Join Auction" severity="info" onClick={() => navigate(`/?page=ncaa-basketball-auction&auction_id=${data.auction_id}`)} />
+                </div>
+              )
+            });
+          }
+        });
+
+        setPusher(pusherInstance);
+        setChannel(biddingChannel);
+
+>>>>>>> Stashed changes
       }).catch((error) => {
         // logout();
       });
@@ -111,6 +176,10 @@ const MainPage = () => {
         return <ContactUs currentUser={currentUser}/>
       case 'faq':
         return <FAQ currentUser={currentUser}/>
+      case 'ncaa-basketball-auction': 
+        return <AdminBidding pusher={pusher} channel={channel}/>
+      case 'settings/manage-bidding': 
+        return <ManageAuction pusher={pusher} channel={channel} />
       default:
         return (
           <NotFound/>
@@ -119,7 +188,10 @@ const MainPage = () => {
   };
 
   return(
-    <Layout children={isLoggedIn && apiToken ? renderPage() : null} currentUser={currentUser} />
+    <>
+      <Layout children={isLoggedIn && apiToken ? renderPage() : null} currentUser={currentUser} />
+      <Toast ref={toastBC} position="top-right" />
+    </>
   )
 }
 
