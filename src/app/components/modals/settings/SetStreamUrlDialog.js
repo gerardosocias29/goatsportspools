@@ -14,7 +14,7 @@ const SetStreamUrlDialog = ({
 }) => {
   const showToast = useToast();
   const axiosService = useAxios();
-  const [streamUrl, setStreamUrl] = useState("");
+  const [streamUrl, setStreamUrl] = useState("https://www.youtube.com/watch?v=DPsyuvBom5k");
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -33,11 +33,13 @@ const SetStreamUrlDialog = ({
     axiosService
       .post(`/api/auctions/${auctionId}/set-stream-url`, { stream_url: streamUrl })
       .then((response) => {
-        showToast({
-          severity: response.data.status ? "success" : "error",
-          summary: response.data.status ? "Success!" : "Error!",
-          detail: response.data.message,
-        });
+        if(!response.data.status) {
+          showToast({
+            severity: response.data.status ? "success" : "error",
+            summary: response.data.status ? "Success!" : "Error!",
+            detail: response.data.message,
+          });
+        }
         onSuccess();
         onHide();
       })

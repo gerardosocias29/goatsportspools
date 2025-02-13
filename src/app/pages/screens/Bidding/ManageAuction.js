@@ -1,13 +1,14 @@
 import { Button } from "primereact/button";
 import LazyTable from "../../../components/tables/LazyTable";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import CreateAuctionEvent from "../../../components/modals/settings/CreateAuctionEvent";
 import { DateTemplate } from "../games/NFLTemplates";
 import { Tooltip } from "primereact/tooltip";
 import SetStreamUrlDialog from "../../../components/modals/settings/SetStreamUrlDialog";
+import { useNavigate } from "react-router-dom";
 
-const ManageAuction = () => {
-
+const ManageAuction = ({pusher, channel, currentUser}) => {
+  const navigate = useNavigate();
   const [showAuctionModal, setShowAuctionModal] = useState(false);
   const [activeAuction, setActiveAuction] = useState();
   const [streamUrlModal, setStreamUrlModal] = useState(false);
@@ -16,7 +17,7 @@ const ManageAuction = () => {
   const statusTemplate = (data) => {
     const emojis = {
       pending: "⏳",
-      active: "⚡",
+      live: "⚡",
       completed: "✅",
       cancelled: "❌",
     };
@@ -59,12 +60,20 @@ const ManageAuction = () => {
               setStreamUrlModal(true)
             }}/>
         )}
-        {data.status === "active" && (
-          <Button className="text-primaryS border-primaryS bg-transparent ring-0 rounded-lg text-sm" 
-            tooltip="End Auction" 
-            icon="pi pi-stop-circle" 
-            data-pr-position="top" 
-            onClick={(e) => {}}/>
+        {data.status === "live" && (
+          <>
+            <Button className="text-primary border-primary bg-transparent ring-0 rounded-lg text-sm" 
+              tooltip="Open Link" 
+              icon="pi pi-link" 
+              data-pr-position="top" 
+              onClick={(e) => { navigate(`/main?page=settings/manage-bidding&auction_id=${data.id}`) }}/>
+
+            <Button className="text-primaryS border-primaryS bg-transparent ring-0 rounded-lg text-sm" 
+              tooltip="End Auction" 
+              icon="pi pi-stop-circle" 
+              data-pr-position="top" 
+              onClick={(e) => {}}/>
+          </>
         )}
         {data.status === "pending" && (
           <Button className="text-red-500 border-red-500 bg-transparent ring-0 rounded-lg text-sm" 

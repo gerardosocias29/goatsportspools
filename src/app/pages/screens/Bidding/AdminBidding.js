@@ -4,8 +4,16 @@ import ReactPlayer from "react-player";
 import PlaceBid from "./PlaceBid";
 import { Button } from "primereact/button";
 import { InputText } from "primereact/inputtext";
+import { useAxios } from "../../../contexts/AxiosContext";
+import moment from "moment";
+import convertUTCToTimeZone from "../../../utils/utcToTimezone";
 
-const AdminBidding = ({pusher, channel}) => {
+const AdminBidding = ({pusher, channel, auctionId}) => {
+  const axiosService = useAxios();
+  const [auctionData, setAuctionData] = useState();
+
+  const [hasStarted, setHasStarted] = useState(false);
+  const [activeItem, setActiveItem] = useState();
   
   const [bids, setBids] = useState([]);
   const [recentBid, setRecentBid] = useState(null);
@@ -47,9 +55,34 @@ const AdminBidding = ({pusher, channel}) => {
     }
   }, [bids]);
 
+  useEffect(() => {
+    if(auctionId){
+      axiosService
+      .get(`/api/auctions/${auctionId}`)
+        .then((response) => {
+          setAuctionData(response.data);
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    }
+  }, [auctionId])
+
+  const handleStart = () => {
+    setHasStarted(true);
+
+    axiosService.get(`/api/auctions/${auctionId}/${activeItem.id}/set-active-item`)
+    .then((response) => {
+      console.log(response);
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+  }
+
   return (
     <div className="p-6 min-h-screen">
-      <div className="flex gap-4 mb-6">
+      <div className="flex gap-10 mb-6">
         <div className="w-full lg:w-1/2 flex flex-col gap-5">
           <div className="flex flex-col gap-4">
             <h2 className="text-2xl">Stream</h2>
@@ -61,16 +94,16 @@ const AdminBidding = ({pusher, channel}) => {
                 style={{ aspectRatio: '16/9' }}
                 onPause={handlePause}
               />
-              <div
+              {/* <div
                 className="absolute top-0 left-0 w-full h-full"
                 onClick={(e) => e.stopPropagation()}
-              />
+              /> */}
             </div>
             
             <InputText
               required 
               value={liveStreamUrl}
-              lassName="w-full text-sm" 
+              className="w-full text-sm" 
               placeholder="Enter Live Stream URL"
               onChange={(e) => setLiveStreamUrl(e.target.value)}
             />
@@ -78,16 +111,21 @@ const AdminBidding = ({pusher, channel}) => {
           <div>
             <h2 className="text-2xl">Auction Items</h2>
             <div className="flex flex-col gap-1">
-              <Button label="#101: Signed NCAA Basketball" className="text-left rounded-lg text-background border-background bg-transparent" />
-              <Button label="#102: Autographed NCAA Basketball Jersey" className="text-left rounded-lg text-background border-background bg-transparent" />
-              <Button label="#103: NCAA Championship Ticket Stub Collection" className="text-left rounded-lg text-background border-background bg-transparent" />
-              <Button label="#104: Limited Edition NCAA Final Four Basketball" className="text-left rounded-lg text-background border-background bg-transparent" />
-              <Button label="#105: Game-Worn NCAA Jersey" className="text-left rounded-lg text-background border-background bg-transparent" />
-              <Button label="#106: NCAA Basketball Poster Signed by Players" className="text-left rounded-lg text-background border-background bg-transparent" />
-              <Button label="#107: NCAA March Madness Commemorative Hat" className="text-left rounded-lg text-background border-background bg-transparent" />
-              <Button label="#108: Autographed NCAA Basketball Shoes" className="text-left rounded-lg text-background border-background bg-transparent" />
-              <Button label="#109: NCAA Basketball Game Program (Final Four)" className="text-left rounded-lg text-background border-background bg-transparent" />
-              <Button label="#110: NCAA Tournament VIP Experience Package" className="text-left rounded-lg text-background border-background bg-transparent" />
+              {
+                auctionData && auctionData.items?.length > 0 && auctionData.items.map((item, index) => {
+                  return <Button 
+                    disabled={item.sold_to != null}
+                    key={index}
+                    label={`#${item.id} ${item.name}`} 
+                    className={`${activeItem && (activeItem.id == item.id) ? "bg-background text-white border-background" : "text-background border-background bg-transparent"} transition-all duration-300 text-left rounded-lg`}
+                    onClick={() => {
+                      setActiveItem({ ...item });
+                      setHasStarted(false);
+                      console.log("item", item, activeItem);
+                    }}
+                  />
+                })
+              }
             </div>
            
           </div>
@@ -96,60 +134,71 @@ const AdminBidding = ({pusher, channel}) => {
           <h2 className="text-2xl">Bidding Details</h2>
           <div className="flex justify-between">
             <div>
-              <p>#101 Signed Gibson Les Paul Guitar</p>
-              <p className="text-3xl font-bold">Next: $4,000.00</p>
+              <p>{`${activeItem && "#"+activeItem.id || ""} - ${activeItem && activeItem.name || ""}`}</p>
+              <p className="text-3xl font-bold">Next: ${activeItem && Number(activeItem.starting_bid).toFixed(2) || "0.00"}</p>
             </div>
 
             <div>
-              <p className="text-right">100 - Gerardo Socias Jr</p>
-              <p className="text-3xl font-bold">Current: $3,000.00</p>
+            <p className="text-right">
+              {activeItem?.bids?.length > 0 
+                  ? `${activeItem.bids[0]?.user_id || ""} - ${activeItem.bids[0]?.user?.name || ""}` 
+                  : "-"}
+              </p>
+              <p className="text-3xl font-bold">
+                Current: {activeItem?.bids?.[0]?.bid_amount 
+                  ? "$"+Number(activeItem.bids[0].bid_amount).toFixed(2) 
+                  : "No Bids"}
+              </p>
             </div>
           </div>
           <div className="flex gap-5">
             <div className="w-full lg:w-1/4 flex flex-col gap-2">
               <p>Start/Sell</p>
-              <Button label="Start" className="rounded-lg border-background bg-background" />
-              <Button label="Sell" className="rounded-lg border-primaryS bg-primaryS" />
+              <Button disabled={hasStarted} label="Start" className="rounded-lg border-background bg-background" onClick={() => handleStart()} />
+              <Button disabled={!hasStarted} label="Sell" className="rounded-lg border-primaryS bg-primaryS" onClick={() => setHasStarted(false)} />
             </div>
             <div className="w-full lg:w-1/4 flex flex-col gap-2">
               <p>Floor Bid</p>
               <input
                 type="text"
-                placeholder="Floor Bid"
+                placeholder="Item Id"
                 className="w-full p-2 text-black"
               />
-              <Button label="Submit" className="rounded-lg border-background bg-background" />
+              <Button disabled={!hasStarted} label="Submit" className="rounded-lg border-background bg-background" />
 
             </div>
             <div className="w-full lg:w-1/2 flex flex-col gap-2">
               <div className="flex justify-between gap-4">
                 <div className="flex flex-col gap-2">
                   <p>Starting Bid</p>
-                  <input
-                    type="text"
-                    placeholder="Starting Bid"
-                    className="w-full p-2 text-black"
+                  <InputText required 
+                    value={activeItem && activeItem.starting_bid} 
+                    placeholder="Starting Bid" 
+                    onChange={(e) => {}} 
+                    style={{width: "120px"}}
                   />
+                  
                 </div>
                 <div className="flex flex-col gap-2">
                   <p>Minimum Bid</p>
-                  <input
-                    type="text"
-                    placeholder="Minimum Bid"
-                    className="w-full p-2 text-black"
+                  <InputText required 
+                    value={activeItem && activeItem.starting_bid} 
+                    placeholder="Minimum Bid" 
+                    onChange={(e) => {}} 
+                    style={{width: "120px"}}
                   />
                 </div>
               </div>
               <div className="grid grid-cols-3 gap-2">
-                <Button label="+100" className="rounded-lg border-background bg-background" />
-                <Button label="+250" className="rounded-lg border-background bg-background" />
-                <Button label="+500" className="rounded-lg border-background bg-background" />
-                <Button label="+1000" className="rounded-lg border-background bg-background" />
-                <Button label="-100" className="rounded-lg border-backgroundS bg-backgroundS" />
-                <Button label="-150" className="rounded-lg border-backgroundS bg-backgroundS" />
-                <Button label="-250" className="rounded-lg border-backgroundS bg-backgroundS" />
-                <Button label="+500" className="rounded-lg border-backgroundS bg-backgroundS" />
-                <Button label="+1000" className="rounded-lg border-backgroundS bg-backgroundS" />
+                <Button disabled={!hasStarted || true} label="+100" className="rounded-lg border-background bg-background" />
+                <Button disabled={!hasStarted || true} label="+250" className="rounded-lg border-background bg-background" />
+                <Button disabled={!hasStarted || true} label="+500" className="rounded-lg border-background bg-background" />
+                <Button disabled={!hasStarted || true} label="+1000" className="rounded-lg border-background bg-background" />
+                <Button disabled={!hasStarted || true} label="-100" className="rounded-lg border-backgroundS bg-backgroundS" />
+                <Button disabled={!hasStarted || true} label="-150" className="rounded-lg border-backgroundS bg-backgroundS" />
+                <Button disabled={!hasStarted || true} label="-250" className="rounded-lg border-backgroundS bg-backgroundS" />
+                <Button disabled={!hasStarted || true} label="+500" className="rounded-lg border-backgroundS bg-backgroundS" />
+                <Button disabled={!hasStarted || true} label="+1000" className="rounded-lg border-backgroundS bg-backgroundS" />
               </div>
             </div>
           </div>
@@ -157,13 +206,15 @@ const AdminBidding = ({pusher, channel}) => {
           <div className="mt-5">
             <h2 className="text-2xl">Bid History</h2>
             <div className="">
-              {bids.length === 0 ? (
+              {activeItem && activeItem.bids.length === 0 ? (
                 <p>No bids yet.</p>
               ) : (
                 <ul>
-                  {bids.map((bid, index) => (
-                    <li key={index} className={`px-2 py-1 rounded transition-all duration-2000 ${recentBid === bid ? "bg-green-500 opacity-100" : "bg-transparent"}`}>
-                      {bid.username}: ${bid.amount}
+                  {activeItem && activeItem.bids.map((bid, index) => (
+                    <li key={index} className={`gap-4 flex items-center px-2 py-1 border-b rounded transition-all duration-2000 ${recentBid === bid ? "bg-green-500 opacity-100" : "bg-transparent"}`}>
+                      <span>{`$${Number(bid.bid_amount)}`}</span>
+                      <span>{`(${bid.user_id}) ${bid.user.name}`}</span>
+                      <span>{convertUTCToTimeZone(bid.created_at, 'DD/MM/YYYY hh:mm A')}</span>
                     </li>
                   ))}
                 </ul>
@@ -174,7 +225,7 @@ const AdminBidding = ({pusher, channel}) => {
       </div>
       
 
-      <PlaceBid />
+      {/* <PlaceBid /> */}
     </div>
   );
 };

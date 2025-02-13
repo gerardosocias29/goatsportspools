@@ -1,8 +1,10 @@
 import { Button } from "primereact/button";
 import LazyTable from "../../../components/tables/LazyTable";
 import { useState } from "react";
+import { useLocation } from "react-router-dom";
 
 const ManageBidding = () => {
+  const location = useLocation();
 
   const [refreshTable, setRefreshTable] = useState(false);
   const eventsColumn = [
@@ -12,6 +14,13 @@ const ManageBidding = () => {
     { field: 'status', header: 'Status' },
     { field: 'stream_url', header: 'Stream URL' },
   ];
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if(params.get("auction_id")){
+      alert("auction_id");
+    }
+  }, [location.search]);
 
   return (
     <div className="flex flex-col gap-5 p-5">

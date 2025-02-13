@@ -26,6 +26,7 @@ import { Avatar } from "primereact/avatar";
 import { Button } from "primereact/button";
 import { Toast } from "primereact/toast";
 import { useToast } from "../contexts/ToastContext";
+import NCAABasketballAuction from "./screens/Bidding/NCAABasketballAuction";
 
 const MainPage = () => {
   const navigate = useNavigate();
@@ -41,6 +42,9 @@ const MainPage = () => {
   const { isSignedIn, isLoaded, isLoggedIn: isLoggedInFromUser } = useUser();
 
   const [isLoading, setIsLoading] = useState(false);
+
+  const [pusher, setPusher] = useState();
+  const [channel, setChannel] = useState();
 
   useEffect(() => {
     if(isSignedIn && isLoaded && !isLoggedIn){
@@ -69,54 +73,51 @@ const MainPage = () => {
   };
 
   useEffect(() => {
-    if(isLoggedIn && apiToken){
+    if (isLoggedIn && apiToken) {
       setIsLoading(true);
-      axiosService.get('/api/me_user').then((response) => {
-        // login(response.data.token);
-        setCurrentUser(response.data.user);
-        setIsLoading(false);
-
-        const pusherInstance = new Pusher(process.env.REACT_APP_PUSHER_KEY, {
-          cluster: process.env.REACT_APP_PUSHER_CLUSTER,
-        });
+      axiosService.get('/api/me_user')
+        .then((response) => {
+          setCurrentUser(response.data.user);
+          setIsLoading(false);
   
-        const biddingChannel = pusherInstance.subscribe("bidding-channel");
-
-        biddingChannel.bind("auction-started", (data) => {
-          if (response.data.user?.role_id != 3) {
-            showToast({ severity: 'info', summary: 'Please wait!', detail: 'Starting to go live now', sticky: true, life: 3000, });
-            setTimeout(() => {
-              console.log("data::::", data)
-              updateQueryParam("auction_id", data.auction_id)
-              // navigate("/?page=settings/manage-bidding&auction_id" + data.auction_id); // Admin goes to bidding page
-            }, 3000);
-          } else {
-            toastBC.current.show({
-              severity: 'info',
-              summary: "Auction is now live!",
-              sticky: true,
-              content: () => (
-                <div className="flex flex-column align-items-left" style={{ flex: '1' }}>
-                  <div className="flex align-items-center gap-2">
-                    <Avatar image="/images/avatar/auction.png" shape="circle" />
-                    <span className="font-bold text-900">Auction Live</span>
-                  </div>
-                  <div className="font-medium text-lg my-3 text-900">Click below to join the bidding.</div>
-                  <Button className="p-button-sm flex" label="Join Auction" severity="info" onClick={() => navigate(`/?page=ncaa-basketball-auction&auction_id=${data.auction_id}`)} />
-                </div>
-              )
+          if (!pusher) {
+            const pusherInstance = new Pusher(process.env.REACT_APP_PUSHER_KEY, {
+              cluster: process.env.REACT_APP_PUSHER_CLUSTER,
             });
+  
+            const biddingChannel = pusherInstance.subscribe("bidding-channel");
+            
+            setPusher(pusherInstance);
+            setChannel(biddingChannel);
+  
+            return () => {
+              pusherInstance.unsubscribe("bidding-channel");
+              pusherInstance.disconnect();
+            };
           }
-        });
-
-        setPusher(pusherInstance);
-        setChannel(biddingChannel);
-
-      }).catch((error) => {
-        // logout();
-      });
+        })
+        .catch(() => {});
     }
-  }, [apiToken, isLoggedIn])
+  }, [apiToken, isLoggedIn]);
+
+  const auctionStartedHandler = (data) => {
+    console.log("active-auction-event", data)
+    if (currentUser?.role_id !== 3) {
+      navigate(`/main?page=settings/manage-bidding&auction_id=${data.data.id}`);
+    }
+  };
+
+  useEffect(() => {
+    if (channel) {
+      channel.bind("active-auction-event-" + currentUser.id, auctionStartedHandler);
+    }
+
+    return () => {
+      if (channel) {
+        channel.unbind("active-auction-event-" + currentUser.id);
+      }
+    };
+  }, [channel]);
 
   const refreshCurrentUser = () => {
     axiosService.get('/api/me_user').then((response) => {
@@ -138,7 +139,7 @@ const MainPage = () => {
     }).flat();  // Flatten the resulting array
     const allPages = modules ? [...modules, ...defaultPages] : defaultPages;
     if (allPages.includes(currentPage)) {
-      console.log(allPages, currentPage);
+      // console.log(allPages, currentPage);
     } else {
       return isLoading ? null : <NotFound/>;
     }
@@ -171,9 +172,13 @@ const MainPage = () => {
       case 'faq':
         return <FAQ currentUser={currentUser}/>
       case 'ncaa-basketball-auction': 
-        return <AdminBidding pusher={pusher} channel={channel}/>
+        return <NCAABasketballAuction pusher={pusher} channel={channel}/>
       case 'settings/manage-bidding': 
-        return <ManageAuction pusher={pusher} channel={channel} />
+        const params = new URLSearchParams(location.search);
+        if(params.get("auction_id")){
+          return <AdminBidding pusher={pusher} channel={channel} auctionId={params.get("auction_id")} currentUser={currentUser}/>
+        }
+        return <ManageAuction pusher={pusher} channel={channel} currentUser={currentUser} />
       default:
         return (
           <NotFound/>
@@ -184,7 +189,6 @@ const MainPage = () => {
   return(
     <>
       <Layout children={isLoggedIn && apiToken ? renderPage() : null} currentUser={currentUser} />
-      <Toast ref={toastBC} position="top-right" />
     </>
   )
 }
