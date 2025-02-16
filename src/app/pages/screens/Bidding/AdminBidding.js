@@ -7,9 +7,11 @@ import { InputText } from "primereact/inputtext";
 import { useAxios } from "../../../contexts/AxiosContext";
 import moment from "moment";
 import convertUTCToTimeZone from "../../../utils/utcToTimezone";
+import { useNavigate } from "react-router-dom";
 
 const AdminBidding = ({pusher, channel, auctionId}) => {
   const axiosService = useAxios();
+  const navigate = useNavigate();
   const [auctionData, setAuctionData] = useState();
 
   const [hasStarted, setHasStarted] = useState(false);
@@ -58,7 +60,7 @@ const AdminBidding = ({pusher, channel, auctionId}) => {
   useEffect(() => {
     if(auctionId){
       axiosService
-      .get(`/api/auctions/${auctionId}`)
+      .get(`/api/auctions/${auctionId}/get-by-id`)
         .then((response) => {
           setAuctionData(response.data);
         })
@@ -70,14 +72,17 @@ const AdminBidding = ({pusher, channel, auctionId}) => {
 
   const handleStart = () => {
     setHasStarted(true);
+    if(activeItem && activeItem.id){
+      axiosService.get(`/api/auctions/${auctionId}/${activeItem.id}/set-active-item`)
+      .then((response) => {
+        console.log(response);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+    }
 
-    axiosService.get(`/api/auctions/${auctionId}/${activeItem.id}/set-active-item`)
-    .then((response) => {
-      console.log(response);
-    })
-    .catch((error) => {
-      console.log(error);
-    });
+    
   }
 
   return (
@@ -85,11 +90,16 @@ const AdminBidding = ({pusher, channel, auctionId}) => {
       <div className="flex gap-10 mb-6">
         <div className="w-full lg:w-1/2 flex flex-col gap-5">
           <div className="flex flex-col gap-4">
-            <h2 className="text-2xl">Stream</h2>
+            <div className="flex gap-4 items-center">
+              <i className="pi pi-arrow-left text-xl cursor-pointer" onClick={() => {
+                navigate("/main?page=settings/manage-bidding");
+              }}></i>
+              <h2 className="text-2xl">Stream</h2>
+            </div>
             <div className="relative">
               <ReactPlayer 
                 ref={playerRef}
-                url={liveStreamUrl} playIcon={false} controls={false} playing width="100%" 
+                url={auctionData?.stream_url} playIcon={false} controls={false} playing width="100%" 
                 height="358px" 
                 style={{ aspectRatio: '16/9' }}
                 onPause={handlePause}
@@ -100,13 +110,13 @@ const AdminBidding = ({pusher, channel, auctionId}) => {
               /> */}
             </div>
             
-            <InputText
+            {/* <InputText
               required 
               value={liveStreamUrl}
               className="w-full text-sm" 
               placeholder="Enter Live Stream URL"
               onChange={(e) => setLiveStreamUrl(e.target.value)}
-            />
+            /> */}
           </div>
           <div>
             <h2 className="text-2xl">Auction Items</h2>
@@ -154,7 +164,7 @@ const AdminBidding = ({pusher, channel, auctionId}) => {
           <div className="flex gap-5">
             <div className="w-full lg:w-1/4 flex flex-col gap-2">
               <p>Start/Sell</p>
-              <Button disabled={hasStarted} label="Start" className="rounded-lg border-background bg-background" onClick={() => handleStart()} />
+              <Button disabled={hasStarted || !activeItem?.id} label="Start" className="rounded-lg border-background bg-background" onClick={() => handleStart()} />
               <Button disabled={!hasStarted} label="Sell" className="rounded-lg border-primaryS bg-primaryS" onClick={() => setHasStarted(false)} />
             </div>
             <div className="w-full lg:w-1/4 flex flex-col gap-2">
@@ -182,7 +192,7 @@ const AdminBidding = ({pusher, channel, auctionId}) => {
                 <div className="flex flex-col gap-2">
                   <p>Minimum Bid</p>
                   <InputText required 
-                    value={activeItem && activeItem.starting_bid} 
+                    value={activeItem && activeItem.minimum_bid} 
                     placeholder="Minimum Bid" 
                     onChange={(e) => {}} 
                     style={{width: "120px"}}

@@ -4,32 +4,26 @@ import { Button } from "primereact/button";
 import PlaceBid from "./PlaceBid";
 import axios from "axios";
 import { useAxios } from "../../../contexts/AxiosContext";
+import convertUTCToTimeZone from "../../../utils/utcToTimezone";
+import { useNavigate } from "react-router-dom";
 
 const NCAABasketballAuction = ({ pusher, channel }) => {
 
   const axiosService = useAxios();
+  const navigate = useNavigate();
 
   const [upcomingAuctions, setUpcomingAuctions] = useState([]);
-  const [liveAuction, setLiveAuction] = useState(null);
+  const [liveAuction, setLiveAuction] = useState({});
   const [userAuctionedItems, setUserAuctionedItems] = useState([]);
 
   useEffect(() => {
-    fetchAuctions();
-
     if (channel) {
       channel.bind("bid-event", (data) => {
         console.log("New Bid:", data);
-        if (liveAuction && liveAuction.id === data.auction_id) {
-          setLiveAuction((prev) => ({
-            ...prev,
-            current_bid: data.bid_amount,
-            highest_bidder: data.user,
-          }));
-        }
       });
 
-      channel.bind("active-item-event", (data) => {
-        console.log("Active Item Update:", data);
+      channel.bind("active-auction-event-all", (data) => {
+        console.log("Active Auction Update:", data);
         setLiveAuction(data);
       });
     }
@@ -37,7 +31,7 @@ const NCAABasketballAuction = ({ pusher, channel }) => {
     return () => {
       if (channel) {
         channel.unbind("bid-event");
-        channel.unbind("active-item-event");
+        channel.unbind("active-auction-event-all");
       }
     };
   }, [channel]);
@@ -58,6 +52,10 @@ const NCAABasketballAuction = ({ pusher, channel }) => {
     }
   };
 
+  useEffect(() => {
+    fetchAuctions();
+  }, [])
+
   return (
     <div className="flex flex-col gap-5 p-5">
       <div className="text-primary text-3xl font-semibold">
@@ -65,34 +63,56 @@ const NCAABasketballAuction = ({ pusher, channel }) => {
       </div>
 
       {/* Live Auction */}
-      {liveAuction ? (
-        <div className="p-4 border rounded-lg bg-white shadow-md">
-          <h2 className="text-2xl font-bold text-red-600">Live Auction</h2>
-          <p className="text-lg">Item: {liveAuction.item_name}</p>
-          <p className="text-lg">Current Bid: ${liveAuction.current_bid}</p>
-          <p className="text-lg">Highest Bidder: {liveAuction.highest_bidder?.name}</p>
-          <PlaceBid auctionId={liveAuction.id} />
-        </div>
-      ) : (
-        <p className="text-gray-500">No active auction at the moment.</p>
-      )}
-
-      {/* Upcoming Auctions */}
-      <div className="p-4 border rounded-lg bg-white shadow-md">
-        <h2 className="text-xl font-bold text-blue-600">Upcoming Auctions</h2>
-        {upcomingAuctions.length > 0 ? (
-          upcomingAuctions.map((auction) => (
-            <div key={auction.id} className="p-2 border-b">
-              <p>{auction.item_name} - Starts at {auction.start_time}</p>
+      <div className="flex flex-col">
+        <h2 className="text-2xl font-bold text-red-600">Live Auction</h2>
+        <div className="grid grid-cols-4">
+          { Object.keys(liveAuction).length > 0 ? (
+            <div className="cursor-pointer lg:col-span-1 shadow-lg p-4 bg-primaryS rounded-lg text-white flex justify-between"
+              onClick={() => {
+                navigate(`/main?page=ncaa-basketball-auction&auction_id=${liveAuction.id}`)
+              }}
+            >
+              <div>
+                <p className="text-xl font-bold">{liveAuction.name}</p>
+                <p className="text-sm">No. of Items: {liveAuction.items?.length}</p>
+                <p className="text-sm">Items Sold: {liveAuction.items?.filter(item => item.sold_to !== null)?.length}</p>
+              </div>
+              <span className="flex items-center">
+                <i className="pi pi-chevron-right"></i>
+              </span>
             </div>
-          ))
-        ) : (
-          <p className="text-gray-500">No upcoming auctions.</p>
-        )}
+          ) : (
+            <div className="col-span-4 shadow-lg p-4 bg-white rounded-lg">
+              <p className="text-gray-500">No active auction at the moment.</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="flex flex-col">
+        <h2 className="text-2xl font-bold text-blue-600">Upcoming Auctions</h2>
+        <div className="grid grid-cols-4">
+          {upcomingAuctions.length > 0 ? (
+            upcomingAuctions.map((auction) => (
+              <div key={auction.id} className="lg:col-span-1 shadow-lg p-4 bg-white rounded-lg">
+                <div>
+                  <p className="text-xl font-bold">{auction.name}</p>
+                  <p>Starts at {convertUTCToTimeZone(auction.event_date, "MMM DD, YYYY hh:mm A")}</p>
+                  <p className="text-sm">No. of Items: {auction.items?.length}</p>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="col-span-4 shadow-lg p-4 bg-white rounded-lg">
+              <p className="text-gray-500">No upcoming auctions at the moment.</p>
+            </div>
+          )}
+
+        </div>
       </div>
 
       {/* User's Auctioned Items */}
-      <div className="p-4 border rounded-lg bg-white shadow-md">
+      <div className="p-4 border rounded-lg bg-white shadow-lg">
         <h2 className="text-xl font-bold text-green-600">Your Auctioned Items</h2>
         {userAuctionedItems.length > 0 ? (
           userAuctionedItems.map((item) => (

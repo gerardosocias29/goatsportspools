@@ -27,6 +27,7 @@ import { Button } from "primereact/button";
 import { Toast } from "primereact/toast";
 import { useToast } from "../contexts/ToastContext";
 import NCAABasketballAuction from "./screens/Bidding/NCAABasketballAuction";
+import UserAuction from "./screens/Bidding/UserAuction";
 
 const MainPage = () => {
   const navigate = useNavigate();
@@ -172,6 +173,10 @@ const MainPage = () => {
       case 'faq':
         return <FAQ currentUser={currentUser}/>
       case 'ncaa-basketball-auction': 
+        const p = new URLSearchParams(location.search);
+        if(p.get("auction_id")){
+          return <UserAuction channel={channel} auctionId={p.get("auction_id")} currentUser={currentUser}/>
+        }
         return <NCAABasketballAuction pusher={pusher} channel={channel}/>
       case 'settings/manage-bidding': 
         const params = new URLSearchParams(location.search);
