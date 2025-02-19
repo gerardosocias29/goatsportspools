@@ -66,7 +66,7 @@ const ManageAuction = ({pusher, channel, currentUser}) => {
               tooltip="Open Link" 
               icon="pi pi-link" 
               data-pr-position="top" 
-              onClick={(e) => { navigate(`/main?page=settings/manage-bidding&auction_id=${data.id}`) }}/>
+              onClick={(e) => { navigate(`/main?page=settings/manage-auction&auction_id=${data.id}`) }}/>
 
             <Button className="text-primaryS border-primaryS bg-transparent ring-0 rounded-lg text-sm" 
               tooltip="End Auction" 

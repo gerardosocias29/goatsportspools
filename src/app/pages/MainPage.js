@@ -104,7 +104,7 @@ const MainPage = () => {
   const auctionStartedHandler = (data) => {
     console.log("active-auction-event", data)
     if (currentUser?.role_id !== 3) {
-      navigate(`/main?page=settings/manage-bidding&auction_id=${data.data.id}`);
+      navigate(`/main?page=settings/manage-auction&auction_id=${data.data.id}`);
     }
   };
 
@@ -178,7 +178,7 @@ const MainPage = () => {
           return <UserAuction channel={channel} auctionId={p.get("auction_id")} currentUser={currentUser}/>
         }
         return <NCAABasketballAuction pusher={pusher} channel={channel}/>
-      case 'settings/manage-bidding': 
+      case 'settings/manage-auction': 
         const params = new URLSearchParams(location.search);
         if(params.get("auction_id")){
           return <AdminBidding pusher={pusher} channel={channel} auctionId={params.get("auction_id")} currentUser={currentUser}/>

@@ -10,7 +10,7 @@ const ManageBidding = () => {
   const eventsColumn = [
     { field: 'name', header: 'Event Name', },
     { field: 'date', header: 'Date'},
-    { field: 'no_of_items', header: 'No. of Items', headerClassName: 'w-[120px]'},
+    { field: 'no_of_items', header: 'No. of Teams', headerClassName: 'w-[120px]'},
     { field: 'status', header: 'Status' },
     { field: 'stream_url', header: 'Stream URL' },
   ];

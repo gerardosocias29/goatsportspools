@@ -63,6 +63,7 @@ const AdminBidding = ({pusher, channel, auctionId}) => {
       .get(`/api/auctions/${auctionId}/get-by-id`)
         .then((response) => {
           setAuctionData(response.data);
+          setLiveStreamUrl(response.data?.stream_url);
         })
         .catch((error) => {
           console.log(error);
@@ -87,23 +88,26 @@ const AdminBidding = ({pusher, channel, auctionId}) => {
 
   return (
     <div className="p-6 min-h-screen">
+      <div className="flex gap-4 items-center mb-5">
+        <i className="pi pi-arrow-left text-xl cursor-pointer" onClick={() => {
+          navigate("/main?page=settings/manage-bidding");
+        }}></i>
+      </div>
       <div className="flex gap-10 mb-6">
         <div className="w-full lg:w-1/2 flex flex-col gap-5">
           <div className="flex flex-col gap-4">
-            <div className="flex gap-4 items-center">
-              <i className="pi pi-arrow-left text-xl cursor-pointer" onClick={() => {
-                navigate("/main?page=settings/manage-bidding");
-              }}></i>
-              <h2 className="text-2xl">Stream</h2>
-            </div>
+            
             <div className="relative">
-              <ReactPlayer 
+              <h2 className="text-2xl font-bold">Auction Members</h2>
+              <div className="grid grid-cols-3 gap-1">
+              </div>
+              {/* <ReactPlayer 
                 ref={playerRef}
-                url={auctionData?.stream_url} playIcon={false} controls={false} playing width="100%" 
+                url={liveStreamUrl} playIcon={false} controls={false} playing width="100%" 
                 height="358px" 
                 style={{ aspectRatio: '16/9' }}
                 onPause={handlePause}
-              />
+              /> */}
               {/* <div
                 className="absolute top-0 left-0 w-full h-full"
                 onClick={(e) => e.stopPropagation()}
@@ -119,8 +123,8 @@ const AdminBidding = ({pusher, channel, auctionId}) => {
             /> */}
           </div>
           <div>
-            <h2 className="text-2xl">Auction Items</h2>
-            <div className="flex flex-col gap-1">
+            <h2 className="text-2xl font-bold">Auction Items</h2>
+            <div className="grid grid-cols-3 gap-1">
               {
                 auctionData && auctionData.items?.length > 0 && auctionData.items.map((item, index) => {
                   return <Button 
@@ -140,8 +144,10 @@ const AdminBidding = ({pusher, channel, auctionId}) => {
            
           </div>
         </div>
+        
+        {/* Bidding Details */}
         <div className="w-full lg:w-1/2 flex flex-col gap-4">
-          <h2 className="text-2xl">Bidding Details</h2>
+          <h2 className="text-2xl font-bold">Bidding Details</h2>
           <div className="flex justify-between">
             <div>
               <p>{`${activeItem && "#"+activeItem.id || ""} - ${activeItem && activeItem.name || ""}`}</p>
@@ -168,13 +174,13 @@ const AdminBidding = ({pusher, channel, auctionId}) => {
               <Button disabled={!hasStarted} label="Sell" className="rounded-lg border-primaryS bg-primaryS" onClick={() => setHasStarted(false)} />
             </div>
             <div className="w-full lg:w-1/4 flex flex-col gap-2">
-              <p>Floor Bid</p>
+              {/* <p>Floor Bid</p>
               <input
                 type="text"
                 placeholder="Item Id"
                 className="w-full p-2 text-black"
               />
-              <Button disabled={!hasStarted} label="Submit" className="rounded-lg border-background bg-background" />
+              <Button disabled={!hasStarted} label="Submit" className="rounded-lg border-background bg-background" /> */}
 
             </div>
             <div className="w-full lg:w-1/2 flex flex-col gap-2">

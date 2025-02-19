@@ -89,14 +89,14 @@ const CreateAuctionEvent = ({
   };
 
   return (
-    <Dialog className="lg:w-2/3 w-[95%]" header={header} visible={visible} draggable={false} maximizable={false} onHide={handleOnHide}>
-      <form onSubmit={handleSubmit} className="grid lg:grid-cols-8 gap-2">
-        <div className="lg:col-span-2 flex flex-col">
+    <Dialog className="lg:w-1/4 w-[95%]" header={header} visible={visible} draggable={false} maximizable={false} onHide={handleOnHide}>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-2">
+        <div className="flex flex-col">
           <label className="font-semibold">Auction Name</label>
           <InputText className="text-sm" required value={newData.name} onChange={(e) => handleChange("name", e.target.value)} />
         </div>
 
-        <div className="lg:col-span-2 flex flex-col">
+        <div className="flex flex-col">
           <label className="font-semibold">Event Date</label>
           <Calendar className="text-sm" minDate={new Date(new Date().setMonth(new Date().getMonth() - 1))} placeholder="MM/DD/YYYY HH:mm" value={newData.event_date} 
             onChange={(e) => handleChange("event_date", e.value)} showTime hourFormat="24"
@@ -104,14 +104,14 @@ const CreateAuctionEvent = ({
           />
         </div>
 
-        <div className="lg:col-span-4 flex flex-col">
+        {/* <div className="lg:col-span-4 flex flex-col"> */}
           {/* <label className="font-semibold">Stream URL</label>
           <InputText className="text-sm" required value={newData.stream_url} placeholder="Livestream Link e.g Youtube or Twitch" onChange={(e) => handleChange("stream_url", e.target.value)} /> */}
-        </div>
+        {/* </div> */}
 
         
 
-        <div className="border-t pt-4 lg:col-span-8">
+        {/* <div className="border-t pt-4 lg:col-span-8">
           <label className="font-bold">Auction Items</label>
           {newData.items.map((item, index) => (
             <div key={index} className="grid lg:grid-cols-6 gap-2 border p-3 mb-2">
@@ -144,14 +144,13 @@ const CreateAuctionEvent = ({
                 <label className="font-semibold">Description</label>
                 <InputTextarea required value={item.description} onChange={(e) => handleItemChange(index, "description", e.target.value)} />
               </div>
-              {/* <Button label="Remove Item" icon="pi pi-trash" className="p-button-danger mt-2" onClick={() => removeItem(index)} /> */}
             </div>
           ))}
           <Button label="Add Item" icon="pi pi-plus" className="p-button-success" onClick={addItem} />
-        </div>
+        </div> */}
 
         <div className="flex lg:col-span-8 justify-end mt-4">
-          <Button type="submit" label="Create Auction" icon="pi pi-check" className="rounded-lg border-primaryS bg-primaryS" />
+          <Button type="submit" label="Create Auction Event" icon="pi pi-check" className="rounded-lg border-primaryS bg-primaryS" />
         </div>
       </form>
     </Dialog>

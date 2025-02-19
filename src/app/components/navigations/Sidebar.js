@@ -32,7 +32,7 @@ const Sidebar = ({ currentUser, callback }) => {
       case 'icon-teams': return <PiUsersFour />;
       case 'icon-hiw': return <FaQuestionCircle />;
       case 'icon-history': return <FaHistory />
-      case 'icon-bidding-management': return <FaDollarSign />
+      case 'icon-auction-management': return <FaDollarSign />
       case 'icon-ncaa': return <FaBasketballBall />
       default: return null;
     }
