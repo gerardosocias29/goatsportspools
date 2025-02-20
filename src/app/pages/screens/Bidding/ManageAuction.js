@@ -6,13 +6,16 @@ import { DateTemplate } from "../games/NFLTemplates";
 import { Tooltip } from "primereact/tooltip";
 import SetStreamUrlDialog from "../../../components/modals/settings/SetStreamUrlDialog";
 import { useNavigate } from "react-router-dom";
+import { useAxios } from "../../../contexts/AxiosContext";
 
 const ManageAuction = ({pusher, channel, currentUser}) => {
   const navigate = useNavigate();
   const [showAuctionModal, setShowAuctionModal] = useState(false);
   const [activeAuction, setActiveAuction] = useState();
   const [streamUrlModal, setStreamUrlModal] = useState(false);
+  const [streamUrl, setStreamUrl] = useState(false);
   const [refreshTable, setRefreshTable] = useState(false);
+  const axiosService = useAxios();
 
   const statusTemplate = (data) => {
     const emojis = {
@@ -47,6 +50,12 @@ const ManageAuction = ({pusher, channel, currentUser}) => {
     setActiveAuction(0);
   }
 
+  const handleEndAuction = (id) => {
+    axiosService.get(`/api/auctions/${id}/end`).then((response) => {
+      setRefreshTable(true);
+    })
+  }
+
   const customActions = (data) => {
     return (
       <div className="flex justify-end gap-1">
@@ -57,7 +66,8 @@ const ManageAuction = ({pusher, channel, currentUser}) => {
             data-pr-position="top" 
             onClick={(e) => {
               setActiveAuction(data.id)
-              setStreamUrlModal(true)
+              setStreamUrl(data.stream_url);
+              setStreamUrlModal(true);
             }}/>
         )}
         {data.status === "live" && (
@@ -72,7 +82,7 @@ const ManageAuction = ({pusher, channel, currentUser}) => {
               tooltip="End Auction" 
               icon="pi pi-stop-circle" 
               data-pr-position="top" 
-              onClick={(e) => {}}/>
+              onClick={(e) => handleEndAuction(data.id)}/>
           </>
         )}
         {data.status === "pending" && (
@@ -103,7 +113,7 @@ const ManageAuction = ({pusher, channel, currentUser}) => {
       </div>
 
       <CreateAuctionEvent visible={showAuctionModal} onSuccess={handleOnSuccess} onHide={() => setShowAuctionModal(false)} />
-      <SetStreamUrlDialog visible={streamUrlModal} auctionId={activeAuction} onHide={() => handleOnHide()}/>
+      <SetStreamUrlDialog visible={streamUrlModal} streamUri={streamUrl} auctionId={activeAuction} onHide={() => handleOnHide()}/>
     </div>
   )
 }

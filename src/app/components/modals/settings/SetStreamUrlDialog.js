@@ -1,7 +1,7 @@
 import { Button } from "primereact/button";
 import { Dialog } from "primereact/dialog";
 import { InputText } from "primereact/inputtext";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAxios } from "../../../contexts/AxiosContext";
 import { useToast } from "../../../contexts/ToastContext";
 
@@ -11,10 +11,17 @@ const SetStreamUrlDialog = ({
   auctionId,
   onHide,
   onSuccess,
+  streamUri = null
 }) => {
   const showToast = useToast();
   const axiosService = useAxios();
   const [streamUrl, setStreamUrl] = useState("https://www.youtube.com/watch?v=DPsyuvBom5k");
+
+  useEffect(() => {
+    if(streamUri){
+      setStreamUrl(streamUri);
+    }
+  }, [streamUri])
 
   const handleSubmit = (e) => {
     e.preventDefault();
