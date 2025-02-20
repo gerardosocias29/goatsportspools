@@ -23,8 +23,9 @@ const NCAABasketballAuction = ({ pusher, channel }) => {
       });
 
       channel.bind("active-auction-event-all", (data) => {
-        console.log("Active Auction Update:", data);
-        setLiveAuction(data);
+        axiosService.get("/api/auctions/live").then((response) => {
+          setLiveAuction(response.data);
+        })
       });
     }
 
@@ -65,7 +66,7 @@ const NCAABasketballAuction = ({ pusher, channel }) => {
       {/* Live Auction */}
       <div className="flex flex-col">
         <h2 className="text-2xl font-bold text-red-600">Live Auction</h2>
-        <div className="grid grid-cols-4">
+        <div className="grid lg:grid-cols-3">
           { Object.keys(liveAuction).length > 0 ? (
             <div className="cursor-pointer lg:col-span-1 shadow-lg p-4 bg-primaryS rounded-lg text-white flex justify-between"
               onClick={() => {
@@ -91,7 +92,7 @@ const NCAABasketballAuction = ({ pusher, channel }) => {
 
       <div className="flex flex-col">
         <h2 className="text-2xl font-bold text-blue-600">Upcoming Auctions</h2>
-        <div className="grid grid-cols-4">
+        <div className="grid lg:grid-cols-4">
           {upcomingAuctions.length > 0 ? (
             upcomingAuctions.map((auction) => (
               <div key={auction.id} className="lg:col-span-1 shadow-lg p-4 bg-white rounded-lg">
