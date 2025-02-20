@@ -62,7 +62,7 @@ export const TeamTemplateWithScores = (value, data, field) => {
 export const DateTemplate = (value, data, field) => {
   return (
     <div className="text-center">
-      {moment(value).format('MMM DD')}<br/>{moment(value).format('hh:mm A')}
+      {convertUTCToTimeZone(value, "MMM DD, YYYY hh:mm A")}
     </div>
   );
 };
