@@ -3,7 +3,6 @@ import { useAxios } from "../../../contexts/AxiosContext";
 import { useNavigate } from "react-router-dom";
 import ReactPlayer from "react-player";
 import { Button } from "primereact/button";
-import { InputText } from "primereact/inputtext";
 import { InputNumber } from "primereact/inputnumber";
 
 const UserAuction = ({ channel, auctionId, currentUser }) => {
@@ -38,19 +37,57 @@ const UserAuction = ({ channel, auctionId, currentUser }) => {
   }, [auctionId])
 
   const [activeItem, setActiveItem] = useState();
+  const [currentBidAmount, setCurrentBidAmount] = useState(1);
+  
+  const handlePlaceBid = () => {
+    axiosService.post(`/api/auctions/${auctionId}/${activeItem.id}/bid`, { bid_amount: currentBidAmount})
+    .then((response) => {
+      console.log(response);
+    })
+    .catch((error) => {
+      console.log(error);
+    })
+  }
+
   const handleActiveItem = (data) => {
     console.log("active-item-event", data)
-    setActiveItem(data.data);
+    let auction_id = data.data;
+    if(data.auction_item_id != null){
+      auction_id = data.auction_item_id;
+    }
+
+    if(auction_id == undefined){
+      return;
+    }
+
+    axiosService.get(`/api/auctions/${auctionId}/${auction_id}/get-active-item`)
+    .then((response) => {
+      setActiveItem(response.data)
+    })
+    .catch(() => {
+      setActiveItem(null);
+    })
   }
 
   useEffect(() => {
+    if(activeItem){
+      if(activeItem.bids?.length > 0){
+        setCurrentBidAmount(activeItem.minimum_bid + activeItem?.bids[0]?.bid_amount)
+      } else {
+        setCurrentBidAmount(activeItem.starting_bid + activeItem?.bids[0]?.bid_amount)
+      }
+    }
+  }, [activeItem]);
+  useEffect(() => {
     if (channel) {
       channel.bind("active-item-event", handleActiveItem);
+      channel.bind("bid-event", handleActiveItem);
     }
 
     return () => {
       if (channel) {
         channel.unbind("active-item-event");
+        channel.unbind("bid-event");
       }
     };
   }, [channel]);
@@ -85,8 +122,9 @@ const UserAuction = ({ channel, auctionId, currentUser }) => {
           <p className="text-xl">{activeItem?.name || "No active item on bid yet."}</p>
           <Button
             type="button"
-            label="Bid $1"
+            label={`Bid $${currentBidAmount}`}
             className="bg-background border-none rounded-lg ring-0"
+            onClick={handlePlaceBid}
           />
           <div className="flex gap-2 items-center">
             <InputNumber inputClassName="w-3/4" placeholder="Custom Bid Amount"/>
