@@ -72,9 +72,9 @@ const UserAuction = ({ channel, auctionId, currentUser }) => {
   useEffect(() => {
     if(activeItem){
       if(activeItem.bids?.length > 0){
-        setCurrentBidAmount(activeItem.minimum_bid + activeItem?.bids[0]?.bid_amount)
+        setCurrentBidAmount(activeItem.minimum_bid + (activeItem?.bids[0]?.bid_amount || 0))
       } else {
-        setCurrentBidAmount(activeItem.starting_bid + activeItem?.bids[0]?.bid_amount)
+        setCurrentBidAmount(activeItem.starting_bid + (activeItem?.bids[0]?.bid_amount || 0))
       }
     }
   }, [activeItem]);
