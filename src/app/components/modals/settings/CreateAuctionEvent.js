@@ -98,9 +98,17 @@ const CreateAuctionEvent = ({
 
         <div className="flex flex-col">
           <label className="font-semibold">Event Date</label>
-          <Calendar className="text-sm" minDate={new Date(new Date().setMonth(new Date().getMonth() - 1))} placeholder="MM/DD/YYYY HH:mm" value={newData.event_date} 
+          {/* <Calendar className="text-sm" minDate={new Date(new Date().setMonth(new Date().getMonth() - 1))} placeholder="MM/DD/YYYY HH:mm" value={newData.event_date} 
             onChange={(e) => handleChange("event_date", e.value)} showTime hourFormat="24"
             showButtonBar stepMinute={1}
+          /> */}
+          <input
+            type="datetime-local"
+            className="text-sm border rounded p-2"
+            value={newData.event_date}
+            onChange={(e) => handleChange("event_date", e.target.value)}
+            min={new Date(new Date().setMonth(new Date().getMonth() - 1)).toISOString().slice(0, 16)}
+            required
           />
         </div>
 
