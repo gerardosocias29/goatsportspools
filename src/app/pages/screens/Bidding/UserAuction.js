@@ -4,11 +4,13 @@ import { useNavigate } from "react-router-dom";
 import ReactPlayer from "react-player";
 import { Button } from "primereact/button";
 import { InputNumber } from "primereact/inputnumber";
+import { useToast } from "../../../contexts/ToastContext";
 
 const UserAuction = ({ channel, auctionId, currentUser }) => {
   const axiosService = useAxios();
   const [event, setEvent] = useState();
   const navigate = useNavigate();
+  const showToast = useToast();
   
   useEffect(() => {
     if(auctionId){
@@ -38,14 +40,29 @@ const UserAuction = ({ channel, auctionId, currentUser }) => {
 
   const [activeItem, setActiveItem] = useState();
   const [currentBidAmount, setCurrentBidAmount] = useState(1);
-  
-  const handlePlaceBid = () => {
-    axiosService.post(`/api/auctions/${auctionId}/${activeItem.id}/bid`, { bid_amount: currentBidAmount})
+  const [customBidAmount, setCustomBidAmount] = useState(1);
+  const [isBidding, setIsBidding] = useState(false);
+  const handlePlaceBid = (customAmount = 0) => {
+    setIsBidding(true)
+
+    let bid_amount = currentBidAmount;
+    if(customAmount != 0){
+      bid_amount = customAmount;
+    }
+
+    axiosService.post(`/api/auctions/${auctionId}/${activeItem.id}/bid`, { bid_amount: bid_amount})
     .then((response) => {
       console.log(response);
+      setIsBidding(false)
     })
     .catch((error) => {
-      console.log(error);
+      console.log();
+      showToast({
+        severity: 'error',
+        summary: 'Unable to Bid',
+        detail: error.response?.data?.message,
+      });
+      setIsBidding(false)
     })
   }
 
@@ -72,9 +89,13 @@ const UserAuction = ({ channel, auctionId, currentUser }) => {
   useEffect(() => {
     if(activeItem){
       if(activeItem.bids?.length > 0){
-        setCurrentBidAmount(activeItem.minimum_bid + (activeItem?.bids[0]?.bid_amount || 0))
+        const a = activeItem.minimum_bid + (activeItem?.bids[0]?.bid_amount || 0);
+        setCurrentBidAmount(a)
+        setCustomBidAmount(a)
       } else {
-        setCurrentBidAmount(activeItem.starting_bid + (activeItem?.bids[0]?.bid_amount || 0))
+        const b = activeItem.starting_bid + (activeItem?.bids[0]?.bid_amount || 0);
+        setCurrentBidAmount(b)
+        setCustomBidAmount(b)
       }
     }
   }, [activeItem]);
@@ -120,18 +141,25 @@ const UserAuction = ({ channel, auctionId, currentUser }) => {
         <div className="lg:w-1/2 flex flex-col gap-4">
           <h2 className="text-2xl font-bold">Item on Bid</h2>
           <p className="text-xl">{activeItem?.name || "No active item on bid yet."}</p>
-          <Button
-            type="button"
-            label={`Bid $${currentBidAmount}`}
-            className="bg-background border-none rounded-lg ring-0"
-            onClick={handlePlaceBid}
-          />
+          {
+            activeItem?.name && 
+            <Button
+              type="button"
+              label={`Bid $${currentBidAmount}`}
+              className="bg-background border-none rounded-lg ring-0"
+              onClick={() => handlePlaceBid()}
+              disabled={isBidding}
+            />
+          }
+          
           <div className="flex gap-2 items-center">
-            <InputNumber inputClassName="w-3/4" placeholder="Custom Bid Amount"/>
+            <InputNumber min={1} value={customBidAmount} onChange={(e) => setCustomBidAmount(e.value)} inputClassName="w-3/4" placeholder="Custom Bid Amount"/>
             <Button
               type="button"
               label="Submit"
               className="w-1/4 bg-backgroundS border-none rounded-lg ring-0"
+              disabled={isBidding}
+              onClick={() => handlePlaceBid(customBidAmount)}
             />
           </div>
 

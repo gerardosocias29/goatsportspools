@@ -6,10 +6,12 @@ import { InputText } from "primereact/inputtext";
 import { useAxios } from "../../../contexts/AxiosContext";
 import convertUTCToTimeZone from "../../../utils/utcToTimezone";
 import ReactPlayer from "react-player";
+import { useToast } from "../../../contexts/ToastContext";
 
 const AdminBidding = ({ pusher, channel, auctionId }) => {
   const axiosService = useAxios();
   const navigate = useNavigate();
+  const showToast = useToast();
 
   // Main auction state
   const [auctionData, setAuctionData] = useState(null);
@@ -24,22 +26,48 @@ const AdminBidding = ({ pusher, channel, auctionId }) => {
   const [selectedRegion, setSelectedRegion] = useState("East");
   const [liveStream, setLiveStream] = useState();
 
+  const [currentBidAmount, setCurrentBidAmount] = useState(1);
+  const [customBidAmount, setCustomBidAmount] = useState(1);
+  const [isBidding, setIsBidding] = useState(false);
+  const handlePlaceBid = (customAmount = 0) => {
+    setIsBidding(true)
+    let bid_amount = currentBidAmount;
+    if(customAmount != 0){
+      bid_amount = customAmount;
+    }
+
+    axiosService.post(`/api/auctions/${auctionId}/${activeItem.id}/bid`, { bid_amount: bid_amount})
+    .then((response) => {
+      console.log(response);
+      setIsBidding(false)
+    })
+    .catch((error) => {
+      setIsBidding(false)
+      showToast({
+        severity: 'error',
+        summary: 'Unable to Bid',
+        detail: error.response.data.message,
+      });
+    })
+  }
+
+  
   // Fetch auction data
   useEffect(() => {
-    const fetchAuctionData = async () => {
-      try {
-        setIsLoading(true);
-        const response = await axiosService.get(`/api/auctions/${auctionId}/get-by-id`);
-        setAuctionData(response.data);
-        setLiveStream(response.data.stream_url);
-        setError(null);
-      } catch (err) {
-        setError('Failed to load auction data');
-        console.error(err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const fetchAuctionData = async () => {
+    try {
+      setIsLoading(true);
+      const response = await axiosService.get(`/api/auctions/${auctionId}/get-by-id`);
+      setAuctionData(response.data);
+      setLiveStream(response.data.stream_url);
+      setError(null);
+    } catch (err) {
+      setError('Failed to load auction data');
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
     if (auctionId) {
       fetchAuctionData();
@@ -50,19 +78,28 @@ const AdminBidding = ({ pusher, channel, auctionId }) => {
   useEffect(() => {
     if (!channel) return;
 
-    const handleNewBid = (data) => {
-      if (!activeItem) return;
+    const handleNewBid = async (data) => {
+      let auction_id = data.data;
+      if(data.auction_item_id != null){
+        auction_id = data.auction_item_id;
+      }
 
-      setActiveItem(prev => {
-        if (!prev) return null;
-        return {
-          ...prev,
-          bids: [data, ...prev.bids]
-        };
-      });
+      if(auction_id == undefined){
+        return;
+      }
 
-      setRecentBid(data);
-      setTimeout(() => setRecentBid(null), 2000);
+      const response = await axiosService.get(`/api/auctions/${auctionId}/get-by-id`);
+      setAuctionData(response.data);
+
+      axiosService.get(`/api/auctions/${auctionId}/${auction_id}/get-active-item`)
+      .then((response) => {
+        setActiveItem(response.data)
+        setRecentBid(data);
+        setTimeout(() => setRecentBid(null), 2000);
+      })
+      .catch(() => {
+        setActiveItem(null);
+      })
     };
 
     const handleAuctionMembers = async () => {
@@ -82,6 +119,20 @@ const AdminBidding = ({ pusher, channel, auctionId }) => {
       channel.unbind("auction-members", handleAuctionMembers);
     };
   }, [channel, auctionId, axiosService, activeItem]);
+
+  useEffect(() => {
+    if(activeItem){
+      if(activeItem.bids?.length > 0){
+        const a = activeItem.minimum_bid + (activeItem?.bids[0]?.bid_amount || 0);
+        setCurrentBidAmount(a)
+        setCustomBidAmount(a)
+      } else {
+        const b = activeItem.starting_bid + (activeItem?.bids[0]?.bid_amount || 0);
+        setCurrentBidAmount(b)
+        setCustomBidAmount(b)
+      }
+    }
+  }, [activeItem]);
 
   // Handle starting an item auction
   const handleStart = async () => {
@@ -115,12 +166,20 @@ const AdminBidding = ({ pusher, channel, auctionId }) => {
     );
   }
 
-  if (error) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-red-500 text-xl">{error}</div>
-      </div>
-    );
+  const handleRemoveBidHistory = (bid_id) => {
+    axiosService.post(`/api/auctions/remove-bid`, { bid_id: bid_id})
+    .then((response) => {
+      console.log(response);
+      setIsBidding(false)
+    })
+    .catch((error) => {
+      setIsBidding(false)
+      showToast({
+        severity: 'error',
+        summary: 'Unable to remove bid',
+        detail: error.response.data.message,
+      });
+    })
   }
 
   return (
@@ -128,24 +187,6 @@ const AdminBidding = ({ pusher, channel, auctionId }) => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Left Column */}
         <div className="space-y-4">
-
-          {/* Auction Members */}
-          <section className="bg-white rounded-lg p-6 shadow-md">
-            
-            <h2 className="text-2xl font-bold mb-4">Auction Members</h2>
-            <div className="grid grid-cols-2 gap-4">
-              {auctionData?.joined_users.map((member) => (
-                <div 
-                  key={member.user_id}
-                  className="bg-gray-50 flex items-center gap-2 rounded-lg px-3 py-2 border border-gray-100"
-                >
-                  <p className="font-medium">#{member.user_id}</p>
-                  <p className="text-gray-600">{member.user.name}</p>
-                </div>
-              ))}
-            </div>
-          </section>
-          
           {/* Auction Items */}
           <section className="bg-white rounded-lg p-6 shadow-md">
             <div className="flex items-center justify-between mb-4">
@@ -192,7 +233,35 @@ const AdminBidding = ({ pusher, channel, auctionId }) => {
               ))}
             </div>
           </section>
-
+          
+          {/* Auction Members */}
+          <section className="bg-white rounded-lg p-6 shadow-md">
+            
+            <h2 className="text-2xl font-bold mb-4">Auction Members</h2>
+            <div className="grid grid-cols-2 gap-4">
+              {auctionData?.joined_users.map((member) => (
+                <div 
+                  key={member.user_id}
+                  className="bg-gray-100 flex items-center justify-between rounded-lg px-3 py-2 border border-gray-300"
+                >
+                  <div className="flex items-center gap-2">
+                    <p className="font-medium">#{member.user_id}</p>
+                    <p className="text-gray-600">{member.user.name}</p>
+                  </div>
+                  <Button 
+                    size="small"
+                    rounded
+                    icon="pi pi-dollar"
+                    className="bg-white border-none bg-primaryS p-2"
+                    tooltip={`Bid $${currentBidAmount} for this user`}
+                    data-pr-position="top"
+                    disabled={isBidding}
+                    onClick={() => handlePlaceBid(currentBidAmount)}
+                  />
+                </div>
+              ))}
+            </div>
+          </section>
         </div>
 
         {/* Right Column - Bidding Details */}
@@ -221,7 +290,7 @@ const AdminBidding = ({ pusher, channel, auctionId }) => {
                   <p className="text-3xl font-bold">
                     {
                       activeItem.bids?.length > 0 ?
-                      `Next Bid: ${Number(activeItem.minimum_bid + (activeItem?.bids[0]?.bid_amount || 0)).toFixed(2)}`
+                      `Next Bid: ${Number(currentBidAmount).toFixed(2)}`
                       : `Next Bid: ${Number(activeItem.starting_bid + (activeItem?.bids[0]?.bid_amount || 0)).toFixed(2)}`
                     }
                   </p>
@@ -253,7 +322,7 @@ const AdminBidding = ({ pusher, channel, auctionId }) => {
                   />
                   <Button 
                     disabled={!hasStarted}
-                    label="Sell"
+                    label="End"
                     className="w-full rounded-lg border-primaryS bg-primaryS"
                     onClick={() => setHasStarted(false)}
                   />
@@ -283,34 +352,6 @@ const AdminBidding = ({ pusher, channel, auctionId }) => {
                       />
                     </div>
                   </div>
-
-                  <div className="grid grid-cols-1 gap-2">
-                    <Button
-                      readOnly
-                      disabled={true || hasStarted}
-                      label={`Submit`}
-                      className="rounded-lg border-background bg-background"
-                      onClick={() => {}}
-                    />
-                    {/* {[100, 250, 500, 1000].map((amount) => (
-                      <Button
-                        key={`inc${amount}`}
-                        disabled={!hasStarted}
-                        label={`+${amount}`}
-                        className="rounded-lg border-background bg-background"
-                        onClick={() => handleBidAdjustment(amount)}
-                      />
-                    ))}
-                    {[100, 250, 500].map((amount) => (
-                      <Button
-                        key={`dec${amount}`}
-                        disabled={!hasStarted}
-                        label={`-${amount}`}
-                        className="rounded-lg border-backgroundS bg-backgroundS"
-                        onClick={() => handleBidAdjustment(-amount)}
-                      />
-                    ))} */}
-                  </div>
                 </div>
               </div>
 
@@ -321,7 +362,7 @@ const AdminBidding = ({ pusher, channel, auctionId }) => {
                   <p className="text-gray-500">No bids yet.</p>
                 ) : (
                   <div className="max-h-96 overflow-y-auto">
-                    {activeItem.bids.map((bid) => (
+                    {activeItem.bids.map((bid, i) => (
                       <div
                         key={bid.id}
                         className={`
@@ -334,9 +375,14 @@ const AdminBidding = ({ pusher, channel, auctionId }) => {
                         <span className="text-gray-600">
                           {bid?.user?.name} (#{bid?.user_id})
                         </span>
-                        <span className="text-gray-500 text-sm">
+                        <span className="text-gray-500 text-sm relative pr-10">
                           {convertUTCToTimeZone(bid?.created_at, 'DD/MM/YYYY hh:mm A')}
+                          {
+                          i == 0 && 
+                          <span className="right-0 top-0 absolute " onClick={() => handleRemoveBidHistory(bid.id)}><i className="pi pi-times-circle text-red-500 cursor-pointer"></i></span>
+                        }
                         </span>
+                        
                       </div>
                     ))}
                   </div>
