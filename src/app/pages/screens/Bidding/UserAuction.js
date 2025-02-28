@@ -93,12 +93,13 @@ const UserAuction = ({ channel, auctionId, currentUser }) => {
         setCurrentBidAmount(a)
         setCustomBidAmount(a)
       } else {
-        const b = activeItem.starting_bid + (activeItem?.bids[0]?.bid_amount || 0);
+        const b = activeItem.starting_bid;
         setCurrentBidAmount(b)
         setCustomBidAmount(b)
       }
     }
   }, [activeItem]);
+
   useEffect(() => {
     if (channel) {
       channel.bind("active-item-event", handleActiveItem);
@@ -151,6 +152,12 @@ const UserAuction = ({ channel, auctionId, currentUser }) => {
               disabled={isBidding}
             />
           }
+          {/* User - DISPLAY THE CURRENT ITEM */}
+          {/* Auction Members - display all users */}
+          {/* Click user > highlight > textbox */}
+          {/* End user */}
+
+
           
           <div className="flex gap-2 items-center">
             <InputNumber min={1} value={customBidAmount} onChange={(e) => setCustomBidAmount(e.value)} inputClassName="w-3/4" placeholder="Custom Bid Amount"/>

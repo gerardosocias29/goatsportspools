@@ -7,6 +7,7 @@ import { useAxios } from "../../../contexts/AxiosContext";
 import convertUTCToTimeZone from "../../../utils/utcToTimezone";
 import ReactPlayer from "react-player";
 import { useToast } from "../../../contexts/ToastContext";
+import { InputNumber } from "primereact/inputnumber";
 
 const AdminBidding = ({ pusher, channel, auctionId }) => {
   const axiosService = useAxios();
@@ -29,14 +30,21 @@ const AdminBidding = ({ pusher, channel, auctionId }) => {
   const [currentBidAmount, setCurrentBidAmount] = useState(1);
   const [customBidAmount, setCustomBidAmount] = useState(1);
   const [isBidding, setIsBidding] = useState(false);
-  const handlePlaceBid = (customAmount = 0) => {
+  const [userOnBid, setUserOnBid] = useState(null);
+  const [users, setUsers] = useState();
+  const handlePlaceBid = (customAmount = 0, user_id = null) => {
     setIsBidding(true)
-    let bid_amount = currentBidAmount;
+    let data = {
+      bid_amount: currentBidAmount,
+    }
     if(customAmount != 0){
-      bid_amount = customAmount;
+      data.bid_amount = customAmount;
+    }
+    if(user_id != null){
+      data.user_id = user_id
     }
 
-    axiosService.post(`/api/auctions/${auctionId}/${activeItem.id}/bid`, { bid_amount: bid_amount})
+    axiosService.post(`/api/auctions/${auctionId}/${activeItem.id}/bid`, data)
     .then((response) => {
       console.log(response);
       setIsBidding(false)
@@ -54,20 +62,20 @@ const AdminBidding = ({ pusher, channel, auctionId }) => {
   
   // Fetch auction data
   useEffect(() => {
-  const fetchAuctionData = async () => {
-    try {
-      setIsLoading(true);
-      const response = await axiosService.get(`/api/auctions/${auctionId}/get-by-id`);
-      setAuctionData(response.data);
-      setLiveStream(response.data.stream_url);
-      setError(null);
-    } catch (err) {
-      setError('Failed to load auction data');
-      console.error(err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    const fetchAuctionData = async () => {
+      try {
+        setIsLoading(true);
+        const response = await axiosService.get(`/api/auctions/${auctionId}/get-by-id`);
+        setAuctionData(response.data);
+        setLiveStream(response.data.stream_url);
+        setError(null);
+      } catch (err) {
+        setError('Failed to load auction data');
+        console.error(err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
     if (auctionId) {
       fetchAuctionData();
@@ -127,12 +135,20 @@ const AdminBidding = ({ pusher, channel, auctionId }) => {
         setCurrentBidAmount(a)
         setCustomBidAmount(a)
       } else {
-        const b = activeItem.starting_bid + (activeItem?.bids[0]?.bid_amount || 0);
+        const b = activeItem.starting_bid;
         setCurrentBidAmount(b)
         setCustomBidAmount(b)
       }
     }
   }, [activeItem]);
+
+  const getUsers = () => {
+    axiosService.get('/api/users/all').then((response) => {setUsers(response.data)})
+  }
+
+  useEffect(() => {
+    getUsers();  
+  }, []);
 
   // Handle starting an item auction
   const handleStart = async () => {
@@ -143,18 +159,6 @@ const AdminBidding = ({ pusher, channel, auctionId }) => {
       setHasStarted(true);
     } catch (err) {
       console.error('Failed to start auction:', err);
-    }
-  };
-
-  // Handle bid increment/decrement
-  const handleBidAdjustment = async (amount) => {
-    if (!activeItem || !hasStarted) return;
-
-    try {
-      // Implement your bid adjustment logic here
-      console.log(`Adjusting bid by ${amount}`);
-    } catch (err) {
-      console.error('Failed to adjust bid:', err);
     }
   };
 
@@ -236,28 +240,49 @@ const AdminBidding = ({ pusher, channel, auctionId }) => {
           
           {/* Auction Members */}
           <section className="bg-white rounded-lg p-6 shadow-md">
-            
-            <h2 className="text-2xl font-bold mb-4">Auction Members</h2>
-            <div className="grid grid-cols-2 gap-4">
-              {auctionData?.joined_users.map((member) => (
-                <div 
-                  key={member.user_id}
-                  className="bg-gray-100 flex items-center justify-between rounded-lg px-3 py-2 border border-gray-300"
-                >
-                  <div className="flex items-center gap-2">
-                    <p className="font-medium">#{member.user_id}</p>
-                    <p className="text-gray-600">{member.user.name}</p>
+            <div className="flex items-center gap-3 justify-between mb-4">
+              <h2 className="lg:w-1/2 w-full text-2xl font-bold ">Auction Members</h2>
+              {
+                userOnBid && hasStarted && <div className="lg:w-1/2 w-full ">
+                  <div className="flex gap-2 items-center">
+                    <div className="p-inputgroup flex-1">
+                      <InputNumber min={1} value={customBidAmount} onChange={(e) => setCustomBidAmount(e.value)} inputClassName="w-1/2 rounded-tl-lg rounded-bl-lg" placeholder="Custom Bid Amount"/>
+                      <Button
+                        type="button"
+                        label=""
+                        icon="pi pi-check-circle"
+                        tooltip={`Bid $${customBidAmount}`}
+                        data-pr-position="top"
+                        className="bg-backgroundS border-none rounded-tr-lg rounded-br-lg ring-0"
+                        disabled={isBidding}
+                        onClick={() => handlePlaceBid(customBidAmount, userOnBid.id)}
+                      />
+                    </div>
                   </div>
-                  <Button 
-                    size="small"
-                    rounded
-                    icon="pi pi-dollar"
-                    className="bg-white border-none bg-primaryS p-2"
-                    tooltip={`Bid $${currentBidAmount} for this user`}
-                    data-pr-position="top"
-                    disabled={isBidding || !hasStarted}
-                    onClick={() => handlePlaceBid(currentBidAmount)}
-                  />
+                  <small>Bid for {userOnBid.name}</small>
+                </div>
+              }
+            </div>
+            
+            <div className="grid grid-cols-2 gap-2">
+              {users.map((member) => (
+                <div 
+                  key={member.id}
+                  className={`
+                    ${member.id == userOnBid?.id ? 'border-background text-background' : 'bg-gray-100 border-gray-300'}
+                    flex items-center justify-between rounded-lg px-3 py-2 border cursor-pointer 
+                  `}
+                  onClick={() => userOnBid?.id == member.id ? setUserOnBid(null) : setUserOnBid(member)}
+                >
+                  <div className="flex items-center gap-2 text-xs">
+                    <p className="font-medium">#{member.id}</p>
+                    <p className="text-gray-600">{member.name}</p>
+                  </div>
+                  <span>
+                    <i className={`pi pi-circle-fill h-3 w-3 
+                      ${ auctionData?.joined_users.find((d) => d.user_id == member.id) ? "text-green-500" : "text-gray-500" }
+                    `}></i>
+                  </span>
                 </div>
               ))}
             </div>
