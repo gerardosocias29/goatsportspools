@@ -255,7 +255,7 @@ const AdminBidding = ({ pusher, channel, auctionId }) => {
                     className="bg-white border-none bg-primaryS p-2"
                     tooltip={`Bid $${currentBidAmount} for this user`}
                     data-pr-position="top"
-                    disabled={isBidding}
+                    disabled={isBidding || !hasStarted}
                     onClick={() => handlePlaceBid(currentBidAmount)}
                   />
                 </div>
