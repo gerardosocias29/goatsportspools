@@ -216,6 +216,7 @@ const AdminBidding = ({ pusher, channel, auctionId }) => {
         });
 
         setStartedItem(null);
+        setActiveItem(null);
 
         const r = await axiosService.get(`/api/auctions/${auctionId}/get-by-id`);
         setAuctionData(r.data);
@@ -320,8 +321,6 @@ const AdminBidding = ({ pusher, channel, auctionId }) => {
                         setActiveItem(item);
                         setHasStarted(false);
                       }
-                      
-                      
                     }}
                   >
                     <span className="truncate">#{item.id} {item.name}</span>
