@@ -45,6 +45,9 @@ const UserAuction = ({ channel, auctionId, currentUser }) => {
       //   .catch((error) => {
       //     console.log(error);
       //   });
+
+      // Implement bid increment on the ADMIN Page
+      // Show all bid history on user auction
     }
 
     const handleUnload = () => {
@@ -120,7 +123,7 @@ const UserAuction = ({ channel, auctionId, currentUser }) => {
       } else {
         setIsUserWinning(false);
       }
-      setBidHistory(response.data.bids.filter((e) => e.user_id == currentUser.id))
+      setBidHistory(response.data.bids)
     })
     .catch(() => {
       setActiveItem(null);
@@ -141,24 +144,31 @@ const UserAuction = ({ channel, auctionId, currentUser }) => {
     }
   }, [activeItem]);
 
+  const [members, setMembers] = useState();
+  const handleAuctionMembers = async () => {
+    try {
+      const response = await axiosService.get(`/api/auctions/${auctionId}/members`);
+      setMembers(response.data);
+    } catch (err) {
+      console.error('Failed to update auction members:', err);
+    }
+  };
+
   useEffect(() => {
     if (channel) {
       channel.bind("active-item-event", handleActiveItem);
       channel.bind("bid-event", handleActiveItem);
+      channel.bind("auction-members", handleAuctionMembers);
     }
 
     return () => {
       if (channel) {
         channel.unbind("active-item-event");
         channel.unbind("bid-event");
+        channel.unbind("auction-members", handleAuctionMembers);
       }
     };
   }, [channel]);
-
-  const formatDateTime = (dateTimeString) => {
-    const date = new Date(dateTimeString);
-    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
-  };
 
   return (
     <div className="p-3 lg:p-5 bg-gray-100 min-h-screen">
@@ -205,7 +215,7 @@ const UserAuction = ({ channel, auctionId, currentUser }) => {
               {event?.items?.map((item) => (
                 <div 
                   key={item.id}
-                  className={`p-2 flex items-center justify-center text-sm border rounded-md text-center cursor-pointer transition-colors ${
+                  className={`p-2 flex items-center justify-center text-xs border rounded-md text-center cursor-pointer transition-colors ${
                     activeItem?.id === item.id ? 'bg-primary text-white' : 'bg-gray-50 hover:bg-gray-100'
                   }`}
                 >
@@ -302,13 +312,15 @@ const UserAuction = ({ channel, auctionId, currentUser }) => {
                       <thead className="bg-gray-50">
                         <tr>
                           <th className="py-2 px-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
+                          <th className="py-2 px-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
                           <th className="py-2 px-3 text-left text-xs font-medium text-gray-500 uppercase">Time</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-200">
                         {bidHistory.map((bid, index) => (
                           <tr key={index} className={bid.user_id === currentUser.id ? 'bg-blue-50' : ''}>
-                            <td className="py-2 px-3 text-sm font-medium">${bid.bid_amount}</td>
+                            <td className="py-2 px-3 text-sm font-medium">${Number(bid.bid_amount).toFixed(2)}</td>
+                            <td className="py-2 px-3 text-sm font-medium">{members.find((e) => e.user_id == bid.user_id)?.user.name || "-"}</td>
                             <td className="py-2 px-3 text-sm text-gray-500">{convertUTCToTimeZone(bid?.created_at, 'DD/MM/YYYY hh:mm A')}</td>
                           </tr>
                         ))}

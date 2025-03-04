@@ -48,41 +48,42 @@ const AdminBidding = ({ pusher, channel, auctionId }) => {
   ];
 
   const handlePlaceBid = (customAmount = 0, user_id = null) => {
-    if (bidConfirmation) {
-      setBidConfirmation(false);
-      setIsBidding(true);
-      let data = {
-        bid_amount: currentBidAmount,
-      };
-      if(customAmount !== 0){
-        data.bid_amount = customAmount;
-      }
-      if(user_id !== null){
-        data.user_id = user_id;
-      }
-
-      axiosService.post(`/api/auctions/${auctionId}/${activeItem.id}/bid`, data)
-        .then((response) => {
-          console.log(response);
-          setIsBidding(false);
-          showToast({
-            severity: 'success',
-            summary: 'Bid Placed',
-            detail: `Successfully placed bid of $${data.bid_amount}`,
-          });
-        })
-        .catch((error) => {
-          setIsBidding(false);
-          showToast({
-            severity: 'error',
-            summary: 'Unable to Bid',
-            detail: error.response?.data?.message || 'An error occurred',
-          });
-        });
-    } else {
-      setBidConfirmation(true);
-      setTimeout(() => setBidConfirmation(false), 3000);
+    // if (bidConfirmation) {
+    //   setBidConfirmation(false);
+      
+    // } else {
+    //   setBidConfirmation(true);
+    //   setTimeout(() => setBidConfirmation(false), 3000);
+    // }
+    setIsBidding(true);
+    let data = {
+      bid_amount: currentBidAmount,
+    };
+    if(customAmount !== 0){
+      data.bid_amount = customAmount;
     }
+    if(user_id !== null){
+      data.user_id = user_id;
+    }
+
+    axiosService.post(`/api/auctions/${auctionId}/${activeItem.id}/bid`, data)
+      .then((response) => {
+        console.log(response);
+        setIsBidding(false);
+        showToast({
+          severity: 'success',
+          summary: 'Bid Placed',
+          detail: `Successfully placed bid of $${data.bid_amount}`,
+        });
+      })
+      .catch((error) => {
+        setIsBidding(false);
+        showToast({
+          severity: 'error',
+          summary: 'Unable to Bid',
+          detail: error.response?.data?.message || 'An error occurred',
+        });
+      });
   };
 
   // Fetch auction data
@@ -173,7 +174,7 @@ const AdminBidding = ({ pusher, channel, auctionId }) => {
 
   useEffect(() => {
     getUsers();  
-  }, [axiosService]);
+  }, []);
 
   // Handle starting an item auction
   const [startedItem, setStartedItem] = useState(null);
@@ -361,9 +362,9 @@ const AdminBidding = ({ pusher, channel, auctionId }) => {
                       />
                       <Button
                         type="button"
-                        icon={bidConfirmation ? "pi pi-check" : "pi pi-dollar"}
-                        tooltip={bidConfirmation ? "Confirm Bid" : `Place Bid: $${customBidAmount}`}
-                        className={`${bidConfirmation ? "p-button-success" : "p-button-primary"} border-none`}
+                        icon={"pi pi-dollar"}
+                        tooltip={`Place Bid: $${customBidAmount}`}
+                        className={`p-button-success border-none`}
                         disabled={isBidding}
                         onClick={() => handlePlaceBid(customBidAmount, userOnBid.id)}
                       />
