@@ -71,9 +71,9 @@ const AdminBidding = ({ pusher, channel, auctionId }) => {
         console.log(response);
         setIsBidding(false);
         showToast({
-          severity: 'success',
-          summary: 'Bid Placed',
-          detail: `Successfully placed bid of $${data.bid_amount}`,
+          severity: response.data.status ? 'success' : 'error',
+          summary: response.data.status ? 'Bid Placed' : 'Bid Error',
+          detail: response.data.status ? `Successfully placed bid of $${data.bid_amount}` : response.data.message,
         });
       })
       .catch((error) => {

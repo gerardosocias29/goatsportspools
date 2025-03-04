@@ -78,6 +78,12 @@ const UserAuction = ({ channel, auctionId, currentUser }) => {
       if (response.data && response.data.winning) {
         setIsUserWinning(true);
       }
+
+      showToast({
+        severity: response.data.status ? 'success' : 'error',
+        summary: response.data.status ? 'Bid Placed' : 'Bid Error',
+        detail: response.data.status ? `Successfully placed bid of $${bid_amount}` : response.data.message,
+      });
       
       // Update bid history
       // axiosService
@@ -109,6 +115,16 @@ const UserAuction = ({ channel, auctionId, currentUser }) => {
       setCurrentBidAmount(0);
       setCustomBidAmount(0);
       setBidHistory(null)
+
+      axiosService
+      .get(`/api/auctions/${auctionId}/get-by-id`)
+        .then((response) => {
+          setEvent(response.data);
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+
       return;
     }
 
