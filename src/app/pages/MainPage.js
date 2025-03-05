@@ -104,7 +104,12 @@ const MainPage = () => {
   const auctionStartedHandler = (data) => {
     console.log("active-auction-event", data)
     if (currentUser?.role_id !== 3) {
-      navigate(`/main?page=settings/manage-auction&auction_id=${data.data.id}`);
+      if(data.data.status == "live"){
+        navigate(`/main?page=settings/manage-auction&auction_id=${data.data.id}`);
+      } else {
+        navigate(`/main?page=settings/manage-auction`);
+      }
+      
     }
   };
 

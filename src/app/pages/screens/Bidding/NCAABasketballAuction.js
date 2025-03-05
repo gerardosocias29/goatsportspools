@@ -23,9 +23,14 @@ const NCAABasketballAuction = ({ pusher, channel }) => {
       });
 
       channel.bind("active-auction-event-all", (data) => {
-        axiosService.get("/api/auctions/live").then((response) => {
-          setLiveAuction(response.data);
-        })
+        console.log(data)
+        if(data.status == "live"){
+          axiosService.get("/api/auctions/live").then((response) => {
+            setLiveAuction(response.data);
+          })
+        } else {
+          setLiveAuction({});
+        }
       });
     }
 
@@ -66,7 +71,7 @@ const NCAABasketballAuction = ({ pusher, channel }) => {
       {/* Live Auction */}
       <div className="flex flex-col">
         <h2 className="text-2xl font-bold text-red-600">Live Auction</h2>
-        <div className="grid lg:grid-cols-3">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           { Object.keys(liveAuction).length > 0 ? (
             <div className="cursor-pointer lg:col-span-1 shadow-lg p-4 bg-primaryS rounded-lg text-white flex justify-between"
               onClick={() => {
@@ -92,7 +97,7 @@ const NCAABasketballAuction = ({ pusher, channel }) => {
 
       <div className="flex flex-col">
         <h2 className="text-2xl font-bold text-blue-600">Upcoming Auctions</h2>
-        <div className="grid lg:grid-cols-4">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {upcomingAuctions.length > 0 ? (
             upcomingAuctions.map((auction) => (
               <div key={auction.id} className="lg:col-span-1 shadow-lg p-4 bg-white rounded-lg">
@@ -117,8 +122,10 @@ const NCAABasketballAuction = ({ pusher, channel }) => {
         <h2 className="text-xl font-bold text-green-600">Your Auctioned Items</h2>
         {userAuctionedItems.length > 0 ? (
           userAuctionedItems.map((item) => (
-            <div key={item.id} className="p-2 border-b">
-              <p>{item.item_name} - Sold for ${item.final_bid || "Pending"}</p>
+            <div key={item.id} className="p-4 border-b text-xs">
+              <p>
+                <span className="p-2 rounded-lg border bg-gray-100">{item.name}</span> - Sold for <span className="text-green-600 font-bold">${Number(item.sold_amount).toFixed(2)}</span>
+              </p>
             </div>
           ))
         ) : (

@@ -157,7 +157,7 @@ const ManageAuction = ({pusher, channel, currentUser}) => {
                 </div>
               )}
               placeholder="Select Region" 
-              className="w-full md:w-48"
+              className="w-full md:w-48 mb-4"
             />
             <table className="min-w-full divide-y divide-gray-200 text-xs">
               <thead className="bg-gray-50">

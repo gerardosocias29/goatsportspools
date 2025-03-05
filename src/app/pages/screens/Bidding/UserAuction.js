@@ -31,6 +31,10 @@ const UserAuction = ({ channel, auctionId, currentUser }) => {
       .get(`/api/auctions/${auctionId}/get-by-id`)
         .then((response) => {
           setEvent(response.data);
+
+          const activeItemId = response.data.active_item_id;
+          const matchedItem = response.data.items?.find((e) => e.id === activeItemId) || null;
+          setActiveItem(matchedItem);
         })
         .catch((error) => {
           console.log(error);
@@ -175,13 +179,27 @@ const UserAuction = ({ channel, auctionId, currentUser }) => {
       channel.bind("active-item-event", handleActiveItem);
       channel.bind("bid-event", handleActiveItem);
       channel.bind("auction-members", handleAuctionMembers);
+
+      channel.bind("active-auction-event-all", (data) => {
+        console.log(data.status)
+        if(data.status != "live") {
+          showToast({
+            severity: 'success',
+            summary: 'Ended',
+            detail: "The auction has been ended!",
+          });
+          navigate('/main?page=ncaa-basketball-auction')
+        }
+      });
+
     }
 
     return () => {
       if (channel) {
         channel.unbind("active-item-event");
         channel.unbind("bid-event");
-        channel.unbind("auction-members", handleAuctionMembers);
+        channel.unbind("auction-members");
+        channel.unbind("active-auction-event-all");
       }
     };
   }, [channel]);

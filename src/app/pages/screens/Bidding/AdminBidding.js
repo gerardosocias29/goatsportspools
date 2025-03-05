@@ -95,6 +95,12 @@ const AdminBidding = ({ pusher, channel, auctionId }) => {
         setAuctionData(response.data);
         setLiveStream(response.data.stream_url);
         setError(null);
+
+        const activeItemId = response.data.active_item_id;
+        const matchedItem = response.data.items?.find((e) => e.id === activeItemId) || null;
+        setActiveItem(matchedItem);
+        setHasStarted(true);
+
       } catch (err) {
         setError('Failed to load auction data');
         console.error(err);
