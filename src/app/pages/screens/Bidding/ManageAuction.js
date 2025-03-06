@@ -14,6 +14,9 @@ import { BiTrophy } from "react-icons/bi";
 import Table from "../../../components/tables/Table";
 import ViewTeamDetails from "../../../components/modals/settings/ViewTeamDetails";
 import { Dropdown } from "primereact/dropdown";
+import { RiTeamLine } from "react-icons/ri";
+import { FaUsersBetweenLines } from "react-icons/fa6";
+import UserAmountModal from "../../../components/modals/settings/UserAmountModal";
 
 const ManageAuction = ({pusher, channel, currentUser}) => {
   const navigate = useNavigate();
@@ -68,7 +71,7 @@ const ManageAuction = ({pusher, channel, currentUser}) => {
       <div className="flex justify-end gap-1">
         <Button className="text-white border-background bg-background ring-0 rounded-lg text-sm" 
           tooltip="Team Details" 
-          icon="pi pi-users" 
+          icon={<RiTeamLine />}
           data-pr-position="top" 
           onClick={(e) => {
             // setActiveAuction(data.id)
@@ -76,6 +79,18 @@ const ManageAuction = ({pusher, channel, currentUser}) => {
             // setStreamUrlModal(true);
             setActiveIndex(1)
             setTeamDetails(data.items) // for now
+          }}
+        />
+        <Button className="text-white border-background bg-background ring-0 rounded-lg text-sm" 
+          tooltip="User Details" 
+          icon={<FaUsersBetweenLines />}
+          data-pr-position="top" 
+          onClick={(e) => {
+            // setActiveAuction(data.id)
+            // setStreamUrl(data.stream_url);
+            // setStreamUrlModal(true);
+            setActiveIndex(2)
+            setAuctionDetails(data) // for now
           }}
         />
         {data.status === "pending" && (
@@ -118,7 +133,9 @@ const ManageAuction = ({pusher, channel, currentUser}) => {
 
   const [activeIndex, setActiveIndex] = useState(0);
   const [teamDetails, setTeamDetails] = useState(null);
+  const [auctionDetails, setAuctionDetails] = useState(null);
   const [activeTeam, setActiveTeam] = useState();
+  const [amounts, setAmounts] = useState(null);
 
   const [selectedRegion, setSelectedRegion] = useState("East");
   const regions = [
@@ -127,6 +144,21 @@ const ManageAuction = ({pusher, channel, currentUser}) => {
     {name: 'Midwest', value: "Midwest", icon: 'pi pi-compass'},
     {name: 'South', value: "South", icon: 'pi pi-compass'},
   ];
+
+  const [owners, setOwners] = useState();
+  const getUsers = async (auctionId) => {
+    if(auctionId){
+      const response = await axiosService.get(`/api/auctions/${auctionId}/users`);
+      setOwners(response.data);
+      setAmounts(null);
+    }
+  }
+
+  useEffect(() => {
+    if(auctionDetails != null){
+      getUsers(auctionDetails?.id)
+    }
+  }, [auctionDetails])
   
   return (
     <div className="flex flex-col gap-5 p-5">
@@ -135,7 +167,7 @@ const ManageAuction = ({pusher, channel, currentUser}) => {
         <Button label="Create Auction Event" icon="pi pi-plus" className="rounded-lg border-primaryS bg-primaryS" onClick={() => setShowAuctionModal(true)}/>
       </div>
       <div className="w-full p-5 bg-white rounded-lg flex flex-col gap-5">
-        <TabView activeIndex={activeIndex} onTabChange={(e) => {setActiveIndex(e.index); setTeamDetails(null)}}>
+        <TabView activeIndex={activeIndex} onTabChange={(e) => {setActiveIndex(e.index); setTeamDetails(null); setAuctionDetails(null)}}>
           <TabPanel header="Auctions" className="flex justify-center">
             <LazyTable api={'/api/auctions'}
               columns={auctionsColumn}
@@ -217,12 +249,76 @@ const ManageAuction = ({pusher, channel, currentUser}) => {
             </table>
             
           </TabPanel>
+          <TabPanel header="User Details" disabled={!auctionDetails} className="">
+            <table className="min-w-full divide-y divide-gray-200 text-xs">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Owner</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount Escrowed</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Budget</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Budget Used</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Team</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {owners?.map((owner, i) => (
+                  <tr
+                    key={owner.id}
+                    className={`
+                      hover:bg-gray-50
+                      transition-all duration-300
+                    `}
+                  >
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      <span className="flex flex-col">
+                        <span className="font-bold">{owner.name || "-"}</span>
+                        <span className="text-xs">{owner.email}</span>
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      <span className="text-center">{owner.auctions[0]?.escrow_amount || "∞"}</span>
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      <span className="text-center">{owner.auctions[0]?.total_budget || "∞"}</span>
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      <span className="text-center text-green-600 font-bold">{(owner.total_sold_amount) ? `$${Number(owner.total_sold_amount).toFixed(2)}` : "-"}</span>
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      {
+                        owner?.auction_items?.length > 0 &&
+                        <span className="text-center p-2 bg-gray-200 border rounded-lg">{owner.auction_items[0]?.name}</span>
+                      }
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      <Button 
+                        size="small"
+                        icon="pi pi-pencil"
+                        className="text-xs bg-transparent border-none text-blue-600"
+                        tooltip="Edit"
+                        data-pr-position="top"
+                        onClick={() => setAmounts({
+                          escrow_amount: owner.auctions[0]?.escrow_amount,
+                          total_budget: owner.auctions[0]?.total_budget,
+                          user_id: owner.id
+                        })}
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            
+          </TabPanel>
         </TabView>
         
       </div>
       <ViewTeamDetails visible={activeTeam} data={activeTeam} onHide={() => setActiveTeam(null)} />
       <CreateAuctionEvent visible={showAuctionModal} onSuccess={handleOnSuccess} onHide={() => setShowAuctionModal(false)} />
       <SetStreamUrlDialog visible={streamUrlModal} streamUri={streamUrl} auctionId={activeAuction} onHide={() => handleOnHide()}/>
+      
+      <UserAmountModal visible={amounts} data={amounts} onSuccess={() => { getUsers(auctionDetails?.id) }} auctionId={auctionDetails?.id} onHide={() => setAmounts(null)}/>
     </div>
   )
 }

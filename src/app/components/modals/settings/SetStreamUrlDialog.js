@@ -40,13 +40,11 @@ const SetStreamUrlDialog = ({
     axiosService
       .post(`/api/auctions/${auctionId}/set-stream-url`, { stream_url: streamUrl })
       .then((response) => {
-        if(!response.data.status) {
-          showToast({
-            severity: response.data.status ? "success" : "error",
-            summary: response.data.status ? "Success!" : "Error!",
-            detail: response.data.message,
-          });
-        }
+        showToast({
+          severity: response.data.status ? "success" : "error",
+          summary: response.data.status ? "Success!" : "Error!",
+          detail: response.data.message,
+        });
         onSuccess();
         onHide();
       })
