@@ -272,7 +272,7 @@ const ManageAuction = ({pusher, channel, currentUser}) => {
                   >
                     <td className="px-4 py-3 whitespace-nowrap">
                       <span className="flex flex-col">
-                        <span className="font-bold">{owner.name || "-"}</span>
+                        <span className="font-bold">#{owner.id} {owner.name || "-"}</span>
                         <span className="text-xs">{owner.email}</span>
                       </span>
                     </td>
