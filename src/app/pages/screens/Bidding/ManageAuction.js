@@ -66,6 +66,12 @@ const ManageAuction = ({pusher, channel, currentUser}) => {
     })
   }
 
+  const handleCancelAuction = (id) => {
+    axiosService.get(`/api/auctions/${id}/cancel`).then((response) => {
+      setRefreshTable(true);
+    })
+  }
+
   const customActions = (data) => {
     return (
       <div className="flex justify-end gap-1">
@@ -124,6 +130,7 @@ const ManageAuction = ({pusher, channel, currentUser}) => {
             tooltip="Cancel Auction" 
             icon="pi pi-times-circle" 
             data-pr-position="top" 
+            onClick={(e) => handleCancelAuction(data.id)}
             />
         )}
         
@@ -168,7 +175,7 @@ const ManageAuction = ({pusher, channel, currentUser}) => {
       </div>
       <div className="w-full p-5 bg-white rounded-lg flex flex-col gap-5">
         <TabView activeIndex={activeIndex} onTabChange={(e) => {setActiveIndex(e.index); setTeamDetails(null); setAuctionDetails(null)}}>
-          <TabPanel header="Auctions" className="flex justify-center">
+          <TabPanel header="Auctions">
             <LazyTable api={'/api/auctions'}
               columns={auctionsColumn}
               refreshTable={refreshTable} setRefreshTable={setRefreshTable}
