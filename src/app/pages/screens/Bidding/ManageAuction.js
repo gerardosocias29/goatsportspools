@@ -204,7 +204,7 @@ const ManageAuction = ({pusher, channel, currentUser}) => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {teamDetails?.filter(item => item.ncaa_team?.region === selectedRegion).map((team, i) => (
+                {teamDetails?.filter(item => item?.region === selectedRegion).map((team, i) => (
                   <tr
                     key={team.id}
                     className={`
@@ -213,10 +213,10 @@ const ManageAuction = ({pusher, channel, currentUser}) => {
                     `}
                   >
                     <td className="px-4 py-3 whitespace-nowrap">
-                      <span className="font-medium">{team.ncaa_team?.region}</span>
+                      <span className="font-medium">{team?.region}</span>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
-                      <span className="font-medium">{team.ncaa_team?.seed}</span>
+                      <span className="font-medium">{team?.seed}</span>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
                       <span className="font-medium">{team.ncaa_team?.school}</span>

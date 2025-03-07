@@ -13,11 +13,14 @@ import { Card } from "primereact/card";
 import { Divider } from "primereact/divider";
 import { ProgressSpinner } from "primereact/progressspinner";
 import { Tag } from "primereact/tag";
+import TournamentBracket from "./TournamentBracket";
 
 const AdminBidding = ({ pusher, channel, auctionId }) => {
   const axiosService = useAxios();
   const navigate = useNavigate();
   const showToast = useToast();
+
+  const [showBracket, setShowBracket] = useState(false); 
 
   // Main auction state
   const [auctionData, setAuctionData] = useState(null);
@@ -68,7 +71,6 @@ const AdminBidding = ({ pusher, channel, auctionId }) => {
 
     axiosService.post(`/api/auctions/${auctionId}/${activeItem.id}/bid`, data)
       .then((response) => {
-        console.log(response);
         setIsBidding(false);
         showToast({
           severity: response.data.status ? 'success' : 'error',
@@ -100,6 +102,10 @@ const AdminBidding = ({ pusher, channel, auctionId }) => {
         const matchedItem = response.data.items?.find((e) => e.id === activeItemId) || null;
         setActiveItem(matchedItem);
         setHasStarted(true);
+
+        if(response.data?.items?.length < 1){
+          setShowBracket(true);
+        }
 
       } catch (err) {
         setError('Failed to load auction data');
@@ -273,6 +279,23 @@ const AdminBidding = ({ pusher, channel, auctionId }) => {
 
   return (
     <div className="p-4 md:p-6 min-h-screen bg-gray-50">
+      {/* <Button label="Manage Tournament Bracket" onClick={() => setShowBracket(true)} /> */}
+      <TournamentBracket auctionId={auctionId} data={auctionData} visible={showBracket} 
+        onHide={() => {
+          setShowBracket(false)
+          setTimeout(() => {
+            if(auctionData?.items?.length < 1){
+              setShowBracket(true);
+            }
+          }, 2000)
+        }} 
+        onSuccess={ async () => {
+          setShowBracket(false);
+          const response = await axiosService.get(`/api/auctions/${auctionId}/get-by-id`);
+          setAuctionData(response.data);
+
+        }}
+      />
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
         {/* Left Column */}
         <div className="lg:col-span-5 space-y-4">
@@ -307,7 +330,7 @@ const AdminBidding = ({ pusher, channel, auctionId }) => {
             
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
               {auctionData?.items
-                .filter(item => item.ncaa_team?.region === selectedRegion)
+                .filter(item => item?.region === selectedRegion)
                 .map((item) => (
                   <Button 
                     key={item.id}
