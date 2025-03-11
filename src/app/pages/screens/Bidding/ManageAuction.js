@@ -17,12 +17,15 @@ import { Dropdown } from "primereact/dropdown";
 import { RiTeamLine } from "react-icons/ri";
 import { FaUsersBetweenLines } from "react-icons/fa6";
 import UserAmountModal from "../../../components/modals/settings/UserAmountModal";
+import { PiTreeStructure } from "react-icons/pi";
+import TournamentBracket from "./TournamentBracket";
 
 const ManageAuction = ({pusher, channel, currentUser}) => {
   const navigate = useNavigate();
   const [showAuctionModal, setShowAuctionModal] = useState(false);
   const [activeAuction, setActiveAuction] = useState();
   const [streamUrlModal, setStreamUrlModal] = useState(false);
+  const [teamModal, setTeamModal] = useState(false);
   const [streamUrl, setStreamUrl] = useState(false);
   const [refreshTable, setRefreshTable] = useState(false);
   const axiosService = useAxios();
@@ -75,50 +78,59 @@ const ManageAuction = ({pusher, channel, currentUser}) => {
   const customActions = (data) => {
     return (
       <div className="flex justify-end gap-1">
-        <Button className="text-white border-background bg-background ring-0 rounded-lg text-sm" 
+        <Button className={`text-white ${data?.is_finalized != 1 ? 'border-background bg-background' : 'border-gray-400 bg-gray-400' } ring-0 rounded-lg text-xs`}
+          tooltip={`${data?.is_finalized == 1 ? 'Team Finalized' : 'Finalize Team'}`}
+          icon={<PiTreeStructure />}
+          data-pr-position="top" 
+          onClick={(e) => {
+            if(data?.is_finalized != 1){
+              setTeamModal(true)
+              setAuctionDetails(data)
+            }
+          }}
+        />
+        <Button className="text-white border-background bg-background ring-0 rounded-lg text-xs" 
           tooltip="Team Details" 
           icon={<RiTeamLine />}
           data-pr-position="top" 
           onClick={(e) => {
-            // setActiveAuction(data.id)
-            // setStreamUrl(data.stream_url);
-            // setStreamUrlModal(true);
             setActiveIndex(1)
             setTeamDetails(data.items) // for now
+            setAuctionDetails(data)
           }}
         />
-        <Button className="text-white border-background bg-background ring-0 rounded-lg text-sm" 
+        <Button className="text-white border-background bg-background ring-0 rounded-lg text-xs" 
           tooltip="User Details" 
           icon={<FaUsersBetweenLines />}
           data-pr-position="top" 
           onClick={(e) => {
-            // setActiveAuction(data.id)
-            // setStreamUrl(data.stream_url);
-            // setStreamUrlModal(true);
             setActiveIndex(2)
+            setTeamDetails(data.items)
             setAuctionDetails(data) // for now
           }}
         />
         {data.status === "pending" && (
-          <Button className="text-white border-background bg-background ring-0 rounded-lg text-sm" 
-            tooltip="Start Auction" 
+          <Button className={`text-white ${data?.is_finalized == 1 ? 'border-background bg-background' : 'border-gray-400 bg-gray-400' } ring-0 rounded-lg text-xs`}
+            tooltip={data?.is_finalized == 1 ? "Start Auction" : "Start Auction disabled. Finalize team first."}
             icon="pi pi-play-circle" 
-            data-pr-position="top" 
+            data-pr-position="left" 
             onClick={(e) => {
-              setActiveAuction(data.id)
-              setStreamUrl(data.stream_url);
-              setStreamUrlModal(true);
+              if(data?.is_finalized == 1) {
+                setActiveAuction(data.id)
+                setStreamUrl(data.stream_url);
+                setStreamUrlModal(true);
+              }
             }}/>
         )}
         {data.status === "live" && (
           <>
-            <Button className="text-primary border-primary bg-transparent ring-0 rounded-lg text-sm" 
+            <Button className="text-primary border-primary bg-transparent ring-0 rounded-lg text-xs" 
               tooltip="Open Link" 
               icon="pi pi-link" 
               data-pr-position="top" 
               onClick={(e) => { navigate(`/main?page=settings/manage-auction&auction_id=${data.id}`) }}/>
 
-            <Button className="text-primaryS border-primaryS bg-transparent ring-0 rounded-lg text-sm" 
+            <Button className="text-primaryS border-primaryS bg-transparent ring-0 rounded-lg text-xs" 
               tooltip="End Auction" 
               icon="pi pi-stop-circle" 
               data-pr-position="top" 
@@ -126,7 +138,7 @@ const ManageAuction = ({pusher, channel, currentUser}) => {
           </>
         )}
         {data.status === "pending" && (
-          <Button className="text-red-500 border-red-500 bg-transparent ring-0 rounded-lg text-sm" 
+          <Button className="text-red-500 border-red-500 bg-transparent ring-0 rounded-lg text-xs" 
             tooltip="Cancel Auction" 
             icon="pi pi-times-circle" 
             data-pr-position="top" 
@@ -174,7 +186,13 @@ const ManageAuction = ({pusher, channel, currentUser}) => {
         <Button label="Create Auction Event" icon="pi pi-plus" className="rounded-lg border-primaryS bg-primaryS" onClick={() => setShowAuctionModal(true)}/>
       </div>
       <div className="w-full p-5 bg-white rounded-lg flex flex-col gap-5">
-        <TabView activeIndex={activeIndex} onTabChange={(e) => {setActiveIndex(e.index); setTeamDetails(null); setAuctionDetails(null)}}>
+        <TabView activeIndex={activeIndex} onTabChange={(e) => {
+          if(e.index == 0){
+            setTeamDetails(null);
+            setAuctionDetails(null);
+          }
+          setActiveIndex(e.index); 
+        }}>
           <TabPanel header="Auctions">
             <LazyTable api={'/api/auctions'}
               columns={auctionsColumn}
@@ -326,6 +344,17 @@ const ManageAuction = ({pusher, channel, currentUser}) => {
       <SetStreamUrlDialog visible={streamUrlModal} streamUri={streamUrl} auctionId={activeAuction} onHide={() => handleOnHide()}/>
       
       <UserAmountModal visible={amounts} data={amounts} onSuccess={() => { getUsers(auctionDetails?.id) }} auctionId={auctionDetails?.id} onHide={() => setAmounts(null)}/>
+      <TournamentBracket auctionId={auctionDetails?.id} data={auctionDetails} visible={teamModal} 
+        onHide={() => {
+          setAuctionDetails(null)
+          setTeamModal(false)
+        }} 
+        onSuccess={ async () => {
+          setAuctionDetails(null)
+          setTeamModal(false)
+          setRefreshTable(true)
+        }}
+      />
     </div>
   )
 }

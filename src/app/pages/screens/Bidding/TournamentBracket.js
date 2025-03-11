@@ -13,15 +13,27 @@ const TournamentBracket = ({ visible, onHide, onSuccess = () => {}, data, auctio
   const axiosService = useAxios();
   const showToast = useToast();
   const [teams, setTeams] = useState([]);
-  const [teamCount, setTeamCount] = useState(64);
-  const [selectedTeams, setSelectedTeams] = useState(
-    Array(64).fill({ team: null, seed: "", region: "" })
-  );
-  const [confirmationVisible, setConfirmationVisible] = useState(false);
+  const [teamCount, setTeamCount] = useState(data?.items?.length || 64);
+  const [selectedTeams, setSelectedTeams] = useState([]);
 
   useEffect(() => {
-    fetchTeams();
-  }, []);
+    if (visible) {
+      fetchTeams();
+      if (data?.items?.length) {
+        setTeamCount(data.items.length);
+        setSelectedTeams(
+          data.items.map((item) => ({
+            id: item.id,
+            team: item.ncaa_team_id,
+            seed: item.seed?.toString(),
+            region: item.region || null,
+          }))
+        );
+      } else {
+        setSelectedTeams(Array(teamCount).fill({ team: null, seed: "", region: "" }));
+      }
+    }
+  }, [visible]);
 
   const fetchTeams = async () => {
     const response = await axiosService.get("/api/ncaa_teams");
@@ -62,9 +74,9 @@ const TournamentBracket = ({ visible, onHide, onSuccess = () => {}, data, auctio
     console.log("Submitting bracket:", bracketData);
     const response = await axiosService.post(`/api/auctions/${auctionId}/brackets`, bracketData);
     showToast({
-      severity: response.data.status ? 'success' : 'error',
-      summary: response.data.status ? 'Success' : 'Error',
-      detail: response.data.message || 'Create bracket failed',
+      severity: response.data.status ? "success" : "error",
+      summary: response.data.status ? "Success" : "Error",
+      detail: response.data.message || "Create bracket failed",
     });
     response.data.status ? onSuccess() : onHide();
   };
@@ -72,12 +84,6 @@ const TournamentBracket = ({ visible, onHide, onSuccess = () => {}, data, auctio
   const filteredTeams = (selectedTeam) => {
     return teams.filter((team) => !selectedTeams.some((entry) => entry.team === team.id) || selectedTeam === team.id);
   };
-
-  useEffect(() => {
-    if (visible) {
-      setSelectedTeams(Array(teamCount).fill({ team: null, seed: "", region: "" }));
-    }
-  }, [visible]);
 
   return (
     <Dialog header="Tournament Bracket" visible={visible} onHide={onHide} className="w-[95%]" draggable={false} resizable={false}>
@@ -100,7 +106,7 @@ const TournamentBracket = ({ visible, onHide, onSuccess = () => {}, data, auctio
                 value={entry.team}
                 options={filteredTeams(entry.team)}
                 onChange={(e) => handleTeamSelect(index, e.value)}
-                optionLabel="nickname"
+                optionLabel={(option) => `${option.school} - ${option.nickname}`}
                 optionValue="id"
                 placeholder={`Select Team ${index + 1}`}
                 className="w-full mb-2"
@@ -126,18 +132,9 @@ const TournamentBracket = ({ visible, onHide, onSuccess = () => {}, data, auctio
           ))}
         </div>
         <div className="flex justify-end mt-4">
-          <Button type="submit" label="Submit Bracket" className="p-button-success" disabled={!isFormComplete} />
+          <Button type="submit" label="Submit & Finalize Bracket" className="p-button-success" disabled={!isFormComplete} />
         </div>
       </form>
-
-      {/* Confirmation Dialog */}
-      <Dialog header="Confirm Submission" visible={confirmationVisible} onHide={() => setConfirmationVisible(false)} className="w-1/3" draggable={false} resizable={false}>
-        <p>Are you sure you want to submit your bracket?</p>
-        <div className="flex justify-end">
-          <Button label="Cancel" onClick={() => setConfirmationVisible(false)} className="p-button-text" />
-          <Button label="Confirm" type="submit" className="p-button-success ml-2" />
-        </div>
-      </Dialog>
     </Dialog>
   );
 };
