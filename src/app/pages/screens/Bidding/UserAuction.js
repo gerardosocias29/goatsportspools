@@ -253,7 +253,7 @@ const UserAuction = ({ channel, auctionId, currentUser }) => {
                     activeItem?.id === item.id ? 'bg-primary text-white' : 'bg-gray-50 hover:bg-gray-100'
                   }`}
                 >
-                  #{item.id} {item.name}
+                  #{item.seed} {item.description} - {item.name} - {item.region}
                 </div>
               ))}
             </div>
@@ -267,7 +267,7 @@ const UserAuction = ({ channel, auctionId, currentUser }) => {
             <div className="mt-2">
               {activeItem ? (
                 <>
-                  <h3 className="text-xl font-medium">#{activeItem.id} {activeItem.name}</h3>
+                  <h3 className="text-xl font-medium">#{activeItem.seed} {activeItem.description} - {activeItem.name} - {activeItem.region}</h3>
                   <div className="grid grid-cols-3 gap-3 mt-3">
                     <div className="bg-gray-50 p-3 border rounded-md">
                       <p className="text-sm text-gray-500">Starting Bid</p>

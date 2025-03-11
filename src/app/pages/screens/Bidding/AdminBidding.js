@@ -328,7 +328,7 @@ const AdminBidding = ({ pusher, channel, auctionId }) => {
               />
             </div>
             
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 md:grid-cols-2 gap-2">
               {auctionData?.items
                 .filter(item => item?.region === selectedRegion)
                 .map((item) => (
@@ -353,7 +353,7 @@ const AdminBidding = ({ pusher, channel, auctionId }) => {
                       }
                     }}
                   >
-                    <span className="truncate">#{item.id} {item.name}</span>
+                    <span className="truncate">#{item.seed} {item.description} - {item.name}</span>
                     {item.sold_to && <i className="pi pi-check-circle ml-1"></i>}
                   </Button>
                 ))}
@@ -491,7 +491,7 @@ const AdminBidding = ({ pusher, channel, auctionId }) => {
                       <div className="flex flex-col md:flex-row justify-between gap-4">
                         <div>
                           <p className="text-gray-600 mb-1">Current Item</p>
-                          <p className="text-xl font-bold mb-1">#{activeItem.id} - {activeItem.name}</p>
+                          <p className="text-xl font-bold mb-1">#{activeItem.seed} {activeItem.description} - {activeItem.name} - {activeItem.region}</p>
                           <Tag 
                             severity={hasStarted ? "success" : "warning"} 
                             value={hasStarted ? "Bidding Active" : "Not Started"} 
