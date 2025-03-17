@@ -334,7 +334,9 @@ const AdminBidding = ({ pusher, channel, auctionId }) => {
                 .map((item) => (
                   <Button 
                     key={item.id}
-                    disabled={item.sold_to != null}
+                    // disabled={item.sold_to != null}
+                    tooltip={item.sold_to && "This item is sold to ID: "+item.sold_to}
+                    data-pr-position="top"
                     className={`
                       ${activeItem?.id === item.id 
                         ? "bg-background text-white" 

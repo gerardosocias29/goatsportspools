@@ -247,14 +247,23 @@ const UserAuction = ({ channel, auctionId, currentUser }) => {
             <h3 className="text-lg font-semibold mb-3">Auction Items</h3>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
               {event?.items?.map((item) => (
-                <div 
+                <Button 
                   key={item.id}
-                  className={`p-2 flex items-center justify-center text-xs border rounded-md text-center cursor-pointer transition-colors ${
-                    activeItem?.id === item.id ? 'bg-primary text-white' : 'bg-gray-50 hover:bg-gray-100'
-                  }`}
+                  tooltip={item.sold_to && "This item is sold"}
+                  data-pr-position="top"
+                  className={`
+                    ${activeItem?.id === item.id 
+                      ? "bg-background text-white" 
+                      : "bg-transparent text-background border-1 border-background"}
+                    transition-all duration-300 text-left rounded-lg p-button-sm
+                    ${item.sold_to ? 'opacity-50 select-none' : ''}
+                  `}
                 >
-                  #{item.seed} {item.description} {item.name} - {item.region}
-                </div>
+                  <span className="flex items-center justify-between text-xs">
+                    #{item.seed} {item.description} {item.name} - {item.region}
+                    {item.sold_to && <i className="pi text-green-500 pi-check-circle ml-1"></i>}
+                  </span>
+                </Button>
               ))}
             </div>
           </div>
