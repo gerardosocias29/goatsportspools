@@ -181,7 +181,12 @@ const AdminBidding = ({ pusher, channel, auctionId }) => {
   }, [activeItem]);
 
   const getUsers = () => {
-    axiosService.get('/api/users/all').then((response) => {setUsers(response.data);});
+    const q = process.env.REACT_APP_USER_QUERY || 0;
+    let param = '?';
+    if(q == 1){
+      param += "query=true"
+    }
+    axiosService.get(`/api/users/all${param}`).then((response) => {setUsers(response.data);});
   };
 
   useEffect(() => {
@@ -335,7 +340,7 @@ const AdminBidding = ({ pusher, channel, auctionId }) => {
                   <Button 
                     key={item.id}
                     // disabled={item.sold_to != null}
-                    tooltip={item.sold_to && "This item is sold to ID: "+item.sold_to}
+                    tooltip={item.sold_to && `This item is sold to ${item?.bids[0]?.user?.name} for $${Number(item.sold_amount).toFixed(2)}`}
                     data-pr-position="top"
                     className={`
                       ${activeItem?.id === item.id 
@@ -346,6 +351,9 @@ const AdminBidding = ({ pusher, channel, auctionId }) => {
                       ${item.sold_to ? 'opacity-50 select-none' : ''}
                     `}
                     onClick={() => {
+                      if(item.sold_to != null){
+                        return;
+                      }
                       if(startedItem?.id == item.id) {
                         setActiveItem(startedItem);
                         setHasStarted(true);
@@ -396,7 +404,7 @@ const AdminBidding = ({ pusher, channel, auctionId }) => {
                         icon={"pi pi-dollar"}
                         tooltip={`Place Bid: $${customBidAmount}`}
                         className={`p-button-success border-none`}
-                        disabled={isBidding}
+                        disabled={!hasStarted}
                         onClick={() => handlePlaceBid(customBidAmount, userOnBid.id)}
                       />
                     </div>

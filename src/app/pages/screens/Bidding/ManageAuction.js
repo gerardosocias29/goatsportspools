@@ -167,7 +167,12 @@ const ManageAuction = ({pusher, channel, currentUser}) => {
   const [owners, setOwners] = useState();
   const getUsers = async (auctionId) => {
     if(auctionId){
-      const response = await axiosService.get(`/api/auctions/${auctionId}/users`);
+      const q = process.env.REACT_APP_USER_QUERY || 0;
+      let param = '?';
+      if(q == 1){
+        param += "query=true"
+      }
+      const response = await axiosService.get(`/api/auctions/${auctionId}/users${param}`);
       setOwners(response.data);
       setAmounts(null);
     }
