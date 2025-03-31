@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "primereact/button";
 import { Dropdown } from "primereact/dropdown";
@@ -14,8 +14,10 @@ import { Divider } from "primereact/divider";
 import { ProgressSpinner } from "primereact/progressspinner";
 import { Tag } from "primereact/tag";
 import TournamentBracket from "./TournamentBracket";
+import { Slider } from "primereact/slider";
 
 const AdminBidding = ({ pusher, channel, auctionId }) => {
+  const inputRef = useRef(null);
   const axiosService = useAxios();
   const navigate = useNavigate();
   const showToast = useToast();
@@ -37,6 +39,8 @@ const AdminBidding = ({ pusher, channel, auctionId }) => {
 
   const [currentBidAmount, setCurrentBidAmount] = useState(1);
   const [customBidAmount, setCustomBidAmount] = useState(1);
+  const [maxBidAmount, setMaxBidAmount] = useState(currentBidAmount * 50);
+
   const [isBidding, setIsBidding] = useState(false);
   const [userOnBid, setUserOnBid] = useState(null);
   const [users, setUsers] = useState([]);
@@ -188,6 +192,12 @@ const AdminBidding = ({ pusher, channel, auctionId }) => {
     }
     axiosService.get(`/api/users/all${param}`).then((response) => {setUsers(response.data);});
   };
+
+  useEffect(() => {
+    if (customBidAmount > maxBidAmount) {
+      setMaxBidAmount(customBidAmount);
+    }
+  }, [customBidAmount]);
 
   useEffect(() => {
     getUsers();  
@@ -384,20 +394,41 @@ const AdminBidding = ({ pusher, channel, auctionId }) => {
               </div>
             </div>
             
-            {userOnBid && hasStarted && (
+            {hasStarted && (
               <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                 <div className="flex flex-col md:flex-row items-start md:items-center gap-2">
-                  <div className="flex-1 text-sm">
-                    <p className="font-medium text-blue-800 mb-1">Bidding for: {userOnBid.name}</p>
-                    <div className="p-inputgroup">
+                  <div className="flex flex-col text-sm">
+                    <p className="font-medium flex items-center gap-3 mb-1">Bidding for: {userOnBid && 
+                      <span className="text-blue-800 font-bold flex items-center gap-3 w-fulll">
+                        {userOnBid.name}
+                        <span><Button icon="pi pi-times" className="p-button-rounded p-button-text p-button-danger" size="xs" onClick={() => setUserOnBid(null)} tooltip="Cancel"/></span>
+                      </span> 
+                      || 
+                      <small className="text-red-500 font-bold">(Please select a member)</small>}
+                    </p>
+                    <div className="p-inputgroup lg:w-1/2">
                       <InputNumber 
+                        ref={inputRef}
                         min={1} 
                         value={customBidAmount} 
                         onChange={(e) => setCustomBidAmount(e.value)} 
-                        mode="currency" 
-                        currency="USD" 
-                        locale="en-US"
                         className="w-full"
+                        onFocus={() => {
+                          setTimeout(() => {
+                            const input = inputRef.current?.getInput();
+                            if (input) {
+                              input.select();
+                            }
+                          }, 100);
+                        }} // Select all on focus
+                        onClick={() => {
+                          setTimeout(() => {
+                            const input = inputRef.current?.getInput();
+                            if (input) {
+                              input.select();
+                            }
+                          }, 100);
+                        }} // Select all on focus
                       />
                       <Button
                         type="button"
@@ -405,16 +436,16 @@ const AdminBidding = ({ pusher, channel, auctionId }) => {
                         tooltip={`Place Bid: $${customBidAmount}`}
                         className={`p-button-success border-none`}
                         disabled={!hasStarted}
-                        onClick={() => handlePlaceBid(customBidAmount, userOnBid.id)}
+                        onClick={() => handlePlaceBid(customBidAmount, (userOnBid && userOnBid.id || null))}
                       />
                     </div>
                   </div>
-                  <Button 
+                  {/* <Button 
                     icon="pi pi-times" 
                     className="p-button-rounded p-button-text p-button-danger" 
                     onClick={() => setUserOnBid(null)}
                     tooltip="Cancel"
-                  />
+                  /> */}
                 </div>
               </div>
             )}
@@ -540,8 +571,14 @@ const AdminBidding = ({ pusher, channel, auctionId }) => {
                             disabled={!hasStarted}
                             label="End Bidding"
                             icon="pi pi-stop"
-                            className="p-button-danger w-full"
-                            onClick={handleEndAuction}
+                            className={`w-full
+                              ${activeItem?.bids[0].user_id == 1 ? 'border-gray-100 bg-gray-500' : 'p-button-danger'}
+                            `}
+                            onClick={ () => {
+                              (activeItem?.bids[0].user_id != 1) && handleEndAuction();
+                            }}
+                            tooltip={`${activeItem?.bids[0].user_id == 1 ? 'Cannot end bidding: Last bidder is anonymous' : ''}`}
+                            data-pr-position="top"
                           />
                         </div>
                       </div>
