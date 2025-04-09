@@ -572,12 +572,12 @@ const AdminBidding = ({ pusher, channel, auctionId }) => {
                             label="End Bidding"
                             icon="pi pi-stop"
                             className={`w-full
-                              ${activeItem?.bids[0].user_id == 1 ? 'border-gray-100 bg-gray-500' : 'p-button-danger'}
+                              ${activeItem?.bids[0]?.user_id == 1 ? 'border-gray-100 bg-gray-500' : 'p-button-danger'}
                             `}
                             onClick={ () => {
-                              (activeItem?.bids[0].user_id != 1) && handleEndAuction();
+                              (activeItem?.bids[0]?.user_id != 1) && handleEndAuction();
                             }}
-                            tooltip={`${activeItem?.bids[0].user_id == 1 ? 'Cannot end bidding: Last bidder is anonymous' : ''}`}
+                            tooltip={`${activeItem?.bids[0]?.user_id == 1 ? 'Cannot end bidding: Last bidder is anonymous' : ''}`}
                             data-pr-position="top"
                           />
                         </div>
