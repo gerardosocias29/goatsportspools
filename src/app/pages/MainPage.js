@@ -16,6 +16,7 @@ import Teams from "./screens/settings/Teams";
 import HowItWorks from "./screens/HowItWorks";
 import FAQ from "./FAQ";
 import ContactUs from "./screens/ContactUs";
+import SquaresPool from "../components/pool-ui/SquaresPool";
 import OpenBets from "./screens/OpenBets";
 import Cookies from 'js-cookie';
 import GameHistory from "./screens/games/GameHistory";
@@ -134,7 +135,7 @@ const MainPage = () => {
   }
 
   const renderPage = () => {
-    const defaultPages = ['faq', 'contactus']; // Define default pages
+    const defaultPages = ['faq', 'contactus', 'squares']; // Define default pages
     const modules = currentUser && currentUser.modules.map((e) => {
       let pages = [e.page];
       if (e.sub_modules && e.sub_modules.length > 0) {
@@ -167,6 +168,8 @@ const MainPage = () => {
         return <BetHistory currentUser={currentUser} refreshCurrentUser={refreshCurrentUser}/>
       case 'open-bets':
         return <OpenBets currentUser={currentUser} refreshCurrentUser={refreshCurrentUser}/>
+      case 'squares':
+        return <SquaresPool currentUser={currentUser} refreshCurrentUser={refreshCurrentUser}/>
       case 'settings/game-management':
         return <ManageGames currentUser={currentUser}/>
       case 'settings/teams':

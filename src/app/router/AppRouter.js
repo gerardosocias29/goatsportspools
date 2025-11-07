@@ -10,6 +10,7 @@ import ClerkSignup from "../pages/auth/ClerkSignUp";
 import HowItWorks from "../pages/screens/HowItWorks";
 import FAQ from "../pages/FAQ";
 import ContactUs from "../pages/screens/ContactUs";
+import SquaresPoolPage from "../pages/screens/SquaresPoolPage";
 
 const AppRouter = () => {
   return (
@@ -23,6 +24,7 @@ const AppRouter = () => {
         <Route path="/how-it-works" element={<HowItWorks />} />
         <Route path="/faq" element={<FAQ />} />
         <Route path="/contactus" element={<ContactUs />} />
+        <Route path="/squares" element={<SquaresPoolPage />} />
         <Route path="/logout" element={<Logout />} />
         <Route path="/main" element={<MainPage />} />
 
