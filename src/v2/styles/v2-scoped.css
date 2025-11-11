@@ -1,0 +1,320 @@
+/* V2 Scoped Styles - Does NOT affect V1 pages */
+
+/* Import Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://api.fontshare.com/v2/css?f[]=hubot-sans@400,500,600,700,800&display=swap');
+
+/* V2 Root Container - All V2 styles are scoped under .v2-root */
+.v2-root {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  min-height: 100vh;
+  transition: background-color 250ms cubic-bezier(0.4, 0, 0.2, 1),
+              color 250ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Light Mode */
+.v2-root.v2-light {
+  background-color: #FAF6F2;
+  color: #1E1E1E;
+}
+
+/* Dark Mode */
+.v2-root.v2-dark {
+  background-color: #161C29;
+  color: #FFF6ED;
+}
+
+/* Reset for V2 only - scoped */
+.v2-root *,
+.v2-root *::before,
+.v2-root *::after {
+  box-sizing: border-box;
+}
+
+/* Typography - scoped to v2-root */
+.v2-root h1,
+.v2-root h2,
+.v2-root h3,
+.v2-root h4,
+.v2-root h5,
+.v2-root h6 {
+  font-family: 'Hubot Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-weight: 700;
+  line-height: 1.25;
+  margin: 0;
+}
+
+.v2-root h1 {
+  font-size: 3rem;
+  font-weight: 800;
+}
+
+.v2-root h2 {
+  font-size: 2.25rem;
+  font-weight: 700;
+}
+
+.v2-root h3 {
+  font-size: 1.875rem;
+  font-weight: 700;
+}
+
+.v2-root h4 {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.v2-root h5 {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.v2-root h6 {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.v2-root p {
+  margin: 0;
+}
+
+/* Links */
+.v2-root a {
+  color: inherit;
+  text-decoration: none;
+  transition: opacity 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.v2-root a:hover {
+  opacity: 0.8;
+}
+
+/* Images */
+.v2-root img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Buttons */
+.v2-root button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.v2-root button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* Inputs */
+.v2-root input,
+.v2-root textarea,
+.v2-root select {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  color: inherit;
+}
+
+/* Focus Styles */
+.v2-root :focus-visible {
+  outline: 2px solid #D47A3E;
+  outline-offset: 2px;
+}
+
+/* Scrollbar Styles */
+.v2-root::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.v2-root.v2-light ::-webkit-scrollbar-track {
+  background: #FAF6F2;
+}
+
+.v2-root.v2-light ::-webkit-scrollbar-thumb {
+  background: #D3C9C2;
+  border-radius: 4px;
+}
+
+.v2-root.v2-light ::-webkit-scrollbar-thumb:hover {
+  background: #C0B7B0;
+}
+
+.v2-root.v2-dark ::-webkit-scrollbar-track {
+  background: #161C29;
+}
+
+.v2-root.v2-dark ::-webkit-scrollbar-thumb {
+  background: #2A3342;
+  border-radius: 4px;
+}
+
+.v2-root.v2-dark ::-webkit-scrollbar-thumb:hover {
+  background: #3A4352;
+}
+
+/* Utility Classes */
+.v2-container {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+.v2-container-wide {
+  width: 100%;
+  max-width: 1536px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+.v2-container-narrow {
+  width: 100%;
+  max-width: 768px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+/* Card Styles */
+.v2-card {
+  border-radius: 1rem;
+  transition: all 250ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.v2-root.v2-light .v2-card {
+  background-color: #FFFFFF;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+.v2-root.v2-dark .v2-card {
+  background-color: #1E2736;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px 0 rgba(0, 0, 0, 0.2);
+}
+
+.v2-card:hover {
+  transform: translateY(-2px);
+}
+
+.v2-root.v2-light .v2-card:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.v2-root.v2-dark .v2-card:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+  background-color: #252D3E;
+}
+
+/* Glassmorphism Effect */
+.v2-glass {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.v2-root.v2-dark .v2-glass {
+  background: rgba(30, 39, 54, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.v2-fade-in {
+  animation: fadeIn 350ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.v2-slide-in {
+  animation: slideIn 350ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.v2-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Responsive Typography */
+@media (max-width: 768px) {
+  .v2-root h1 {
+    font-size: 2.25rem;
+  }
+
+  .v2-root h2 {
+    font-size: 1.875rem;
+  }
+
+  .v2-root h3 {
+    font-size: 1.5rem;
+  }
+
+  .v2-root h4 {
+    font-size: 1.25rem;
+  }
+}
+
+/* Loading Skeleton */
+.v2-skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(211, 201, 194, 0.2) 0%,
+    rgba(211, 201, 194, 0.4) 50%,
+    rgba(211, 201, 194, 0.2) 100%
+  );
+  background-size: 200% 100%;
+  animation: loading 1.5s ease-in-out infinite;
+  border-radius: 0.5rem;
+}
+
+.v2-root.v2-dark .v2-skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(42, 51, 66, 0.3) 0%,
+    rgba(42, 51, 66, 0.6) 50%,
+    rgba(42, 51, 66, 0.3) 100%
+  );
+  background-size: 200% 100%;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}

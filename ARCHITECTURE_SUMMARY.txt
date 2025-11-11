@@ -1,0 +1,168 @@
+GOAT SPORTS POOLS - COMPLETE ARCHITECTURE OVERVIEW
+
+PROJECT: React 18.2.0 SPA (Create React App)
+Routing: React Router v6.22.3
+CSS: Tailwind CSS v3.4.3 + PrimeReact v10.6.2
+HTTP: Axios v1.6.8 (AxiosContext wrapper)
+Auth: Clerk v5.2.5 + Token-based API
+Real-time: Pusher.js v8.4.0
+Source Files: 64 JS/JSX
+API Calls: 68 across 29 files
+
+DIRECTORY TREE
+src/
+  app/
+    components/ - Reusable UI components
+    contexts/ - AuthContext, AxiosContext, ToastContext, ThemeContext
+    pages/ - Page screens, modals, dialogs
+    router/ - AppRouter with React Router
+    utils/ - numberFormat, utcToTimezone, cryptoUtils
+  App.js
+  index.js (Provider stack)
+  index.css (Tailwind layers)
+
+STYLING
+1. Tailwind CSS v3.4.3
+   Colors: background(#100c44), backgroundS(#064ab8), primary(#453f65), primaryS(#d69a3e)
+
+2. PrimeReact v10.6.2 (Saga Blue)
+   Components: DataTable, Dialog, Button, InputText, Dropdown
+   Icons: Primeicons v7.0.0
+
+3. Additional: react-icons v5.0.1
+
+4. CSS Layers: @layer tailwind-base, primereact, tailwind-utilities
+
+AUTHENTICATION
+Provider: Clerk (clerk-react v5.2.5)
+
+AuthContext:
+  isLoggedIn: boolean
+  apiToken: string
+  login(token): void
+  logout(): void
+
+Storage:
+  localStorage: isLoggedIn, apiToken
+  Cookies: __session (Clerk)
+
+Flow: Clerk Login -> /api/user-details -> API Token -> MainPage
+
+API INTEGRATION
+HTTP: Axios v1.6.8
+Wrapper: AxiosContext
+
+Hook: const axiosService = useAxios()
+Methods: get(), post(), patch(), delete()
+
+Features:
+  Auto Bearer token injection
+  Cookie fallback
+  401 auto-logout
+  Config.token override
+
+Base URL: REACT_APP_API_URL (http://localhost:8000)
+
+DATA FETCHING
+1. Context HTTP: axiosService.get(url)
+2. LazyTable: Server pagination, filtering, CSV export
+3. Pusher: Real-time bidding channel
+4. Hooks: useState + useEffect + Context
+
+FEATURES
+
+1. MODULE-BASED ACCESS CONTROL
+   User roles: 1=Admin, 2=Regular, 3=Guest
+   User.modules[] drives sidebar and page access
+   MainPage validates authorization
+
+2. SPORTS BETTING (NFL)
+   Bet types: Spread, Money Line, Total Points
+   Wagers: Straight, Parlay, Teasers (6/6.5/7pt)
+   Features: Game-time validation, parlay rules, fraction odds, timezone aware
+
+3. LEAGUE MANAGEMENT
+   Create/edit/join leagues
+   League-specific balance
+   Member directory
+
+4. AUCTION/BIDDING
+   Admin: Create auctions, manage bids (11 API calls)
+   User: Place bids (4 API calls)
+   Real-time: Pusher updates
+
+5. FOOTBALL SQUARES
+   10x10 grid, $5/square, 20 max
+   Quarterly prizes
+   Winners: Last digit of score
+
+6. DASHBOARD
+   Quick stats: Leagues joined, Amount at risk
+
+7. BET HISTORY
+   Full history with filters
+   CSV export
+
+CONTEXTS
+1. AuthContext - User session + apiToken
+2. AxiosContext - HTTP client with auto-auth
+3. ToastContext - Notifications
+4. ThemeContext - Dark/light mode
+
+ROUTING
+AppRouter:
+  / -> ClerkLogin
+  /login, /signup -> Clerk pages
+  /main -> MainPage (query param: ?page=)
+  /squares -> SquaresPoolPage
+  /how-it-works, /faq, /contactus -> Static
+  /* -> NotFound
+
+MainPage Pages:
+  dashboard, games/nfl, games/history
+  users, leagues, league-standings
+  bet-history, open-bets, squares
+  settings/game-management, settings/teams
+  settings/manage-auction, ncaa-basketball-auction
+  how-it-works, contactus, faq
+
+COMPONENTS
+Tables:
+  LazyTable - Advanced pagination, filtering, export
+  SkeletonTable - Loading skeleton
+  Table - Simple table
+
+Modals:
+  LeagueModal, LeagueJoin, LeagueUsersModal
+  BetHistoryModal
+  Settings modals (GameModal, AnnounceWinnerModal, etc)
+
+Layout:
+  Navbar - Top navigation
+  Sidebar - Left menu (collapsible)
+  Layout - 2-column wrapper
+
+UTILITIES
+decimalToMixedFraction(3.5) -> "3½"
+convertUTCToTimeZone(utcTime, tz) -> Local time
+cryptoUtils -> Encryption
+
+ENVIRONMENT
+REACT_APP_API_URL=http://localhost:8000
+REACT_APP_ENV=local
+REACT_APP_VITE_CLERK_PUBLISHABLE_KEY=pk_test_...
+REACT_APP_PUSHER_KEY=8480e4a0d4175d7bfdf9
+REACT_APP_PUSHER_CLUSTER=ap1
+REACT_APP_USER_QUERY=1
+
+BUILD
+npm start -> Dev (localhost:3000)
+npm run build -> Production (./build/)
+npm run new-build -> Alternative (./build2/)
+npm run build-and-rename -> Build + rename
+
+LIBRARIES
+Critical: react, react-router-dom, axios, primereact, tailwindcss
+Features: pusher-js, moment, moment-timezone, react-csv, react-player, react-icons, js-cookie
+
+FOR V2: Maintain patterns, consider TypeScript, consolidate styling, add error boundaries

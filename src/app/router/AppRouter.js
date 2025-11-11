@@ -11,6 +11,7 @@ import HowItWorks from "../pages/screens/HowItWorks";
 import FAQ from "../pages/FAQ";
 import ContactUs from "../pages/screens/ContactUs";
 import SquaresPoolPage from "../pages/screens/SquaresPoolPage";
+import V2App from "../../v2/V2App";
 
 const AppRouter = () => {
   return (
@@ -27,6 +28,9 @@ const AppRouter = () => {
         <Route path="/squares" element={<SquaresPoolPage />} />
         <Route path="/logout" element={<Logout />} />
         <Route path="/main" element={<MainPage />} />
+
+        {/* V2 Routes */}
+        <Route path="/v2/*" element={<V2App />} />
 
         <Route path="*" element={<NotFound />} />
       </Routes>
