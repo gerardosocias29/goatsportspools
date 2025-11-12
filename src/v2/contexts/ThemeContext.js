@@ -12,14 +12,14 @@ export const useTheme = () => {
 };
 
 export const ThemeProvider = ({ children }) => {
-  // Check localStorage and system preference
+  // Always default to light mode
   const getInitialTheme = () => {
     const savedTheme = localStorage.getItem('goat-v2-theme');
     if (savedTheme) {
       return savedTheme === 'dark';
     }
-    // Check system preference
-    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    // Default to light mode (always)
+    return false;
   };
 
   const [isDark, setIsDark] = useState(getInitialTheme);

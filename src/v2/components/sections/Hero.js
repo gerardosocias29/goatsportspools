@@ -160,7 +160,7 @@ const Hero = () => {
             <Button
               variant="primary"
               size="xl"
-              onClick={() => navigate('/sign-up')}
+              onClick={() => navigate('/v2/sign-up')}
             >
               Get Started Free
             </Button>

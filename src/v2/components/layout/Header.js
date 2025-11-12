@@ -51,7 +51,6 @@ const Header = ({ user, onSignOut }) => {
   };
 
   const navStylesDesktop = {
-    display: 'flex',
     alignItems: 'center',
     gap: '2rem',
   };
@@ -65,6 +64,17 @@ const Header = ({ user, onSignOut }) => {
     padding: '0.5rem 0',
     position: 'relative',
   };
+
+  // Add window width detection for mobile
+  const [isMobile, setIsMobile] = React.useState(window.innerWidth < 768);
+
+  React.useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const rightSectionStyles = {
     display: 'flex',
@@ -107,36 +117,39 @@ const Header = ({ user, onSignOut }) => {
           <span>GoatSportsPools</span>
         </div>
 
-        {/* Desktop Navigation */}
-        <nav style={navStylesDesktop} className="hidden md:flex">
-          <a style={navLinkStyles} onClick={() => navigate('/v2')}>
-            Home
-          </a>
-          <a style={navLinkStyles} onClick={() => navigate('/v2/pools')}>
-            Pools
-          </a>
-          <a style={navLinkStyles} onClick={() => navigate('/v2/leagues')}>
-            Leagues
-          </a>
-          <a style={navLinkStyles} onClick={() => navigate('/v2/betting')}>
-            Betting
-          </a>
-        </nav>
-
-        {/* Mobile Menu Button */}
-        <button
-          style={mobileMenuButtonStyles}
-          className="flex md:hidden"
-          onClick={() => setShowMobileMenu(!showMobileMenu)}
-          aria-label="Toggle menu"
-        >
-          <span style={hamburgerLineStyles} />
-          <span style={hamburgerLineStyles} />
-          <span style={hamburgerLineStyles} />
-        </button>
+        {/* Desktop Navigation - Only show on desktop */}
+        {!isMobile && (
+          <nav style={{ ...navStylesDesktop, display: 'flex' }}>
+            <a style={navLinkStyles} onClick={() => navigate('/v2')}>
+              Home
+            </a>
+            <a style={navLinkStyles} onClick={() => navigate('/v2/pools')}>
+              Pools
+            </a>
+            <a style={navLinkStyles} onClick={() => navigate('/v2/leagues')}>
+              Leagues
+            </a>
+            <a style={navLinkStyles} onClick={() => navigate('/v2/betting')}>
+              Betting
+            </a>
+          </nav>
+        )}
 
         {/* Right Section */}
         <div style={rightSectionStyles}>
+          {/* Mobile Menu Button - Shows on mobile, hides on desktop */}
+          {isMobile && (
+            <button
+              style={{ ...mobileMenuButtonStyles, display: 'flex' }}
+              onClick={() => setShowMobileMenu(!showMobileMenu)}
+              aria-label="Toggle menu"
+            >
+              <span style={hamburgerLineStyles} />
+              <span style={hamburgerLineStyles} />
+              <span style={hamburgerLineStyles} />
+            </button>
+          )}
+
           {/* Theme Toggle - Temporarily commented out */}
           {/* <button
             style={themeToggleStyles}
@@ -180,10 +193,10 @@ const Header = ({ user, onSignOut }) => {
 
           {!isSignedIn && (
             <div style={{ display: 'flex', gap: '0.75rem' }}>
-              <Button variant="ghost" size="md" onClick={() => navigate('/sign-in')}>
+              <Button variant="ghost" size="md" onClick={() => navigate('/v2/sign-in')}>
                 Sign In
               </Button>
-              <Button variant="primary" size="md" onClick={() => navigate('/sign-up')}>
+              <Button variant="primary" size="md" onClick={() => navigate('/v2/sign-up')}>
                 Get Started
               </Button>
             </div>
@@ -191,7 +204,7 @@ const Header = ({ user, onSignOut }) => {
         </div>
       </div>
 
-      {/* Mobile Menu Overlay */}
+      {/* Mobile Menu Overlay - Shows when hamburger is clicked on mobile */}
       {showMobileMenu && (
         <div
           style={{
@@ -206,6 +219,7 @@ const Header = ({ user, onSignOut }) => {
             display: 'flex',
             flexDirection: 'column',
             gap: '1rem',
+            zIndex: 1100,
           }}
         >
           <a

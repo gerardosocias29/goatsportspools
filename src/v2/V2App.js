@@ -6,6 +6,8 @@ import { useAxios } from '../app/contexts/AxiosContext';
 import Layout from './components/layout/Layout';
 import Home from './pages/Home';
 import Dashboard from './pages/Dashboard';
+import SignInPage from './pages/SignIn';
+import SignUpPage from './pages/SignUp';
 // Import fonts only - not the full globals.css to avoid conflicts with v1
 import './styles/v2-scoped.css';
 
@@ -44,10 +46,51 @@ const V2App = () => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            minHeight: '100vh'
+            minHeight: '100vh',
+            backgroundColor: '#FAF6F2'
           }}>
-            <div className="v2-pulse" style={{ fontSize: '1.5rem' }}>
-              Loading...
+            <div style={{
+              position: 'relative',
+              width: '120px',
+              height: '120px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              {/* Rotating Circle */}
+              <svg
+                style={{
+                  position: 'absolute',
+                  width: '120px',
+                  height: '120px',
+                  animation: 'spin 1.5s linear infinite'
+                }}
+                viewBox="0 0 120 120"
+              >
+                <circle
+                  cx="60"
+                  cy="60"
+                  r="54"
+                  fill="none"
+                  stroke="#D47A3E"
+                  strokeWidth="4"
+                  strokeDasharray="300 360"
+                  strokeLinecap="round"
+                />
+              </svg>
+
+              {/* Logo */}
+              <img
+                src="/assets/images/favicon.png"
+                alt="Loading"
+                style={{
+                  width: '64px',
+                  height: '64px',
+                  position: 'relative',
+                  zIndex: 1,
+                  animation: 'bounce 1s ease-in-out infinite'
+                }}
+              />
             </div>
           </div>
         </Layout>
@@ -57,34 +100,52 @@ const V2App = () => {
 
   return (
     <ThemeProvider>
-      <Layout user={user} onSignOut={handleSignOut}>
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/" element={<Home />} />
+      <Routes>
+        {/* Auth Routes - Without Layout */}
+        <Route
+          path="/sign-in/*"
+          element={<SignInPage />}
+        />
+        <Route
+          path="/sign-up/*"
+          element={<SignUpPage />}
+        />
 
-          {/* Protected Routes */}
-          <Route
-            path="/dashboard"
-            element={
-              isLoggedIn ? (
-                <Dashboard user={user} />
-              ) : (
-                <Navigate to="/sign-in" replace />
-              )
-            }
-          />
+        {/* All other routes - With Layout */}
+        <Route
+          path="/*"
+          element={
+            <Layout user={user} onSignOut={handleSignOut}>
+              <Routes>
+                {/* Public Routes */}
+                <Route path="/" element={<Home />} />
 
-          {/* Placeholder routes for future pages */}
-          <Route path="/pools" element={<ComingSoon title="Pools" />} />
-          <Route path="/leagues" element={<ComingSoon title="Leagues" />} />
-          <Route path="/betting" element={<ComingSoon title="Betting" />} />
-          <Route path="/settings" element={<ComingSoon title="Settings" />} />
-          <Route path="/activity" element={<ComingSoon title="Activity" />} />
+                {/* Protected Routes */}
+                <Route
+                  path="/dashboard"
+                  element={
+                    isLoggedIn ? (
+                      <Dashboard user={user} />
+                    ) : (
+                      <Navigate to="/v2/sign-in" replace />
+                    )
+                  }
+                />
 
-          {/* Catch all - redirect to home */}
-          <Route path="*" element={<Navigate to="/v2" replace />} />
-        </Routes>
-      </Layout>
+                {/* Placeholder routes for future pages */}
+                <Route path="/pools" element={<ComingSoon title="Pools" />} />
+                <Route path="/leagues" element={<ComingSoon title="Leagues" />} />
+                <Route path="/betting" element={<ComingSoon title="Betting" />} />
+                <Route path="/settings" element={<ComingSoon title="Settings" />} />
+                <Route path="/activity" element={<ComingSoon title="Activity" />} />
+
+                {/* Catch all - redirect to home */}
+                <Route path="*" element={<Navigate to="/v2" replace />} />
+              </Routes>
+            </Layout>
+          }
+        />
+      </Routes>
     </ThemeProvider>
   );
 };
