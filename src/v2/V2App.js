@@ -6,8 +6,12 @@ import { useAxios } from '../app/contexts/AxiosContext';
 import Layout from './components/layout/Layout';
 import Home from './pages/Home';
 import Dashboard from './pages/Dashboard';
+import Pools from './pages/Pools';
+import NCAABasketballAuction from './pages/NCAABasketballAuction';
+import LiveAuction from './pages/LiveAuction';
 import SignInPage from './pages/SignIn';
 import SignUpPage from './pages/SignUp';
+import Pusher from 'pusher-js';
 // Import fonts only - not the full globals.css to avoid conflicts with v1
 import './styles/v2-scoped.css';
 
@@ -16,6 +20,8 @@ const V2App = () => {
   const axiosService = useAxios();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [pusher, setPusher] = useState(null);
+  const [channel, setChannel] = useState(null);
 
   useEffect(() => {
     if (isLoggedIn) {
@@ -24,6 +30,18 @@ const V2App = () => {
         .then((response) => {
           setUser(response.data);
           setLoading(false);
+
+          // Initialize Pusher for real-time auction updates
+          if (!pusher) {
+            const pusherInstance = new Pusher(process.env.REACT_APP_PUSHER_KEY, {
+              cluster: process.env.REACT_APP_PUSHER_CLUSTER,
+            });
+
+            const biddingChannel = pusherInstance.subscribe('bidding-channel');
+            
+            setPusher(pusherInstance);
+            setChannel(biddingChannel);
+          }
         })
         .catch((error) => {
           console.error('Error fetching user data:', error);
@@ -32,6 +50,14 @@ const V2App = () => {
     } else {
       setLoading(false);
     }
+
+    // Cleanup Pusher on unmount
+    return () => {
+      if (pusher) {
+        pusher.unsubscribe('bidding-channel');
+        pusher.disconnect();
+      }
+    };
   }, [isLoggedIn]);
 
   const handleSignOut = () => {
@@ -132,8 +158,21 @@ const V2App = () => {
                   }
                 />
 
+                {/* Pools Routes */}
+                <Route path="/pools" element={<Pools />} />
+                <Route path="/pools/ncaa-basketball-auction" element={<NCAABasketballAuction />} />
+                <Route 
+                  path="/pools/live-auction" 
+                  element={
+                    isLoggedIn ? (
+                      <LiveAuction channel={channel} />
+                    ) : (
+                      <Navigate to="/v2/sign-in" replace />
+                    )
+                  } 
+                />
+
                 {/* Placeholder routes for future pages */}
-                <Route path="/pools" element={<ComingSoon title="Pools" />} />
                 <Route path="/leagues" element={<ComingSoon title="Leagues" />} />
                 <Route path="/betting" element={<ComingSoon title="Betting" />} />
                 <Route path="/settings" element={<ComingSoon title="Settings" />} />
