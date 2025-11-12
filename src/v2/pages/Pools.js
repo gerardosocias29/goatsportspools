@@ -105,6 +105,12 @@ const Pools = () => {
     opacity: 0.6,
   };
 
+  const infoBadgeStyles = {
+    ...badgeStyles,
+    backgroundColor: colors.brand.primary + '20',
+    color: colors.brand.primary,
+  };
+
   const pools = [
     {
       id: 'ncaa-basketball-auction',
@@ -115,12 +121,13 @@ const Pools = () => {
       route: '/v2/pools/ncaa-basketball-auction',
     },
     {
-      id: 'nfl-squares',
-      title: 'NFL Squares',
-      description: 'Classic NFL squares pool. Pick your squares and win based on the score at the end of each quarter.',
+      id: 'nfl-betting',
+      title: 'NFL Betting',
+      description: 'Place bets on NFL games with spreads, totals, and moneylines. Join a league to start betting!',
       emoji: '🏈',
-      status: 'coming-soon',
-      route: null,
+      status: 'live',
+      badge: 'League Required',
+      route: '/v2/pools/nfl',
     },
   ];
 
@@ -161,7 +168,10 @@ const Pools = () => {
             <div style={{ padding: '1.5rem' }}>
               <div style={{ marginBottom: '0.75rem' }}>
                 {pool.status === 'live' ? (
-                  <span style={liveBadgeStyles}>● LIVE</span>
+                  <>
+                    <span style={liveBadgeStyles}>● LIVE</span>
+                    {pool.badge && <span style={infoBadgeStyles}>{pool.badge}</span>}
+                  </>
                 ) : (
                   <span style={comingSoonBadgeStyles}>Coming Soon</span>
                 )}

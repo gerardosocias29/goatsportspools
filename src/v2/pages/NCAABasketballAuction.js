@@ -5,6 +5,7 @@ import { useAxios } from '../../app/contexts/AxiosContext';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
+import moment from 'moment';
 
 const NCAABasketballAuction = () => {
   const { colors } = useTheme();
@@ -113,7 +114,7 @@ const NCAABasketballAuction = () => {
 
   const liveAuctionCardStyles = {
     padding: '1.5rem',
-    border: '2px solid #dc2626',
+    border: `2px solid ${colors.error}`,
     borderRadius: '1rem',
   };
 
@@ -122,7 +123,7 @@ const NCAABasketballAuction = () => {
     alignItems: 'center',
     gap: '0.5rem',
     padding: '0.5rem 1rem',
-    backgroundColor: '#dc2626',
+    backgroundColor: colors.error,
     color: '#ffffff',
     borderRadius: '9999px',
     fontSize: '0.875rem',
@@ -258,7 +259,7 @@ const NCAABasketballAuction = () => {
               <div>
                 <h3 style={auctionTitleStyles}>{liveAuction.name}</h3>
                 <p style={auctionInfoStyles}>
-                  Started: {new Date(liveAuction.event_date).toLocaleString()}
+                  Started: {moment(liveAuction.event_date).format('ddd, MMM D • h:mm A')}
                 </p>
               </div>
               <span style={liveBadgeStyles}>LIVE NOW</span>
@@ -301,11 +302,14 @@ const NCAABasketballAuction = () => {
         {upcomingAuctions.length > 0 ? (
           <div style={gridStyles}>
             {upcomingAuctions.map((auction) => (
-              <Card key={auction.id} style={auctionCardStyles}>
+              <Card key={auction.id} style={auctionCardStyles} hover>
                 <div style={{ marginBottom: '1rem' }}>
+                  <Badge variant="default" style={{ marginBottom: '0.75rem' }}>
+                    {auction.status === 'pending' ? 'Upcoming' : auction.status}
+                  </Badge>
                   <h3 style={auctionTitleStyles}>{auction.name}</h3>
                   <p style={auctionInfoStyles}>
-                    📅 {new Date(auction.event_date).toLocaleString()}
+                    📅 {moment(auction.event_date).format('ddd, MMM D • h:mm A')}
                   </p>
                 </div>
 
@@ -314,25 +318,17 @@ const NCAABasketballAuction = () => {
                     <span style={statLabelStyles}>Total Items:</span>
                     <span style={statValueStyles}>{auction.items?.length || 0}</span>
                   </div>
-                  <div style={statRowStyles}>
-                    <span style={statLabelStyles}>Status:</span>
-                    <Badge variant="default">
-                      {auction.status === 'pending' ? 'Upcoming' : auction.status}
-                    </Badge>
-                  </div>
                 </div>
 
-                <div title={`Starts: ${new Date(auction.event_date).toLocaleString()}`}>
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    fullWidth
-                    disabled={true}
-                    style={{ cursor: 'not-allowed', opacity: 0.6 }}
-                  >
-                    Starts {new Date(auction.event_date).toLocaleString()}
-                  </Button>
-                </div>
+                <Button
+                  variant="outline"
+                  size="lg"
+                  fullWidth
+                  disabled={true}
+                  style={{ cursor: 'not-allowed', opacity: 0.6 }}
+                >
+                  Starts {moment(auction.event_date).format('MMM D, h:mm A')}
+                </Button>
               </Card>
             ))}
           </div>

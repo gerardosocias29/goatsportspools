@@ -7,7 +7,9 @@ import Layout from './components/layout/Layout';
 import Home from './pages/Home';
 import Dashboard from './pages/Dashboard';
 import Pools from './pages/Pools';
+import Leagues from './pages/Leagues';
 import NCAABasketballAuction from './pages/NCAABasketballAuction';
+import NFLBetting from './pages/NFLBetting';
 import LiveAuction from './pages/LiveAuction';
 import SignInPage from './pages/SignIn';
 import SignUpPage from './pages/SignUp';
@@ -161,19 +163,31 @@ const V2App = () => {
                 {/* Pools Routes */}
                 <Route path="/pools" element={<Pools />} />
                 <Route path="/pools/ncaa-basketball-auction" element={<NCAABasketballAuction />} />
-                <Route 
-                  path="/pools/live-auction" 
+                <Route
+                  path="/pools/live-auction"
                   element={
                     isLoggedIn ? (
                       <LiveAuction channel={channel} />
                     ) : (
                       <Navigate to="/v2/sign-in" replace />
                     )
-                  } 
+                  }
+                />
+                <Route
+                  path="/pools/nfl"
+                  element={
+                    isLoggedIn ? (
+                      <NFLBetting />
+                    ) : (
+                      <Navigate to="/v2/sign-in" replace />
+                    )
+                  }
                 />
 
+                {/* Leagues Route */}
+                <Route path="/leagues" element={<Leagues />} />
+
                 {/* Placeholder routes for future pages */}
-                <Route path="/leagues" element={<ComingSoon title="Leagues" />} />
                 <Route path="/betting" element={<ComingSoon title="Betting" />} />
                 <Route path="/settings" element={<ComingSoon title="Settings" />} />
                 <Route path="/activity" element={<ComingSoon title="Activity" />} />

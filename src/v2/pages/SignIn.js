@@ -69,14 +69,6 @@ const SignInPage = () => {
         </div>
 
         {/* Clerk SignIn Component */}
-        {/* <SignIn
-            path="/v2/sign-in"
-            routing="path"
-            signUpUrl="/v2/sign-up"
-            afterSignInUrl="/v2/dashboard"
-           
-          /> */}
-
         <SignIn 
           path="/v2/sign-in"
           routing="path"
