@@ -13,6 +13,10 @@ import NFLBetting from './pages/NFLBetting';
 import LiveAuction from './pages/LiveAuction';
 import SignInPage from './pages/SignIn';
 import SignUpPage from './pages/SignUp';
+import SquaresPoolList from './pages/SquaresPoolList';
+import SquaresPoolDetail from './pages/SquaresPoolDetail';
+import CreateSquaresPool from './pages/CreateSquaresPool';
+import SquaresAdminDashboard from './pages/SquaresAdminDashboard';
 import Pusher from 'pusher-js';
 // Import fonts only - not the full globals.css to avoid conflicts with v1
 import './styles/v2-scoped.css';
@@ -186,6 +190,30 @@ const V2App = () => {
 
                 {/* Leagues Route */}
                 <Route path="/leagues" element={<Leagues />} />
+
+                {/* Squares Routes */}
+                <Route path="/squares" element={<SquaresPoolList />} />
+                <Route path="/squares/pool/:poolId" element={<SquaresPoolDetail />} />
+                <Route
+                  path="/squares/create"
+                  element={
+                    isLoggedIn ? (
+                      <CreateSquaresPool />
+                    ) : (
+                      <Navigate to="/v2/sign-in" replace />
+                    )
+                  }
+                />
+                <Route
+                  path="/squares/admin"
+                  element={
+                    isLoggedIn ? (
+                      <SquaresAdminDashboard />
+                    ) : (
+                      <Navigate to="/v2/sign-in" replace />
+                    )
+                  }
+                />
 
                 {/* Placeholder routes for future pages */}
                 <Route path="/betting" element={<ComingSoon title="Betting" />} />
