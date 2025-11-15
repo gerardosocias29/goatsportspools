@@ -1,25 +1,58 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAxios } from '../../app/contexts/AxiosContext';
+import { AuthContext } from '../../app/contexts/AuthContext';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
 import LeagueJoinModal from '../components/leagues/LeagueJoinModal';
+import LeagueCreateModal from '../components/leagues/LeagueCreateModal';
+import LeagueManageMembersModal from '../components/leagues/LeagueManageMembersModal';
 
 const Leagues = () => {
   const { colors } = useTheme();
   const axiosService = useAxios();
+  const { user: authUser } = useContext(AuthContext);
 
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('all'); // 'all' | 'my-leagues'
+  const [activeTab, setActiveTab] = useState('my-leagues'); // 'all' | 'my-leagues' - Default to my-leagues for better UX
   const [allLeagues, setAllLeagues] = useState([]);
   const [joinedLeagues, setJoinedLeagues] = useState([]);
   const [joinModalVisible, setJoinModalVisible] = useState(false);
+  const [createModalVisible, setCreateModalVisible] = useState(false);
+  const [manageMembersModalVisible, setManageMembersModalVisible] = useState(false);
   const [selectedLeague, setSelectedLeague] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [leagueToEdit, setLeagueToEdit] = useState(null);
+
+  // Stats
+  const [totalLeagues, setTotalLeagues] = useState(0);
+  const [leaguesCreated, setLeaguesCreated] = useState(0);
+  const [leaguesJoined, setLeaguesJoined] = useState(0);
 
   useEffect(() => {
+    fetchUserData();
     fetchLeagues();
+    fetchStats();
   }, []);
+
+  useEffect(() => {
+    // Fetch stats when user data is loaded
+    if (currentUser?.user) {
+      fetchStats();
+    }
+  }, [currentUser]);
+
+  const fetchUserData = async () => {
+    try {
+      const response = await axiosService.get('/api/me_user');
+      setCurrentUser(response.data);
+    } catch (error) {
+      console.error('Failed to fetch user data:', error);
+      // Fallback to authUser if API fails
+      setCurrentUser(authUser);
+    }
+  };
 
   const fetchLeagues = async () => {
     setLoading(true);
@@ -28,20 +61,55 @@ const Leagues = () => {
       const allResponse = await axiosService.get('/api/leagues');
       // The API returns paginated data with 'data' array
       if (allResponse.data && allResponse.data.data) {
-        setAllLeagues(allResponse.data.data || []);
+        const leagues = allResponse.data.data || [];
+        setAllLeagues(leagues);
+        setTotalLeagues(leagues.length);
       } else if (Array.isArray(allResponse.data)) {
         setAllLeagues(allResponse.data);
+        setTotalLeagues(allResponse.data.length);
       }
 
       // Fetch joined leagues
       const joinedResponse = await axiosService.get('/api/leagues/joined');
-      if (joinedResponse.data.status) {
-        setJoinedLeagues(joinedResponse.data.leagues_joined || []);
+
+      // Handle different response structures
+      if (joinedResponse.data.status && joinedResponse.data.leagues_joined) {
+        const leagues = joinedResponse.data.leagues_joined;
+        setJoinedLeagues(leagues);
+      } else if (Array.isArray(joinedResponse.data)) {
+        setJoinedLeagues(joinedResponse.data);
+      } else {
+        setJoinedLeagues([]);
       }
     } catch (error) {
       console.error('Error fetching leagues:', error);
+      // Set empty arrays on error to prevent crashes
+      setAllLeagues([]);
+      setJoinedLeagues([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchStats = async () => {
+    if (!currentUser?.user) return;
+
+    const roleId = currentUser.user.role_id;
+
+    try {
+      // Fetch joined leagues count for non-super-admins
+      if (roleId !== 1) {
+        const joinedResponse = await axiosService.get('/api/leagues/leagues-joined');
+        setLeaguesJoined(joinedResponse.data.leagues_joined || 0);
+      }
+
+      // Fetch created leagues count for league admins
+      if (roleId === 2) {
+        const createdResponse = await axiosService.get('/api/leagues/leagues-created');
+        setLeaguesCreated(createdResponse.data.leagues_created || 0);
+      }
+    } catch (error) {
+      console.error('Error fetching stats:', error);
     }
   };
 
@@ -54,6 +122,42 @@ const Leagues = () => {
     setJoinModalVisible(false);
     setSelectedLeague(null);
     fetchLeagues(); // Refresh leagues
+    fetchStats(); // Refresh stats
+  };
+
+  const handleEditLeague = (league) => {
+    setLeagueToEdit({
+      id: league.id || league.league_id,
+      name: league.name,
+      password: league.old_password || league.password,
+      user_id: league.user_id,
+    });
+    setCreateModalVisible(true);
+  };
+
+  const handleManageMembers = async (league) => {
+    try {
+      // Fetch full league data with members
+      const response = await axiosService.get(`/api/leagues/get/${league.id || league.league_id}`);
+      setSelectedLeague(response.data);
+      setManageMembersModalVisible(true);
+    } catch (error) {
+      console.error('Error fetching league members:', error);
+    }
+  };
+
+  const handleManageMembersSuccess = async () => {
+    // Refresh league data after rebuy/buyin
+    if (selectedLeague) {
+      try {
+        const response = await axiosService.get(`/api/leagues/get/${selectedLeague.id || selectedLeague.league_id}`);
+        setSelectedLeague(response.data);
+      } catch (error) {
+        console.error('Error refreshing league data:', error);
+      }
+    }
+    fetchLeagues();
+    fetchStats();
   };
 
   // Container styles
@@ -164,7 +268,17 @@ const Leagues = () => {
   };
 
   // Filter leagues based on active tab
-  const displayLeagues = activeTab === 'all' ? allLeagues : joinedLeagues;
+  // For 'my-leagues', merge joined leagues data with all leagues data to get member counts
+  const displayLeagues = activeTab === 'all'
+    ? allLeagues
+    : joinedLeagues.map(joinedLeague => {
+        // Find the matching league in allLeagues to get league_users data
+        const fullLeagueData = allLeagues.find(
+          league => (league.league_id === joinedLeague.league_id) || (league.id === joinedLeague.id)
+        );
+        // Merge the data, preferring fullLeagueData for member info
+        return fullLeagueData ? { ...joinedLeague, ...fullLeagueData, balance: joinedLeague.balance } : joinedLeague;
+      });
 
   // Check if user has joined a league
   const isLeagueJoined = (leagueId) => {
@@ -242,6 +356,7 @@ const Leagues = () => {
   const buttonRowStyles = {
     display: 'flex',
     justifyContent: 'flex-end',
+    gap: '1rem',
     marginBottom: '2rem',
   };
 
@@ -250,9 +365,59 @@ const Leagues = () => {
     marginBottom: '3rem',
   };
 
+  const handleCreateSuccess = () => {
+    fetchLeagues();
+    fetchStats();
+    setLeagueToEdit(null); // Clear edit data
+  };
+
+  const roleId = currentUser?.user?.role_id;
+
   return (
     <div style={containerStyles} className="v2-fade-in">
+      {/* Stats Cards - Role Based */}
+      {roleId && roleId !== 3 && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '2rem', marginBottom: '2rem' }}>
+          <Card>
+            <div style={{ padding: '1.5rem' }}>
+              <div style={{ fontSize: '0.875rem', fontWeight: 600, color: colors.text, opacity: 0.7, marginBottom: '0.5rem' }}>
+                Total Leagues
+              </div>
+              <div style={{ fontSize: '2rem', fontWeight: 700, color: colors.text }}>
+                {roleId === 1 ? totalLeagues : leaguesCreated}
+              </div>
+            </div>
+          </Card>
+          {roleId !== 1 && (
+            <Card>
+              <div style={{ padding: '1.5rem' }}>
+                <div style={{ fontSize: '0.875rem', fontWeight: 600, color: colors.text, opacity: 0.7, marginBottom: '0.5rem' }}>
+                  Joined Leagues
+                </div>
+                <div style={{ fontSize: '2rem', fontWeight: 700, color: colors.text }}>
+                  {leaguesJoined}
+                </div>
+              </div>
+            </Card>
+          )}
+        </div>
+      )}
+
       <div style={buttonRowStyles}>
+        {/* Create League Button - Only for Super Admin and League Admin */}
+        {roleId && roleId !== 3 && (
+          <Button
+            variant="outline"
+            size="lg"
+            onClick={() => {
+              setLeagueToEdit(null);
+              setCreateModalVisible(true);
+            }}
+          >
+            Create League
+          </Button>
+        )}
+        {/* Join League Button */}
         <Button
           variant="primary"
           size="lg"
@@ -312,6 +477,9 @@ const Leagues = () => {
             const joined = isLeagueJoined(league.league_id || league.id);
             const balance = getLeagueBalance(league.league_id || league.id);
 
+            // Count members from league_users array if available, otherwise use total_users
+            const memberCount = league.league_users?.length || league.total_users || league.member_count || 0;
+
             return (
               <Card key={league.id || league.league_id} hover={!joined}>
                 <div style={leagueCardContentStyles}>
@@ -330,24 +498,49 @@ const Leagues = () => {
                     </div>
                   )}
 
+                  {/* Member Count */}
                   <div style={statRowStyles}>
                     <span style={statLabelStyles}>Members:</span>
-                    <span style={statValueStyles}>{league.member_count || 0}</span>
+                    <span style={statValueStyles}>{memberCount}</span>
                   </div>
 
-                  {!joined ? (
-                    <Button
-                      variant="primary"
-                      size="lg"
-                      fullWidth
-                      onClick={() => handleJoinClick(league)}
-                    >
-                      Join League
-                    </Button>
+                  {/* Action Buttons Based on Role */}
+                  {roleId && roleId !== 3 ? (
+                    // Admin buttons (Edit & Manage Members)
+                    <div style={{ display: 'flex', gap: '0.5rem', flexDirection: 'column' }}>
+                      <Button
+                        variant="outline"
+                        size="lg"
+                        fullWidth
+                        onClick={() => handleEditLeague(league)}
+                      >
+                        Edit League
+                      </Button>
+                      <Button
+                        variant="primary"
+                        size="lg"
+                        fullWidth
+                        onClick={() => handleManageMembers(league)}
+                      >
+                        Manage Members
+                      </Button>
+                    </div>
                   ) : (
-                    <Button variant="outline" size="lg" fullWidth disabled>
-                      Already Joined
-                    </Button>
+                    // Regular user - Join/Joined button
+                    !joined ? (
+                      <Button
+                        variant="primary"
+                        size="lg"
+                        fullWidth
+                        onClick={() => handleJoinClick(league)}
+                      >
+                        Join League
+                      </Button>
+                    ) : (
+                      <Button variant="outline" size="lg" fullWidth disabled>
+                        Already Joined
+                      </Button>
+                    )
                   )}
                 </div>
               </Card>
@@ -365,6 +558,29 @@ const Leagues = () => {
           setSelectedLeague(null);
         }}
         onSuccess={handleJoinSuccess}
+      />
+
+      {/* Create/Edit League Modal */}
+      <LeagueCreateModal
+        visible={createModalVisible}
+        onHide={() => {
+          setCreateModalVisible(false);
+          setLeagueToEdit(null);
+        }}
+        onSuccess={handleCreateSuccess}
+        currentUser={currentUser}
+        leagueData={leagueToEdit}
+      />
+
+      {/* Manage Members Modal */}
+      <LeagueManageMembersModal
+        visible={manageMembersModalVisible}
+        onHide={() => {
+          setManageMembersModalVisible(false);
+          setSelectedLeague(null);
+        }}
+        onSuccess={handleManageMembersSuccess}
+        league={selectedLeague}
       />
     </div>
   );
