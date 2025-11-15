@@ -129,6 +129,15 @@ const Pools = () => {
       badge: 'League Required',
       route: '/v2/pools/nfl',
     },
+    {
+      id: 'squares',
+      title: 'Football Squares',
+      description: 'Pick your squares on a 10x10 grid and win based on final scores. Perfect for game day with friends!',
+      emoji: '🎯',
+      status: 'live',
+      badge: 'New!',
+      route: '/v2/squares',
+    },
   ];
 
   const [hoveredCard, setHoveredCard] = React.useState(null);

@@ -77,7 +77,7 @@ const SignInPage = () => {
           appearance={{
             elements: {
               rootBox: {
-                width: '500px',
+                className: 'v2-fade-in lg:w-[500px] w-full',
               },
               cardBox: {
                 width: '100%',
