@@ -127,11 +127,16 @@ const Header = ({ user, onSignOut }) => {
               Pools
             </a>
             <a style={navLinkStyles} onClick={() => navigate('/v2/leagues')}>
-              Leagues
+              Freeroll League
             </a>
             <a style={navLinkStyles} onClick={() => navigate('/v2/betting')}>
-              Betting
+              Auction Madness
             </a>
+            {isSignedIn && (
+              <a style={navLinkStyles} onClick={() => navigate('/v2/squares/admin')}>
+                Commissioner
+              </a>
+            )}
           </nav>
         )}
 
@@ -247,7 +252,7 @@ const Header = ({ user, onSignOut }) => {
               setShowMobileMenu(false);
             }}
           >
-            Leagues
+            Freeroll League
           </a>
           <a
             style={navLinkStyles}
@@ -256,7 +261,16 @@ const Header = ({ user, onSignOut }) => {
               setShowMobileMenu(false);
             }}
           >
-            Betting
+            Auction Madness
+          </a>
+          <a
+            style={navLinkStyles}
+            onClick={() => {
+              navigate('/v2/squares/admin');
+              setShowMobileMenu(false);
+            }}
+          >
+            Commissioner
           </a>
         </div>
       )}
