@@ -1,7 +1,7 @@
 import React, { useContext, useState, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from './contexts/ThemeContext';
-import { AuthContext } from '../app/contexts/AuthContext';
+import { useUser } from '@clerk/clerk-react';
 import { useAxios } from '../app/contexts/AxiosContext';
 import Layout from './components/layout/Layout';
 import Home from './pages/Home';
@@ -22,7 +22,7 @@ import Pusher from 'pusher-js';
 import './styles/v2-scoped.css';
 
 const V2App = () => {
-  const { isLoggedIn, logout } = useContext(AuthContext);
+  const { isSignedIn, user: clerkUser, isLoaded } = useUser();
   const axiosService = useAxios();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -30,7 +30,7 @@ const V2App = () => {
   const [channel, setChannel] = useState(null);
 
   useEffect(() => {
-    if (isLoggedIn) {
+    if (isSignedIn && isLoaded) {
       // Fetch user data
       axiosService.get('/api/me_user')
         .then((response) => {
@@ -44,7 +44,6 @@ const V2App = () => {
             });
 
             const biddingChannel = pusherInstance.subscribe('bidding-channel');
-            
             setPusher(pusherInstance);
             setChannel(biddingChannel);
           }
@@ -53,7 +52,7 @@ const V2App = () => {
           console.error('Error fetching user data:', error);
           setLoading(false);
         });
-    } else {
+    } else if (isLoaded) {
       setLoading(false);
     }
 
@@ -64,10 +63,10 @@ const V2App = () => {
         pusher.disconnect();
       }
     };
-  }, [isLoggedIn]);
+  }, [isSignedIn, isLoaded]);
 
   const handleSignOut = () => {
-    logout();
+    window.location.href = '/v2/sign-in';
   };
 
   if (loading) {
@@ -151,12 +150,13 @@ const V2App = () => {
               <Routes>
                 {/* Public Routes */}
                 <Route path="/" element={<Home />} />
+                <Route path="/v2" element={<Home />} />
 
                 {/* Protected Routes */}
                 <Route
                   path="/dashboard"
                   element={
-                    isLoggedIn ? (
+                    isSignedIn ? (
                       <Dashboard user={user} />
                     ) : (
                       <Navigate to="/v2/sign-in" replace />
@@ -170,7 +170,7 @@ const V2App = () => {
                 <Route
                   path="/pools/live-auction"
                   element={
-                    isLoggedIn ? (
+                    isSignedIn ? (
                       <LiveAuction channel={channel} />
                     ) : (
                       <Navigate to="/v2/sign-in" replace />
@@ -180,7 +180,7 @@ const V2App = () => {
                 <Route
                   path="/pools/nfl"
                   element={
-                    isLoggedIn ? (
+                    isSignedIn ? (
                       <NFLBetting />
                     ) : (
                       <Navigate to="/v2/sign-in" replace />
@@ -197,7 +197,7 @@ const V2App = () => {
                 <Route
                   path="/squares/create"
                   element={
-                    isLoggedIn ? (
+                    isSignedIn ? (
                       <CreateSquaresPool />
                     ) : (
                       <Navigate to="/v2/sign-in" replace />
@@ -207,7 +207,7 @@ const V2App = () => {
                 <Route
                   path="/squares/admin"
                   element={
-                    isLoggedIn ? (
+                    isSignedIn ? (
                       <SquaresAdminDashboard />
                     ) : (
                       <Navigate to="/v2/sign-in" replace />
@@ -220,7 +220,7 @@ const V2App = () => {
                 <Route path="/settings" element={<ComingSoon title="Settings" />} />
                 <Route path="/activity" element={<ComingSoon title="Activity" />} />
 
-                {/* Catch all - redirect to home */}
+                {/* Catch all - redirect to v2 home */}
                 <Route path="*" element={<Navigate to="/v2" replace />} />
               </Routes>
             </Layout>

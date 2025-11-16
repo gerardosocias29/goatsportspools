@@ -187,17 +187,17 @@ const Header = ({ user, onSignOut }) => {
                   {clerkUser.fullName}
                 </p>
               )}
-              <UserButton afterSignOutUrl='/logout' />
+              <UserButton afterSignOutUrl='/v2/logout' />
             </div>
           )}
 
           {!isSignedIn && (
             <div style={{ display: 'flex', gap: '0.75rem' }}>
-              <Button variant="ghost" size="md" onClick={() => navigate('/v2/sign-in')}>
+              {/* <Button variant="ghost" size="md" onClick={() => navigate('/v2/sign-in')}>
                 Sign In
-              </Button>
-              <Button variant="primary" size="md" onClick={() => navigate('/v2/sign-up')}>
-                Get Started
+              </Button> */}
+              <Button variant="primary" size="md" onClick={() => navigate('/v2/sign-in')}>
+                Sign In
               </Button>
             </div>
           )}

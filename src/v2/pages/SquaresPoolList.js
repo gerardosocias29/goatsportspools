@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiCalendar, FiUsers, FiDollarSign, FiGrid, FiLock, FiUnlock } from 'react-icons/fi';
-import squaresMockService from '../services/squaresMockData';
+import squaresApiService from '../services/squaresApiService';
 
 /**
  * Squares Pool List Page
@@ -27,7 +27,7 @@ const SquaresPoolList = () => {
       if (filter.status !== 'all') filters.status = filter.status;
       if (filter.league !== 'all') filters.league = filter.league;
 
-      const response = await squaresMockService.getGrids(filters);
+      const response = await squaresApiService.getPools(filters);
       if (response.success) {
         setPools(response.data);
       }
@@ -40,6 +40,8 @@ const SquaresPoolList = () => {
 
   const getStatusBadge = (status) => {
     const badges = {
+      open: 'bg-green-500 text-white',
+      closed: 'bg-red-500 text-white',
       SelectOpen: 'bg-green-500 text-white',
       SelectClosed: 'bg-yellow-500 text-gray-900',
       GameStarted: 'bg-blue-500 text-white',
@@ -51,6 +53,8 @@ const SquaresPoolList = () => {
 
   const getStatusText = (status) => {
     const texts = {
+      open: 'Open for Selection',
+      closed: 'Closed',
       SelectOpen: 'Open for Selection',
       SelectClosed: 'Selection Closed',
       GameStarted: 'Game in Progress',
@@ -72,8 +76,9 @@ const SquaresPoolList = () => {
   };
 
   const getProgressPercentage = (pool) => {
-    if (!pool.totalSquares) return 0;
-    return ((pool.selectedSquares / pool.totalSquares) * 100).toFixed(0);
+    const totalSquares = pool.total_squares || pool.totalSquares || 100;
+    const selectedSquares = pool.squares_claimed || pool.selectedSquares || 0;
+    return ((selectedSquares / totalSquares) * 100).toFixed(0);
   };
 
   const handlePoolClick = (poolId) => {
@@ -186,14 +191,14 @@ const SquaresPoolList = () => {
                 className="bg-gray-800 rounded-xl shadow-xl overflow-hidden hover:shadow-2xl hover:scale-105 transition-all duration-200 cursor-pointer border-2 border-gray-700 hover:border-blue-500"
               >
                 {/* Status Badge */}
-                <div className={`${getStatusBadge(pool.gridStatus)} px-4 py-2 text-sm font-semibold text-center`}>
-                  {getStatusText(pool.gridStatus)}
+                <div className={`${getStatusBadge(pool.pool_status || pool.gridStatus)} px-4 py-2 text-sm font-semibold text-center`}>
+                  {getStatusText(pool.pool_status || pool.gridStatus)}
                 </div>
 
                 {/* Pool Info */}
                 <div className="p-6">
                   <h3 className="text-xl font-bold text-white mb-2 line-clamp-2">
-                    {pool.gridName}
+                    {pool.pool_name || pool.gridName}
                   </h3>
 
                   {/* Game Info */}
@@ -203,11 +208,11 @@ const SquaresPoolList = () => {
                         <span className="font-semibold">{pool.game.league}</span>
                       </div>
                       <div className="text-gray-300 text-sm font-medium">
-                        {pool.game.homeTeam} vs {pool.game.visitorTeam}
+                        {pool.game.home_team || pool.game.homeTeam} vs {pool.game.visitor_team || pool.game.visitorTeam}
                       </div>
                       <div className="flex items-center gap-2 text-gray-400 text-xs mt-1">
                         <FiCalendar />
-                        {formatDate(pool.game.gameTime)}
+                        {formatDate(pool.game.game_time || pool.game.gameTime)}
                       </div>
                     </div>
                   )}
@@ -219,7 +224,7 @@ const SquaresPoolList = () => {
                       <div className="flex justify-between text-sm mb-1">
                         <span className="text-gray-400">Squares Filled</span>
                         <span className="text-white font-semibold">
-                          {pool.selectedSquares}/{pool.totalSquares}
+                          {pool.squares_claimed || pool.selectedSquares || 0}/{pool.total_squares || pool.totalSquares || 100}
                         </span>
                       </div>
                       <div className="w-full bg-gray-700 rounded-full h-2 overflow-hidden">
@@ -237,7 +242,7 @@ const SquaresPoolList = () => {
                         <span>Per Square</span>
                       </div>
                       <span className="text-green-400 font-bold text-lg">
-                        ${(pool.costPerSquare || 0).toFixed(2)}
+                        ${(pool.entry_fee || pool.credit_cost || pool.costPerSquare || 0).toFixed(2)}
                       </span>
                     </div>
 
@@ -248,18 +253,18 @@ const SquaresPoolList = () => {
                         <span>Total Pot</span>
                       </div>
                       <span className="text-yellow-400 font-bold text-lg">
-                        ${(pool.totalPot || 0).toFixed(2)}
+                        ${(pool.total_pot || pool.totalPot || 0).toFixed(2)}
                       </span>
                     </div>
 
                     {/* Access Type */}
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2 text-gray-400 text-sm">
-                        {pool.costType === 'PasswordOpen' ? <FiLock /> : <FiUnlock />}
+                        {(pool.player_pool_type === 'CREDIT' || pool.costType === 'PasswordOpen') ? <FiLock /> : <FiUnlock />}
                         <span>Access</span>
                       </div>
                       <span className="text-gray-300 text-sm">
-                        {pool.costType === 'PasswordOpen' ? 'Password Required' : 'Open'}
+                        {pool.player_pool_type === 'CREDIT' || pool.costType === 'PasswordOpen' ? 'Password Required' : 'Open'}
                       </span>
                     </div>
                   </div>
@@ -272,7 +277,7 @@ const SquaresPoolList = () => {
                       handlePoolClick(pool.id);
                     }}
                   >
-                    {pool.gridStatus === 'SelectOpen' ? 'Join & Select Squares' : 'View Pool'}
+                    {(pool.pool_status === 'open' || pool.gridStatus === 'SelectOpen') ? 'Join & Select Squares' : 'View Pool'}
                   </button>
                 </div>
               </div>

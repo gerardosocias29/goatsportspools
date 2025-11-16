@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FiArrowLeft, FiCalendar, FiDollarSign, FiGrid, FiUsers, FiLock, FiTrendingUp } from 'react-icons/fi';
+import { FiArrowLeft, FiCalendar, FiDollarSign, FiGrid, FiUsers, FiLock, FiTrendingUp, FiAward, FiShare2 } from 'react-icons/fi';
 import SquaresGrid from '../components/squares/SquaresGrid';
-import squaresMockService, { mockCurrentUser } from '../services/squaresMockData';
+import squaresApiService from '../services/squaresApiService';
 
 /**
  * Pool Detail Page
@@ -20,22 +20,47 @@ const SquaresPoolDetail = () => {
   const [joinPassword, setJoinPassword] = useState('');
   const [joinError, setJoinError] = useState('');
   const [selectionMode, setSelectionMode] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [winners, setWinners] = useState([]);
+  const [showQRCode, setShowQRCode] = useState(false);
+  const [showWinners, setShowWinners] = useState(false);
+  const [calculatingWinners, setCalculatingWinners] = useState(false);
 
   useEffect(() => {
+    loadCurrentUser();
     loadPool();
+    loadWinners();
   }, [poolId]);
+
+  const loadCurrentUser = async () => {
+    try {
+      const axios = (await import('axios')).default;
+      const Cookies = (await import('js-cookie')).default;
+      const token = Cookies.get('__session') || localStorage.getItem('token');
+
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/me_user`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        }
+      });
+      setCurrentUser(response.data);
+    } catch (error) {
+      console.error('Error loading user:', error);
+    }
+  };
 
   const loadPool = async () => {
     setLoading(true);
     try {
-      const response = await squaresMockService.getGrid(poolId);
+      const response = await squaresApiService.getPool(poolId);
       if (response.success) {
         setPool(response.data);
 
-        // Check if user has already joined
-        const playerGridsResponse = await squaresMockService.getPlayerGrids(mockCurrentUser.playerID);
-        if (playerGridsResponse.success) {
-          const joined = playerGridsResponse.data.some(g => g.id === parseInt(poolId));
+        // Check if user has already joined by checking my-joined pools
+        const myPoolsResponse = await squaresApiService.getMyPools();
+        if (myPoolsResponse.success) {
+          const joined = myPoolsResponse.data.some(p => p.id === parseInt(poolId));
           setHasJoined(joined);
         }
       }
@@ -46,14 +71,26 @@ const SquaresPoolDetail = () => {
     }
   };
 
+  const loadWinners = async () => {
+    try {
+      const response = await squaresApiService.getWinners(poolId);
+      if (response.success) {
+        setWinners(response.data || []);
+      }
+    } catch (error) {
+      console.error('Error loading winners:', error);
+    }
+  };
+
   const handleJoinPool = async () => {
     setJoinError('');
     try {
-      const response = await squaresMockService.joinGrid(poolId, joinPassword);
+      const response = await squaresApiService.joinPool(pool.pool_number || pool.poolNumber, joinPassword);
       if (response.success) {
         setHasJoined(true);
         setShowJoinModal(false);
         setJoinPassword('');
+        await loadPool(); // Reload pool data
       } else {
         setJoinError(response.error);
       }
@@ -69,10 +106,13 @@ const SquaresPoolDetail = () => {
   const handleConfirmSelection = async () => {
     if (selectedSquares.length === 0) return;
 
-    const coordinates = selectedSquares.map(s => ({ x: s.xCoordinate, y: s.yCoordinate }));
+    const coordinates = selectedSquares.map(s => ({
+      x: s.x_coordinate || s.xCoordinate,
+      y: s.y_coordinate || s.yCoordinate
+    }));
 
     try {
-      const response = await squaresMockService.selectSquares(poolId, coordinates);
+      const response = await squaresApiService.claimSquares(poolId, coordinates);
       if (response.success) {
         // Reload pool to get updated data
         await loadPool();
@@ -83,7 +123,47 @@ const SquaresPoolDetail = () => {
         alert(response.error);
       }
     } catch (error) {
-      alert('Failed to select squares');
+      alert('Failed to select squares: ' + error.message);
+    }
+  };
+
+  const handleCalculateWinner = async (quarter) => {
+    if (!window.confirm(`Calculate winner for Quarter ${quarter}?`)) return;
+
+    setCalculatingWinners(true);
+    try {
+      const response = await squaresApiService.calculateWinners(poolId, quarter);
+      if (response.success) {
+        alert(`Winner calculated for Quarter ${quarter}!`);
+        await loadWinners();
+        await loadPool();
+      } else {
+        alert('Failed to calculate winner: ' + response.error);
+      }
+    } catch (error) {
+      alert('Error calculating winner: ' + error.message);
+    } finally {
+      setCalculatingWinners(false);
+    }
+  };
+
+  const handleCalculateAllWinners = async () => {
+    if (!window.confirm('Calculate winners for all 4 quarters?')) return;
+
+    setCalculatingWinners(true);
+    try {
+      const response = await squaresApiService.calculateAllWinners(poolId);
+      if (response.success) {
+        alert('Winners calculated for all quarters!');
+        await loadWinners();
+        await loadPool();
+      } else {
+        alert('Failed to calculate winners: ' + response.error);
+      }
+    } catch (error) {
+      alert('Error calculating winners: ' + error.message);
+    } finally {
+      setCalculatingWinners(false);
     }
   };
 
@@ -100,13 +180,16 @@ const SquaresPoolDetail = () => {
   };
 
   const getProgressPercentage = () => {
-    if (!pool || !pool.totalSquares) return 0;
-    return ((pool.selectedSquares / pool.totalSquares) * 100).toFixed(0);
+    if (!pool) return 0;
+    const totalSquares = pool.total_squares || pool.totalSquares || 100;
+    const selectedSquares = pool.squares_claimed || pool.selectedSquares || 0;
+    return ((selectedSquares / totalSquares) * 100).toFixed(0);
   };
 
   const getTotalCost = () => {
-    if (!pool || pool.costPerSquare === undefined) return '0.00';
-    return (selectedSquares.length * pool.costPerSquare).toFixed(2);
+    if (!pool) return '0.00';
+    const cost = pool.entry_fee || pool.credit_cost || pool.costPerSquare || 0;
+    return (selectedSquares.length * cost).toFixed(2);
   };
 
   if (loading) {
@@ -150,9 +233,9 @@ const SquaresPoolDetail = () => {
           </button>
           <div className="flex-1">
             <h1 className="text-3xl md:text-4xl font-bold text-white">
-              {pool.gridName}
+              {pool.pool_name || pool.gridName}
             </h1>
-            <p className="text-gray-300 mt-1">Pool #{pool.poolNumber}</p>
+            <p className="text-gray-300 mt-1">Pool #{pool.pool_number || pool.poolNumber}</p>
           </div>
         </div>
 
@@ -167,10 +250,10 @@ const SquaresPoolDetail = () => {
                 <span className="text-sm font-medium">Game</span>
               </div>
               <div className="text-white font-bold text-lg">
-                {pool.game?.homeTeam} vs {pool.game?.visitorTeam}
+                {pool.game?.home_team || pool.game?.homeTeam} vs {pool.game?.visitor_team || pool.game?.visitorTeam}
               </div>
               <div className="text-gray-400 text-sm mt-1">
-                {pool.game?.league} • {formatDate(pool.game?.gameTime)}
+                {pool.game?.league} • {formatDate(pool.game?.game_time || pool.game?.gameTime)}
               </div>
             </div>
 
@@ -181,10 +264,10 @@ const SquaresPoolDetail = () => {
                 <span className="text-sm font-medium">Cost & Pot</span>
               </div>
               <div className="text-green-400 font-bold text-2xl">
-                ${(pool.costPerSquare || 0).toFixed(2)}
+                ${(pool.entry_fee || pool.credit_cost || pool.costPerSquare || 0).toFixed(2)}
               </div>
               <div className="text-gray-400 text-sm mt-1">
-                Total Pot: <span className="text-yellow-400 font-semibold">${(pool.totalPot || 0).toFixed(2)}</span>
+                Total Pot: <span className="text-yellow-400 font-semibold">${(pool.total_pot || pool.totalPot || 0).toFixed(2)}</span>
               </div>
             </div>
 
@@ -198,7 +281,7 @@ const SquaresPoolDetail = () => {
                 {getProgressPercentage()}%
               </div>
               <div className="text-gray-400 text-sm mt-1">
-                {pool.selectedSquares}/{pool.totalSquares} squares filled
+                {pool.squares_claimed || pool.selectedSquares || 0}/{pool.total_squares || pool.totalSquares || 100} squares filled
               </div>
             </div>
 
@@ -227,6 +310,113 @@ const SquaresPoolDetail = () => {
             </div>
           </div>
         </div>
+
+        {/* Admin Controls (Only for pool owner/admin) */}
+        {currentUser && pool && (pool.admin_id === currentUser.user?.id || pool.admin_id === currentUser.id) && (
+          <div className="mb-6 bg-gradient-to-r from-purple-900 to-indigo-900 rounded-xl p-6 border-2 border-purple-700 shadow-xl">
+            <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+              <FiAward className="text-2xl" />
+              Admin Controls
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <h4 className="text-white font-semibold mb-3">Calculate Winners</h4>
+                <div className="flex flex-wrap gap-2">
+                  {[1, 2, 3, 4].map((quarter) => (
+                    <button
+                      key={quarter}
+                      onClick={() => handleCalculateWinner(quarter)}
+                      disabled={calculatingWinners}
+                      className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg font-semibold transition-all"
+                    >
+                      Q{quarter}
+                    </button>
+                  ))}
+                  <button
+                    onClick={handleCalculateAllWinners}
+                    disabled={calculatingWinners}
+                    className="bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-6 py-2 rounded-lg font-bold transition-all"
+                  >
+                    All Quarters
+                  </button>
+                </div>
+              </div>
+              <div>
+                <h4 className="text-white font-semibold mb-3">Pool Tools</h4>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={() => setShowQRCode(!showQRCode)}
+                    className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-semibold transition-all flex items-center gap-2"
+                  >
+                    <FiShare2 />
+                    {showQRCode ? 'Hide' : 'Show'} QR Code
+                  </button>
+                  <button
+                    onClick={() => setShowWinners(!showWinners)}
+                    className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg font-semibold transition-all flex items-center gap-2"
+                  >
+                    <FiAward />
+                    {showWinners ? 'Hide' : 'Show'} Winners
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* QR Code Display */}
+        {showQRCode && pool && pool.qr_code_url && (
+          <div className="mb-6 bg-gray-800 rounded-xl p-6 border-2 border-gray-700 shadow-xl">
+            <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+              <FiShare2 className="text-2xl" />
+              Share Pool - QR Code
+            </h3>
+            <div className="flex flex-col items-center">
+              <img
+                src={pool.qr_code_url}
+                alt="Pool QR Code"
+                className="max-w-xs rounded-lg shadow-lg bg-white p-4"
+              />
+              <p className="text-gray-300 mt-4">Pool Number: <span className="font-bold text-white">{pool.pool_number || pool.poolNumber}</span></p>
+              <p className="text-gray-400 text-sm mt-2">Scan to join this pool</p>
+            </div>
+          </div>
+        )}
+
+        {/* Winners Display */}
+        {showWinners && winners.length > 0 && (
+          <div className="mb-6 bg-gray-800 rounded-xl p-6 border-2 border-gray-700 shadow-xl">
+            <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+              <FiAward className="text-2xl" />
+              Winners
+            </h3>
+            <div className="space-y-3">
+              {winners.map((winner, index) => (
+                <div key={index} className="bg-gradient-to-r from-yellow-900 to-yellow-800 rounded-lg p-4 border border-yellow-600">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <div className="text-yellow-300 font-bold text-lg">
+                        Quarter {winner.quarter}
+                      </div>
+                      <div className="text-white mt-1">
+                        Winner: <span className="font-semibold">{winner.player?.name || 'Unknown'}</span>
+                      </div>
+                      <div className="text-gray-300 text-sm mt-1">
+                        Square: ({winner.square?.x_coordinate}, {winner.square?.y_coordinate})
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-green-400 font-bold text-2xl">
+                        ${(winner.prize_amount || 0).toFixed(2)}
+                      </div>
+                      <div className="text-gray-400 text-sm">Prize</div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Join/Selection Controls */}
         {!hasJoined ? (
@@ -311,9 +501,9 @@ const SquaresPoolDetail = () => {
             grid={pool}
             squares={pool.squares || []}
             onSquareSelect={handleSquareSelection}
-            currentPlayerID={mockCurrentUser.playerID}
+            currentPlayerID={currentUser?.user?.id || currentUser?.id}
             selectionMode={selectionMode}
-            disabled={!hasJoined || pool.gridStatus !== 'SelectOpen'}
+            disabled={!hasJoined || (pool.pool_status !== 'open' && pool.gridStatus !== 'SelectOpen')}
           />
         </div>
 
@@ -325,22 +515,28 @@ const SquaresPoolDetail = () => {
             <div className="space-y-3 text-gray-300">
               <div className="flex items-start gap-3">
                 <span className="text-green-400 font-bold">•</span>
-                <p>Max {pool.maxSquaresPerPlayer || 'Unlimited'} squares per player</p>
+                <p>Max {pool.max_squares_per_player || pool.maxSquaresPerPlayer || 'Unlimited'} squares per player</p>
               </div>
               <div className="flex items-start gap-3">
                 <span className="text-green-400 font-bold">•</span>
-                <p>Numbers assignment: {pool.numbersType}</p>
+                <p>Numbers assignment: {pool.pool_type === 'A' ? 'Ascending' : pool.pool_type === 'B' ? 'Random/Scheduled' : pool.numbersType}</p>
               </div>
-              {pool.numbersAssignDate && (
+              {(pool.number_assign_datetime || pool.numbersAssignDate) && (
                 <div className="flex items-start gap-3">
                   <span className="text-green-400 font-bold">•</span>
-                  <p>Numbers assigned on: {formatDate(pool.numbersAssignDate)}</p>
+                  <p>Numbers assigned on: {formatDate(pool.number_assign_datetime || pool.numbersAssignDate)}</p>
                 </div>
               )}
-              {pool.closeDate && (
+              {(pool.close_datetime || pool.closeDate) && (
                 <div className="flex items-start gap-3">
                   <span className="text-green-400 font-bold">•</span>
-                  <p>Pool closes: {formatDate(pool.closeDate)}</p>
+                  <p>Pool closes: {formatDate(pool.close_datetime || pool.closeDate)}</p>
+                </div>
+              )}
+              {pool.pool_description && (
+                <div className="flex items-start gap-3">
+                  <span className="text-green-400 font-bold">•</span>
+                  <p>{pool.pool_description}</p>
                 </div>
               )}
             </div>

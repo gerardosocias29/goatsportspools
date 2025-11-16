@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiArrowLeft, FiCheck, FiInfo } from 'react-icons/fi';
-import squaresMockService, { mockRewardTypes } from '../services/squaresMockData';
+import squaresApiService from '../services/squaresApiService';
 
 /**
  * Create Squares Pool Page
@@ -11,13 +11,16 @@ const CreateSquaresPool = () => {
   const navigate = useNavigate();
 
   const [games, setGames] = useState([]);
+  const [rewardTypes, setRewardTypes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
 
   // Form state
   const [formData, setFormData] = useState({
     gridName: '',
+    poolDescription: '',
     gameID: '',
+    gameNickname: '',
 
     // Number Assignment
     numbersType: 'TimeSet',
@@ -36,28 +39,45 @@ const CreateSquaresPool = () => {
     maxSquaresPerPlayer: 10,
 
     // Teams
+    homeTeamId: '',
+    visitorTeamId: '',
     xAxisTeam: '',
     yAxisTeam: '',
     axisType: 'HomeAway',
 
     // Closing
     closeDate: '',
+
+    // External
+    externalPoolId: '',
   });
 
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
     loadGames();
+    loadRewardTypes();
   }, []);
 
   const loadGames = async () => {
     try {
-      const response = await squaresMockService.getGames({ status: 'NotStarted' });
+      const response = await squaresApiService.getGames({ status: 'NotStarted' });
       if (response.success) {
         setGames(response.data);
       }
     } catch (error) {
       console.error('Error loading games:', error);
+    }
+  };
+
+  const loadRewardTypes = async () => {
+    try {
+      const response = await squaresApiService.getRewardTypes();
+      if (response.success) {
+        setRewardTypes(response.data);
+      }
+    } catch (error) {
+      console.error('Error loading reward types:', error);
     }
   };
 
@@ -70,14 +90,17 @@ const CreateSquaresPool = () => {
   };
 
   const handleGameSelect = (gameID) => {
-    const game = games.find(g => g.gameID === parseInt(gameID));
+    const game = games.find(g => g.id === parseInt(gameID) || g.gameID === parseInt(gameID));
     if (game) {
       setFormData(prev => ({
         ...prev,
         gameID: gameID,
-        xAxisTeam: game.homeTeam,
-        yAxisTeam: game.visitorTeam,
-        gridName: `${game.homeTeam} vs ${game.visitorTeam} Squares`,
+        homeTeamId: game.home_team_id || game.homeTeamId,
+        visitorTeamId: game.visitor_team_id || game.visitorTeamId,
+        xAxisTeam: game.home_team || game.homeTeam,
+        yAxisTeam: game.visitor_team || game.visitorTeam,
+        gridName: `${game.home_team || game.homeTeam} vs ${game.visitor_team || game.visitorTeam} Squares`,
+        gameNickname: game.game_nickname || game.gameNickname || `${game.home_team || game.homeTeam} vs ${game.visitor_team || game.visitorTeam}`,
       }));
     }
   };
@@ -160,22 +183,25 @@ const CreateSquaresPool = () => {
 
     setLoading(true);
     try {
-      const response = await squaresMockService.createGrid(formData);
+      const response = await squaresApiService.createPool(formData);
       if (response.success) {
         alert('Pool created successfully!');
         navigate(`/v2/squares/pool/${response.data.id}`);
       } else {
-        alert('Failed to create pool: ' + response.error);
+        const errorMsg = typeof response.error === 'object'
+          ? JSON.stringify(response.error)
+          : response.error;
+        alert('Failed to create pool: ' + errorMsg);
       }
     } catch (error) {
-      alert('Error creating pool');
+      alert('Error creating pool: ' + error.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const selectedGame = games.find(g => g.gameID === parseInt(formData.gameID));
-  const selectedRewardType = mockRewardTypes.find(r => r.id === formData.gameRewardTypeID);
+  const selectedGame = games.find(g => g.id === parseInt(formData.gameID) || g.gameID === parseInt(formData.gameID));
+  const selectedRewardType = rewardTypes.find(r => r.id === formData.gameRewardTypeID);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 p-4 md:p-8">
@@ -251,43 +277,68 @@ const CreateSquaresPool = () => {
                 )}
               </div>
 
+              {/* Pool Description */}
+              <div>
+                <label className="block text-gray-300 font-medium mb-2">
+                  Pool Description (Optional)
+                </label>
+                <textarea
+                  value={formData.poolDescription}
+                  onChange={(e) => handleChange('poolDescription', e.target.value)}
+                  className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Describe your pool rules, prize structure, or any special instructions"
+                  rows="3"
+                />
+                <p className="mt-1 text-gray-400 text-sm">
+                  Detailed description of pool rules and details
+                </p>
+              </div>
+
               {/* Game Selection */}
               <div>
                 <label className="block text-gray-300 font-medium mb-2">
                   Select Game *
                 </label>
                 <div className="space-y-3 max-h-96 overflow-y-auto">
-                  {games.map((game) => (
-                    <div
-                      key={game.gameID}
-                      onClick={() => handleGameSelect(game.gameID)}
-                      className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                        formData.gameID === game.gameID
-                          ? 'bg-blue-600 border-blue-400'
-                          : 'bg-gray-700 border-gray-600 hover:border-blue-500'
-                      }`}
-                    >
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <div className="text-white font-bold text-lg">
-                            {game.homeTeam} vs {game.visitorTeam}
+                  {games.map((game) => {
+                    const gameId = game.id || game.gameID;
+                    const homeTeam = game.home_team || game.homeTeam;
+                    const visitorTeam = game.visitor_team || game.visitorTeam;
+                    const league = game.league;
+                    const gameTime = game.game_time || game.gameTime;
+
+                    return (
+                      <div
+                        key={gameId}
+                        onClick={() => handleGameSelect(gameId)}
+                        className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                          formData.gameID == gameId
+                            ? 'bg-blue-600 border-blue-400'
+                            : 'bg-gray-700 border-gray-600 hover:border-blue-500'
+                        }`}
+                      >
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <div className="text-white font-bold text-lg">
+                              {homeTeam} vs {visitorTeam}
+                            </div>
+                            <div className="text-gray-300 text-sm mt-1">
+                              {league} • {new Date(gameTime).toLocaleDateString('en-US', {
+                                weekday: 'short',
+                                month: 'short',
+                                day: 'numeric',
+                                hour: 'numeric',
+                                minute: '2-digit',
+                              })}
+                            </div>
                           </div>
-                          <div className="text-gray-300 text-sm mt-1">
-                            {game.league} • {new Date(game.gameTime).toLocaleDateString('en-US', {
-                              weekday: 'short',
-                              month: 'short',
-                              day: 'numeric',
-                              hour: 'numeric',
-                              minute: '2-digit',
-                            })}
-                          </div>
+                          {formData.gameID == gameId && (
+                            <FiCheck className="text-white text-2xl" />
+                          )}
                         </div>
-                        {formData.gameID === game.gameID && (
-                          <FiCheck className="text-white text-2xl" />
-                        )}
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
                 {errors.gameID && (
                   <p className="mt-2 text-red-400 text-sm">{errors.gameID}</p>
@@ -405,12 +456,15 @@ const CreateSquaresPool = () => {
                   onChange={(e) => handleChange('gameRewardTypeID', parseInt(e.target.value))}
                   className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  {mockRewardTypes.map((reward) => (
+                  {rewardTypes.map((reward) => (
                     <option key={reward.id} value={reward.id}>
                       {reward.name} - {reward.description}
                     </option>
                   ))}
                 </select>
+                <p className="mt-1 text-gray-400 text-sm">
+                  How the total pot will be distributed to winners
+                </p>
               </div>
 
               {/* Close Date */}
@@ -516,8 +570,11 @@ const CreateSquaresPool = () => {
                   <h3 className="text-lg font-semibold text-white mb-2">Pool Details</h3>
                   <div className="space-y-2 text-gray-300">
                     <p><span className="font-medium">Name:</span> {formData.gridName}</p>
+                    {formData.poolDescription && (
+                      <p><span className="font-medium">Description:</span> {formData.poolDescription}</p>
+                    )}
                     {selectedGame && (
-                      <p><span className="font-medium">Game:</span> {selectedGame.homeTeam} vs {selectedGame.visitorTeam}</p>
+                      <p><span className="font-medium">Game:</span> {selectedGame.home_team || selectedGame.homeTeam} vs {selectedGame.visitor_team || selectedGame.visitorTeam}</p>
                     )}
                   </div>
                 </div>
