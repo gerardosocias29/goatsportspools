@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiCalendar, FiUsers, FiDollarSign, FiGrid, FiLock, FiUnlock } from 'react-icons/fi';
-import squaresApiService from '../services/squaresApiService';
+import { useAxios } from '../../app/contexts/AxiosContext';
 
 /**
  * Squares Pool List Page
@@ -9,7 +9,9 @@ import squaresApiService from '../services/squaresApiService';
  */
 const SquaresPoolList = () => {
   const navigate = useNavigate();
+  const axiosService = useAxios();
   const [pools, setPools] = useState([]);
+  const [teams, setTeams] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState({
     status: 'all',
@@ -17,20 +19,33 @@ const SquaresPoolList = () => {
   });
 
   useEffect(() => {
+    loadTeams();
     loadPools();
   }, [filter]);
+
+  const loadTeams = async () => {
+    try {
+      const response = await axiosService.get('/api/teams');
+      setTeams(response.data || []);
+    } catch (error) {
+      console.error('Error loading teams:', error);
+    }
+  };
 
   const loadPools = async () => {
     setLoading(true);
     try {
-      const filters = {};
-      if (filter.status !== 'all') filters.status = filter.status;
-      if (filter.league !== 'all') filters.league = filter.league;
+      const params = new URLSearchParams();
+      if (filter.status !== 'all') params.append('status', filter.status);
+      if (filter.league !== 'all') params.append('league', filter.league);
 
-      const response = await squaresApiService.getPools(filters);
-      if (response.success) {
-        setPools(response.data);
-      }
+      const queryString = params.toString();
+      const url = `/api/squares-pools${queryString ? `?${queryString}` : ''}`;
+
+      const response = await axiosService.get(url);
+      const poolsData = response.data.data || response.data || [];
+
+      setPools(poolsData);
     } catch (error) {
       console.error('Error loading pools:', error);
     } finally {
@@ -65,7 +80,9 @@ const SquaresPoolList = () => {
   };
 
   const formatDate = (dateString) => {
+    if (!dateString) return 'TBD';
     const date = new Date(dateString);
+    if (isNaN(date.getTime())) return 'TBD';
     return date.toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
@@ -79,6 +96,12 @@ const SquaresPoolList = () => {
     const totalSquares = pool.total_squares || pool.totalSquares || 100;
     const selectedSquares = pool.squares_claimed || pool.selectedSquares || 0;
     return ((selectedSquares / totalSquares) * 100).toFixed(0);
+  };
+
+  const getTeamName = (teamId) => {
+    if (!teamId) return 'TBD';
+    const team = teams.find(t => t.id === teamId);
+    return team?.name || team?.team_name || 'TBD';
   };
 
   const handlePoolClick = (poolId) => {
@@ -168,8 +191,62 @@ const SquaresPoolList = () => {
         {/* Pools Grid */}
         {loading ? (
           <div className="text-center py-20">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-            <p className="text-gray-300 mt-4">Loading pools...</p>
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '2rem',
+            }}>
+              <div style={{
+                position: 'relative',
+                width: '120px',
+                height: '120px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <svg
+                  style={{
+                    position: 'absolute',
+                    width: '120px',
+                    height: '120px',
+                    animation: 'spin 1.5s linear infinite'
+                  }}
+                  viewBox="0 0 120 120"
+                >
+                  <circle
+                    cx="60"
+                    cy="60"
+                    r="54"
+                    fill="none"
+                    stroke="#fff"
+                    strokeWidth="4"
+                    strokeDasharray="300 360"
+                    strokeLinecap="round"
+                  />
+                </svg>
+                <img
+                  src="/assets/images/favicon.png"
+                  alt="Loading"
+                  style={{
+                    width: '64px',
+                    height: '64px',
+                    position: 'relative',
+                    zIndex: 1,
+                    animation: 'bounce 1s ease-in-out infinite'
+                  }}
+                />
+              </div>
+              <div style={{
+                fontSize: '1.25rem',
+                fontWeight: 600,
+                color: "#fff",
+                fontFamily: '"Hubot Sans", sans-serif',
+              }}>
+                Loading NFL betting...
+              </div>
+            </div>
           </div>
         ) : pools.length === 0 ? (
           <div className="text-center py-20 bg-gray-800 rounded-xl">
@@ -205,14 +282,14 @@ const SquaresPoolList = () => {
                   {pool.game && (
                     <div className="mb-4 pb-4 border-b border-gray-700">
                       <div className="flex items-center gap-2 text-blue-400 text-sm mb-2">
-                        <span className="font-semibold">{pool.game.league}</span>
+                        <span className="font-semibold">{pool.game.league || 'NFL'}</span>
                       </div>
                       <div className="text-gray-300 text-sm font-medium">
-                        {pool.game.home_team || pool.game.homeTeam} vs {pool.game.visitor_team || pool.game.visitorTeam}
+                        {getTeamName(pool.game.home_team_id || pool.game.homeTeamId)} vs {getTeamName(pool.game.visitor_team_id || pool.game.visitorTeamId)}
                       </div>
                       <div className="flex items-center gap-2 text-gray-400 text-xs mt-1">
                         <FiCalendar />
-                        {formatDate(pool.game.game_time || pool.game.gameTime)}
+                        {formatDate(pool.game.game_time || pool.game.game_datetime || pool.game.gameTime)}
                       </div>
                     </div>
                   )}
@@ -242,7 +319,7 @@ const SquaresPoolList = () => {
                         <span>Per Square</span>
                       </div>
                       <span className="text-green-400 font-bold text-lg">
-                        ${(pool.entry_fee || pool.credit_cost || pool.costPerSquare || 0).toFixed(2)}
+                        ${parseFloat(pool.entry_fee || pool.credit_cost || pool.costPerSquare || 0).toFixed(2)}
                       </span>
                     </div>
 
@@ -253,7 +330,7 @@ const SquaresPoolList = () => {
                         <span>Total Pot</span>
                       </div>
                       <span className="text-yellow-400 font-bold text-lg">
-                        ${(pool.total_pot || pool.totalPot || 0).toFixed(2)}
+                        ${parseFloat(pool.total_pot || pool.totalPot || 0).toFixed(2)}
                       </span>
                     </div>
 

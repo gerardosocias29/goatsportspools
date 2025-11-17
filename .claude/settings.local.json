@@ -1,8 +1,10 @@
 {
   "permissions": {
     "allow": [
-      "Bash(php artisan migrate:*)",
-      "Bash(php artisan migrate:rollback:*)"
+      "Bash(cat:*)",
+      "Bash(dir:*)",
+      "Bash(nul)",
+      "Bash(findstr:*)"
     ],
     "deny": [],
     "ask": []

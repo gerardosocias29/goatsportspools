@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiArrowLeft, FiCheck, FiInfo } from 'react-icons/fi';
-import squaresApiService from '../services/squaresApiService';
+import { useAxios } from '../../app/contexts/AxiosContext';
 
 /**
  * Create Squares Pool Page
@@ -9,6 +9,7 @@ import squaresApiService from '../services/squaresApiService';
  */
 const CreateSquaresPool = () => {
   const navigate = useNavigate();
+  const axiosService = useAxios();
 
   const [games, setGames] = useState([]);
   const [rewardTypes, setRewardTypes] = useState([]);
@@ -34,6 +35,10 @@ const CreateSquaresPool = () => {
     // Rewards
     rewardsType: 'CreditsRewards',
     gameRewardTypeID: 1,
+    reward1_percent: 25, // Q1
+    reward2_percent: 25, // Q2
+    reward3_percent: 25, // Q3
+    reward4_percent: 25, // Q4 (Final)
 
     // Player Limits
     maxSquaresPerPlayer: 10,
@@ -61,10 +66,8 @@ const CreateSquaresPool = () => {
 
   const loadGames = async () => {
     try {
-      const response = await squaresApiService.getGames({ status: 'NotStarted' });
-      if (response.success) {
-        setGames(response.data);
-      }
+      const response = await axiosService.get('/api/games/manage');
+      setGames(response.data.data || response.data || []);
     } catch (error) {
       console.error('Error loading games:', error);
     }
@@ -72,10 +75,8 @@ const CreateSquaresPool = () => {
 
   const loadRewardTypes = async () => {
     try {
-      const response = await squaresApiService.getRewardTypes();
-      if (response.success) {
-        setRewardTypes(response.data);
-      }
+      const response = await axiosService.get('/api/game-reward-types');
+      setRewardTypes(response.data.data || response.data || []);
     } catch (error) {
       console.error('Error loading reward types:', error);
     }
@@ -92,15 +93,19 @@ const CreateSquaresPool = () => {
   const handleGameSelect = (gameID) => {
     const game = games.find(g => g.id === parseInt(gameID) || g.gameID === parseInt(gameID));
     if (game) {
+      // Extract team names (handle both object and string formats)
+      const homeTeamName = game.home_team?.name || game.home_team || game.homeTeam;
+      const visitorTeamName = game.visitor_team?.name || game.visitor_team || game.visitorTeam;
+
       setFormData(prev => ({
         ...prev,
         gameID: gameID,
-        homeTeamId: game.home_team_id || game.homeTeamId,
-        visitorTeamId: game.visitor_team_id || game.visitorTeamId,
-        xAxisTeam: game.home_team || game.homeTeam,
-        yAxisTeam: game.visitor_team || game.visitorTeam,
-        gridName: `${game.home_team || game.homeTeam} vs ${game.visitor_team || game.visitorTeam} Squares`,
-        gameNickname: game.game_nickname || game.gameNickname || `${game.home_team || game.homeTeam} vs ${game.visitor_team || game.visitorTeam}`,
+        homeTeamId: game.home_team_id || game.home_team?.id || game.homeTeamId,
+        visitorTeamId: game.visitor_team_id || game.visitor_team?.id || game.visitorTeamId,
+        xAxisTeam: homeTeamName,
+        yAxisTeam: visitorTeamName,
+        gridName: `${homeTeamName} vs ${visitorTeamName} Squares`,
+        gameNickname: game.game_nickname || game.gameNickname || `${homeTeamName} vs ${visitorTeamName}`,
       }));
     }
   };
@@ -130,6 +135,12 @@ const CreateSquaresPool = () => {
     }
     if (formData.costPerSquare < 0) {
       newErrors.costPerSquare = 'Cost cannot be negative';
+    }
+
+    // Validate reward percentages add up to 100%
+    const totalReward = formData.reward1_percent + formData.reward2_percent + formData.reward3_percent + formData.reward4_percent;
+    if (totalReward !== 100) {
+      newErrors.rewardPercentages = `Quarter payouts must total 100% (currently ${totalReward}%)`;
     }
 
     setErrors(newErrors);
@@ -183,18 +194,41 @@ const CreateSquaresPool = () => {
 
     setLoading(true);
     try {
-      const response = await squaresApiService.createPool(formData);
-      if (response.success) {
+      // Map UI field names to backend field names (matching squaresApiService structure)
+      const requestData = {
+        pool_name: formData.gridName,
+        pool_description: formData.poolDescription,
+        game_id: formData.gameID,
+        pool_type: formData.numbersType === 'Ascending' ? 'A' : 'B',
+        player_pool_type: formData.costType === 'Free' ? 'FREE' : 'CREDIT',
+        reward_type: formData.rewardsType || 'CreditsRewards',
+        password: formData.poolPassword,
+        entry_fee: formData.costPerSquare,
+        credit_cost: formData.costPerSquare,
+        max_squares_per_player: formData.maxSquaresPerPlayer,
+        close_datetime: formData.closeDate,
+        number_assign_datetime: formData.numbersAssignDate,
+        game_reward_type_id: formData.gameRewardTypeID,
+        home_team_id: formData.homeTeamId,
+        visitor_team_id: formData.visitorTeamId,
+        game_nickname: formData.gameNickname,
+        external_pool_id: formData.externalPoolId,
+        // Quarter reward percentages (must add up to 100%)
+        reward1_percent: formData.reward1_percent,
+        reward2_percent: formData.reward2_percent,
+        reward3_percent: formData.reward3_percent,
+        reward4_percent: formData.reward4_percent,
+      };
+
+      const response = await axiosService.post('/api/squares-pools', requestData);
+      if (response.data) {
         alert('Pool created successfully!');
-        navigate(`/v2/squares/pool/${response.data.id}`);
-      } else {
-        const errorMsg = typeof response.error === 'object'
-          ? JSON.stringify(response.error)
-          : response.error;
-        alert('Failed to create pool: ' + errorMsg);
+        navigate(`/v2/squares/pool/${response.data.id || response.data.data?.id}`);
       }
     } catch (error) {
-      alert('Error creating pool: ' + error.message);
+      const errorMsg = error.response?.data?.message || error.response?.data?.errors || error.message;
+      const errorText = typeof errorMsg === 'object' ? JSON.stringify(errorMsg) : errorMsg;
+      alert('Failed to create pool: ' + errorText);
     } finally {
       setLoading(false);
     }
@@ -302,10 +336,11 @@ const CreateSquaresPool = () => {
                 <div className="space-y-3 max-h-96 overflow-y-auto">
                   {games.map((game) => {
                     const gameId = game.id || game.gameID;
-                    const homeTeam = game.home_team || game.homeTeam;
-                    const visitorTeam = game.visitor_team || game.visitorTeam;
+                    // Handle both object and string formats for teams
+                    const homeTeam = game.home_team?.name || game.home_team || game.homeTeam;
+                    const visitorTeam = game.visitor_team?.name || game.visitor_team || game.visitorTeam;
                     const league = game.league;
-                    const gameTime = game.game_time || game.gameTime;
+                    const gameTime = game.game_datetime || game.game_time || game.gameTime;
 
                     return (
                       <div
@@ -467,6 +502,76 @@ const CreateSquaresPool = () => {
                 </p>
               </div>
 
+              {/* Quarter Payout Percentages */}
+              <div className="border-t border-gray-600 pt-4">
+                <label className="block text-gray-300 font-medium mb-4">
+                  Quarter Payout Percentages (must total 100%)
+                </label>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-gray-400 text-sm mb-1">Q1 Payout %</label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="1"
+                      value={formData.reward1_percent}
+                      onChange={(e) => handleChange('reward1_percent', parseFloat(e.target.value) || 0)}
+                      className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-gray-400 text-sm mb-1">Q2 Payout %</label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="1"
+                      value={formData.reward2_percent}
+                      onChange={(e) => handleChange('reward2_percent', parseFloat(e.target.value) || 0)}
+                      className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-gray-400 text-sm mb-1">Q3 Payout %</label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="1"
+                      value={formData.reward3_percent}
+                      onChange={(e) => handleChange('reward3_percent', parseFloat(e.target.value) || 0)}
+                      className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-gray-400 text-sm mb-1">Q4 (Final) Payout %</label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="1"
+                      value={formData.reward4_percent}
+                      onChange={(e) => handleChange('reward4_percent', parseFloat(e.target.value) || 0)}
+                      className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+                <p className={`mt-2 text-sm font-medium ${
+                  (formData.reward1_percent + formData.reward2_percent + formData.reward3_percent + formData.reward4_percent) === 100
+                    ? 'text-green-400'
+                    : 'text-red-400'
+                }`}>
+                  Total: {formData.reward1_percent + formData.reward2_percent + formData.reward3_percent + formData.reward4_percent}%
+                  {(formData.reward1_percent + formData.reward2_percent + formData.reward3_percent + formData.reward4_percent) === 100
+                    ? ' ✓'
+                    : ' (must equal 100%)'}
+                </p>
+                {errors.rewardPercentages && (
+                  <p className="mt-1 text-red-400 text-sm">{errors.rewardPercentages}</p>
+                )}
+              </div>
+
               {/* Close Date */}
               <div>
                 <label className="block text-gray-300 font-medium mb-2">
@@ -574,7 +679,7 @@ const CreateSquaresPool = () => {
                       <p><span className="font-medium">Description:</span> {formData.poolDescription}</p>
                     )}
                     {selectedGame && (
-                      <p><span className="font-medium">Game:</span> {selectedGame.home_team || selectedGame.homeTeam} vs {selectedGame.visitor_team || selectedGame.visitorTeam}</p>
+                      <p><span className="font-medium">Game:</span> {selectedGame.home_team?.name || selectedGame.home_team || selectedGame.homeTeam} vs {selectedGame.visitor_team?.name || selectedGame.visitor_team || selectedGame.visitorTeam}</p>
                     )}
                   </div>
                 </div>

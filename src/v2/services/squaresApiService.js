@@ -14,12 +14,31 @@ const axiosInstance = axios.create({
   },
 });
 
-// Add request interceptor to include auth token
-axiosInstance.interceptors.request.use((config) => {
-  const token = Cookies.get('__session') || localStorage.getItem('token');
+// Add request interceptor to include auth token from Clerk
+axiosInstance.interceptors.request.use(async (config) => {
+  // Try multiple sources for the token
+  let token = Cookies.get('__session'); // Clerk stores JWT here
+
+  if (!token) {
+    // Fallback to localStorage
+    token = localStorage.getItem('token') || localStorage.getItem('clerk-token');
+  }
+
+  if (!token) {
+    // Try to get from Clerk's window object (if available)
+    if (window.Clerk && window.Clerk.session) {
+      try {
+        token = await window.Clerk.session.getToken();
+      } catch (error) {
+        console.warn('Could not get Clerk token:', error);
+      }
+    }
+  }
+
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+
   return config;
 }, (error) => {
   return Promise.reject(error);
@@ -285,6 +304,62 @@ class SquaresApiService {
     } catch (error) {
       console.error('Error deleting pool:', error);
       return { success: false, error: error.response?.data?.message || 'Failed to delete pool' };
+    }
+  }
+
+  /**
+   * Create a new game (matches V1 API endpoint)
+   * POST /api/games/create
+   */
+  async createGame(gameData) {
+    try {
+      const response = await axiosInstance.post('/api/games/create', gameData);
+      return { success: response.data.status || false, data: response.data, message: response.data.message };
+    } catch (error) {
+      console.error('Error creating game:', error);
+      return { success: false, error: error.response?.data?.message || 'Failed to create game' };
+    }
+  }
+
+  /**
+   * Update an existing game (matches V1 API endpoint)
+   * POST /api/games/update/{id}
+   */
+  async updateGame(gameId, gameData) {
+    try {
+      const response = await axiosInstance.post(`/api/games/update/${gameId}`, gameData);
+      return { success: response.data.status || false, data: response.data, message: response.data.message };
+    } catch (error) {
+      console.error('Error updating game:', error);
+      return { success: false, error: error.response?.data?.message || 'Failed to update game' };
+    }
+  }
+
+  /**
+   * Delete a game
+   * DELETE /api/games/{id}
+   */
+  async deleteGame(gameId) {
+    try {
+      const response = await axiosInstance.delete(`/api/games/${gameId}`);
+      return { success: true, data: response.data };
+    } catch (error) {
+      console.error('Error deleting game:', error);
+      return { success: false, error: error.response?.data?.message || 'Failed to delete game' };
+    }
+  }
+
+  /**
+   * Get teams for game creation
+   * GET /api/teams
+   */
+  async getTeams() {
+    try {
+      const response = await axiosInstance.get('/api/teams');
+      return { success: true, data: response.data };
+    } catch (error) {
+      console.error('Error fetching teams:', error);
+      return { success: false, error: error.response?.data?.message || 'Failed to fetch teams' };
     }
   }
 }

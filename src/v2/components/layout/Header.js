@@ -137,6 +137,11 @@ const Header = ({ user, onSignOut }) => {
                 Commissioner
               </a>
             )}
+            {isSignedIn && user?.role_id === 1 && (
+              <a style={navLinkStyles} onClick={() => navigate('/v2/admin/settings')}>
+                Admin
+              </a>
+            )}
           </nav>
         )}
 

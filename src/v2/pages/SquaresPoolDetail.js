@@ -2,15 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FiArrowLeft, FiCalendar, FiDollarSign, FiGrid, FiUsers, FiLock, FiTrendingUp, FiAward, FiShare2 } from 'react-icons/fi';
 import SquaresGrid from '../components/squares/SquaresGrid';
-import squaresApiService from '../services/squaresApiService';
+import { useAxios } from '../../app/contexts/AxiosContext';
+import { TeamTemplate } from '../../app/pages/screens/games/NFLTemplates';
+import { useTheme } from '../contexts/ThemeContext';
 
 /**
  * Pool Detail Page
  * Shows grid details and allows square selection
  */
 const SquaresPoolDetail = () => {
+  const { colors } = useTheme();
   const { poolId } = useParams();
   const navigate = useNavigate();
+  const axiosService = useAxios();
 
   const [pool, setPool] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -25,11 +29,16 @@ const SquaresPoolDetail = () => {
   const [showQRCode, setShowQRCode] = useState(false);
   const [showWinners, setShowWinners] = useState(false);
   const [calculatingWinners, setCalculatingWinners] = useState(false);
+  const [teams, setTeams] = useState([]);
 
   useEffect(() => {
-    loadCurrentUser();
-    loadPool();
-    loadWinners();
+    const initPage = async () => {
+      const user = await loadCurrentUser();
+      loadTeams();
+      loadPool(user);
+      loadWinners();
+    };
+    initPage();
   }, [poolId]);
 
   const loadCurrentUser = async () => {
@@ -45,25 +54,63 @@ const SquaresPoolDetail = () => {
         }
       });
       setCurrentUser(response.data);
+      return response.data;
     } catch (error) {
       console.error('Error loading user:', error);
+      return null;
     }
   };
 
-  const loadPool = async () => {
+  const loadTeams = async () => {
+    try {
+      const response = await axiosService.get('/api/teams');
+      setTeams(response.data || []);
+    } catch (error) {
+      console.error('Error loading teams:', error);
+    }
+  };
+
+  const loadPool = async (userData = null) => {
     setLoading(true);
     try {
-      const response = await squaresApiService.getPool(poolId);
-      if (response.success) {
-        setPool(response.data);
+      const response = await axiosService.get(`/api/squares-pools/${poolId}`);
+      const poolData = response.data.data || response.data;
 
-        // Check if user has already joined by checking my-joined pools
-        const myPoolsResponse = await squaresApiService.getMyPools();
-        if (myPoolsResponse.success) {
-          const joined = myPoolsResponse.data.some(p => p.id === parseInt(poolId));
-          setHasJoined(joined);
+      setPool(poolData);
+
+      // Use passed userData or fallback to state
+      const user = userData || currentUser;
+      const currentUserId = user?.user?.id || user?.id;
+      const isOwner = poolData.admin_id === currentUserId || poolData.created_by === currentUserId;
+
+      // Check if user has already joined - try multiple methods
+      let joined = false;
+
+      // Method 1: Check if user has any claimed squares in this pool
+      if (poolData.squares && Array.isArray(poolData.squares)) {
+        joined = poolData.squares.some(square =>
+          square.player_id === currentUserId || square.user_id === currentUserId
+        );
+      }
+
+      // Method 2: Check my-pools API (wrap in try-catch to handle 404)
+      if (!joined) {
+        try {
+          const myPoolsResponse = await axiosService.get('/api/squares-pools/my-pools');
+          const myPools = myPoolsResponse.data.data || myPoolsResponse.data || [];
+          joined = myPools.some(p => p.id === parseInt(poolId));
+        } catch (myPoolsError) {
+          console.log('my-pools API not available, using alternative methods');
         }
       }
+
+      // Method 3: Check if pool has a joined status field
+      if (!joined && poolData.user_joined !== undefined) {
+        joined = poolData.user_joined;
+      }
+
+      // Pool owner is automatically considered joined
+      setHasJoined(isOwner || joined);
     } catch (error) {
       console.error('Error loading pool:', error);
     } finally {
@@ -73,10 +120,8 @@ const SquaresPoolDetail = () => {
 
   const loadWinners = async () => {
     try {
-      const response = await squaresApiService.getWinners(poolId);
-      if (response.success) {
-        setWinners(response.data || []);
-      }
+      const response = await axiosService.get(`/api/squares-pools/${poolId}/winners`);
+      setWinners(response.data.data || response.data || []);
     } catch (error) {
       console.error('Error loading winners:', error);
     }
@@ -85,17 +130,16 @@ const SquaresPoolDetail = () => {
   const handleJoinPool = async () => {
     setJoinError('');
     try {
-      const response = await squaresApiService.joinPool(pool.pool_number || pool.poolNumber, joinPassword);
-      if (response.success) {
-        setHasJoined(true);
-        setShowJoinModal(false);
-        setJoinPassword('');
-        await loadPool(); // Reload pool data
-      } else {
-        setJoinError(response.error);
-      }
+      const response = await axiosService.post('/api/squares-pools/join', {
+        pool_number: pool.pool_number || pool.poolNumber,
+        password: joinPassword,
+      });
+      setHasJoined(true);
+      setShowJoinModal(false);
+      setJoinPassword('');
+      await loadPool(); // Reload pool data
     } catch (error) {
-      setJoinError('Failed to join pool');
+      setJoinError(error.response?.data?.message || 'Failed to join pool');
     }
   };
 
@@ -112,18 +156,20 @@ const SquaresPoolDetail = () => {
     }));
 
     try {
-      const response = await squaresApiService.claimSquares(poolId, coordinates);
-      if (response.success) {
-        // Reload pool to get updated data
-        await loadPool();
-        setSelectedSquares([]);
-        setSelectionMode(false);
-        alert(`Successfully selected ${coordinates.length} square(s)!`);
-      } else {
-        alert(response.error);
+      // Backend expects individual square claims, but we can batch them
+      for (const coord of coordinates) {
+        await axiosService.post(`/api/squares-pools/${poolId}/claim-square`, {
+          x_coordinate: coord.x,
+          y_coordinate: coord.y,
+        });
       }
+      // Reload pool to get updated data
+      await loadPool();
+      setSelectedSquares([]);
+      setSelectionMode(false);
+      alert(`Successfully selected ${coordinates.length} square(s)!`);
     } catch (error) {
-      alert('Failed to select squares: ' + error.message);
+      alert('Failed to select squares: ' + (error.response?.data?.message || error.message));
     }
   };
 
@@ -132,16 +178,14 @@ const SquaresPoolDetail = () => {
 
     setCalculatingWinners(true);
     try {
-      const response = await squaresApiService.calculateWinners(poolId, quarter);
-      if (response.success) {
-        alert(`Winner calculated for Quarter ${quarter}!`);
-        await loadWinners();
-        await loadPool();
-      } else {
-        alert('Failed to calculate winner: ' + response.error);
-      }
+      await axiosService.post(`/api/squares-pools/${poolId}/calculate-winners`, {
+        quarter: quarter,
+      });
+      alert(`Winner calculated for Quarter ${quarter}!`);
+      await loadWinners();
+      await loadPool();
     } catch (error) {
-      alert('Error calculating winner: ' + error.message);
+      alert('Failed to calculate winner: ' + (error.response?.data?.message || error.message));
     } finally {
       setCalculatingWinners(false);
     }
@@ -152,23 +196,21 @@ const SquaresPoolDetail = () => {
 
     setCalculatingWinners(true);
     try {
-      const response = await squaresApiService.calculateAllWinners(poolId);
-      if (response.success) {
-        alert('Winners calculated for all quarters!');
-        await loadWinners();
-        await loadPool();
-      } else {
-        alert('Failed to calculate winners: ' + response.error);
-      }
+      await axiosService.post(`/api/squares-pools/${poolId}/calculate-all-winners`);
+      alert('Winners calculated for all quarters!');
+      await loadWinners();
+      await loadPool();
     } catch (error) {
-      alert('Error calculating winners: ' + error.message);
+      alert('Failed to calculate winners: ' + (error.response?.data?.message || error.message));
     } finally {
       setCalculatingWinners(false);
     }
   };
 
   const formatDate = (dateString) => {
+    if (!dateString) return 'TBD';
     const date = new Date(dateString);
+    if (isNaN(date.getTime())) return 'TBD';
     return date.toLocaleDateString('en-US', {
       weekday: 'short',
       month: 'short',
@@ -188,16 +230,87 @@ const SquaresPoolDetail = () => {
 
   const getTotalCost = () => {
     if (!pool) return '0.00';
-    const cost = pool.entry_fee || pool.credit_cost || pool.costPerSquare || 0;
+    const cost = parseFloat(pool.entry_fee || pool.credit_cost || pool.costPerSquare || 0);
     return (selectedSquares.length * cost).toFixed(2);
+  };
+
+  const getTeamName = (teamId) => {
+    if (!teamId) return 'TBD';
+    const team = teams.find(t => t.id === teamId);
+    return team?.name || team?.team_name || 'TBD';
+  };
+
+  const getTeamLogo = (teamId) => {
+    if (!teamId) return null;
+    const team = teams.find(t => t.id === teamId);
+    return team?.logo || team?.image_url || null;
+  };
+
+  const getTeamBackground = (teamId) => {
+    if (!teamId) return null;
+    const team = teams.find(t => t.id === teamId);
+    return team?.background_url || team?.backgroundUrl || null;
   };
 
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
-          <p className="text-white mt-4 text-xl">Loading pool...</p>
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: 'calc(100vh - 64px)',
+          gap: '2rem',
+        }}>
+          <div style={{
+            position: 'relative',
+            width: '120px',
+            height: '120px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}>
+            <svg
+              style={{
+                position: 'absolute',
+                width: '120px',
+                height: '120px',
+                animation: 'spin 1.5s linear infinite'
+              }}
+              viewBox="0 0 120 120"
+            >
+              <circle
+                cx="60"
+                cy="60"
+                r="54"
+                fill="none"
+                stroke="#fff"
+                strokeWidth="4"
+                strokeDasharray="300 360"
+                strokeLinecap="round"
+              />
+            </svg>
+            <img
+              src="/assets/images/favicon.png"
+              alt="Loading"
+              style={{
+                width: '64px',
+                height: '64px',
+                position: 'relative',
+                zIndex: 1,
+                animation: 'bounce 1s ease-in-out infinite'
+              }}
+            />
+          </div>
+          <div style={{
+            fontSize: '1.25rem',
+            fontWeight: 600,
+            color: "#fff",
+            fontFamily: '"Hubot Sans", sans-serif',
+          }}>
+            Loading NFL betting...
+          </div>
         </div>
       </div>
     );
@@ -249,11 +362,27 @@ const SquaresPoolDetail = () => {
                 <FiCalendar />
                 <span className="text-sm font-medium">Game</span>
               </div>
-              <div className="text-white font-bold text-lg">
-                {pool.game?.home_team || pool.game?.homeTeam} vs {pool.game?.visitor_team || pool.game?.visitorTeam}
+              <div className="text-white font-bold text-lg grid gap-1 items-center">
+                <div className="flex items-center gap-2 border rounded-lg shadow-md px-4 min-w-[250px]" style={{
+                  backgroundImage: `url(${getTeamBackground(pool.game?.home_team_id || pool.game?.homeTeamId)})`,
+                  backgroundSize: 'cover', // Ensures the image covers the entire div
+                  backgroundPosition: 'center', // Centers the image within the div
+                }}>
+                  <img src={getTeamLogo(pool.game?.home_team_id || pool.game?.homeTeamId)} alt={getTeamName(pool.game?.home_team_id || pool.game?.homeTeamId)} className="w-[50px]"/>
+                  <p className="font-bold text-white select-none">{getTeamName(pool.game?.home_team_id || pool.game?.homeTeamId)}</p>
+                </div>
+                <div className='text-center'>vs</div>
+                <div className="flex items-center gap-2 border rounded-lg shadow-md px-4 min-w-[250px]" style={{
+                  backgroundImage: `url(${getTeamBackground(pool.game?.visitor_team_id || pool.game?.visitorTeamId)})`,
+                  backgroundSize: 'cover', // Ensures the image covers the entire div
+                  backgroundPosition: 'center', // Centers the image within the div
+                }}>
+                  <img src={getTeamLogo(pool.game?.visitor_team_id || pool.game?.visitorTeamId)} alt={getTeamName(pool.game?.visitor_team_id || pool.game?.visitorTeamId)} className="w-[50px]"/>
+                  <p className="font-bold text-white select-none">{getTeamName(pool.game?.visitor_team_id || pool.game?.visitorTeamId)}</p>
+                </div>
               </div>
-              <div className="text-gray-400 text-sm mt-1">
-                {pool.game?.league} • {formatDate(pool.game?.game_time || pool.game?.gameTime)}
+              <div className="text-gray-400 text-sm mt-2">
+                {pool.game?.league || 'NFL'} • {formatDate(pool.game?.game_time || pool.game?.game_datetime || pool.game?.gameTime)}
               </div>
             </div>
 
@@ -264,10 +393,10 @@ const SquaresPoolDetail = () => {
                 <span className="text-sm font-medium">Cost & Pot</span>
               </div>
               <div className="text-green-400 font-bold text-2xl">
-                ${(pool.entry_fee || pool.credit_cost || pool.costPerSquare || 0).toFixed(2)}
+                ${parseFloat(pool.entry_fee || pool.credit_cost || pool.costPerSquare || 0).toFixed(2)}
               </div>
               <div className="text-gray-400 text-sm mt-1">
-                Total Pot: <span className="text-yellow-400 font-semibold">${(pool.total_pot || pool.totalPot || 0).toFixed(2)}</span>
+                Total Pot: <span className="text-yellow-400 font-semibold">${parseFloat(pool.total_pot || pool.totalPot || 0).toFixed(2)}</span>
               </div>
             </div>
 
@@ -374,7 +503,7 @@ const SquaresPoolDetail = () => {
             <div className="flex flex-col items-center">
               <img
                 src={pool.qr_code_url}
-                alt="Pool QR Code"
+                alt="Pool 64ode"
                 className="max-w-xs rounded-lg shadow-lg bg-white p-4"
               />
               <p className="text-gray-300 mt-4">Pool Number: <span className="font-bold text-white">{pool.pool_number || pool.poolNumber}</span></p>
@@ -407,7 +536,7 @@ const SquaresPoolDetail = () => {
                     </div>
                     <div className="text-right">
                       <div className="text-green-400 font-bold text-2xl">
-                        ${(winner.prize_amount || 0).toFixed(2)}
+                        ${parseFloat(winner.prize_amount || 0).toFixed(2)}
                       </div>
                       <div className="text-gray-400 text-sm">Prize</div>
                     </div>
@@ -498,7 +627,19 @@ const SquaresPoolDetail = () => {
         {/* Grid */}
         <div className="mb-8">
           <SquaresGrid
-            grid={pool}
+            grid={{
+              ...pool,
+              xAxisTeam: getTeamName(pool.game?.home_team_id || pool.game?.homeTeamId),
+              yAxisTeam: getTeamName(pool.game?.visitor_team_id || pool.game?.visitorTeamId),
+              homeTeamLogo: getTeamLogo(pool.game?.home_team_id || pool.game?.homeTeamId),
+              visitorTeamLogo: getTeamLogo(pool.game?.visitor_team_id || pool.game?.visitorTeamId),
+              homeTeamBackground: getTeamBackground(pool.game?.home_team_id || pool.game?.homeTeamId),
+              visitorTeamBackground: getTeamBackground(pool.game?.visitor_team_id || pool.game?.visitorTeamId),
+              homeTeamName: getTeamName(pool.game?.home_team_id || pool.game?.homeTeamId),
+              visitorTeamName: getTeamName(pool.game?.visitor_team_id || pool.game?.visitorTeamId),
+              xAxisNumbers: pool.x_numbers || [],
+              yAxisNumbers: pool.y_numbers || [],
+            }}
             squares={pool.squares || []}
             onSquareSelect={handleSquareSelection}
             currentPlayerID={currentUser?.user?.id || currentUser?.id}
@@ -573,12 +714,12 @@ const SquaresPoolDetail = () => {
           <div className="bg-gray-800 rounded-xl p-8 max-w-md w-full border-2 border-gray-700">
             <h2 className="text-2xl font-bold text-white mb-4">Join Pool</h2>
             <p className="text-gray-300 mb-6">
-              {pool.costType === 'PasswordOpen'
+              {pool.player_pool_type === 'CREDIT'
                 ? 'Enter the pool password to join'
                 : 'Click join to enter this pool'}
             </p>
 
-            {pool.costType === 'PasswordOpen' && (
+            {pool.player_pool_type === 'CREDIT' && (
               <div className="mb-6">
                 <label className="block text-gray-300 font-medium mb-2">
                   Pool Password

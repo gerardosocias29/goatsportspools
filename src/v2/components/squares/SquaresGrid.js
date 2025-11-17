@@ -17,8 +17,8 @@ const SquaresGrid = ({
   const [hoveredSquare, setHoveredSquare] = useState(null);
 
   // Parse axis numbers
-  const xNumbers = grid.xAxisNumbers ? grid.xAxisNumbers.split(',').map(Number) : null;
-  const yNumbers = grid.yAxisNumbers ? grid.yAxisNumbers.split(',').map(Number) : null;
+  const xNumbers = grid.xAxisNumbers || null;
+  const yNumbers = grid.yAxisNumbers || null;
 
   const isSquareSelected = (square) => {
     return selectedSquares.some(
@@ -82,34 +82,35 @@ const SquaresGrid = ({
   };
 
   return (
-    <div className="w-full max-w-6xl mx-auto">
+    <div className="w-full">
       {/* Grid Container */}
       <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-4 md:p-6 rounded-xl shadow-2xl">
 
-        {/* Top Team Label */}
-        <div className="text-center mb-4">
-          <div className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg shadow-lg text-lg md:text-xl font-bold">
-            {grid.xAxisTeam || 'Team X'}
-          </div>
-        </div>
-
         {/* Main Grid with Side Labels */}
-        <div className="flex items-center justify-center gap-2 md:gap-3">
-
-          {/* Left Side - Y Axis Team Label (Vertical) */}
-          <div className="flex items-center">
-            <div className="writing-mode-vertical bg-red-600 text-white px-3 py-6 rounded-lg shadow-lg text-lg md:text-xl font-bold transform -rotate-180">
-              {grid.yAxisTeam || 'Team Y'}
-            </div>
-          </div>
+        <div className="flex items-center justify-center gap-2 md:gap-3 w-full">
 
           {/* Grid Structure */}
           <div className="flex-1 max-w-4xl">
 
             {/* Top Numbers Row (X Axis) */}
             <div className="flex mb-2">
-              <div className="w-12"></div> {/* Spacer for corner */}
+              {
+                xNumbers && (
+                  <div className="w-12"></div> // Spacer for corner
+                )
+              }
               <div className="flex-1 grid grid-cols-10 gap-1 md:gap-2">
+                <div className='col-span-10 flex justify-center mb-2'>
+                  {/* X Axis Label */}
+                  <div className="flex items-center gap-2 border rounded-lg shadow-md px-4 min-w-[250px]" style={{
+                    backgroundImage: `url(${grid.homeTeamBackground})`,
+                    backgroundSize: 'cover', // Ensures the image covers the entire div
+                    backgroundPosition: 'center', // Centers the image within the div
+                  }}>
+                    <img src={grid.homeTeamLogo} className="w-[50px]"/>
+                    <p className="font-bold text-white select-none">{grid.homeTeamName}</p>
+                  </div>
+                </div>
                 {xNumbers ? (
                   xNumbers.map((num, idx) => (
                     <div
@@ -129,22 +130,44 @@ const SquaresGrid = ({
 
             {/* Grid Rows with Y Numbers */}
             <div className="flex">
-              {/* Y Numbers Column */}
-              <div className="flex flex-col gap-1 md:gap-2 mr-2">
-                {yNumbers ? (
-                  yNumbers.map((num, idx) => (
-                    <div
-                      key={idx}
-                      className="flex items-center justify-center w-10 h-full min-h-[50px] md:min-h-[60px] lg:min-h-[70px] bg-red-500 text-white font-bold text-sm md:text-base rounded shadow"
-                    >
-                      {num}
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-gray-500 text-xs writing-mode-vertical transform rotate-180">
-                    Not assigned
+              {/* Y Numbers Column with Vertical Team Label */}
+              <div className="relative h-auto flex flex-col gap-1 md:gap-2 mr-2">
+                {/* Vertically Centered, Rotated Label */}
+                <div
+                  className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-[130%] flex justify-left -rotate-90"
+                  style={{ width: '60px', zIndex: 2 }}
+                >
+                  <div
+                    className="flex flex-col items-center gap-2 border rounded-lg shadow-md px-2 py-2 min-w-[50px]"
+                    style={{
+                      backgroundImage: `url(${grid.visitorTeamBackground})`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center',
+                      transform: 'rotate(-90deg)',
+                      minHeight: '260px',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      display: 'flex',
+                    }}
+                  >
+                    <img src={grid.visitorTeamLogo} className="w-[50px] mb-2" style={{ transform: 'none' }} />
+                    <p className="font-bold text-white select-none whitespace-nowrap" style={{ transform: 'none', writingMode: 'vertical-rl', textAlign: 'center' }}>{grid.visitorTeamName}</p>
                   </div>
-                )}
+                </div>
+                  {yNumbers ? (
+                    yNumbers.map((num, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-center justify-center w-10 h-full min-h-[50px] md:min-h-[60px] lg:min-h-[70px] bg-red-500 text-white font-bold text-sm md:text-base rounded shadow"
+                      >
+                        {num}
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-gray-500 text-xs flex items-center justify-center" style={{ height: '100%', minHeight: '180px', transform: 'rotate(-90deg)' }}>
+                      <span style={{ display: 'inline-block', transform: 'rotate(0)' }}>Not assigned</span>
+                    </div>
+                  )}
               </div>
 
               {/* Actual Grid of Squares */}

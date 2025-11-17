@@ -1,25 +1,83 @@
-import React, { useContext, useState, useEffect } from 'react';
+import React, { useContext, useState, useEffect, Suspense, lazy } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { useUser } from '@clerk/clerk-react';
 import { useAxios } from '../app/contexts/AxiosContext';
 import Layout from './components/layout/Layout';
-import Home from './pages/Home';
-import Dashboard from './pages/Dashboard';
-import Pools from './pages/Pools';
-import Leagues from './pages/Leagues';
-import NCAABasketballAuction from './pages/NCAABasketballAuction';
-import NFLBetting from './pages/NFLBetting';
-import LiveAuction from './pages/LiveAuction';
-import SignInPage from './pages/SignIn';
-import SignUpPage from './pages/SignUp';
-import SquaresPoolList from './pages/SquaresPoolList';
-import SquaresPoolDetail from './pages/SquaresPoolDetail';
-import CreateSquaresPool from './pages/CreateSquaresPool';
-import SquaresAdminDashboard from './pages/SquaresAdminDashboard';
-import Pusher from 'pusher-js';
 // Import fonts only - not the full globals.css to avoid conflicts with v1
 import './styles/v2-scoped.css';
+
+// Lazy load all page components for better performance
+const Home = lazy(() => import('./pages/Home'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const Pools = lazy(() => import('./pages/Pools'));
+const Leagues = lazy(() => import('./pages/Leagues'));
+const NCAABasketballAuction = lazy(() => import('./pages/NCAABasketballAuction'));
+const NFLBetting = lazy(() => import('./pages/NFLBetting'));
+const LiveAuction = lazy(() => import('./pages/LiveAuction'));
+const SignInPage = lazy(() => import('./pages/SignIn'));
+const SignUpPage = lazy(() => import('./pages/SignUp'));
+const SquaresPoolList = lazy(() => import('./pages/SquaresPoolList'));
+const SquaresPoolDetail = lazy(() => import('./pages/SquaresPoolDetail'));
+const CreateSquaresPool = lazy(() => import('./pages/CreateSquaresPool'));
+const SquaresAdminDashboard = lazy(() => import('./pages/SquaresAdminDashboard'));
+const ManageGames = lazy(() => import('./pages/ManageGames'));
+const AdminSettings = lazy(() => import('./pages/AdminSettings'));
+
+// Loading fallback component for lazy-loaded routes
+const LoadingFallback = () => (
+  <div style={{
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: '100vh',
+    backgroundColor: '#FAF6F2'
+  }}>
+    <div style={{
+      position: 'relative',
+      width: '120px',
+      height: '120px',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center'
+    }}>
+      {/* Rotating Circle */}
+      <svg
+        style={{
+          position: 'absolute',
+          width: '120px',
+          height: '120px',
+          animation: 'spin 1.5s linear infinite'
+        }}
+        viewBox="0 0 120 120"
+      >
+        <circle
+          cx="60"
+          cy="60"
+          r="54"
+          fill="none"
+          stroke="#D47A3E"
+          strokeWidth="4"
+          strokeDasharray="300 360"
+          strokeLinecap="round"
+        />
+      </svg>
+
+      {/* Logo */}
+      <img
+        src="/assets/images/favicon.png"
+        alt="Loading"
+        style={{
+          width: '64px',
+          height: '64px',
+          position: 'relative',
+          zIndex: 1,
+          animation: 'bounce 1s ease-in-out infinite'
+        }}
+      />
+    </div>
+  </div>
+);
 
 const V2App = () => {
   const { isSignedIn, user: clerkUser, isLoaded } = useUser();
@@ -33,19 +91,24 @@ const V2App = () => {
     if (isSignedIn && isLoaded) {
       // Fetch user data
       axiosService.get('/api/me_user')
-        .then((response) => {
-          setUser(response.data);
+        .then(async (response) => {
+          setUser(response.data.user);
           setLoading(false);
 
-          // Initialize Pusher for real-time auction updates
+          // Lazy load and initialize Pusher for real-time auction updates
           if (!pusher) {
-            const pusherInstance = new Pusher(process.env.REACT_APP_PUSHER_KEY, {
-              cluster: process.env.REACT_APP_PUSHER_CLUSTER,
-            });
+            try {
+              const Pusher = (await import('pusher-js')).default;
+              const pusherInstance = new Pusher(process.env.REACT_APP_PUSHER_KEY, {
+                cluster: process.env.REACT_APP_PUSHER_CLUSTER,
+              });
 
-            const biddingChannel = pusherInstance.subscribe('bidding-channel');
-            setPusher(pusherInstance);
-            setChannel(biddingChannel);
+              const biddingChannel = pusherInstance.subscribe('bidding-channel');
+              setPusher(pusherInstance);
+              setChannel(biddingChannel);
+            } catch (error) {
+              console.error('Error loading Pusher:', error);
+            }
           }
         })
         .catch((error) => {
@@ -131,102 +194,156 @@ const V2App = () => {
 
   return (
     <ThemeProvider>
-      <Routes>
-        {/* Auth Routes - Without Layout */}
-        <Route
-          path="/sign-in/*"
-          element={<SignInPage />}
-        />
-        <Route
-          path="/sign-up/*"
-          element={<SignUpPage />}
-        />
+      <Suspense fallback={<LoadingFallback />}>
+        <Routes>
+          {/* Auth Routes - Without Layout */}
+          <Route
+            path="/sign-in/*"
+            element={<SignInPage />}
+          />
+          <Route
+            path="/sign-up/*"
+            element={<SignUpPage />}
+          />
 
-        {/* All other routes - With Layout */}
-        <Route
-          path="/*"
-          element={
-            <Layout user={user} onSignOut={handleSignOut}>
-              <Routes>
-                {/* Public Routes */}
-                <Route path="/" element={<Home />} />
-                <Route path="/v2" element={<Home />} />
+          {/* All other routes - With Layout */}
+          <Route
+            path="/*"
+            element={
+              <Layout user={user} onSignOut={handleSignOut}>
+                <Routes>
+                  {/* Public Routes */}
+                  <Route path="/" element={<Home />} />
+                  <Route path="/v2" element={<Home />} />
 
-                {/* Protected Routes */}
-                <Route
-                  path="/dashboard"
-                  element={
-                    isSignedIn ? (
-                      <Dashboard user={user} />
-                    ) : (
-                      <Navigate to="/v2/sign-in" replace />
-                    )
-                  }
-                />
+                  {/* Protected Routes */}
+                  <Route
+                    path="/dashboard"
+                    element={
+                      isSignedIn ? (
+                        <Dashboard user={user} />
+                      ) : (
+                        <Navigate to="/v2/sign-in" replace />
+                      )
+                    }
+                  />
 
-                {/* Pools Routes */}
-                <Route path="/pools" element={<Pools />} />
-                <Route path="/pools/ncaa-basketball-auction" element={<NCAABasketballAuction />} />
-                <Route
-                  path="/pools/live-auction"
-                  element={
-                    isSignedIn ? (
-                      <LiveAuction channel={channel} />
-                    ) : (
-                      <Navigate to="/v2/sign-in" replace />
-                    )
-                  }
-                />
-                <Route
-                  path="/pools/nfl"
-                  element={
-                    isSignedIn ? (
-                      <NFLBetting />
-                    ) : (
-                      <Navigate to="/v2/sign-in" replace />
-                    )
-                  }
-                />
+                  {/* Pools Routes */}
+                  <Route path="/pools" element={<Pools />} />
+                  <Route path="/pools/ncaa-basketball-auction" element={<NCAABasketballAuction />} />
+                  <Route
+                    path="/pools/live-auction"
+                    element={
+                      isSignedIn ? (
+                        <LiveAuction channel={channel} />
+                      ) : (
+                        <Navigate to="/v2/sign-in" replace />
+                      )
+                    }
+                  />
+                  <Route
+                    path="/pools/nfl"
+                    element={
+                      isSignedIn ? (
+                        <NFLBetting />
+                      ) : (
+                        <Navigate to="/v2/sign-in" replace />
+                      )
+                    }
+                  />
 
-                {/* Leagues Route */}
-                <Route path="/leagues" element={<Leagues />} />
+                  {/* Leagues Route */}
+                  <Route path="/leagues" element={<Leagues />} />
 
-                {/* Squares Routes */}
-                <Route path="/squares" element={<SquaresPoolList />} />
-                <Route path="/squares/pool/:poolId" element={<SquaresPoolDetail />} />
-                <Route
-                  path="/squares/create"
-                  element={
-                    isSignedIn ? (
-                      <CreateSquaresPool />
-                    ) : (
-                      <Navigate to="/v2/sign-in" replace />
-                    )
-                  }
-                />
-                <Route
-                  path="/squares/admin"
-                  element={
-                    isSignedIn ? (
-                      <SquaresAdminDashboard />
-                    ) : (
-                      <Navigate to="/v2/sign-in" replace />
-                    )
-                  }
-                />
+                  {/* Squares Routes */}
+                  <Route path="/squares" element={<SquaresPoolList />} />
+                  <Route path="/squares/pool/:poolId" element={<SquaresPoolDetail />} />
+                  <Route
+                    path="/squares/create"
+                    element={
+                      isSignedIn ? (
+                        <CreateSquaresPool />
+                      ) : (
+                        <Navigate to="/v2/sign-in" replace />
+                      )
+                    }
+                  />
+                  <Route
+                    path="/squares/admin"
+                    element={
+                      isSignedIn ? (
+                        <SquaresAdminDashboard />
+                      ) : (
+                        <Navigate to="/v2/sign-in" replace />
+                      )
+                    }
+                  />
+                  <Route
+                    path="/games/manage"
+                    element={
+                      isSignedIn ? (
+                        <ManageGames />
+                      ) : (
+                        <Navigate to="/v2/sign-in" replace />
+                      )
+                    }
+                  />
 
-                {/* Placeholder routes for future pages */}
-                <Route path="/betting" element={<ComingSoon title="Betting" />} />
-                <Route path="/settings" element={<ComingSoon title="Settings" />} />
-                <Route path="/activity" element={<ComingSoon title="Activity" />} />
+                  {/* Admin Routes - Superadmin Only */}
+                  <Route
+                    path="/admin/settings"
+                    element={
+                      isSignedIn && user?.role_id === 1 ? (
+                        <AdminSettings />
+                      ) : (
+                        <Navigate to="/v2" replace />
+                      )
+                    }
+                  />
+                  <Route
+                    path="/admin/auction"
+                    element={
+                      isSignedIn && user?.role_id === 1 ? (
+                        <ComingSoon title="Manage Auction" />
+                      ) : (
+                        <Navigate to="/v2" replace />
+                      )
+                    }
+                  />
+                  <Route
+                    path="/admin/teams"
+                    element={
+                      isSignedIn && user?.role_id === 1 ? (
+                        <ComingSoon title="Manage Teams" />
+                      ) : (
+                        <Navigate to="/v2" replace />
+                      )
+                    }
+                  />
+                  <Route
+                    path="/admin/users"
+                    element={
+                      isSignedIn && user?.role_id === 1 ? (
+                        <ComingSoon title="User Management" />
+                      ) : (
+                        <Navigate to="/v2" replace />
+                      )
+                    }
+                  />
 
-                {/* Catch all - redirect to v2 home */}
-                <Route path="*" element={<Navigate to="/v2" replace />} />
-              </Routes>
-            </Layout>
-          }
-        />
-      </Routes>
+                  {/* Placeholder routes for future pages */}
+                  <Route path="/betting" element={<ComingSoon title="Betting" />} />
+                  <Route path="/settings" element={<ComingSoon title="Settings" />} />
+                  <Route path="/activity" element={<ComingSoon title="Activity" />} />
+
+                  {/* Catch all - redirect to v2 home */}
+                  <Route path="*" element={<Navigate to="/v2" replace />} />
+                </Routes>
+              </Layout>
+            }
+          />
+        </Routes>
+      </Suspense>
     </ThemeProvider>
   );
 };
