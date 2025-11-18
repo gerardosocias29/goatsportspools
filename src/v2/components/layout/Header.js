@@ -132,12 +132,12 @@ const Header = ({ user, onSignOut }) => {
             <a style={navLinkStyles} onClick={() => navigate('/v2/betting')}>
               Auction Madness
             </a>
-            {isSignedIn && (
+            {isSignedIn && (user?.role_id === 1 || user?.role_id === 2) && (
               <a style={navLinkStyles} onClick={() => navigate('/v2/squares/admin')}>
                 Commissioner
               </a>
             )}
-            {isSignedIn && (
+            {isSignedIn && (user?.role_id === 1 || user?.role_id === 2) && (
               <a style={navLinkStyles} onClick={() => navigate('/v2/credit-requests')}>
                 Credits
               </a>
@@ -273,16 +273,18 @@ const Header = ({ user, onSignOut }) => {
           >
             Auction Madness
           </a>
-          <a
-            style={navLinkStyles}
-            onClick={() => {
-              navigate('/v2/squares/admin');
-              setShowMobileMenu(false);
-            }}
-          >
-            Commissioner
-          </a>
-          {isSignedIn && (
+          {isSignedIn && (user?.role_id === 1 || user?.role_id === 2) && (
+            <a
+              style={navLinkStyles}
+              onClick={() => {
+                navigate('/v2/squares/admin');
+                setShowMobileMenu(false);
+              }}
+            >
+              Commissioner
+            </a>
+          )}
+          {isSignedIn && (user?.role_id === 1 || user?.role_id === 2) && (
             <a
               style={navLinkStyles}
               onClick={() => {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FiArrowLeft, FiCalendar, FiDollarSign, FiGrid, FiLock, FiUnlock, FiTrendingUp, FiAward, FiShare2, FiDownload, FiX, FiCreditCard } from 'react-icons/fi';
+import { FiUsers, FiArrowLeft, FiCalendar, FiDollarSign, FiGrid, FiLock, FiUnlock, FiTrendingUp, FiAward, FiShare2, FiDownload, FiX, FiCreditCard } from 'react-icons/fi';
 import SquaresGrid from '../components/squares/SquaresGrid';
 import { useAxios } from '../../app/contexts/AxiosContext';
 import { useUserContext } from '../contexts/UserContext';
