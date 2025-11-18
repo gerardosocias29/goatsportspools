@@ -8,6 +8,56 @@ import { TeamTemplate } from '../../app/pages/screens/games/NFLTemplates';
 import { useTheme } from '../contexts/ThemeContext';
 
 /**
+ * Reusable Loading Modal Component
+ */
+const LoadingModal = ({ message, count }) => (
+  <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 backdrop-blur-sm">
+    <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-8 max-w-md w-full border-2 border-blue-500 shadow-2xl">
+      <div className="flex flex-col items-center">
+        {/* Spinning Logo */}
+        <div className="relative w-24 h-24 mb-6">
+          <svg
+            className="absolute inset-0 w-24 h-24 animate-spin"
+            viewBox="0 0 120 120"
+          >
+            <circle
+              cx="60"
+              cy="60"
+              r="54"
+              fill="none"
+              stroke="#3B82F6"
+              strokeWidth="4"
+              strokeDasharray="300 360"
+              strokeLinecap="round"
+            />
+          </svg>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <img
+              src="/assets/images/favicon.png"
+              alt="Loading"
+              className="w-12 h-12 animate-bounce"
+            />
+          </div>
+        </div>
+
+        {/* Message */}
+        <h3 className="text-2xl font-bold text-white mb-2">{message}</h3>
+        {count && (
+          <p className="text-gray-300 text-center mb-4">
+            Processing {count} square{count !== 1 ? 's' : ''}...
+          </p>
+        )}
+
+        {/* Progress indicator */}
+        <div className="w-full bg-gray-700 rounded-full h-2 overflow-hidden">
+          <div className="bg-gradient-to-r from-blue-500 to-blue-400 h-full rounded-full animate-pulse w-3/4"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+/**
  * Pool Detail Page
  * Shows grid details and allows square selection
  */
@@ -30,6 +80,10 @@ const SquaresPoolDetail = () => {
   const [showQRCode, setShowQRCode] = useState(false);
   const [showWinners, setShowWinners] = useState(false);
   const [calculatingWinners, setCalculatingWinners] = useState(false);
+  const [confirmingSquares, setConfirmingSquares] = useState(false);
+  const [updatingPool, setUpdatingPool] = useState(false);
+  const [showCreditsModal, setShowCreditsModal] = useState(false);
+  const [creditAmounts, setCreditAmounts] = useState({});
   const [teams, setTeams] = useState([]);
 
   useEffect(() => {
@@ -50,11 +104,30 @@ const SquaresPoolDetail = () => {
     }
   };
 
-  const loadPool = async (userData = null) => {
-    setLoading(true);
+  const loadPool = async (userData = null, silent = false) => {
+    if (!silent) {
+      setLoading(true);
+    }
     try {
       const response = await axiosService.get(`/api/squares-pools/${poolId}`);
       const poolData = response.data.data || response.data;
+
+      // Debug: Log pool data
+      console.log('=== POOL DATA ===');
+      console.log('Pool:', poolData);
+      console.log('Squares count:', poolData.squares?.length);
+      console.log('Sample squares:', poolData.squares?.slice(0, 3));
+      console.log('x_numbers:', poolData.x_numbers);
+      console.log('y_numbers:', poolData.y_numbers);
+
+      // Debug: Check current user ID
+      const debugUserId = userData?.user?.id || userData?.id || currentUser?.user?.id || currentUser?.id;
+      console.log('Current User ID:', debugUserId);
+      console.log('Current User Object:', userData || currentUser);
+
+      // Debug: Check owned squares
+      const ownedSquares = poolData.squares?.filter(s => s.player_id === debugUserId);
+      console.log('Owned squares by current user:', ownedSquares);
 
       setPool(poolData);
 
@@ -94,7 +167,9 @@ const SquaresPoolDetail = () => {
     } catch (error) {
       console.error('Error loading pool:', error);
     } finally {
-      setLoading(false);
+      if (!silent) {
+        setLoading(false);
+      }
     }
   };
 
@@ -117,7 +192,7 @@ const SquaresPoolDetail = () => {
       setHasJoined(true);
       setShowJoinModal(false);
       setJoinPassword('');
-      await loadPool(); // Reload pool data
+      await loadPool(null, true); // Reload pool data silently
     } catch (error) {
       setJoinError(error.response?.data?.message || 'Failed to join pool');
     }
@@ -130,26 +205,24 @@ const SquaresPoolDetail = () => {
   const handleConfirmSelection = async () => {
     if (selectedSquares.length === 0) return;
 
-    const coordinates = selectedSquares.map(s => ({
-      x: s.x_coordinate || s.xCoordinate,
-      y: s.y_coordinate || s.yCoordinate
-    }));
-
+    setConfirmingSquares(true);
     try {
       // Backend expects individual square claims, but we can batch them
-      for (const coord of coordinates) {
+      for (const square of selectedSquares) {
         await axiosService.post(`/api/squares-pools/${poolId}/claim-square`, {
-          x_coordinate: coord.x,
-          y_coordinate: coord.y,
+          x_coordinate: square.x_coordinate,
+          y_coordinate: square.y_coordinate,
         });
       }
-      // Reload pool to get updated data
-      await loadPool();
+      // Reload pool to get updated data (silent = no full-page loader)
+      await loadPool(null, true);
       setSelectedSquares([]);
       setSelectionMode(false);
-      alert(`Successfully selected ${coordinates.length} square(s)!`);
     } catch (error) {
+      console.error('Error selecting squares:', error);
       alert('Failed to select squares: ' + (error.response?.data?.message || error.message));
+    } finally {
+      setConfirmingSquares(false);
     }
   };
 
@@ -163,7 +236,7 @@ const SquaresPoolDetail = () => {
       });
       alert(`Winner calculated for Quarter ${quarter}!`);
       await loadWinners();
-      await loadPool();
+      await loadPool(null, true);
     } catch (error) {
       alert('Failed to calculate winner: ' + (error.response?.data?.message || error.message));
     } finally {
@@ -179,7 +252,7 @@ const SquaresPoolDetail = () => {
       await axiosService.post(`/api/squares-pools/${poolId}/calculate-all-winners`);
       alert('Winners calculated for all quarters!');
       await loadWinners();
-      await loadPool();
+      await loadPool(null, true);
     } catch (error) {
       alert('Failed to calculate winners: ' + (error.response?.data?.message || error.message));
     } finally {
@@ -190,38 +263,44 @@ const SquaresPoolDetail = () => {
   const handleClosePool = async () => {
     if (!window.confirm('Are you sure you want to close this pool? No new squares can be selected after closing.')) return;
 
+    setUpdatingPool(true);
     try {
       await axiosService.post(`/api/squares-pools/${poolId}/close`);
-      alert('Pool closed successfully!');
-      await loadPool();
+      await loadPool(null, true);
     } catch (error) {
       alert('Failed to close pool: ' + (error.response?.data?.message || error.message));
+    } finally {
+      setUpdatingPool(false);
     }
   };
 
   const handleReopenPool = async () => {
     if (!window.confirm('Are you sure you want to reopen this pool for square selection?')) return;
 
+    setUpdatingPool(true);
     try {
       await axiosService.post(`/api/squares-pools/${poolId}/reopen`);
-      alert('Pool reopened successfully!');
-      await loadPool();
+      await loadPool(null, true);
     } catch (error) {
       alert('Failed to reopen pool: ' + (error.response?.data?.message || error.message));
+    } finally {
+      setUpdatingPool(false);
     }
   };
 
   const handleMakePoolFree = async () => {
     if (!window.confirm('Change this pool to FREE? All players will be able to select squares without credits.')) return;
 
+    setUpdatingPool(true);
     try {
       await axiosService.patch(`/api/squares-pools/${poolId}/settings`, {
         player_pool_type: 'OPEN'
       });
-      alert('Pool changed to FREE successfully!');
-      await loadPool();
+      await loadPool(null, true);
     } catch (error) {
       alert('Failed to update pool: ' + (error.response?.data?.message || error.message));
+    } finally {
+      setUpdatingPool(false);
     }
   };
 
@@ -232,15 +311,17 @@ const SquaresPoolDetail = () => {
     const credits = prompt('How many credits to add?');
     if (!credits || isNaN(credits)) return;
 
+    setUpdatingPool(true);
     try {
       await axiosService.post(`/api/squares-pools/${poolId}/add-credits`, {
         player_id: parseInt(playerId),
         credits: parseInt(credits)
       });
-      alert(`Added ${credits} credits successfully!`);
-      await loadPool();
+      await loadPool(null, true);
     } catch (error) {
       alert('Failed to add credits: ' + (error.response?.data?.message || error.message));
+    } finally {
+      setUpdatingPool(false);
     }
   };
 
@@ -698,26 +779,35 @@ const SquaresPoolDetail = () => {
 
         {/* Grid */}
         <div className="mb-8">
-          <SquaresGrid
-            grid={{
-              ...pool,
-              xAxisTeam: getTeamName(pool.game?.home_team_id || pool.game?.homeTeamId),
-              yAxisTeam: getTeamName(pool.game?.visitor_team_id || pool.game?.visitorTeamId),
-              homeTeamLogo: getTeamLogo(pool.game?.home_team_id || pool.game?.homeTeamId),
-              visitorTeamLogo: getTeamLogo(pool.game?.visitor_team_id || pool.game?.visitorTeamId),
-              homeTeamBackground: getTeamBackground(pool.game?.home_team_id || pool.game?.homeTeamId),
-              visitorTeamBackground: getTeamBackground(pool.game?.visitor_team_id || pool.game?.visitorTeamId),
-              homeTeamName: getTeamName(pool.game?.home_team_id || pool.game?.homeTeamId),
-              visitorTeamName: getTeamName(pool.game?.visitor_team_id || pool.game?.visitorTeamId),
-              xAxisNumbers: pool.x_numbers || [],
-              yAxisNumbers: pool.y_numbers || [],
-            }}
-            squares={pool.squares || []}
-            onSquareSelect={handleSquareSelection}
-            currentPlayerID={currentUser?.user?.id || currentUser?.id}
-            selectionMode={selectionMode}
-            disabled={!hasJoined || pool.pool_status !== 'open'}
-          />
+          {(() => {
+            const currentPlayerId = currentUser?.user?.id || currentUser?.id;
+            console.log('=== GRID RENDER ===');
+            console.log('currentPlayerID passed to grid:', currentPlayerId);
+            console.log('Pool squares:', pool.squares);
+
+            return (
+              <SquaresGrid
+                grid={{
+                  ...pool,
+                  xAxisTeam: getTeamName(pool.game?.home_team_id || pool.game?.homeTeamId),
+                  yAxisTeam: getTeamName(pool.game?.visitor_team_id || pool.game?.visitorTeamId),
+                  homeTeamLogo: getTeamLogo(pool.game?.home_team_id || pool.game?.homeTeamId),
+                  visitorTeamLogo: getTeamLogo(pool.game?.visitor_team_id || pool.game?.visitorTeamId),
+                  homeTeamBackground: getTeamBackground(pool.game?.home_team_id || pool.game?.homeTeamId),
+                  visitorTeamBackground: getTeamBackground(pool.game?.visitor_team_id || pool.game?.visitorTeamId),
+                  homeTeamName: getTeamName(pool.game?.home_team_id || pool.game?.homeTeamId),
+                  visitorTeamName: getTeamName(pool.game?.visitor_team_id || pool.game?.visitorTeamId),
+                  xAxisNumbers: pool.x_numbers || [],
+                  yAxisNumbers: pool.y_numbers || [],
+                }}
+                squares={pool.squares || []}
+                onSquareSelect={handleSquareSelection}
+                currentPlayerID={currentPlayerId}
+                selectionMode={selectionMode}
+                disabled={!hasJoined || pool.pool_status !== 'open'}
+              />
+            );
+          })()}
         </div>
 
         {/* Additional Info */}
@@ -833,6 +923,28 @@ const SquaresPoolDetail = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Loading Modal for Confirming Squares */}
+      {confirmingSquares && (
+        <LoadingModal
+          message="Confirming Squares"
+          count={selectedSquares.length}
+        />
+      )}
+
+      {/* Loading Modal for Calculating Winners */}
+      {calculatingWinners && (
+        <LoadingModal
+          message="Calculating Winners"
+        />
+      )}
+
+      {/* Loading Modal for Pool Updates */}
+      {updatingPool && (
+        <LoadingModal
+          message="Updating Pool"
+        />
       )}
     </div>
   );

@@ -21,17 +21,34 @@ const SquaresGrid = ({
   const yNumbers = grid.yAxisNumbers || null;
 
   const isSquareSelected = (square) => {
+    // Only compare using normalized snake_case fields
     return selectedSquares.some(
-      s => s.xCoordinate === square.xCoordinate && s.yCoordinate === square.yCoordinate
+      s => s.x_coordinate === square.x_coordinate && s.y_coordinate === square.y_coordinate
     );
   };
 
   const isSquareOwned = (square) => {
-    return square.playerID !== null;
+    return square.player_id !== null && square.player_id !== undefined;
   };
 
   const isSquareOwnedByCurrentUser = (square) => {
-    return square.playerID === currentPlayerID;
+    // Ensure both values are numbers for comparison
+    const squarePlayerId = parseInt(square.player_id);
+    const currentPlayerId = parseInt(currentPlayerID);
+    const isOwner = !isNaN(squarePlayerId) && !isNaN(currentPlayerId) && squarePlayerId === currentPlayerId;
+
+    // Debug logging for owned squares
+    if (square.player_id !== null && square.player_id !== undefined) {
+      console.log(`Square [${square.x_coordinate},${square.y_coordinate}]:`, {
+        player_id: square.player_id,
+        player_id_parsed: squarePlayerId,
+        currentPlayerID,
+        currentPlayerID_parsed: currentPlayerId,
+        isOwner,
+        originalTypes: `${typeof square.player_id} vs ${typeof currentPlayerID}`
+      });
+    }
+    return isOwner;
   };
 
   const handleSquareClick = (square) => {
@@ -47,10 +64,12 @@ const SquaresGrid = ({
 
     // Toggle selection
     if (isSquareSelected(square)) {
+      // Deselect: remove this square from selection
       setSelectedSquares(prev =>
-        prev.filter(s => !(s.xCoordinate === square.xCoordinate && s.yCoordinate === square.yCoordinate))
+        prev.filter(s => !(s.x_coordinate === square.x_coordinate && s.y_coordinate === square.y_coordinate))
       );
     } else {
+      // Select: add this square to selection
       setSelectedSquares(prev => [...prev, square]);
     }
   };
@@ -65,6 +84,13 @@ const SquaresGrid = ({
     setHoveredSquare(null);
   };
 
+  // Clear selections when selection mode is disabled
+  useEffect(() => {
+    if (!selectionMode) {
+      setSelectedSquares([]);
+    }
+  }, [selectionMode]);
+
   // Notify parent of selection changes
   useEffect(() => {
     if (onSquareSelect) {
@@ -74,11 +100,46 @@ const SquaresGrid = ({
 
   // Organize squares into grid
   const getSquareAt = (x, y) => {
-    return squares.find(s => s.xCoordinate === x && s.yCoordinate === y) || {
-      xCoordinate: x,
-      yCoordinate: y,
-      playerID: null,
+    // Backend uses snake_case: x_coordinate, y_coordinate, player_id
+    const square = squares.find(s =>
+      (s.x_coordinate === x || s.xCoordinate === x) &&
+      (s.y_coordinate === y || s.yCoordinate === y)
+    );
+
+    if (square) {
+      // Normalize to snake_case and add computed fields
+      return {
+        ...square,
+        x_coordinate: square.x_coordinate !== undefined ? square.x_coordinate : square.xCoordinate,
+        y_coordinate: square.y_coordinate !== undefined ? square.y_coordinate : square.yCoordinate,
+        player_id: square.player_id !== undefined ? square.player_id : square.playerID,
+        x_number: square.x_number !== undefined ? square.x_number : square.xNumber,
+        y_number: square.y_number !== undefined ? square.y_number : square.yNumber,
+        playerName: square.player?.name || square.playerName,
+        playerInitials: square.player?.name ? getInitials(square.player.name) : (square.playerInitials || null),
+      };
+    }
+
+    // Empty square
+    return {
+      x_coordinate: x,
+      y_coordinate: y,
+      player_id: null,
+      x_number: null,
+      y_number: null,
+      playerName: null,
+      playerInitials: null,
     };
+  };
+
+  // Helper function to get player initials
+  const getInitials = (name) => {
+    if (!name) return null;
+    const parts = name.trim().split(' ');
+    if (parts.length === 1) {
+      return parts[0].substring(0, 2).toUpperCase();
+    }
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   };
 
   return (
@@ -180,7 +241,7 @@ const SquaresGrid = ({
                         key={`${xIdx}-${yIdx}`}
                         square={square}
                         isSelected={isSquareSelected(square)}
-                        isHovered={hoveredSquare?.xCoordinate === xIdx && hoveredSquare?.yCoordinate === yIdx}
+                        isHovered={hoveredSquare?.x_coordinate === xIdx && hoveredSquare?.y_coordinate === yIdx}
                         isOwned={isSquareOwned(square)}
                         isCurrentUser={isSquareOwnedByCurrentUser(square)}
                         disabled={disabled || isSquareOwned(square)}

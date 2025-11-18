@@ -16,6 +16,16 @@ const SquareCell = ({
   onMouseLeave,
   showNumbers,
 }) => {
+  // Debug: Log owned squares
+  React.useEffect(() => {
+    if (isOwned && square.x_coordinate === 0 && square.y_coordinate === 0) {
+      console.log('SquareCell [0,0] - isOwned:', isOwned);
+      console.log('SquareCell [0,0] - isCurrentUser:', isCurrentUser);
+      console.log('SquareCell [0,0] - square:', square);
+      console.log('SquareCell [0,0] - playerInitials:', square.playerInitials);
+    }
+  }, [isOwned, square]);
+
   const getCellStyles = () => {
     let baseStyles = 'w-full h-full min-h-[50px] md:min-h-[60px] lg:min-h-[70px] flex flex-col items-center justify-center text-xs md:text-sm font-medium transition-all duration-200 cursor-pointer rounded-md border-2';
 
@@ -69,15 +79,16 @@ const SquareCell = ({
       )}
 
       {/* Show numbers if assigned */}
-      {showNumbers && square.xNumber !== null && square.yNumber !== null && (
-        <div className="text-xs text-gray-600 mt-1">
-          {square.xNumber}-{square.yNumber}
+      {showNumbers && square.x_number !== null && square.x_number !== undefined &&
+       square.y_number !== null && square.y_number !== undefined && (
+        <div className="text-xs font-bold mt-1">
+          {square.x_number}-{square.y_number}
         </div>
       )}
 
       {/* Empty square indicator */}
-      {!square.playerInitials && !disabled && (
-        <div className="text-gray-400 text-2xl">+</div>
+      {!square.playerInitials && !isOwned && (
+        <div className="text-gray-400 text-2xl font-light">+</div>
       )}
     </div>
   );
