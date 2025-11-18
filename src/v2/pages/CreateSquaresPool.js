@@ -2,14 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiArrowLeft, FiCheck, FiInfo } from 'react-icons/fi';
 import { useAxios } from '../../app/contexts/AxiosContext';
+import { useUserContext } from '../contexts/UserContext';
 
 /**
  * Create Squares Pool Page
  * Admin interface for creating new squares pools
+ * Only accessible to role_id <= 2 (Superadmin and Square Admin)
  */
 const CreateSquaresPool = () => {
   const navigate = useNavigate();
   const axiosService = useAxios();
+  const { user: currentUser, isSignedIn, isLoaded } = useUserContext();
 
   const [games, setGames] = useState([]);
   const [rewardTypes, setRewardTypes] = useState([]);
@@ -58,6 +61,24 @@ const CreateSquaresPool = () => {
   });
 
   const [errors, setErrors] = useState({});
+
+  // Authentication and role-based access control
+  useEffect(() => {
+    if (isLoaded && !isSignedIn) {
+      // Not signed in - redirect to sign-in
+      navigate('/v2/sign-in', { state: { returnTo: '/v2/squares/create' } });
+      return;
+    }
+
+    if (isLoaded && isSignedIn && currentUser) {
+      const userRoleId = currentUser?.user?.role_id ?? currentUser?.role_id;
+      // Only role_id 1 (Superadmin) and role_id 2 (Square Admin) can create pools
+      if (userRoleId > 2) {
+        alert('You do not have permission to create pools. Only admins can create pools.');
+        navigate('/v2/squares');
+      }
+    }
+  }, [isSignedIn, isLoaded, currentUser, navigate]);
 
   useEffect(() => {
     loadGames();

@@ -19,6 +19,7 @@ const SignInPage = lazy(() => import('./pages/SignIn'));
 const SignUpPage = lazy(() => import('./pages/SignUp'));
 const SquaresPoolList = lazy(() => import('./pages/SquaresPoolList'));
 const SquaresPoolDetail = lazy(() => import('./pages/SquaresPoolDetail'));
+const SquaresJoin = lazy(() => import('./pages/SquaresJoin'));
 const CreateSquaresPool = lazy(() => import('./pages/CreateSquaresPool'));
 const SquaresAdminDashboard = lazy(() => import('./pages/SquaresAdminDashboard'));
 const ManageGames = lazy(() => import('./pages/ManageGames'));
@@ -241,6 +242,7 @@ const V2AppContent = () => {
 
                   {/* Squares Routes */}
                   <Route path="/squares" element={<SquaresPoolList />} />
+                  <Route path="/squares/join" element={<SquaresJoin />} />
                   <Route path="/squares/pool/:poolId" element={<SquaresPoolDetail />} />
                   <Route
                     path="/squares/create"

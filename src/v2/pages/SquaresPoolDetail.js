@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FiArrowLeft, FiCalendar, FiDollarSign, FiGrid, FiUsers, FiLock, FiUnlock, FiTrendingUp, FiAward, FiShare2 } from 'react-icons/fi';
+import { FiArrowLeft, FiCalendar, FiDollarSign, FiGrid, FiLock, FiUnlock, FiTrendingUp, FiAward, FiShare2, FiDownload, FiX, FiCreditCard } from 'react-icons/fi';
 import SquaresGrid from '../components/squares/SquaresGrid';
 import { useAxios } from '../../app/contexts/AxiosContext';
 import { useUserContext } from '../contexts/UserContext';
 import { TeamTemplate } from '../../app/pages/screens/games/NFLTemplates';
 import { useTheme } from '../contexts/ThemeContext';
+import { QRCodeCanvas } from 'qrcode.react';
 
 /**
  * Reusable Loading Modal Component
@@ -66,7 +67,7 @@ const SquaresPoolDetail = () => {
   const { poolId } = useParams();
   const navigate = useNavigate();
   const axiosService = useAxios();
-  const { user: currentUser } = useUserContext(); // Get user from context
+  const { user: currentUser, isSignedIn, isLoaded } = useUserContext(); // Get user from context
 
   const [pool, setPool] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -85,6 +86,47 @@ const SquaresPoolDetail = () => {
   const [showCreditsModal, setShowCreditsModal] = useState(false);
   const [creditAmounts, setCreditAmounts] = useState({});
   const [teams, setTeams] = useState([]);
+  const [poolPlayers, setPoolPlayers] = useState([]);
+  const [creditsLoading, setCreditsLoading] = useState(false);
+  const [downloadingQR, setDownloadingQR] = useState(false);
+  const [assigningNumbers, setAssigningNumbers] = useState(false);
+  const [poolPlayersNotice, setPoolPlayersNotice] = useState({ type: '', message: '' });
+  const QRCodeCanvasComponent = QRCodeCanvas;
+  const qrCanvasRef = useRef(null);
+  const getCurrentUserId = (userObj = currentUser) => userObj?.user?.id || userObj?.id;
+  const getCurrentUserRole = (userObj = currentUser) => userObj?.user?.role_id ?? userObj?.role_id;
+  const getPoolNumber = (poolObj = pool) => poolObj?.pool_number || poolObj?.poolNumber || '';
+  const getPoolJoinUrl = () => {
+    const poolNumber = getPoolNumber();
+    if (!poolNumber) return '';
+
+    const isGoogleQrUrl = (url) => url && /chart\.googleapis\.com/i.test(url);
+
+    // Prefer backend-provided join URL if available and not a Google QR endpoint
+    const backendUrl = pool?.qr_join_url || pool?.join_url;
+    if (backendUrl && !isGoogleQrUrl(backendUrl)) {
+      return backendUrl;
+    }
+
+    // Fallback: build join link from app origin
+    const baseUrl =
+      process.env.REACT_APP_PUBLIC_URL ||
+      process.env.REACT_APP_APP_URL ||
+      process.env.REACT_APP_BASE_URL ||
+      (typeof window !== 'undefined' ? window.location.origin : '');
+
+    if (!baseUrl) return '';
+
+    const normalizedBase = baseUrl.replace(/\/$/, '');
+    return `${normalizedBase}/v2/squares/join?pool=${poolNumber}`;
+  };
+
+  // Authentication guard - redirect to sign-in if not authenticated
+  useEffect(() => {
+    if (isLoaded && !isSignedIn) {
+      navigate('/v2/sign-in', { state: { returnTo: `/v2/squares/pool/${poolId}` } });
+    }
+  }, [isSignedIn, isLoaded, poolId, navigate]);
 
   useEffect(() => {
     const initPage = async () => {
@@ -133,37 +175,16 @@ const SquaresPoolDetail = () => {
 
       // Use passed userData or fallback to state
       const user = userData || currentUser;
-      const currentUserId = user?.user?.id || user?.id;
+      const currentUserId = getCurrentUserId(user);
+      const roleId = getCurrentUserRole(user);
       const isOwner = poolData.admin_id === currentUserId || poolData.created_by === currentUserId;
+      const isAdminRole = roleId === 1 || roleId === 2;
 
-      // Check if user has already joined - try multiple methods
-      let joined = false;
+      // Use backend-provided user_joined flag (most reliable)
+      const joined = poolData.user_joined === true;
 
-      // Method 1: Check if user has any claimed squares in this pool
-      if (poolData.squares && Array.isArray(poolData.squares)) {
-        joined = poolData.squares.some(square =>
-          square.player_id === currentUserId || square.user_id === currentUserId
-        );
-      }
-
-      // Method 2: Check my-pools API (wrap in try-catch to handle 404)
-      if (!joined) {
-        try {
-          const myPoolsResponse = await axiosService.get('/api/squares-pools/my-pools');
-          const myPools = myPoolsResponse.data.data || myPoolsResponse.data || [];
-          joined = myPools.some(p => p.id === parseInt(poolId));
-        } catch (myPoolsError) {
-          console.log('my-pools API not available, using alternative methods');
-        }
-      }
-
-      // Method 3: Check if pool has a joined status field
-      if (!joined && poolData.user_joined !== undefined) {
-        joined = poolData.user_joined;
-      }
-
-      // Pool owner is automatically considered joined
-      setHasJoined(isOwner || joined);
+      // Pool owner and admins are automatically considered joined
+      setHasJoined(isOwner || joined || isAdminRole);
     } catch (error) {
       console.error('Error loading pool:', error);
     } finally {
@@ -304,25 +325,281 @@ const SquaresPoolDetail = () => {
     }
   };
 
-  const handleAddCredits = async () => {
-    const playerId = prompt('Enter Player ID to grant credits to:');
-    if (!playerId) return;
+  const extractPlayerId = (player) => {
+    return (
+      player?.player_id ||
+      player?.playerId ||
+      player?.user_id ||
+      player?.id ||
+      player?.player?.id ||
+      null
+    );
+  };
 
-    const credits = prompt('How many credits to add?');
-    if (!credits || isNaN(credits)) return;
+  const getPlayerDisplayName = (player) => {
+    const fallbackId = extractPlayerId(player);
+    return (
+      player?.player?.name ||
+      player?.player_name ||
+      player?.name ||
+      player?.user?.name ||
+      (fallbackId ? `Player #${fallbackId}` : 'Player')
+    );
+  };
 
-    setUpdatingPool(true);
-    try {
-      await axiosService.post(`/api/squares-pools/${poolId}/add-credits`, {
-        player_id: parseInt(playerId),
-        credits: parseInt(credits)
+  const getPlayerEmail = (player) => {
+    return (
+      player?.player?.email ||
+      player?.player_email ||
+      player?.email ||
+      player?.user?.email ||
+      null
+    );
+  };
+
+  const getPlayerAvailableCredits = (player) => {
+    const credits =
+      player?.available_credits ??
+      player?.credits ??
+      player?.player?.available_credits ??
+      player?.player?.credits ??
+      player?.player_available_credits ??
+      0;
+    return credits;
+  };
+
+  const buildFallbackPoolPlayers = () => {
+    if (!pool) return [];
+    const playersMap = new Map();
+
+    const addCandidate = (candidate = {}, extras = {}) => {
+      const normalized = { ...candidate, ...extras };
+      const candidateId = extractPlayerId(normalized);
+      if (!candidateId) return;
+      const existing = playersMap.get(candidateId) || {};
+      playersMap.set(candidateId, {
+        ...existing,
+        ...normalized,
+        player_id: candidateId,
       });
+    };
+
+    const potentialCollections = [
+      pool.pool_players,
+      pool.players,
+      pool.joined_players,
+      pool.player_stats,
+    ];
+
+    potentialCollections.forEach((collection) => {
+      if (Array.isArray(collection)) {
+        collection.forEach((player) => addCandidate(player));
+      }
+    });
+
+    if (Array.isArray(pool.squares)) {
+      pool.squares.forEach((square) => {
+        const extras = {
+          player_id: square.player_id ?? square.playerId,
+          player_name: square.player?.name || square.player_name,
+          player_email: square.player?.email || square.player_email,
+          available_credits:
+            square.player?.available_credits ??
+            square.available_credits ??
+            square.player?.credits ??
+            square.player_credits,
+          player: square.player || {
+            name: square.player_name,
+            email: square.player_email,
+            credits: square.player?.credits,
+          },
+        };
+        addCandidate(square.player || {}, extras);
+      });
+    }
+
+    return Array.from(playersMap.values());
+  };
+
+  const syncCreditInputsWithPlayers = (playersList = []) => {
+    setCreditAmounts((prev) => {
+      const updated = {};
+      playersList.forEach((player) => {
+        const playerId = extractPlayerId(player);
+        if (playerId) {
+          updated[playerId] = prev[playerId] || '';
+        }
+      });
+      return updated;
+    });
+  };
+
+  const getAlertStyles = (type) => {
+    switch (type) {
+      case 'warning':
+        return 'bg-yellow-900 bg-opacity-30 border border-yellow-600 text-yellow-200';
+      case 'error':
+        return 'bg-red-900 bg-opacity-30 border border-red-600 text-red-200';
+      case 'info':
+        return 'bg-blue-900 bg-opacity-30 border border-blue-600 text-blue-200';
+      default:
+        return 'bg-gray-800 bg-opacity-40 border border-gray-600 text-gray-200';
+    }
+  };
+
+  const fetchAndStorePoolPlayers = async () => {
+    if (!pool) {
+      setPoolPlayers([]);
+      setCreditAmounts({});
+      setPoolPlayersNotice({
+        type: 'error',
+        message: 'Pool data is still loading. Please try again in a moment.',
+      });
+      return;
+    }
+
+    setPoolPlayersNotice({ type: '', message: '' });
+    try {
+      const response = await axiosService.get(`/api/squares-pools/${poolId}/players`);
+      let players = response.data.data || response.data || [];
+      if (!Array.isArray(players)) {
+        players = [];
+      }
+
+      if (players.length === 0) {
+        const derivedPlayers = buildFallbackPoolPlayers();
+        if (derivedPlayers.length > 0) {
+          setPoolPlayersNotice({
+            type: 'info',
+            message: 'No players returned from the server. Showing players derived from current pool data.',
+          });
+          players = derivedPlayers;
+        }
+      }
+
+      setPoolPlayers(players);
+      syncCreditInputsWithPlayers(players);
+    } catch (error) {
+      console.warn('Failed to load joined players, falling back to derived data.', error);
+      const derivedPlayers = buildFallbackPoolPlayers();
+      if (derivedPlayers.length > 0) {
+        setPoolPlayersNotice({
+          type: 'warning',
+          message: 'Unable to load player list from the server. Showing players derived from current pool data.',
+        });
+        setPoolPlayers(derivedPlayers);
+        syncCreditInputsWithPlayers(derivedPlayers);
+      } else {
+        setPoolPlayers([]);
+        setCreditAmounts({});
+        setPoolPlayersNotice({
+          type: 'error',
+          message: error.response?.data?.message || error.message || 'Failed to load pool players.',
+        });
+      }
+    }
+  };
+
+  const handleAddCredits = async () => {
+    setShowCreditsModal(true);
+    setCreditsLoading(true);
+    try {
+      await fetchAndStorePoolPlayers();
+    } finally {
+      setCreditsLoading(false);
+    }
+  };
+
+  const handleCreditsInputChange = (playerId, value) => {
+    setCreditAmounts(prev => ({ ...prev, [playerId]: value }));
+  };
+
+  const handleGrantCreditsToPlayer = async (playerId) => {
+    const amount = parseFloat(creditAmounts[playerId]);
+    const numericPlayerId = parseInt(playerId, 10);
+    if (isNaN(amount) || amount <= 0) {
+      alert('Enter a valid credit amount greater than zero.');
+      return;
+    }
+    if (isNaN(numericPlayerId)) {
+      alert('Invalid player selected.');
+      return;
+    }
+
+    try {
+      setCreditsLoading(true);
+      await axiosService.post(`/api/squares-pools/${poolId}/add-credits`, {
+        player_id: numericPlayerId,
+        credits: amount,
+      });
+      setCreditAmounts(prev => ({ ...prev, [playerId]: '' }));
+      await fetchAndStorePoolPlayers();
       await loadPool(null, true);
     } catch (error) {
       alert('Failed to add credits: ' + (error.response?.data?.message || error.message));
     } finally {
-      setUpdatingPool(false);
+      setCreditsLoading(false);
     }
+  };
+
+  const closeCreditsModal = () => {
+    setShowCreditsModal(false);
+    setPoolPlayers([]);
+    setCreditAmounts({});
+    setPoolPlayersNotice({ type: '', message: '' });
+  };
+
+  const handleAssignNumbers = async () => {
+    if (!window.confirm('Assign random numbers to this pool now? This cannot be undone.')) return;
+
+    setAssigningNumbers(true);
+    try {
+      await axiosService.post(`/api/squares-pools/${poolId}/assign-numbers`);
+      await loadPool(null, true);
+      alert('Numbers assigned successfully!');
+    } catch (error) {
+      alert('Failed to assign numbers: ' + (error.response?.data?.message || error.message));
+    } finally {
+      setAssigningNumbers(false);
+    }
+  };
+
+  const handleDownloadQRCode = () => {
+    if (!effectiveJoinUrl && !fallbackQrImage) {
+      alert('QR code is not available yet.');
+      return;
+    }
+
+    setDownloadingQR(true);
+    try {
+      if (effectiveJoinUrl && qrCanvasRef.current) {
+        const dataUrl = qrCanvasRef.current.toDataURL('image/png');
+        const link = document.createElement('a');
+        link.href = dataUrl;
+        link.download = `${getPoolNumber() || 'pool'}-qr.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } else if (fallbackQrImage) {
+        const link = document.createElement('a');
+        link.href = fallbackQrImage;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.download = `${getPoolNumber() || 'pool'}-qr.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    } catch (error) {
+      console.error('Error downloading QR code:', error);
+      alert('Failed to download QR code. Please try again.');
+    } finally {
+      setDownloadingQR(false);
+    }
+  };
+
+  const closeQRCodeModal = () => {
+    setShowQRCode(false);
   };
 
   const formatDate = (dateString) => {
@@ -338,6 +615,60 @@ const SquaresPoolDetail = () => {
       minute: '2-digit',
     });
   };
+
+  const formatCurrency = (value) => {
+    const amount = Number(value || 0);
+    return `$${amount.toFixed(2)}`;
+  };
+
+  const currentUserIdValue = getCurrentUserId();
+  const roleId = getCurrentUserRole();
+  const isSuperAdmin = roleId === 1; // Only role_id 1 is superadmin
+  const isSquareAdmin = roleId === 2; // role_id 2 is Square Admin
+  const isPoolOwner = pool && (pool.admin_id === currentUserIdValue || pool.created_by === currentUserIdValue);
+
+  // Superadmin can manage ALL pools, Square Admin can only manage their own pools
+  const canManagePool = currentUser && pool && (
+    isSuperAdmin || (isSquareAdmin && isPoolOwner) || isPoolOwner
+  );
+
+  const canGrantCredits = isSuperAdmin; // Only superadmin can grant credits
+  const poolNumberDisplay = getPoolNumber();
+  const joinUrl = getPoolJoinUrl();
+  const fallbackQrImage = pool?.qr_code_url || pool?.qrCodeUrl || '';
+  const decodeJoinUrlFromFallback = (qrUrl = '') => {
+    if (!qrUrl || !qrUrl.includes('?')) return '';
+    try {
+      const parsed = new URL(qrUrl);
+      const chl = parsed.searchParams.get('chl');
+      return chl ? decodeURIComponent(chl) : '';
+    } catch (error) {
+      return '';
+    }
+  };
+  const fallbackJoinUrl = !joinUrl ? decodeJoinUrlFromFallback(fallbackQrImage) : '';
+  const effectiveJoinUrl = joinUrl || fallbackJoinUrl;
+  const numbersType =
+    pool?.numbers_type ||
+    pool?.numbersType ||
+    (pool?.pool_type === 'A' ? 'Ascending' : pool?.pool_type === 'B' ? 'TimeSet' : undefined);
+  const numbersAssigned = Boolean(
+    (Array.isArray(pool?.x_numbers) ? pool?.x_numbers?.length : pool?.x_numbers) &&
+    (Array.isArray(pool?.y_numbers) ? pool?.y_numbers?.length : pool?.y_numbers)
+  );
+  const requiresManualAssignment = numbersType === 'AdminTrigger' && !numbersAssigned;
+  const numbersTypeLabel = (() => {
+    switch (numbersType) {
+      case 'Ascending':
+        return 'Ascending (0-9 in order)';
+      case 'TimeSet':
+        return 'Random/Scheduled';
+      case 'AdminTrigger':
+        return 'Manual trigger by admin';
+      default:
+        return numbersType || 'Not set';
+    }
+  })();
 
   const getProgressPercentage = () => {
     if (!pool) return 0;
@@ -508,14 +839,31 @@ const SquaresPoolDetail = () => {
             <div>
               <div className="flex items-center gap-2 text-gray-400 mb-2">
                 <FiDollarSign />
-                <span className="text-sm font-medium">Cost & Pot</span>
+                <span className="text-sm font-medium">Cost & Type</span>
+              </div>
+              {/* Pool Type Badge */}
+              <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-semibold mb-2 ${
+                pool.player_pool_type === 'CREDIT'
+                  ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
+                  : 'bg-green-500/20 text-green-300 border border-green-500/30'
+              }`}>
+                {pool.player_pool_type === 'CREDIT' ? <FiLock /> : <FiUnlock />}
+                {pool.player_pool_type === 'CREDIT' ? 'CREDIT' : 'FREE'}
               </div>
               <div className="text-green-400 font-bold text-2xl">
                 ${parseFloat(pool.entry_fee || pool.credit_cost || pool.costPerSquare || 0).toFixed(2)}
+                <span className="text-sm text-gray-400 ml-1">per square</span>
               </div>
               <div className="text-gray-400 text-sm mt-1">
                 Total Pot: <span className="text-yellow-400 font-semibold">${parseFloat(pool.total_pot || pool.totalPot || 0).toFixed(2)}</span>
               </div>
+              {/* Show user balance if CREDIT type */}
+              {pool.player_pool_type === 'CREDIT' && currentUser && (
+                <div className="text-blue-400 text-sm mt-2 flex items-center gap-1">
+                  <FiCreditCard />
+                  Your Balance: <span className="font-bold">{currentUser.credits || currentUser.available_credits || 0} credits</span>
+                </div>
+              )}
             </div>
 
             {/* Progress */}
@@ -547,6 +895,29 @@ const SquaresPoolDetail = () => {
             </div>
           </div>
 
+          {/* Pool Commissioner Info */}
+          {pool.admin && (
+            <div className="mt-6 p-4 bg-gradient-to-r from-blue-900/30 to-purple-900/30 rounded-lg border border-blue-500/30">
+              <div className="flex items-center gap-3">
+                <div className="bg-blue-500 p-2 rounded-full">
+                  <FiUsers className="text-white text-xl" />
+                </div>
+                <div>
+                  <div className="text-gray-400 text-sm">Pool Commissioner</div>
+                  <div className="text-white font-semibold text-lg">{pool.admin.name || 'Unknown'}</div>
+                  {pool.admin.email && (
+                    <div className="text-gray-400 text-xs">{pool.admin.email}</div>
+                  )}
+                </div>
+                <div className="ml-auto">
+                  <span className="bg-blue-500/20 text-blue-300 px-3 py-1 rounded-full text-xs font-semibold border border-blue-500/30">
+                    Admin
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Progress Bar */}
           <div className="mt-6">
             <div className="w-full bg-gray-700 rounded-full h-3 overflow-hidden">
@@ -558,8 +929,8 @@ const SquaresPoolDetail = () => {
           </div>
         </div>
 
-        {/* Admin Controls (Only for pool owner/admin) */}
-        {currentUser && pool && (pool.admin_id === currentUser.user?.id || pool.admin_id === currentUser.id) && (
+        {/* Admin Controls */}
+        {canManagePool && (
           <div className="mb-6 bg-gradient-to-r from-purple-900 to-indigo-900 rounded-xl p-6 border-2 border-purple-700 shadow-xl">
             <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
               <FiAward className="text-2xl" />
@@ -592,11 +963,11 @@ const SquaresPoolDetail = () => {
                 <h4 className="text-white font-semibold mb-3">Pool Tools</h4>
                 <div className="flex flex-wrap gap-2">
                   <button
-                    onClick={() => setShowQRCode(!showQRCode)}
+                    onClick={() => setShowQRCode(true)}
                     className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-semibold transition-all flex items-center gap-2"
                   >
                     <FiShare2 />
-                    {showQRCode ? 'Hide' : 'Show'} QR Code
+                    Show QR Code
                   </button>
                   <button
                     onClick={() => setShowWinners(!showWinners)}
@@ -622,6 +993,16 @@ const SquaresPoolDetail = () => {
                       Reopen Pool
                     </button>
                   )}
+                  {requiresManualAssignment && (
+                    <button
+                      onClick={handleAssignNumbers}
+                      disabled={assigningNumbers}
+                      className="bg-blue-700 hover:bg-blue-800 disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg font-semibold transition-all flex items-center gap-2"
+                    >
+                      <FiGrid />
+                      {assigningNumbers ? 'Assigning...' : 'Assign Numbers'}
+                    </button>
+                  )}
                   {pool.player_pool_type === 'CREDIT' && (
                     <>
                       <button
@@ -642,25 +1023,6 @@ const SquaresPoolDetail = () => {
                   )}
                 </div>
               </div>
-            </div>
-          </div>
-        )}
-
-        {/* QR Code Display */}
-        {showQRCode && pool && pool.qr_code_url && (
-          <div className="mb-6 bg-gray-800 rounded-xl p-6 border-2 border-gray-700 shadow-xl">
-            <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-              <FiShare2 className="text-2xl" />
-              Share Pool - QR Code
-            </h3>
-            <div className="flex flex-col items-center">
-              <img
-                src={pool.qr_code_url}
-                alt="Pool 64ode"
-                className="max-w-xs rounded-lg shadow-lg bg-white p-4"
-              />
-              <p className="text-gray-300 mt-4">Pool Number: <span className="font-bold text-white">{pool.pool_number || pool.poolNumber}</span></p>
-              <p className="text-gray-400 text-sm mt-2">Scan to join this pool</p>
             </div>
           </div>
         )}
@@ -822,8 +1184,14 @@ const SquaresPoolDetail = () => {
               </div>
               <div className="flex items-start gap-3">
                 <span className="text-green-400 font-bold">•</span>
-                <p>Numbers assignment: {pool.pool_type === 'A' ? 'Ascending' : pool.pool_type === 'B' ? 'Random/Scheduled' : pool.numbersType}</p>
+                <p>Numbers assignment: {numbersTypeLabel}</p>
               </div>
+              {!numbersAssigned && numbersType === 'AdminTrigger' && (
+                <div className="flex items-start gap-3">
+                  <span className="text-yellow-400 font-bold">!</span>
+                  <p>Numbers will remain hidden until an admin manually assigns them.</p>
+                </div>
+              )}
               {(pool.number_assign_datetime || pool.numbersAssignDate) && (
                 <div className="flex items-start gap-3">
                   <span className="text-green-400 font-bold">•</span>
@@ -925,6 +1293,171 @@ const SquaresPoolDetail = () => {
         </div>
       )}
 
+      {/* Grant Credits Modal */}
+      {showCreditsModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-80 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={closeCreditsModal}>
+          <div
+            className="bg-gray-900 rounded-2xl border border-gray-700 shadow-2xl w-full max-w-3xl p-6 relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={closeCreditsModal}
+              className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
+              aria-label="Close credits modal"
+            >
+              <FiX className="text-2xl" />
+            </button>
+            <div className="flex items-center gap-3 mb-4">
+              <FiCreditCard className="text-indigo-400 text-3xl" />
+              <div>
+                <h3 className="text-2xl font-bold text-white">Grant Credits</h3>
+                <p className="text-gray-400 text-sm">View joined players and manage their credits for this pool.</p>
+              </div>
+            </div>
+            {!canGrantCredits && (
+              <div className="mb-4 bg-yellow-900 bg-opacity-30 border border-yellow-600 text-yellow-200 px-4 py-3 rounded-lg text-sm">
+                Only Super Admins can add credits. You can still review each player's current balance.
+              </div>
+            )}
+            {poolPlayersNotice.message && (
+              <div className={`mb-4 px-4 py-3 rounded-lg text-sm ${getAlertStyles(poolPlayersNotice.type)}`}>
+                {poolPlayersNotice.message}
+              </div>
+            )}
+            <div className="max-h-[420px] overflow-y-auto space-y-4 pr-1">
+              {creditsLoading ? (
+                <div className="text-center text-gray-300 py-12">Loading players...</div>
+              ) : poolPlayers.length === 0 ? (
+                <div className="text-center text-gray-400 py-12">No players have joined this pool yet.</div>
+              ) : (
+                poolPlayers.map((player) => {
+                  const playerId = extractPlayerId(player);
+                  if (!playerId) return null;
+                  const name = getPlayerDisplayName(player);
+                  const email = getPlayerEmail(player);
+                  const availableCredits = getPlayerAvailableCredits(player);
+                  return (
+                    <div key={playerId} className="bg-gray-800 rounded-xl border border-gray-700 p-4 space-y-4">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <div>
+                          <p className="text-white font-semibold">{name}</p>
+                          {email && <p className="text-gray-400 text-sm">{email}</p>}
+                        </div>
+                        <div className="text-sm text-gray-300">
+                          <p className="text-gray-400 text-xs uppercase tracking-wide">Available Credits</p>
+                          <p className="text-green-400 font-bold text-xl">{formatCurrency(availableCredits)}</p>
+                        </div>
+                      </div>
+                      <div className="flex flex-col sm:flex-row gap-3">
+                        <input
+                          type="number"
+                          min="1"
+                          step="1"
+                          inputMode="numeric"
+                          placeholder="Credits to add"
+                          value={creditAmounts[playerId] ?? ''}
+                          onChange={(e) => handleCreditsInputChange(playerId, e.target.value)}
+                          disabled={!canGrantCredits}
+                          className="flex-1 bg-gray-900 text-white border border-gray-700 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-60"
+                        />
+                        <button
+                          onClick={() => handleGrantCreditsToPlayer(playerId)}
+                          disabled={!canGrantCredits || creditsLoading}
+                          className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-700 disabled:cursor-not-allowed text-white px-5 py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition-all"
+                        >
+                          <FiTrendingUp />
+                          Add Credits
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* QR Code Modal */}
+      {showQRCode && (
+        <div className="fixed inset-0 bg-black bg-opacity-80 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={closeQRCodeModal}>
+          <div
+            className="bg-gray-900 rounded-2xl border border-gray-700 shadow-2xl w-full max-w-lg p-6 relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={closeQRCodeModal}
+              className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
+              aria-label="Close QR modal"
+            >
+              <FiX className="text-2xl" />
+            </button>
+            <div className="flex flex-col items-center gap-4">
+              <h3 className="text-2xl font-bold text-white text-center">Share Pool</h3>
+              <p className="text-gray-400 text-center text-sm">Scan or download the QR code to invite players to this pool.</p>
+              <div className="relative bg-white p-4 rounded-2xl shadow-inner w-full flex items-center justify-center min-h-[18rem]">
+                {effectiveJoinUrl && QRCodeCanvasComponent ? (
+                  <>
+                    <QRCodeCanvasComponent
+                      value={effectiveJoinUrl}
+                      size={280}
+                      includeMargin={true}
+                      bgColor="#ffffff"
+                      fgColor="#000000"
+                      ref={qrCanvasRef}
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-lg border border-gray-200">
+                        <img
+                          src="/assets/images/favicon.png"
+                          alt="GOAT Sports Pools"
+                          className="w-10 h-10 object-contain"
+                        />
+                      </div>
+                    </div>
+                  </>
+                ) : fallbackQrImage ? (
+                  <img
+                    src={fallbackQrImage}
+                    alt="Pool QR Code"
+                    className="w-64 h-64 sm:w-72 sm:h-72 object-contain"
+                  />
+                ) : (
+                  <div className="text-red-500 text-sm">QR code not available.</div>
+                )}
+              </div>
+              {effectiveJoinUrl && (
+                <div className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3">
+                  <p className="text-gray-400 text-xs uppercase">Join Link</p>
+                  <p className="text-white text-sm font-mono break-all">{effectiveJoinUrl}</p>
+                </div>
+              )}
+              <div className="text-center">
+                <p className="text-gray-300 text-sm">Pool Number</p>
+                <p className="text-white text-xl font-bold">{poolNumberDisplay || 'N/A'}</p>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-3 w-full">
+                <button
+                  onClick={handleDownloadQRCode}
+                  disabled={downloadingQR || (!effectiveJoinUrl && !fallbackQrImage)}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:cursor-not-allowed text-white px-4 py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition-all"
+                >
+                  <FiDownload />
+                  {downloadingQR ? 'Downloading...' : 'Download QR Code'}
+                </button>
+                <button
+                  onClick={closeQRCodeModal}
+                  className="flex-1 bg-gray-800 hover:bg-gray-700 text-white px-4 py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition-all"
+                >
+                  <FiX />
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Loading Modal for Confirming Squares */}
       {confirmingSquares && (
         <LoadingModal
@@ -951,3 +1484,9 @@ const SquaresPoolDetail = () => {
 };
 
 export default SquaresPoolDetail;
+
+
+
+
+
+

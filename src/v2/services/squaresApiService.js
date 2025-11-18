@@ -89,6 +89,7 @@ class SquaresApiService {
         pool_description: poolData.poolDescription,
         game_id: poolData.gameID,
         pool_type: poolData.numbersType === 'Ascending' ? 'A' : 'B', // A = Ascending, B = TimeSet/AdminTrigger
+        numbers_type: poolData.numbersType,
         player_pool_type: poolData.costType === 'Free' ? 'FREE' : 'CREDIT',
         reward_type: poolData.rewardsType || 'CreditsRewards',
         password: poolData.poolPassword,
@@ -216,6 +217,20 @@ class SquaresApiService {
   }
 
   /**
+   * Manually assign numbers to a pool
+   * POST /api/squares-pools/{id}/assign-numbers
+   */
+  async assignNumbers(poolId, payload = {}) {
+    try {
+      const response = await axiosInstance.post(`/api/squares-pools/${poolId}/assign-numbers`, payload);
+      return { success: true, data: response.data.data || response.data };
+    } catch (error) {
+      console.error('Error assigning numbers:', error);
+      return { success: false, error: error.response?.data?.message || 'Failed to assign numbers' };
+    }
+  }
+
+  /**
    * Get games for pool creation
    * GET /api/games
    */
@@ -290,6 +305,37 @@ class SquaresApiService {
     } catch (error) {
       console.error('Error fetching pending requests:', error);
       return { success: false, error: error.response?.data?.message || 'Failed to fetch pending requests' };
+    }
+  }
+
+  /**
+   * Get players who joined a pool
+   * GET /api/squares-pools/{id}/players
+   */
+  async getPoolPlayers(poolId) {
+    try {
+      const response = await axiosInstance.get(`/api/squares-pools/${poolId}/players`);
+      return { success: true, data: response.data.data || response.data };
+    } catch (error) {
+      console.error('Error fetching pool players:', error);
+      return { success: false, error: error.response?.data?.message || 'Failed to fetch pool players' };
+    }
+  }
+
+  /**
+   * Grant credits to a pool player
+   * POST /api/squares-pools/{id}/add-credits
+   */
+  async grantCredits(poolId, playerId, credits) {
+    try {
+      const response = await axiosInstance.post(`/api/squares-pools/${poolId}/add-credits`, {
+        player_id: playerId,
+        credits,
+      });
+      return { success: true, data: response.data.data || response.data };
+    } catch (error) {
+      console.error('Error granting credits:', error);
+      return { success: false, error: error.response?.data?.message || 'Failed to grant credits' };
     }
   }
 

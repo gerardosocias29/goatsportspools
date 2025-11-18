@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiCalendar, FiUsers, FiDollarSign, FiGrid, FiLock, FiUnlock } from 'react-icons/fi';
 import { useAxios } from '../../app/contexts/AxiosContext';
+import { useUserContext } from '../contexts/UserContext';
 
 /**
  * Squares Pool List Page
@@ -10,6 +11,7 @@ import { useAxios } from '../../app/contexts/AxiosContext';
 const SquaresPoolList = () => {
   const navigate = useNavigate();
   const axiosService = useAxios();
+  const { user: currentUser, isSignedIn } = useUserContext();
   const [pools, setPools] = useState([]);
   const [teams, setTeams] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -121,13 +123,19 @@ const SquaresPoolList = () => {
                 Join a pool and pick your winning squares
               </p>
             </div>
-            <button
-              onClick={handleCreatePool}
-              className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all duration-200 flex items-center gap-2"
-            >
-              <FiGrid className="text-xl" />
-              Create New Pool
-            </button>
+            {/* Only show Create Pool button for admins (role_id <= 2) */}
+            {isSignedIn && (() => {
+              const userRoleId = currentUser?.user?.role_id ?? currentUser?.role_id;
+              return userRoleId <= 2;
+            })() && (
+              <button
+                onClick={handleCreatePool}
+                className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all duration-200 flex items-center gap-2"
+              >
+                <FiGrid className="text-xl" />
+                Create New Pool
+              </button>
+            )}
           </div>
         </div>
 
@@ -238,7 +246,7 @@ const SquaresPoolList = () => {
                 color: "#fff",
                 fontFamily: '"Hubot Sans", sans-serif',
               }}>
-                Loading NFL betting...
+                Loading Square Pools...
               </div>
             </div>
           </div>
@@ -246,12 +254,18 @@ const SquaresPoolList = () => {
           <div className="text-center py-20 bg-gray-800 rounded-xl">
             <FiGrid className="text-6xl text-gray-600 mx-auto mb-4" />
             <p className="text-gray-400 text-xl">No pools found</p>
-            <button
-              onClick={handleCreatePool}
-              className="mt-6 bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold transition-all"
-            >
-              Create the First Pool
-            </button>
+            {/* Only show Create Pool button for admins */}
+            {isSignedIn && (() => {
+              const userRoleId = currentUser?.user?.role_id ?? currentUser?.role_id;
+              return userRoleId <= 2;
+            })() && (
+              <button
+                onClick={handleCreatePool}
+                className="mt-6 bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold transition-all"
+              >
+                Create the First Pool
+              </button>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -261,9 +275,27 @@ const SquaresPoolList = () => {
                 onClick={() => handlePoolClick(pool.id)}
                 className="bg-gray-800 rounded-xl shadow-xl overflow-hidden hover:shadow-2xl hover:scale-105 transition-all duration-200 cursor-pointer border-2 border-gray-700 hover:border-blue-500"
               >
-                {/* Status Badge */}
-                <div className={`${getStatusBadge(pool.pool_status)} px-4 py-2 text-sm font-semibold text-center`}>
-                  {getStatusText(pool.pool_status)}
+                {/* Status and Type Badges */}
+                <div className="flex items-center justify-between px-4 py-2">
+                  <div className={`${getStatusBadge(pool.pool_status)} px-3 py-1 text-xs font-semibold rounded-full`}>
+                    {getStatusText(pool.pool_status)}
+                  </div>
+                  {/* Pool Type Badge */}
+                  <div className={`px-3 py-1 text-xs font-semibold rounded-full ${
+                    pool.player_pool_type === 'CREDIT'
+                      ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
+                      : 'bg-green-500/20 text-green-300 border border-green-500/30'
+                  }`}>
+                    {pool.player_pool_type === 'CREDIT' ? (
+                      <span className="flex items-center gap-1">
+                        <FiLock className="text-xs" /> CREDIT
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1">
+                        <FiUnlock className="text-xs" /> FREE
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 {/* Pool Info */}
