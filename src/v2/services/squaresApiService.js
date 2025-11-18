@@ -1,50 +1,18 @@
 /**
  * Squares Pool API Service
  * Connects to Laravel backend for all squares pool operations
+ *
+ * NOTE: This service requires an authenticated axios instance from AxiosContext.
+ * Create an instance by calling: new SquaresApiService(axiosInstance)
  */
 
-import axios from 'axios';
-import Cookies from 'js-cookie';
-
-// Create axios instance with base configuration
-const axiosInstance = axios.create({
-  baseURL: process.env.REACT_APP_API_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// Add request interceptor to include auth token from Clerk
-axiosInstance.interceptors.request.use(async (config) => {
-  // Try multiple sources for the token
-  let token = Cookies.get('__session'); // Clerk stores JWT here
-
-  if (!token) {
-    // Fallback to localStorage
-    token = localStorage.getItem('token') || localStorage.getItem('clerk-token');
-  }
-
-  if (!token) {
-    // Try to get from Clerk's window object (if available)
-    if (window.Clerk && window.Clerk.session) {
-      try {
-        token = await window.Clerk.session.getToken();
-      } catch (error) {
-        console.warn('Could not get Clerk token:', error);
-      }
-    }
-  }
-
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-
-  return config;
-}, (error) => {
-  return Promise.reject(error);
-});
-
 class SquaresApiService {
+  /**
+   * @param {Object} axiosInstance - Authenticated axios instance from AxiosContext
+   */
+  constructor(axiosInstance) {
+    this.axios = axiosInstance;
+  }
   /**
    * Get all pools with optional filters
    * GET /api/squares-pools
@@ -55,7 +23,7 @@ class SquaresApiService {
       if (filters.status) params.append('status', filters.status);
       if (filters.league) params.append('league', filters.league);
 
-      const response = await axiosInstance.get(`/api/squares-pools?${params.toString()}`);
+      const response = await this.axios.get(`/api/squares-pools?${params.toString()}`);
       return { success: true, data: response.data.data || response.data };
     } catch (error) {
       console.error('Error fetching pools:', error);
@@ -69,7 +37,7 @@ class SquaresApiService {
    */
   async getPool(poolId) {
     try {
-      const response = await axiosInstance.get(`/api/squares-pools/${poolId}`);
+      const response = await this.axios.get(`/api/squares-pools/${poolId}`);
       return { success: true, data: response.data.data || response.data };
     } catch (error) {
       console.error('Error fetching pool:', error);
@@ -105,7 +73,7 @@ class SquaresApiService {
         external_pool_id: poolData.externalPoolId,
       };
 
-      const response = await axiosInstance.post('/api/squares-pools', requestData);
+      const response = await this.axios.post('/api/squares-pools', requestData);
       return { success: true, data: response.data.data || response.data };
     } catch (error) {
       console.error('Error creating pool:', error);
@@ -122,7 +90,7 @@ class SquaresApiService {
    */
   async joinPool(poolNumber, password = '') {
     try {
-      const response = await axiosInstance.post('/api/squares-pools/join', {
+      const response = await this.axios.post('/api/squares-pools/join', {
         pool_number: poolNumber,
         password: password,
       });
@@ -142,7 +110,7 @@ class SquaresApiService {
       // Backend expects individual square claims, but we can batch them
       const results = [];
       for (const coord of coordinates) {
-        const response = await axiosInstance.post(`/api/squares-pools/${poolId}/claim-square`, {
+        const response = await this.axios.post(`/api/squares-pools/${poolId}/claim-square`, {
           x_coordinate: coord.x,
           y_coordinate: coord.y,
         });
@@ -161,7 +129,7 @@ class SquaresApiService {
    */
   async releaseSquare(poolId, squareId) {
     try {
-      const response = await axiosInstance.post('/api/squares-pools/release-square', {
+      const response = await this.axios.post('/api/squares-pools/release-square', {
         pool_id: poolId,
         square_id: squareId,
       });
@@ -178,7 +146,7 @@ class SquaresApiService {
    */
   async calculateWinners(poolId, quarter) {
     try {
-      const response = await axiosInstance.post(`/api/squares-pools/${poolId}/calculate-winners`, {
+      const response = await this.axios.post(`/api/squares-pools/${poolId}/calculate-winners`, {
         quarter: quarter,
       });
       return { success: true, data: response.data };
@@ -194,7 +162,7 @@ class SquaresApiService {
    */
   async calculateAllWinners(poolId) {
     try {
-      const response = await axiosInstance.post(`/api/squares-pools/${poolId}/calculate-all-winners`);
+      const response = await this.axios.post(`/api/squares-pools/${poolId}/calculate-all-winners`);
       return { success: true, data: response.data };
     } catch (error) {
       console.error('Error calculating all winners:', error);
@@ -208,7 +176,7 @@ class SquaresApiService {
    */
   async getWinners(poolId) {
     try {
-      const response = await axiosInstance.get(`/api/squares-pools/${poolId}/winners`);
+      const response = await this.axios.get(`/api/squares-pools/${poolId}/winners`);
       return { success: true, data: response.data.data || response.data };
     } catch (error) {
       console.error('Error fetching winners:', error);
@@ -222,7 +190,7 @@ class SquaresApiService {
    */
   async assignNumbers(poolId, payload = {}) {
     try {
-      const response = await axiosInstance.post(`/api/squares-pools/${poolId}/assign-numbers`, payload);
+      const response = await this.axios.post(`/api/squares-pools/${poolId}/assign-numbers`, payload);
       return { success: true, data: response.data.data || response.data };
     } catch (error) {
       console.error('Error assigning numbers:', error);
@@ -240,7 +208,7 @@ class SquaresApiService {
       if (filters.status) params.append('status', filters.status);
       if (filters.league) params.append('league', filters.league);
 
-      const response = await axiosInstance.get(`/api/games?${params.toString()}`);
+      const response = await this.axios.get(`/api/games?${params.toString()}`);
       return { success: true, data: response.data.data || response.data };
     } catch (error) {
       console.error('Error fetching games:', error);
@@ -254,7 +222,7 @@ class SquaresApiService {
    */
   async getRewardTypes() {
     try {
-      const response = await axiosInstance.get('/api/game-reward-types');
+      const response = await this.axios.get('/api/game-reward-types');
       return { success: true, data: response.data.data || response.data };
     } catch (error) {
       console.error('Error fetching reward types:', error);
@@ -268,7 +236,7 @@ class SquaresApiService {
    */
   async getMyPools() {
     try {
-      const response = await axiosInstance.get('/api/squares-pools/my-pools');
+      const response = await this.axios.get('/api/squares-pools/my-pools');
       return { success: true, data: response.data.data || response.data };
     } catch (error) {
       console.error('Error fetching my pools:', error);
@@ -282,7 +250,7 @@ class SquaresApiService {
    */
   async approvePlayer(poolId, playerId, status) {
     try {
-      const response = await axiosInstance.post('/api/squares-pools/approve-player', {
+      const response = await this.axios.post('/api/squares-pools/approve-player', {
         pool_id: poolId,
         player_id: playerId,
         join_status: status, // 'Approved' or 'Denied'
@@ -300,7 +268,7 @@ class SquaresApiService {
    */
   async getPendingRequests(poolId) {
     try {
-      const response = await axiosInstance.get(`/api/squares-pools/${poolId}/pending-requests`);
+      const response = await this.axios.get(`/api/squares-pools/${poolId}/pending-requests`);
       return { success: true, data: response.data.data || response.data };
     } catch (error) {
       console.error('Error fetching pending requests:', error);
@@ -314,7 +282,7 @@ class SquaresApiService {
    */
   async getPoolPlayers(poolId) {
     try {
-      const response = await axiosInstance.get(`/api/squares-pools/${poolId}/players`);
+      const response = await this.axios.get(`/api/squares-pools/${poolId}/players`);
       return { success: true, data: response.data.data || response.data };
     } catch (error) {
       console.error('Error fetching pool players:', error);
@@ -328,7 +296,7 @@ class SquaresApiService {
    */
   async grantCredits(poolId, playerId, credits) {
     try {
-      const response = await axiosInstance.post(`/api/squares-pools/${poolId}/add-credits`, {
+      const response = await this.axios.post(`/api/squares-pools/${poolId}/add-credits`, {
         player_id: playerId,
         credits,
       });
@@ -345,7 +313,7 @@ class SquaresApiService {
    */
   async deletePool(poolId) {
     try {
-      const response = await axiosInstance.delete(`/api/squares-pools/${poolId}`);
+      const response = await this.axios.delete(`/api/squares-pools/${poolId}`);
       return { success: true, data: response.data };
     } catch (error) {
       console.error('Error deleting pool:', error);
@@ -359,7 +327,7 @@ class SquaresApiService {
    */
   async createGame(gameData) {
     try {
-      const response = await axiosInstance.post('/api/games/create', gameData);
+      const response = await this.axios.post('/api/games/create', gameData);
       return { success: response.data.status || false, data: response.data, message: response.data.message };
     } catch (error) {
       console.error('Error creating game:', error);
@@ -373,7 +341,7 @@ class SquaresApiService {
    */
   async updateGame(gameId, gameData) {
     try {
-      const response = await axiosInstance.post(`/api/games/update/${gameId}`, gameData);
+      const response = await this.axios.post(`/api/games/update/${gameId}`, gameData);
       return { success: response.data.status || false, data: response.data, message: response.data.message };
     } catch (error) {
       console.error('Error updating game:', error);
@@ -387,7 +355,7 @@ class SquaresApiService {
    */
   async deleteGame(gameId) {
     try {
-      const response = await axiosInstance.delete(`/api/games/${gameId}`);
+      const response = await this.axios.delete(`/api/games/${gameId}`);
       return { success: true, data: response.data };
     } catch (error) {
       console.error('Error deleting game:', error);
@@ -401,7 +369,7 @@ class SquaresApiService {
    */
   async getTeams() {
     try {
-      const response = await axiosInstance.get('/api/teams');
+      const response = await this.axios.get('/api/teams');
       return { success: true, data: response.data };
     } catch (error) {
       console.error('Error fetching teams:', error);
@@ -419,7 +387,7 @@ class SquaresApiService {
    */
   async requestCreditsFromCommissioner(poolId, amount, reason = '') {
     try {
-      const response = await axiosInstance.post(`/api/credit-requests/pools/${poolId}/request`, {
+      const response = await this.axios.post(`/api/credit-requests/pools/${poolId}/request`, {
         amount,
         reason,
       });
@@ -439,7 +407,7 @@ class SquaresApiService {
    */
   async getPoolCreditRequests(poolId) {
     try {
-      const response = await axiosInstance.get(`/api/credit-requests/pools/${poolId}`);
+      const response = await this.axios.get(`/api/credit-requests/pools/${poolId}`);
       return { success: true, data: response.data };
     } catch (error) {
       console.error('Error fetching pool credit requests:', error);
@@ -453,7 +421,7 @@ class SquaresApiService {
    */
   async getCommissionerCreditRequests() {
     try {
-      const response = await axiosInstance.get('/api/credit-requests/commissioner');
+      const response = await this.axios.get('/api/credit-requests/commissioner');
       return { success: true, data: response.data };
     } catch (error) {
       console.error('Error fetching commissioner credit requests:', error);
@@ -467,7 +435,7 @@ class SquaresApiService {
    */
   async updateCreditRequest(requestId, status, adminNote = '') {
     try {
-      const response = await axiosInstance.patch(`/api/credit-requests/${requestId}`, {
+      const response = await this.axios.patch(`/api/credit-requests/${requestId}`, {
         status, // 'approved' or 'denied'
         admin_note: adminNote,
       });
@@ -484,7 +452,7 @@ class SquaresApiService {
    */
   async requestCreditsFromSuperadmin(amount, reason) {
     try {
-      const response = await axiosInstance.post('/api/credit-requests/admin/request', {
+      const response = await this.axios.post('/api/credit-requests/admin/request', {
         amount,
         reason,
       });
@@ -504,7 +472,7 @@ class SquaresApiService {
    */
   async getSuperadminCreditRequests() {
     try {
-      const response = await axiosInstance.get('/api/credit-requests/admin');
+      const response = await this.axios.get('/api/credit-requests/admin');
       return { success: true, data: response.data };
     } catch (error) {
       console.error('Error fetching superadmin credit requests:', error);
@@ -518,7 +486,7 @@ class SquaresApiService {
    */
   async updateAdminCreditRequest(requestId, status, adminNote = '') {
     try {
-      const response = await axiosInstance.patch(`/api/credit-requests/admin/${requestId}`, {
+      const response = await this.axios.patch(`/api/credit-requests/admin/${requestId}`, {
         status, // 'approved' or 'denied'
         admin_note: adminNote,
       });
@@ -535,7 +503,7 @@ class SquaresApiService {
    */
   async getMyCreditRequests() {
     try {
-      const response = await axiosInstance.get('/api/credit-requests/my-requests');
+      const response = await this.axios.get('/api/credit-requests/my-requests');
       return { success: true, data: response.data };
     } catch (error) {
       console.error('Error fetching my credit requests:', error);
@@ -544,5 +512,4 @@ class SquaresApiService {
   }
 }
 
-export const squaresApiService = new SquaresApiService();
-export default squaresApiService;
+export default SquaresApiService;

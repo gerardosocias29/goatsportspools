@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiArrowLeft, FiCreditCard, FiClock, FiCheckCircle, FiXCircle, FiAlertCircle } from 'react-icons/fi';
 import { useUserContext } from '../contexts/UserContext';
-import squaresApiService from '../services/squaresApiService';
+import { useAxios } from '../../app/contexts/AxiosContext';
+import SquaresApiService from '../services/squaresApiService';
 
 /**
  * Credit Requests Page
@@ -11,6 +12,9 @@ import squaresApiService from '../services/squaresApiService';
 const CreditRequests = () => {
   const navigate = useNavigate();
   const { user: currentUser, isSignedIn, isLoaded } = useUserContext();
+  const axiosService = useAxios();
+  const squaresApiService = useMemo(() => new SquaresApiService(axiosService), [axiosService]);
+
   const [loading, setLoading] = useState(true);
   const [poolRequests, setPoolRequests] = useState([]);
   const [adminRequests, setAdminRequests] = useState([]);

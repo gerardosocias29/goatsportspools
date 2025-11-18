@@ -1,49 +1,92 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiGrid, FiDollarSign, FiUsers, FiTrendingUp, FiPlus, FiEye } from 'react-icons/fi';
-import squaresMockService, { mockCurrentUser } from '../services/squaresMockData';
+import { FiGrid, FiDollarSign, FiUsers, FiTrendingUp, FiPlus, FiEye, FiClock, FiCheckCircle, FiXCircle, FiCreditCard, FiAlertCircle } from 'react-icons/fi';
+import { useUserContext } from '../contexts/UserContext';
+import { useAxios } from '../../app/contexts/AxiosContext';
+import SquaresApiService from '../services/squaresApiService';
 
 /**
- * Squares Admin Dashboard
- * Manage all pools created by the admin
+ * Commissioner Dashboard
+ * Manage pools and approve credit requests
  */
 const SquaresAdminDashboard = () => {
   const navigate = useNavigate();
+  const { user: currentUser, isSignedIn, isLoaded } = useUserContext();
+  const axiosService = useAxios();
+  const squaresApiService = useMemo(() => new SquaresApiService(axiosService), [axiosService]);
+
   const [pools, setPools] = useState([]);
+  const [creditRequests, setCreditRequests] = useState([]);
+  const [adminCreditRequests, setAdminCreditRequests] = useState([]);
   const [stats, setStats] = useState({
     totalPools: 0,
     activePools: 0,
     totalRevenue: 0,
-    freeGridsRemaining: 10,
+    pendingRequests: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('pools'); // 'pools', 'credit-requests', 'admin-requests'
+  const [processingRequest, setProcessingRequest] = useState(null);
+
+  const userRoleId = currentUser?.user?.role_id ?? currentUser?.role_id;
+  const isSuperadmin = userRoleId === 1;
 
   useEffect(() => {
-    loadDashboard();
-  }, []);
+    if (isLoaded && !isSignedIn) {
+      navigate('/v2/sign-in', { state: { returnTo: '/v2/squares/admin' } });
+    }
+  }, [isSignedIn, isLoaded, navigate]);
+
+  useEffect(() => {
+    if (isSignedIn) {
+      loadDashboard();
+    }
+  }, [isSignedIn]);
 
   const loadDashboard = async () => {
     setLoading(true);
     try {
-      const response = await squaresMockService.getGrids();
-      if (response.success) {
-        const allPools = response.data;
+      // Load pools
+      const poolsResponse = await squaresApiService.getPools();
+      if (poolsResponse.success) {
+        const allPools = poolsResponse.data;
+        const currentUserId = currentUser?.user?.id || currentUser?.id;
+
         // Filter pools created by current user
-        const myPools = allPools.filter(p => p.admin === mockCurrentUser.playerID);
+        const myPools = allPools.filter(p =>
+          p.admin_id === currentUserId || p.created_by === currentUserId
+        );
         setPools(myPools);
 
         // Calculate stats
-        const activePools = myPools.filter(p => p.pool_status === 'open' || p.pool_status === 'in_progress').length;
-        const totalRevenue = myPools.reduce((sum, p) => sum + (p.selectedSquares * p.costPerSquare), 0);
-        const freeGrids = Math.max(0, 10 - myPools.filter(p => p.gridFeeType === 'Free').length);
+        const activePools = myPools.filter(p => p.pool_status === 'open').length;
+        const totalRevenue = 0; // Would need to calculate from squares
 
-        setStats({
+        setStats(prev => ({
+          ...prev,
           totalPools: myPools.length,
           activePools,
           totalRevenue,
-          freeGridsRemaining: freeGrids,
-        });
+        }));
       }
+
+      // Load credit requests where I'm commissioner
+      const requestsResponse = await squaresApiService.getCommissionerCreditRequests();
+      if (requestsResponse.success) {
+        const requests = requestsResponse.data;
+        const pendingCount = requests.filter(r => r.status === 'pending').length;
+        setCreditRequests(requests);
+        setStats(prev => ({ ...prev, pendingRequests: pendingCount }));
+      }
+
+      // Load admin credit requests (Superadmin only)
+      if (isSuperadmin) {
+        const adminRequestsResponse = await squaresApiService.getSuperadminCreditRequests();
+        if (adminRequestsResponse.success) {
+          setAdminCreditRequests(adminRequestsResponse.data);
+        }
+      }
+
     } catch (error) {
       console.error('Error loading dashboard:', error);
     } finally {
@@ -51,54 +94,113 @@ const SquaresAdminDashboard = () => {
     }
   };
 
+  const handleApproveRequest = async (requestId, isAdminRequest = false) => {
+    if (!window.confirm('Approve this credit request?')) return;
+
+    setProcessingRequest(requestId);
+    try {
+      const response = isAdminRequest
+        ? await squaresApiService.updateAdminCreditRequest(requestId, 'approved')
+        : await squaresApiService.updateCreditRequest(requestId, 'approved');
+
+      if (response.success) {
+        alert('Credit request approved successfully!');
+        await loadDashboard();
+      } else {
+        alert(response.error || 'Failed to approve request');
+      }
+    } catch (error) {
+      alert('Failed to approve request: ' + (error.message || 'Unknown error'));
+    } finally {
+      setProcessingRequest(null);
+    }
+  };
+
+  const handleDenyRequest = async (requestId, isAdminRequest = false) => {
+    const reason = prompt('Reason for denial (optional):');
+    if (reason === null) return; // User cancelled
+
+    setProcessingRequest(requestId);
+    try {
+      const response = isAdminRequest
+        ? await squaresApiService.updateAdminCreditRequest(requestId, 'denied', reason)
+        : await squaresApiService.updateCreditRequest(requestId, 'denied', reason);
+
+      if (response.success) {
+        alert('Credit request denied.');
+        await loadDashboard();
+      } else {
+        alert(response.error || 'Failed to deny request');
+      }
+    } catch (error) {
+      alert('Failed to deny request: ' + (error.message || 'Unknown error'));
+    } finally {
+      setProcessingRequest(null);
+    }
+  };
+
   const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
       month: 'short',
       day: 'numeric',
-      hour: 'numeric',
+      hour: '2-digit',
       minute: '2-digit',
     });
   };
 
+  const formatCurrency = (amount) => {
+    return `$${parseFloat(amount || 0).toFixed(2)}`;
+  };
+
   const getStatusBadge = (status) => {
     const badges = {
-      open: { bg: 'bg-green-500', text: 'Open' },
-      closed: { bg: 'bg-red-500', text: 'Closed' },
-      in_progress: { bg: 'bg-blue-500', text: 'In Progress' },
-      completed: { bg: 'bg-gray-500', text: 'Completed' },
+      pending: { icon: FiClock, color: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30', text: 'Pending' },
+      approved: { icon: FiCheckCircle, color: 'bg-green-500/20 text-green-300 border-green-500/30', text: 'Approved' },
+      denied: { icon: FiXCircle, color: 'bg-red-500/20 text-red-300 border-red-500/30', text: 'Denied' },
+      open: { icon: FiCheckCircle, color: 'bg-green-500/20 text-green-300 border-green-500/30', text: 'Open' },
+      closed: { icon: FiXCircle, color: 'bg-red-500/20 text-red-300 border-red-500/30', text: 'Closed' },
     };
-    return badges[status] || { bg: 'bg-gray-500', text: status };
+    const badge = badges[status] || badges.pending;
+    const Icon = badge.icon;
+
+    return (
+      <span className={`px-3 py-1 rounded-full text-xs font-semibold border flex items-center gap-1 ${badge.color}`}>
+        <Icon className="text-sm" />
+        {badge.text}
+      </span>
+    );
   };
 
-  const handleCreatePool = () => {
-    navigate('/v2/squares/create');
-  };
-
-  const handleViewPool = (poolId) => {
-    navigate(`/v2/squares/pool/${poolId}`);
-  };
+  if (!isLoaded || loading) {
+    return (
+      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
+        <div className="text-white text-xl">Loading...</div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 p-4 md:p-8">
+    <div className="min-h-screen bg-gray-950 p-6">
       <div className="max-w-7xl mx-auto">
 
         {/* Header */}
         <div className="mb-8">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
-              <h1 className="text-4xl md:text-5xl font-bold text-white mb-2">
-                Admin Dashboard
+              <h1 className="text-4xl font-bold text-white mb-2">
+                Commissioner Dashboard
               </h1>
-              <p className="text-gray-300 text-lg">
-                Manage your squares pools
+              <p className="text-gray-400">
+                Manage your pools and credit requests
               </p>
             </div>
             <button
-              onClick={handleCreatePool}
-              className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all duration-200 flex items-center gap-2"
+              onClick={() => navigate('/v2/squares/create')}
+              className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition-all flex items-center gap-2"
             >
-              <FiPlus className="text-xl" />
+              <FiPlus />
               Create New Pool
             </button>
           </div>
@@ -106,149 +208,283 @@ const SquaresAdminDashboard = () => {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {/* Total Pools */}
-          <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl shadow-xl p-6">
+          <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-blue-200 text-sm font-medium">Total Pools</p>
                 <p className="text-white text-4xl font-bold mt-2">{stats.totalPools}</p>
               </div>
-              <div className="bg-blue-500 bg-opacity-30 p-4 rounded-lg">
+              <div className="bg-blue-500/30 p-4 rounded-lg">
                 <FiGrid className="text-white text-3xl" />
               </div>
             </div>
           </div>
 
-          {/* Active Pools */}
-          <div className="bg-gradient-to-br from-green-600 to-green-700 rounded-xl shadow-xl p-6">
+          <div className="bg-gradient-to-br from-green-600 to-green-700 rounded-xl p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-green-200 text-sm font-medium">Active Pools</p>
                 <p className="text-white text-4xl font-bold mt-2">{stats.activePools}</p>
               </div>
-              <div className="bg-green-500 bg-opacity-30 p-4 rounded-lg">
+              <div className="bg-green-500/30 p-4 rounded-lg">
                 <FiTrendingUp className="text-white text-3xl" />
               </div>
             </div>
           </div>
 
-          {/* Total Revenue */}
-          <div className="bg-gradient-to-br from-purple-600 to-purple-700 rounded-xl shadow-xl p-6">
+          <div className="bg-gradient-to-br from-purple-600 to-purple-700 rounded-xl p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-purple-200 text-sm font-medium">Total Revenue</p>
-                <p className="text-white text-4xl font-bold mt-2">${(stats.totalRevenue || 0).toFixed(0)}</p>
+                <p className="text-purple-200 text-sm font-medium">Pending Requests</p>
+                <p className="text-white text-4xl font-bold mt-2">{stats.pendingRequests}</p>
               </div>
-              <div className="bg-purple-500 bg-opacity-30 p-4 rounded-lg">
+              <div className="bg-purple-500/30 p-4 rounded-lg">
+                <FiCreditCard className="text-white text-3xl" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-br from-orange-600 to-orange-700 rounded-xl p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-orange-200 text-sm font-medium">Total Revenue</p>
+                <p className="text-white text-4xl font-bold mt-2">{formatCurrency(stats.totalRevenue)}</p>
+              </div>
+              <div className="bg-orange-500/30 p-4 rounded-lg">
                 <FiDollarSign className="text-white text-3xl" />
               </div>
             </div>
           </div>
-
-          {/* Free Grids */}
-          <div className="bg-gradient-to-br from-yellow-600 to-orange-600 rounded-xl shadow-xl p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-yellow-200 text-sm font-medium">Free Grids Left</p>
-                <p className="text-white text-4xl font-bold mt-2">{stats.freeGridsRemaining}</p>
-              </div>
-              <div className="bg-yellow-500 bg-opacity-30 p-4 rounded-lg">
-                <FiUsers className="text-white text-3xl" />
-              </div>
-            </div>
-            <div className="mt-3 text-yellow-100 text-xs">
-              {stats.freeGridsRemaining > 0 ? 'Promotion active' : 'Next 50 minimal fee'}
-            </div>
-          </div>
         </div>
 
-        {/* Pools List */}
-        <div className="bg-gray-800 rounded-xl shadow-2xl p-6 border-2 border-gray-700">
-          <h2 className="text-2xl font-bold text-white mb-6">Your Pools</h2>
-
-          {loading ? (
-            <div className="text-center py-12">
-              <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-              <p className="text-gray-400 mt-4">Loading pools...</p>
-            </div>
-          ) : pools.length === 0 ? (
-            <div className="text-center py-12">
-              <FiGrid className="text-6xl text-gray-600 mx-auto mb-4" />
-              <p className="text-gray-400 text-xl mb-6">No pools created yet</p>
-              <button
-                onClick={handleCreatePool}
-                className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold transition-all"
-              >
-                Create Your First Pool
-              </button>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-gray-700">
-                    <th className="text-left text-gray-400 font-medium py-3 px-4">Pool Name</th>
-                    <th className="text-left text-gray-400 font-medium py-3 px-4">Game</th>
-                    <th className="text-center text-gray-400 font-medium py-3 px-4">Status</th>
-                    <th className="text-center text-gray-400 font-medium py-3 px-4">Progress</th>
-                    <th className="text-center text-gray-400 font-medium py-3 px-4">Revenue</th>
-                    <th className="text-center text-gray-400 font-medium py-3 px-4">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {pools.map((pool) => {
-                    const status = getStatusBadge(pool.pool_status);
-                    const progress = pool.totalSquares ? ((pool.selectedSquares / pool.totalSquares) * 100).toFixed(0) : 0;
-                    const revenue = ((pool.selectedSquares || 0) * (pool.costPerSquare || 0)).toFixed(2);
-
-                    return (
-                      <tr
-                        key={pool.id}
-                        className="border-b border-gray-700 hover:bg-gray-750 transition-colors"
-                      >
-                        <td className="py-4 px-4">
-                          <div className="text-white font-semibold">{pool.gridName}</div>
-                          <div className="text-gray-400 text-sm">#{pool.poolNumber}</div>
-                        </td>
-                        <td className="py-4 px-4">
-                          <div className="text-gray-300 text-sm">
-                            {pool.game?.homeTeam} vs {pool.game?.visitorTeam}
-                          </div>
-                          <div className="text-gray-500 text-xs">
-                            {formatDate(pool.game?.gameTime)}
-                          </div>
-                        </td>
-                        <td className="py-4 px-4 text-center">
-                          <span className={`${status.bg} text-white px-3 py-1 rounded-full text-xs font-semibold`}>
-                            {status.text}
-                          </span>
-                        </td>
-                        <td className="py-4 px-4 text-center">
-                          <div className="text-white font-semibold">{progress}%</div>
-                          <div className="text-gray-400 text-xs">
-                            {pool.selectedSquares}/100
-                          </div>
-                        </td>
-                        <td className="py-4 px-4 text-center">
-                          <div className="text-green-400 font-bold">${revenue}</div>
-                        </td>
-                        <td className="py-4 px-4 text-center">
-                          <button
-                            onClick={() => handleViewPool(pool.id)}
-                            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all inline-flex items-center gap-2"
-                          >
-                            <FiEye />
-                            View
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+        {/* Tabs */}
+        <div className="flex gap-2 mb-6 border-b border-gray-800">
+          <button
+            onClick={() => setActiveTab('pools')}
+            className={`px-6 py-3 font-semibold transition-all ${
+              activeTab === 'pools'
+                ? 'text-blue-400 border-b-2 border-blue-400'
+                : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            My Pools ({pools.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('credit-requests')}
+            className={`px-6 py-3 font-semibold transition-all ${
+              activeTab === 'credit-requests'
+                ? 'text-blue-400 border-b-2 border-blue-400'
+                : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            Credit Requests ({creditRequests.filter(r => r.status === 'pending').length})
+          </button>
+          {isSuperadmin && (
+            <button
+              onClick={() => setActiveTab('admin-requests')}
+              className={`px-6 py-3 font-semibold transition-all ${
+                activeTab === 'admin-requests'
+                  ? 'text-blue-400 border-b-2 border-blue-400'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              Admin Requests ({adminCreditRequests.filter(r => r.status === 'pending').length})
+            </button>
           )}
         </div>
+
+        {/* Content */}
+        {activeTab === 'pools' && (
+          <div className="bg-gray-900 rounded-xl border border-gray-800 p-6">
+            <h2 className="text-2xl font-bold text-white mb-6" style={{marginBottom: '1.5rem'}}>Your Pools</h2>
+
+            {pools.length === 0 ? (
+              <div className="text-center py-12">
+                <FiGrid className="text-6xl text-gray-600 mx-auto mb-4" />
+                <p className="text-gray-400 text-xl mb-6">No pools created yet</p>
+                <button
+                  onClick={() => navigate('/v2/squares/create')}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-all"
+                >
+                  Create Your First Pool
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {pools.map((pool) => (
+                  <div key={pool.id} className="bg-gray-800 rounded-lg border border-gray-700 p-4">
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                      <div className="flex-1">
+                        <h3 className="text-white font-semibold text-lg mb-1">
+                          {pool.pool_name}
+                        </h3>
+                        <p className="text-gray-400 text-sm">Pool #{pool.pool_number}</p>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        {getStatusBadge(pool.pool_status)}
+                        <button
+                          onClick={() => navigate(`/v2/squares/pool/${pool.id}`)}
+                          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold transition-all flex items-center gap-2"
+                        >
+                          <FiEye />
+                          View
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'credit-requests' && (
+          <div className="bg-gray-900 rounded-xl border border-gray-800 p-6">
+            <h2 className="text-2xl font-bold text-white mb-6" style={{marginBottom: '1.5rem'}}>Player Credit Requests</h2>
+
+            {creditRequests.length === 0 ? (
+              <div className="text-center py-12">
+                <FiAlertCircle className="text-6xl text-gray-600 mx-auto mb-4" />
+                <p className="text-gray-400 text-xl">No credit requests</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {creditRequests.map((request) => (
+                  <div key={request.id} className="bg-gray-800 rounded-lg border border-gray-700 p-6">
+                    <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-4">
+                      <div className="flex-1">
+                        <h3 className="text-white font-semibold text-lg mb-1">
+                          {request.pool?.pool_name || `Pool #${request.pool?.pool_number}`}
+                        </h3>
+                        <p className="text-gray-400 text-sm mb-2">
+                          From: {request.requester?.name || request.requester?.email}
+                        </p>
+                        <p className="text-gray-400 text-xs">
+                          Requested on {formatDate(request.created_at)}
+                        </p>
+                      </div>
+                      {getStatusBadge(request.status)}
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      <div>
+                        <p className="text-gray-400 text-xs uppercase tracking-wide mb-1">Amount</p>
+                        <p className="text-white font-bold text-2xl">{formatCurrency(request.amount)}</p>
+                      </div>
+
+                      {request.reason && (
+                        <div>
+                          <p className="text-gray-400 text-xs uppercase tracking-wide mb-1">Reason</p>
+                          <p className="text-gray-300">{request.reason}</p>
+                        </div>
+                      )}
+                    </div>
+
+                    {request.status === 'pending' && (
+                      <div className="flex gap-3 pt-4 border-t border-gray-700">
+                        <button
+                          onClick={() => handleApproveRequest(request.id)}
+                          disabled={processingRequest === request.id}
+                          className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-700 text-white px-4 py-2 rounded-lg font-semibold transition-all flex items-center justify-center gap-2"
+                        >
+                          <FiCheckCircle />
+                          Approve
+                        </button>
+                        <button
+                          onClick={() => handleDenyRequest(request.id)}
+                          disabled={processingRequest === request.id}
+                          className="flex-1 bg-red-600 hover:bg-red-700 disabled:bg-gray-700 text-white px-4 py-2 rounded-lg font-semibold transition-all flex items-center justify-center gap-2"
+                        >
+                          <FiXCircle />
+                          Deny
+                        </button>
+                      </div>
+                    )}
+
+                    {request.status !== 'pending' && request.admin_note && (
+                      <div className="mt-4 pt-4 border-t border-gray-700">
+                        <p className="text-gray-400 text-xs uppercase tracking-wide mb-1">Admin Note</p>
+                        <p className="text-gray-300">{request.admin_note}</p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'admin-requests' && isSuperadmin && (
+          <div className="bg-gray-900 rounded-xl border border-gray-800 p-6">
+            <h2 className="text-2xl font-bold text-white mb-6" style={{marginBottom: '1.5rem'}}>Square Admin Credit Requests</h2>
+
+            {adminCreditRequests.length === 0 ? (
+              <div className="text-center py-12">
+                <FiAlertCircle className="text-6xl text-gray-600 mx-auto mb-4" />
+                <p className="text-gray-400 text-xl">No admin credit requests</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {adminCreditRequests.map((request) => (
+                  <div key={request.id} className="bg-gray-800 rounded-lg border border-purple-700 p-6">
+                    <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-4">
+                      <div className="flex-1">
+                        <h3 className="text-white font-semibold text-lg mb-1">
+                          Credit Request from Square Admin
+                        </h3>
+                        <p className="text-gray-400 text-sm mb-2">
+                          From: {request.requester?.name || request.requester?.email}
+                        </p>
+                        <p className="text-gray-400 text-xs">
+                          Requested on {formatDate(request.created_at)}
+                        </p>
+                      </div>
+                      {getStatusBadge(request.status)}
+                    </div>
+
+                    <div className="mb-4">
+                      <p className="text-gray-400 text-xs uppercase tracking-wide mb-1">Amount</p>
+                      <p className="text-white font-bold text-2xl">{formatCurrency(request.amount)}</p>
+                    </div>
+
+                    <div className="mb-4">
+                      <p className="text-gray-400 text-xs uppercase tracking-wide mb-1">Reason</p>
+                      <p className="text-gray-300">{request.reason}</p>
+                    </div>
+
+                    {request.status === 'pending' && (
+                      <div className="flex gap-3 pt-4 border-t border-gray-700">
+                        <button
+                          onClick={() => handleApproveRequest(request.id, true)}
+                          disabled={processingRequest === request.id}
+                          className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-700 text-white px-4 py-2 rounded-lg font-semibold transition-all flex items-center justify-center gap-2"
+                        >
+                          <FiCheckCircle />
+                          Approve
+                        </button>
+                        <button
+                          onClick={() => handleDenyRequest(request.id, true)}
+                          disabled={processingRequest === request.id}
+                          className="flex-1 bg-red-600 hover:bg-red-700 disabled:bg-gray-700 text-white px-4 py-2 rounded-lg font-semibold transition-all flex items-center justify-center gap-2"
+                        >
+                          <FiXCircle />
+                          Deny
+                        </button>
+                      </div>
+                    )}
+
+                    {request.status !== 'pending' && request.admin_note && (
+                      <div className="mt-4 pt-4 border-t border-gray-700">
+                        <p className="text-gray-400 text-xs uppercase tracking-wide mb-1">Admin Note</p>
+                        <p className="text-gray-300">{request.admin_note}</p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
