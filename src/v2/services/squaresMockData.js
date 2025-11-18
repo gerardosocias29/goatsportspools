@@ -123,7 +123,7 @@ export const mockGrids = [
     rewardsType: 'CreditsRewards',
     gameRewardTypeID: 3,
     rewardType: mockRewardTypes[2],
-    gridStatus: 'SelectOpen',
+    pool_status: 'open',
     closeDate: '2025-11-20T17:00:00',
     gridFeeType: 'Free',
     maxSquaresPerPlayer: 10,
@@ -153,7 +153,7 @@ export const mockGrids = [
     rewardsType: 'CreditsRewards',
     gameRewardTypeID: 2,
     rewardType: mockRewardTypes[1],
-    gridStatus: 'SelectOpen',
+    pool_status: 'open',
     closeDate: '2025-11-21T15:00:00',
     gridFeeType: 'Free',
     maxSquaresPerPlayer: 20,
@@ -218,7 +218,7 @@ class SquaresMockService {
 
     // Apply filters
     if (filters.status) {
-      grids = grids.filter(g => g.gridStatus === filters.status);
+      grids = grids.filter(g => g.pool_status === filters.status);
     }
     if (filters.league) {
       grids = grids.filter(g => g.game.league === filters.league);
@@ -262,7 +262,7 @@ class SquaresMockService {
       admin: mockCurrentUser.playerID,
       totalSquares: 100,
       selectedSquares: 0,
-      gridStatus: 'SelectOpen',
+      pool_status: 'open',
       gridFeeType: grids.length < 10 ? 'Free' : grids.length < 60 ? 'Min1' : 'Standard',
       createdAt: new Date().toISOString(),
       ...gridData,
@@ -314,7 +314,7 @@ class SquaresMockService {
       return { success: false, error: 'Incorrect password' };
     }
 
-    if (grid.gridStatus !== 'SelectOpen') {
+    if (grid.pool_status !== 'open') {
       return { success: false, error: 'Grid is not open for selection' };
     }
 
@@ -345,7 +345,7 @@ class SquaresMockService {
     const grid = grids[gridIndex];
 
     // Check if grid is open
-    if (grid.gridStatus !== 'SelectOpen') {
+    if (grid.pool_status !== 'open') {
       return { success: false, error: 'Grid is not open for selection' };
     }
 

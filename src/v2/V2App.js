@@ -1,8 +1,8 @@
-import React, { useContext, useState, useEffect, Suspense, lazy } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { UserProvider, useUserContext } from './contexts/UserContext';
 import { useUser } from '@clerk/clerk-react';
-import { useAxios } from '../app/contexts/AxiosContext';
 import Layout from './components/layout/Layout';
 // Import fonts only - not the full globals.css to avoid conflicts with v1
 import './styles/v2-scoped.css';
@@ -79,44 +79,31 @@ const LoadingFallback = () => (
   </div>
 );
 
-const V2App = () => {
-  const { isSignedIn, user: clerkUser, isLoaded } = useUser();
-  const axiosService = useAxios();
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+// Inner component that uses UserContext
+const V2AppContent = () => {
+  const { isSignedIn } = useUser();
+  const { user, loading } = useUserContext();
   const [pusher, setPusher] = useState(null);
   const [channel, setChannel] = useState(null);
 
   useEffect(() => {
-    if (isSignedIn && isLoaded) {
-      // Fetch user data
-      axiosService.get('/api/me_user')
-        .then(async (response) => {
-          setUser(response.data.user);
-          setLoading(false);
+    // Initialize Pusher for real-time auction updates when user is signed in
+    if (isSignedIn && user && !pusher) {
+      const initPusher = async () => {
+        try {
+          const Pusher = (await import('pusher-js')).default;
+          const pusherInstance = new Pusher(process.env.REACT_APP_PUSHER_KEY, {
+            cluster: process.env.REACT_APP_PUSHER_CLUSTER,
+          });
 
-          // Lazy load and initialize Pusher for real-time auction updates
-          if (!pusher) {
-            try {
-              const Pusher = (await import('pusher-js')).default;
-              const pusherInstance = new Pusher(process.env.REACT_APP_PUSHER_KEY, {
-                cluster: process.env.REACT_APP_PUSHER_CLUSTER,
-              });
-
-              const biddingChannel = pusherInstance.subscribe('bidding-channel');
-              setPusher(pusherInstance);
-              setChannel(biddingChannel);
-            } catch (error) {
-              console.error('Error loading Pusher:', error);
-            }
-          }
-        })
-        .catch((error) => {
-          console.error('Error fetching user data:', error);
-          setLoading(false);
-        });
-    } else if (isLoaded) {
-      setLoading(false);
+          const biddingChannel = pusherInstance.subscribe('bidding-channel');
+          setPusher(pusherInstance);
+          setChannel(biddingChannel);
+        } catch (error) {
+          console.error('Error loading Pusher:', error);
+        }
+      };
+      initPusher();
     }
 
     // Cleanup Pusher on unmount
@@ -126,7 +113,7 @@ const V2App = () => {
         pusher.disconnect();
       }
     };
-  }, [isSignedIn, isLoaded]);
+  }, [isSignedIn, user, pusher]);
 
   const handleSignOut = () => {
     window.location.href = '/v2/sign-in';
@@ -134,68 +121,65 @@ const V2App = () => {
 
   if (loading) {
     return (
-      <ThemeProvider>
-        <Layout showHeader={false} showFooter={false}>
+      <Layout showHeader={false} showFooter={false}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: '100vh',
+          backgroundColor: '#FAF6F2'
+        }}>
           <div style={{
+            position: 'relative',
+            width: '120px',
+            height: '120px',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
-            minHeight: '100vh',
-            backgroundColor: '#FAF6F2'
+            justifyContent: 'center'
           }}>
-            <div style={{
-              position: 'relative',
-              width: '120px',
-              height: '120px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}>
-              {/* Rotating Circle */}
-              <svg
-                style={{
-                  position: 'absolute',
-                  width: '120px',
-                  height: '120px',
-                  animation: 'spin 1.5s linear infinite'
-                }}
-                viewBox="0 0 120 120"
-              >
-                <circle
-                  cx="60"
-                  cy="60"
-                  r="54"
-                  fill="none"
-                  stroke="#D47A3E"
-                  strokeWidth="4"
-                  strokeDasharray="300 360"
-                  strokeLinecap="round"
-                />
-              </svg>
-
-              {/* Logo */}
-              <img
-                src="/assets/images/favicon.png"
-                alt="Loading"
-                style={{
-                  width: '64px',
-                  height: '64px',
-                  position: 'relative',
-                  zIndex: 1,
-                  animation: 'bounce 1s ease-in-out infinite'
-                }}
+            {/* Rotating Circle */}
+            <svg
+              style={{
+                position: 'absolute',
+                width: '120px',
+                height: '120px',
+                animation: 'spin 1.5s linear infinite'
+              }}
+              viewBox="0 0 120 120"
+            >
+              <circle
+                cx="60"
+                cy="60"
+                r="54"
+                fill="none"
+                stroke="#D47A3E"
+                strokeWidth="4"
+                strokeDasharray="300 360"
+                strokeLinecap="round"
               />
-            </div>
+            </svg>
+
+            {/* Logo */}
+            <img
+              src="/assets/images/favicon.png"
+              alt="Loading"
+              style={{
+                width: '64px',
+                height: '64px',
+                position: 'relative',
+                zIndex: 1,
+                animation: 'bounce 1s ease-in-out infinite'
+              }}
+            />
           </div>
-        </Layout>
-      </ThemeProvider>
+        </div>
+      </Layout>
     );
   }
 
   return (
-    <ThemeProvider>
-      <Suspense fallback={<LoadingFallback />}>
-        <Routes>
+    <Suspense fallback={<LoadingFallback />}>
+      <Routes>
           {/* Auth Routes - Without Layout */}
           <Route
             path="/sign-in/*"
@@ -344,6 +328,16 @@ const V2App = () => {
           />
         </Routes>
       </Suspense>
+  );
+};
+
+// Main V2App wrapper with providers
+const V2App = () => {
+  return (
+    <ThemeProvider>
+      <UserProvider>
+        <V2AppContent />
+      </UserProvider>
     </ThemeProvider>
   );
 };

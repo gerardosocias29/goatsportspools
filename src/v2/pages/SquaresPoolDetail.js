@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FiArrowLeft, FiCalendar, FiDollarSign, FiGrid, FiUsers, FiLock, FiTrendingUp, FiAward, FiShare2 } from 'react-icons/fi';
+import { FiArrowLeft, FiCalendar, FiDollarSign, FiGrid, FiUsers, FiLock, FiUnlock, FiTrendingUp, FiAward, FiShare2 } from 'react-icons/fi';
 import SquaresGrid from '../components/squares/SquaresGrid';
 import { useAxios } from '../../app/contexts/AxiosContext';
+import { useUserContext } from '../contexts/UserContext';
 import { TeamTemplate } from '../../app/pages/screens/games/NFLTemplates';
 import { useTheme } from '../contexts/ThemeContext';
 
@@ -15,6 +16,7 @@ const SquaresPoolDetail = () => {
   const { poolId } = useParams();
   const navigate = useNavigate();
   const axiosService = useAxios();
+  const { user: currentUser } = useUserContext(); // Get user from context
 
   const [pool, setPool] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -24,7 +26,6 @@ const SquaresPoolDetail = () => {
   const [joinPassword, setJoinPassword] = useState('');
   const [joinError, setJoinError] = useState('');
   const [selectionMode, setSelectionMode] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
   const [winners, setWinners] = useState([]);
   const [showQRCode, setShowQRCode] = useState(false);
   const [showWinners, setShowWinners] = useState(false);
@@ -33,33 +34,12 @@ const SquaresPoolDetail = () => {
 
   useEffect(() => {
     const initPage = async () => {
-      const user = await loadCurrentUser();
       loadTeams();
-      loadPool(user);
+      loadPool(); // currentUser is available from context
       loadWinners();
     };
     initPage();
-  }, [poolId]);
-
-  const loadCurrentUser = async () => {
-    try {
-      const axios = (await import('axios')).default;
-      const Cookies = (await import('js-cookie')).default;
-      const token = Cookies.get('__session') || localStorage.getItem('token');
-
-      const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/me_user`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        }
-      });
-      setCurrentUser(response.data);
-      return response.data;
-    } catch (error) {
-      console.error('Error loading user:', error);
-      return null;
-    }
-  };
+  }, [poolId, currentUser]);
 
   const loadTeams = async () => {
     try {
@@ -207,6 +187,63 @@ const SquaresPoolDetail = () => {
     }
   };
 
+  const handleClosePool = async () => {
+    if (!window.confirm('Are you sure you want to close this pool? No new squares can be selected after closing.')) return;
+
+    try {
+      await axiosService.post(`/api/squares-pools/${poolId}/close`);
+      alert('Pool closed successfully!');
+      await loadPool();
+    } catch (error) {
+      alert('Failed to close pool: ' + (error.response?.data?.message || error.message));
+    }
+  };
+
+  const handleReopenPool = async () => {
+    if (!window.confirm('Are you sure you want to reopen this pool for square selection?')) return;
+
+    try {
+      await axiosService.post(`/api/squares-pools/${poolId}/reopen`);
+      alert('Pool reopened successfully!');
+      await loadPool();
+    } catch (error) {
+      alert('Failed to reopen pool: ' + (error.response?.data?.message || error.message));
+    }
+  };
+
+  const handleMakePoolFree = async () => {
+    if (!window.confirm('Change this pool to FREE? All players will be able to select squares without credits.')) return;
+
+    try {
+      await axiosService.patch(`/api/squares-pools/${poolId}/settings`, {
+        player_pool_type: 'OPEN'
+      });
+      alert('Pool changed to FREE successfully!');
+      await loadPool();
+    } catch (error) {
+      alert('Failed to update pool: ' + (error.response?.data?.message || error.message));
+    }
+  };
+
+  const handleAddCredits = async () => {
+    const playerId = prompt('Enter Player ID to grant credits to:');
+    if (!playerId) return;
+
+    const credits = prompt('How many credits to add?');
+    if (!credits || isNaN(credits)) return;
+
+    try {
+      await axiosService.post(`/api/squares-pools/${poolId}/add-credits`, {
+        player_id: parseInt(playerId),
+        credits: parseInt(credits)
+      });
+      alert(`Added ${credits} credits successfully!`);
+      await loadPool();
+    } catch (error) {
+      alert('Failed to add credits: ' + (error.response?.data?.message || error.message));
+    }
+  };
+
   const formatDate = (dateString) => {
     if (!dateString) return 'TBD';
     const date = new Date(dateString);
@@ -309,7 +346,7 @@ const SquaresPoolDetail = () => {
             color: "#fff",
             fontFamily: '"Hubot Sans", sans-serif',
           }}>
-            Loading NFL betting...
+            Loading Pool Details...
           </div>
         </div>
       </div>
@@ -487,6 +524,41 @@ const SquaresPoolDetail = () => {
                     <FiAward />
                     {showWinners ? 'Hide' : 'Show'} Winners
                   </button>
+                  {pool.pool_status === 'open' ? (
+                    <button
+                      onClick={handleClosePool}
+                      className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-semibold transition-all flex items-center gap-2"
+                    >
+                      <FiLock />
+                      Close Pool
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleReopenPool}
+                      className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold transition-all flex items-center gap-2"
+                    >
+                      <FiUnlock />
+                      Reopen Pool
+                    </button>
+                  )}
+                  {pool.player_pool_type === 'CREDIT' && (
+                    <>
+                      <button
+                        onClick={handleMakePoolFree}
+                        className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg font-semibold transition-all flex items-center gap-2"
+                      >
+                        <FiDollarSign />
+                        Make Pool FREE
+                      </button>
+                      <button
+                        onClick={handleAddCredits}
+                        className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-semibold transition-all flex items-center gap-2"
+                      >
+                        <FiTrendingUp />
+                        Grant Credits
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
@@ -582,7 +654,7 @@ const SquaresPoolDetail = () => {
               {!selectionMode ? (
                 <button
                   onClick={() => setSelectionMode(true)}
-                  disabled={pool.gridStatus !== 'SelectOpen'}
+                  disabled={pool.pool_status !== 'open'}
                   className="bg-blue-500 hover:bg-blue-600 disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-8 py-3 rounded-lg font-bold transition-all shadow-lg"
                 >
                   Select Squares
@@ -644,7 +716,7 @@ const SquaresPoolDetail = () => {
             onSquareSelect={handleSquareSelection}
             currentPlayerID={currentUser?.user?.id || currentUser?.id}
             selectionMode={selectionMode}
-            disabled={!hasJoined || (pool.pool_status !== 'open' && pool.gridStatus !== 'SelectOpen')}
+            disabled={!hasJoined || pool.pool_status !== 'open'}
           />
         </div>
 

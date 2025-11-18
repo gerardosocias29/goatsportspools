@@ -57,11 +57,8 @@ const SquaresPoolList = () => {
     const badges = {
       open: 'bg-green-500 text-white',
       closed: 'bg-red-500 text-white',
-      SelectOpen: 'bg-green-500 text-white',
-      SelectClosed: 'bg-yellow-500 text-gray-900',
-      GameStarted: 'bg-blue-500 text-white',
-      GameCompleted: 'bg-gray-500 text-white',
-      Closed: 'bg-red-500 text-white',
+      in_progress: 'bg-blue-500 text-white',
+      completed: 'bg-gray-500 text-white',
     };
     return badges[status] || 'bg-gray-300 text-gray-700';
   };
@@ -70,11 +67,8 @@ const SquaresPoolList = () => {
     const texts = {
       open: 'Open for Selection',
       closed: 'Closed',
-      SelectOpen: 'Open for Selection',
-      SelectClosed: 'Selection Closed',
-      GameStarted: 'Game in Progress',
-      GameCompleted: 'Completed',
-      Closed: 'Closed',
+      in_progress: 'Game in Progress',
+      completed: 'Completed',
     };
     return texts[status] || status;
   };
@@ -268,8 +262,8 @@ const SquaresPoolList = () => {
                 className="bg-gray-800 rounded-xl shadow-xl overflow-hidden hover:shadow-2xl hover:scale-105 transition-all duration-200 cursor-pointer border-2 border-gray-700 hover:border-blue-500"
               >
                 {/* Status Badge */}
-                <div className={`${getStatusBadge(pool.pool_status || pool.gridStatus)} px-4 py-2 text-sm font-semibold text-center`}>
-                  {getStatusText(pool.pool_status || pool.gridStatus)}
+                <div className={`${getStatusBadge(pool.pool_status)} px-4 py-2 text-sm font-semibold text-center`}>
+                  {getStatusText(pool.pool_status)}
                 </div>
 
                 {/* Pool Info */}
@@ -354,7 +348,7 @@ const SquaresPoolList = () => {
                       handlePoolClick(pool.id);
                     }}
                   >
-                    {(pool.pool_status === 'open' || pool.gridStatus === 'SelectOpen') ? 'Join & Select Squares' : 'View Pool'}
+                    {pool.pool_status === 'open' ? 'Join & Select Squares' : 'View Pool'}
                   </button>
                 </div>
               </div>

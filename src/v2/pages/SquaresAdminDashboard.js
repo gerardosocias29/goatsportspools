@@ -33,7 +33,7 @@ const SquaresAdminDashboard = () => {
         setPools(myPools);
 
         // Calculate stats
-        const activePools = myPools.filter(p => p.gridStatus === 'SelectOpen' || p.gridStatus === 'GameStarted').length;
+        const activePools = myPools.filter(p => p.pool_status === 'open' || p.pool_status === 'in_progress').length;
         const totalRevenue = myPools.reduce((sum, p) => sum + (p.selectedSquares * p.costPerSquare), 0);
         const freeGrids = Math.max(0, 10 - myPools.filter(p => p.gridFeeType === 'Free').length);
 
@@ -63,10 +63,10 @@ const SquaresAdminDashboard = () => {
 
   const getStatusBadge = (status) => {
     const badges = {
-      SelectOpen: { bg: 'bg-green-500', text: 'Open' },
-      SelectClosed: { bg: 'bg-yellow-500', text: 'Closed' },
-      GameStarted: { bg: 'bg-blue-500', text: 'In Progress' },
-      GameCompleted: { bg: 'bg-gray-500', text: 'Completed' },
+      open: { bg: 'bg-green-500', text: 'Open' },
+      closed: { bg: 'bg-red-500', text: 'Closed' },
+      in_progress: { bg: 'bg-blue-500', text: 'In Progress' },
+      completed: { bg: 'bg-gray-500', text: 'Completed' },
     };
     return badges[status] || { bg: 'bg-gray-500', text: status };
   };
@@ -197,7 +197,7 @@ const SquaresAdminDashboard = () => {
                 </thead>
                 <tbody>
                   {pools.map((pool) => {
-                    const status = getStatusBadge(pool.gridStatus);
+                    const status = getStatusBadge(pool.pool_status);
                     const progress = pool.totalSquares ? ((pool.selectedSquares / pool.totalSquares) * 100).toFixed(0) : 0;
                     const revenue = ((pool.selectedSquares || 0) * (pool.costPerSquare || 0)).toFixed(2);
 
