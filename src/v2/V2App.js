@@ -24,6 +24,7 @@ const CreateSquaresPool = lazy(() => import('./pages/CreateSquaresPool'));
 const SquaresAdminDashboard = lazy(() => import('./pages/SquaresAdminDashboard'));
 const ManageGames = lazy(() => import('./pages/ManageGames'));
 const AdminSettings = lazy(() => import('./pages/AdminSettings'));
+const CreditRequests = lazy(() => import('./pages/CreditRequests'));
 
 // Loading fallback component for lazy-loaded routes
 const LoadingFallback = () => (
@@ -244,6 +245,7 @@ const V2AppContent = () => {
                   <Route path="/squares" element={<SquaresPoolList />} />
                   <Route path="/squares/join" element={<SquaresJoin />} />
                   <Route path="/squares/pool/:poolId" element={<SquaresPoolDetail />} />
+                  <Route path="/credit-requests" element={<CreditRequests />} />
                   <Route
                     path="/squares/create"
                     element={

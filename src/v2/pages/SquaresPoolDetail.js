@@ -91,6 +91,10 @@ const SquaresPoolDetail = () => {
   const [downloadingQR, setDownloadingQR] = useState(false);
   const [assigningNumbers, setAssigningNumbers] = useState(false);
   const [poolPlayersNotice, setPoolPlayersNotice] = useState({ type: '', message: '' });
+  const [showRequestCreditsModal, setShowRequestCreditsModal] = useState(false);
+  const [requestAmount, setRequestAmount] = useState('');
+  const [requestReason, setRequestReason] = useState('');
+  const [requestingCredits, setRequestingCredits] = useState(false);
   const QRCodeCanvasComponent = QRCodeCanvas;
   const qrCanvasRef = useRef(null);
   const getCurrentUserId = (userObj = currentUser) => userObj?.user?.id || userObj?.id;
@@ -547,6 +551,43 @@ const SquaresPoolDetail = () => {
     setPoolPlayers([]);
     setCreditAmounts({});
     setPoolPlayersNotice({ type: '', message: '' });
+  };
+
+  const handleRequestCredits = async () => {
+    const amount = parseFloat(requestAmount);
+    if (isNaN(amount) || amount <= 0) {
+      alert('Please enter a valid amount greater than zero.');
+      return;
+    }
+
+    setRequestingCredits(true);
+    try {
+      const response = await axiosService.post(
+        `/api/credit-requests/pools/${poolId}/request`,
+        {
+          amount,
+          reason: requestReason,
+        }
+      );
+
+      if (response.data) {
+        alert('Credit request submitted successfully! The pool commissioner will review your request.');
+        setShowRequestCreditsModal(false);
+        setRequestAmount('');
+        setRequestReason('');
+      }
+    } catch (error) {
+      const errorMessage = error.response?.data?.error || error.response?.data?.message || 'Failed to request credits';
+      alert(errorMessage);
+    } finally {
+      setRequestingCredits(false);
+    }
+  };
+
+  const closeRequestCreditsModal = () => {
+    setShowRequestCreditsModal(false);
+    setRequestAmount('');
+    setRequestReason('');
   };
 
   const handleAssignNumbers = async () => {
@@ -1095,13 +1136,24 @@ const SquaresPoolDetail = () => {
               </div>
 
               {!selectionMode ? (
-                <button
-                  onClick={() => setSelectionMode(true)}
-                  disabled={pool.pool_status !== 'open'}
-                  className="bg-blue-500 hover:bg-blue-600 disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-8 py-3 rounded-lg font-bold transition-all shadow-lg"
-                >
-                  Select Squares
-                </button>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setSelectionMode(true)}
+                    disabled={pool.pool_status !== 'open'}
+                    className="bg-blue-500 hover:bg-blue-600 disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-8 py-3 rounded-lg font-bold transition-all shadow-lg"
+                  >
+                    Select Squares
+                  </button>
+                  {pool.player_pool_type === 'CREDIT' && (
+                    <button
+                      onClick={() => setShowRequestCreditsModal(true)}
+                      className="bg-purple-500 hover:bg-purple-600 text-white px-6 py-3 rounded-lg font-semibold transition-all shadow-lg flex items-center gap-2"
+                    >
+                      <FiCreditCard />
+                      Request Credits
+                    </button>
+                  )}
+                </div>
               ) : (
                 <div className="flex gap-3">
                   <button
@@ -1451,6 +1503,78 @@ const SquaresPoolDetail = () => {
                 >
                   <FiX />
                   Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Request Credits Modal */}
+      {showRequestCreditsModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-80 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={closeRequestCreditsModal}>
+          <div
+            className="bg-gray-900 rounded-2xl border border-purple-700 shadow-2xl w-full max-w-md p-6 relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={closeRequestCreditsModal}
+              className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
+              aria-label="Close request credits modal"
+            >
+              <FiX className="text-2xl" />
+            </button>
+
+            <div className="flex items-center gap-3 mb-4">
+              <FiCreditCard className="text-purple-400 text-3xl" />
+              <div>
+                <h3 className="text-2xl font-bold text-white">Request Credits</h3>
+                <p className="text-gray-400 text-sm">Request credits from the pool commissioner</p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-gray-300 text-sm font-semibold mb-2">
+                  Amount *
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  step="1"
+                  placeholder="Enter amount"
+                  value={requestAmount}
+                  onChange={(e) => setRequestAmount(e.target.value)}
+                  className="w-full bg-gray-800 text-white border border-gray-700 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-gray-300 text-sm font-semibold mb-2">
+                  Reason (Optional)
+                </label>
+                <textarea
+                  rows="3"
+                  placeholder="Why do you need these credits?"
+                  value={requestReason}
+                  onChange={(e) => setRequestReason(e.target.value)}
+                  className="w-full bg-gray-800 text-white border border-gray-700 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
+                />
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={closeRequestCreditsModal}
+                  className="flex-1 bg-gray-700 hover:bg-gray-600 text-white px-4 py-3 rounded-lg font-semibold transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleRequestCredits}
+                  disabled={requestingCredits || !requestAmount}
+                  className="flex-1 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-700 disabled:cursor-not-allowed text-white px-4 py-3 rounded-lg font-semibold transition-all flex items-center justify-center gap-2"
+                >
+                  {requestingCredits ? 'Submitting...' : 'Submit Request'}
                 </button>
               </div>
             </div>

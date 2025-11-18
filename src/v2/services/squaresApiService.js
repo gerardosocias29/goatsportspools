@@ -408,6 +408,140 @@ class SquaresApiService {
       return { success: false, error: error.response?.data?.message || 'Failed to fetch teams' };
     }
   }
+
+  // ============================================
+  // CREDIT REQUEST METHODS
+  // ============================================
+
+  /**
+   * Request credits from pool commissioner (Player → Commissioner)
+   * POST /api/credit-requests/pools/{poolId}/request
+   */
+  async requestCreditsFromCommissioner(poolId, amount, reason = '') {
+    try {
+      const response = await axiosInstance.post(`/api/credit-requests/pools/${poolId}/request`, {
+        amount,
+        reason,
+      });
+      return { success: true, data: response.data };
+    } catch (error) {
+      console.error('Error requesting credits from commissioner:', error);
+      return {
+        success: false,
+        error: error.response?.data?.error || error.response?.data?.message || 'Failed to request credits'
+      };
+    }
+  }
+
+  /**
+   * Get credit requests for a specific pool (Commissioner only)
+   * GET /api/credit-requests/pools/{poolId}
+   */
+  async getPoolCreditRequests(poolId) {
+    try {
+      const response = await axiosInstance.get(`/api/credit-requests/pools/${poolId}`);
+      return { success: true, data: response.data };
+    } catch (error) {
+      console.error('Error fetching pool credit requests:', error);
+      return { success: false, error: error.response?.data?.message || 'Failed to fetch credit requests' };
+    }
+  }
+
+  /**
+   * Get all credit requests where current user is commissioner
+   * GET /api/credit-requests/commissioner
+   */
+  async getCommissionerCreditRequests() {
+    try {
+      const response = await axiosInstance.get('/api/credit-requests/commissioner');
+      return { success: true, data: response.data };
+    } catch (error) {
+      console.error('Error fetching commissioner credit requests:', error);
+      return { success: false, error: error.response?.data?.message || 'Failed to fetch credit requests' };
+    }
+  }
+
+  /**
+   * Approve or deny a credit request (Commissioner or Superadmin)
+   * PATCH /api/credit-requests/{requestId}
+   */
+  async updateCreditRequest(requestId, status, adminNote = '') {
+    try {
+      const response = await axiosInstance.patch(`/api/credit-requests/${requestId}`, {
+        status, // 'approved' or 'denied'
+        admin_note: adminNote,
+      });
+      return { success: true, data: response.data };
+    } catch (error) {
+      console.error('Error updating credit request:', error);
+      return { success: false, error: error.response?.data?.message || 'Failed to update credit request' };
+    }
+  }
+
+  /**
+   * Request credits from Superadmin (Square Admin → Superadmin)
+   * POST /api/credit-requests/admin/request
+   */
+  async requestCreditsFromSuperadmin(amount, reason) {
+    try {
+      const response = await axiosInstance.post('/api/credit-requests/admin/request', {
+        amount,
+        reason,
+      });
+      return { success: true, data: response.data };
+    } catch (error) {
+      console.error('Error requesting credits from superadmin:', error);
+      return {
+        success: false,
+        error: error.response?.data?.error || error.response?.data?.message || 'Failed to request credits'
+      };
+    }
+  }
+
+  /**
+   * Get all admin credit requests (Superadmin only)
+   * GET /api/credit-requests/admin
+   */
+  async getSuperadminCreditRequests() {
+    try {
+      const response = await axiosInstance.get('/api/credit-requests/admin');
+      return { success: true, data: response.data };
+    } catch (error) {
+      console.error('Error fetching superadmin credit requests:', error);
+      return { success: false, error: error.response?.data?.message || 'Failed to fetch credit requests' };
+    }
+  }
+
+  /**
+   * Approve or deny an admin credit request (Superadmin only)
+   * PATCH /api/credit-requests/admin/{requestId}
+   */
+  async updateAdminCreditRequest(requestId, status, adminNote = '') {
+    try {
+      const response = await axiosInstance.patch(`/api/credit-requests/admin/${requestId}`, {
+        status, // 'approved' or 'denied'
+        admin_note: adminNote,
+      });
+      return { success: true, data: response.data };
+    } catch (error) {
+      console.error('Error updating admin credit request:', error);
+      return { success: false, error: error.response?.data?.message || 'Failed to update credit request' };
+    }
+  }
+
+  /**
+   * Get current user's credit requests
+   * GET /api/credit-requests/my-requests
+   */
+  async getMyCreditRequests() {
+    try {
+      const response = await axiosInstance.get('/api/credit-requests/my-requests');
+      return { success: true, data: response.data };
+    } catch (error) {
+      console.error('Error fetching my credit requests:', error);
+      return { success: false, error: error.response?.data?.message || 'Failed to fetch credit requests' };
+    }
+  }
 }
 
 export const squaresApiService = new SquaresApiService();
