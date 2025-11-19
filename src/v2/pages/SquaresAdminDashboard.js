@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiGrid, FiDollarSign, FiUsers, FiTrendingUp, FiPlus, FiEye, FiClock, FiCheckCircle, FiXCircle, FiCreditCard, FiAlertCircle } from 'react-icons/fi';
+import { FiGrid, FiDollarSign, FiUsers, FiTrendingUp, FiPlus, FiEye, FiAlertCircle, FiCreditCard, FiCheckCircle, FiXCircle } from 'react-icons/fi';
 import { useUserContext } from '../contexts/UserContext';
 import { useAxios } from '../../app/contexts/AxiosContext';
+import { useTheme } from '../contexts/ThemeContext';
 import SquaresApiService from '../services/squaresApiService';
+import StatusBadge from '../components/ui/StatusBadge';
 
 /**
  * Commissioner Dashboard
@@ -14,6 +16,7 @@ const SquaresAdminDashboard = () => {
   const { user: currentUser, isSignedIn, isLoaded } = useUserContext();
   const axiosService = useAxios();
   const squaresApiService = useMemo(() => new SquaresApiService(axiosService), [axiosService]);
+  const { colors, isDark } = useTheme();
 
   const [pools, setPools] = useState([]);
   const [creditRequests, setCreditRequests] = useState([]);
@@ -154,51 +157,48 @@ const SquaresAdminDashboard = () => {
     return `$${parseFloat(amount || 0).toFixed(2)}`;
   };
 
-  const getStatusBadge = (status) => {
-    const badges = {
-      pending: { icon: FiClock, color: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30', text: 'Pending' },
-      approved: { icon: FiCheckCircle, color: 'bg-green-500/20 text-green-300 border-green-500/30', text: 'Approved' },
-      denied: { icon: FiXCircle, color: 'bg-red-500/20 text-red-300 border-red-500/30', text: 'Denied' },
-      open: { icon: FiCheckCircle, color: 'bg-green-500/20 text-green-300 border-green-500/30', text: 'Open' },
-      closed: { icon: FiXCircle, color: 'bg-red-500/20 text-red-300 border-red-500/30', text: 'Closed' },
-    };
-    const badge = badges[status] || badges.pending;
-    const Icon = badge.icon;
-
+  // Using StatusBadge component for credit requests
+  // Pool status badges (open/closed) keep inline for now
+  const getPoolStatusBadge = (status) => {
+    const isOpen = status === 'open';
     return (
-      <span className={`px-3 py-1 rounded-full text-xs font-semibold border flex items-center gap-1 ${badge.color}`}>
-        <Icon className="text-sm" />
-        {badge.text}
+      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+        isOpen ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'
+      }`}>
+        {isOpen ? 'Open' : 'Closed'}
       </span>
     );
   };
 
   if (!isLoaded || loading) {
     return (
-      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
-        <div className="text-white text-xl">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: colors.background }}>
+        <div style={{ color: colors.text }} className="text-xl">Loading...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 p-6">
+    <div className="min-h-screen p-6" style={{ backgroundColor: colors.background }}>
       <div className="max-w-7xl mx-auto">
 
         {/* Header */}
         <div className="mb-8">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
-              <h1 className="text-4xl font-bold text-white mb-2">
+              <h1 className="text-4xl font-bold mb-2" style={{ color: colors.text }}>
                 Commissioner Dashboard
               </h1>
-              <p className="text-gray-400">
+              <p style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>
                 Manage your pools and credit requests
               </p>
             </div>
             <button
               onClick={() => navigate('/v2/squares/create')}
-              className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition-all flex items-center gap-2"
+              className="px-6 py-3 rounded-lg font-semibold transition-all flex items-center gap-2 text-white"
+              style={{ backgroundColor: colors.brand.primary }}
+              onMouseOver={(e) => e.target.style.backgroundColor = colors.brand.primaryHover}
+              onMouseOut={(e) => e.target.style.backgroundColor = colors.brand.primary}
             >
               <FiPlus />
               Create New Pool
@@ -258,35 +258,35 @@ const SquaresAdminDashboard = () => {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-2 mb-6 border-b border-gray-800">
+        <div className="flex gap-2 mb-6" style={{ borderBottom: `1px solid ${colors.border}` }}>
           <button
             onClick={() => setActiveTab('pools')}
-            className={`px-6 py-3 font-semibold transition-all ${
-              activeTab === 'pools'
-                ? 'text-blue-400 border-b-2 border-blue-400'
-                : 'text-gray-400 hover:text-white'
-            }`}
+            className="px-6 py-3 font-semibold transition-all"
+            style={{
+              color: activeTab === 'pools' ? colors.brand.primary : (isDark ? '#9CA3AF' : '#6B7280'),
+              borderBottom: activeTab === 'pools' ? `2px solid ${colors.brand.primary}` : 'none'
+            }}
           >
             My Pools ({pools.length})
           </button>
           <button
             onClick={() => setActiveTab('credit-requests')}
-            className={`px-6 py-3 font-semibold transition-all ${
-              activeTab === 'credit-requests'
-                ? 'text-blue-400 border-b-2 border-blue-400'
-                : 'text-gray-400 hover:text-white'
-            }`}
+            className="px-6 py-3 font-semibold transition-all"
+            style={{
+              color: activeTab === 'credit-requests' ? colors.brand.primary : (isDark ? '#9CA3AF' : '#6B7280'),
+              borderBottom: activeTab === 'credit-requests' ? `2px solid ${colors.brand.primary}` : 'none'
+            }}
           >
             Credit Requests ({creditRequests.filter(r => r.status === 'pending').length})
           </button>
           {isSuperadmin && (
             <button
               onClick={() => setActiveTab('admin-requests')}
-              className={`px-6 py-3 font-semibold transition-all ${
-                activeTab === 'admin-requests'
-                  ? 'text-blue-400 border-b-2 border-blue-400'
-                  : 'text-gray-400 hover:text-white'
-              }`}
+              className="px-6 py-3 font-semibold transition-all"
+              style={{
+                color: activeTab === 'admin-requests' ? colors.brand.primary : (isDark ? '#9CA3AF' : '#6B7280'),
+                borderBottom: activeTab === 'admin-requests' ? `2px solid ${colors.brand.primary}` : 'none'
+              }}
             >
               Admin Requests ({adminCreditRequests.filter(r => r.status === 'pending').length})
             </button>
@@ -295,8 +295,8 @@ const SquaresAdminDashboard = () => {
 
         {/* Content */}
         {activeTab === 'pools' && (
-          <div className="bg-gray-900 rounded-xl border border-gray-800 p-6">
-            <h2 className="text-2xl font-bold text-white mb-6" style={{marginBottom: '1.5rem'}}>Your Pools</h2>
+          <div className="rounded-xl p-6" style={{ backgroundColor: colors.card, border: `1px solid ${colors.border}` }}>
+            <h2 className="text-2xl font-bold mb-6" style={{ color: colors.text, marginBottom: '1.5rem' }}>Your Pools</h2>
 
             {pools.length === 0 ? (
               <div className="text-center py-12">
@@ -304,7 +304,10 @@ const SquaresAdminDashboard = () => {
                 <p className="text-gray-400 text-xl mb-6">No pools created yet</p>
                 <button
                   onClick={() => navigate('/v2/squares/create')}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-all"
+                  className="text-white px-6 py-3 rounded-lg font-semibold transition-all"
+                  style={{ backgroundColor: colors.brand.primary }}
+                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = colors.brand.primaryHover}
+                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = colors.brand.primary}
                 >
                   Create Your First Pool
                 </button>
@@ -312,19 +315,22 @@ const SquaresAdminDashboard = () => {
             ) : (
               <div className="space-y-4">
                 {pools.map((pool) => (
-                  <div key={pool.id} className="bg-gray-800 rounded-lg border border-gray-700 p-4">
+                  <div key={pool.id} className="rounded-lg p-4" style={{ backgroundColor: colors.cardHover, border: `1px solid ${colors.border}` }}>
                     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                       <div className="flex-1">
-                        <h3 className="text-white font-semibold text-lg mb-1">
+                        <h3 className="font-semibold text-lg mb-1" style={{ color: colors.text }}>
                           {pool.pool_name}
                         </h3>
                         <p className="text-gray-400 text-sm">Pool #{pool.pool_number}</p>
                       </div>
                       <div className="flex items-center gap-4">
-                        {getStatusBadge(pool.pool_status)}
+                        {getPoolStatusBadge(pool.pool_status)}
                         <button
                           onClick={() => navigate(`/v2/squares/pool/${pool.id}`)}
-                          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold transition-all flex items-center gap-2"
+                          className="text-white px-4 py-2 rounded-lg font-semibold transition-all flex items-center gap-2"
+                          style={{ backgroundColor: colors.brand.primary }}
+                          onMouseOver={(e) => e.currentTarget.style.backgroundColor = colors.brand.primaryHover}
+                          onMouseOut={(e) => e.currentTarget.style.backgroundColor = colors.brand.primary}
                         >
                           <FiEye />
                           View
@@ -339,21 +345,21 @@ const SquaresAdminDashboard = () => {
         )}
 
         {activeTab === 'credit-requests' && (
-          <div className="bg-gray-900 rounded-xl border border-gray-800 p-6">
-            <h2 className="text-2xl font-bold text-white mb-6" style={{marginBottom: '1.5rem'}}>Player Credit Requests</h2>
+          <div className="rounded-xl p-6" style={{ backgroundColor: colors.card, border: `1px solid ${colors.border}` }}>
+            <h2 className="text-2xl font-bold mb-6" style={{ color: colors.text, marginBottom: '1.5rem' }}>Player Credit Requests</h2>
 
             {creditRequests.length === 0 ? (
               <div className="text-center py-12">
                 <FiAlertCircle className="text-6xl text-gray-600 mx-auto mb-4" />
-                <p className="text-gray-400 text-xl">No credit requests</p>
+                <p className="text-xl" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>No credit requests</p>
               </div>
             ) : (
               <div className="space-y-4">
                 {creditRequests.map((request) => (
-                  <div key={request.id} className="bg-gray-800 rounded-lg border border-gray-700 p-6">
+                  <div key={request.id} className="rounded-lg p-6" style={{ backgroundColor: colors.cardHover, border: `1px solid ${colors.border}` }}>
                     <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-4">
                       <div className="flex-1">
-                        <h3 className="text-white font-semibold text-lg mb-1">
+                        <h3 className="font-semibold text-lg mb-1" style={{ color: colors.text }}>
                           {request.pool?.pool_name || `Pool #${request.pool?.pool_number}`}
                         </h3>
                         <p className="text-gray-400 text-sm mb-2">
@@ -363,7 +369,7 @@ const SquaresAdminDashboard = () => {
                           Requested on {formatDate(request.created_at)}
                         </p>
                       </div>
-                      {getStatusBadge(request.status)}
+                      <StatusBadge status={request.status} />
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -415,13 +421,13 @@ const SquaresAdminDashboard = () => {
         )}
 
         {activeTab === 'admin-requests' && isSuperadmin && (
-          <div className="bg-gray-900 rounded-xl border border-gray-800 p-6">
-            <h2 className="text-2xl font-bold text-white mb-6" style={{marginBottom: '1.5rem'}}>Square Admin Credit Requests</h2>
+          <div className="rounded-xl p-6" style={{ backgroundColor: colors.card, border: `1px solid ${colors.border}` }}>
+            <h2 className="text-2xl font-bold mb-6" style={{ color: colors.text, marginBottom: '1.5rem' }}>Square Admin Credit Requests</h2>
 
             {adminCreditRequests.length === 0 ? (
               <div className="text-center py-12">
                 <FiAlertCircle className="text-6xl text-gray-600 mx-auto mb-4" />
-                <p className="text-gray-400 text-xl">No admin credit requests</p>
+                <p className="text-xl" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>No admin credit requests</p>
               </div>
             ) : (
               <div className="space-y-4">
@@ -429,7 +435,7 @@ const SquaresAdminDashboard = () => {
                   <div key={request.id} className="bg-gray-800 rounded-lg border border-purple-700 p-6">
                     <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-4">
                       <div className="flex-1">
-                        <h3 className="text-white font-semibold text-lg mb-1">
+                        <h3 className="font-semibold text-lg mb-1" style={{ color: colors.text }}>
                           Credit Request from Square Admin
                         </h3>
                         <p className="text-gray-400 text-sm mb-2">
@@ -439,7 +445,7 @@ const SquaresAdminDashboard = () => {
                           Requested on {formatDate(request.created_at)}
                         </p>
                       </div>
-                      {getStatusBadge(request.status)}
+                      <StatusBadge status={request.status} />
                     </div>
 
                     <div className="mb-4">

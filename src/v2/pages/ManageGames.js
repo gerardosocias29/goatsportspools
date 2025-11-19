@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiPlus, FiEdit2, FiTrash2, FiCheck, FiX, FiCalendar, FiDownload, FiUpload } from 'react-icons/fi';
 import { useAxios } from '../../app/contexts/AxiosContext';
+import { useTheme } from '../contexts/ThemeContext';
 
 /**
  * Manage Games Page - V2 Implementation
@@ -11,6 +12,7 @@ import { useAxios } from '../../app/contexts/AxiosContext';
 const ManageGames = () => {
   const navigate = useNavigate();
   const axiosService = useAxios();
+  const { colors, isDark } = useTheme();
   const [games, setGames] = useState([]);
   const [teams, setTeams] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -157,7 +159,7 @@ const ManageGames = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 py-8 px-4">
+    <div className="min-h-screen py-8 px-4" style={{ backgroundColor: colors.background }}>
       <div className="max-w-7xl mx-auto">
         {/* Success/Error Message */}
         {message && (
@@ -172,7 +174,7 @@ const ManageGames = () => {
 
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-white mb-6">Game Management</h1>
+          <h1 className="text-4xl font-bold mb-6" style={{ color: colors.text }}>Game Management</h1>
 
           <div className="flex flex-wrap gap-4 items-center justify-between">
             {/* Import/Export Buttons (Disabled) */}
@@ -201,7 +203,10 @@ const ManageGames = () => {
                 resetForm();
                 setShowModal(true);
               }}
-              className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg font-semibold shadow-lg transition-all duration-200 transform hover:scale-105"
+              className="flex items-center gap-2 px-6 py-3 text-white rounded-lg font-semibold shadow-lg transition-all duration-200 transform hover:scale-105"
+              style={{ backgroundColor: colors.brand.primary }}
+              onMouseOver={(e) => e.currentTarget.style.backgroundColor = colors.brand.primaryHover}
+              onMouseOut={(e) => e.currentTarget.style.backgroundColor = colors.brand.primary}
             >
               <FiPlus size={20} />
               Create Game
@@ -212,23 +217,24 @@ const ManageGames = () => {
         {/* Games Grid */}
         {loading && games.length === 0 ? (
           <div className="text-center py-20">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
-            <p className="text-white mt-4">Loading games...</p>
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2" style={{ borderTopColor: colors.brand.primary, borderBottomColor: colors.brand.primary }}></div>
+            <p className="mt-4" style={{ color: colors.text }}>Loading games...</p>
           </div>
         ) : games.length === 0 ? (
-          <div className="bg-gray-800/50 rounded-xl p-12 text-center border border-gray-700">
-            <FiCalendar size={64} className="mx-auto mb-4 text-gray-600" />
-            <p className="text-gray-400 text-lg">No games found. Create your first game!</p>
+          <div className="rounded-xl p-12 text-center" style={{ backgroundColor: colors.card, border: `1px solid ${colors.border}` }}>
+            <FiCalendar size={64} className="mx-auto mb-4" style={{ color: isDark ? '#6B7280' : '#9CA3AF' }} />
+            <p className="text-lg" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>No games found. Create your first game!</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {games.map((game) => (
               <div
                 key={game.id}
-                className="bg-gray-800 rounded-xl shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 overflow-hidden border border-gray-700"
+                className="rounded-xl shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 overflow-hidden"
+                style={{ backgroundColor: colors.card, border: `1px solid ${colors.border}` }}
               >
                 {/* Game Card Header */}
-                <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-4">
+                <div className="px-6 py-4" style={{ backgroundColor: colors.brand.primary }}>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 text-white">
                       <FiCalendar size={18} />
@@ -255,7 +261,7 @@ const ManageGames = () => {
                 {/* Teams */}
                 <div className="p-6">
                   {/* Home Team */}
-                  <div className="flex items-center gap-3 mb-4 pb-4 border-b border-gray-700">
+                  <div className="flex items-center gap-3 mb-4 pb-4" style={{ borderBottom: `1px solid ${colors.border}` }}>
                     {game.home_team?.image_url && (
                       <img
                         src={game.home_team.image_url}
@@ -264,10 +270,10 @@ const ManageGames = () => {
                       />
                     )}
                     <div className="flex-1">
-                      <p className="text-white font-semibold">
+                      <p className="font-semibold" style={{ color: colors.text }}>
                         {game.home_team?.name || game.home_team}
                       </p>
-                      <p className="text-gray-400 text-sm">Home</p>
+                      <p className="text-sm" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>Home</p>
                     </div>
                   </div>
 
@@ -281,10 +287,10 @@ const ManageGames = () => {
                       />
                     )}
                     <div className="flex-1">
-                      <p className="text-white font-semibold">
+                      <p className="font-semibold" style={{ color: colors.text }}>
                         {game.visitor_team?.name || game.visitor_team}
                       </p>
-                      <p className="text-gray-400 text-sm">Visitor</p>
+                      <p className="text-sm" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>Visitor</p>
                     </div>
                   </div>
                 </div>
@@ -300,7 +306,10 @@ const ManageGames = () => {
                   ) : (
                     <button
                       onClick={() => handleEdit(game)}
-                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200"
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-white rounded-lg transition-colors duration-200"
+                      style={{ backgroundColor: colors.brand.primary }}
+                      onMouseOver={(e) => e.currentTarget.style.backgroundColor = colors.brand.primaryHover}
+                      onMouseOut={(e) => e.currentTarget.style.backgroundColor = colors.brand.primary}
                     >
                       <FiEdit2 size={16} />
                       Edit
@@ -332,31 +341,38 @@ const ManageGames = () => {
             onClick={handleModalClose}
           >
             <div
-              className="bg-gray-800 rounded-xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-gray-700"
+              className="rounded-xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+              style={{ backgroundColor: colors.card, border: `2px solid ${colors.brand.primary}` }}
               onClick={(e) => e.stopPropagation()}
             >
-              <h2 className="text-3xl font-bold text-white mb-6">
+              <h2 className="text-3xl font-bold mb-6" style={{ color: colors.text }}>
                 {editingGame ? 'Edit Game' : 'Create New Game'}
               </h2>
 
               <form onSubmit={handleSubmit}>
                 {/* Game Date & Time */}
                 <div className="mb-6">
-                  <label className="block text-white font-semibold mb-2">
+                  <label className="block font-semibold mb-2" style={{ color: colors.text }}>
                     Game Date & Time *
                   </label>
                   <input
                     type="datetime-local"
                     value={formData.game_datetime}
                     onChange={(e) => setFormData({ ...formData, game_datetime: e.target.value })}
-                    className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 rounded-lg focus:ring-2 focus:border-transparent"
+                    style={{
+                      backgroundColor: isDark ? '#374151' : '#F3F4F6',
+                      border: `1px solid ${colors.border}`,
+                      color: colors.text,
+                      outlineColor: colors.brand.primary
+                    }}
                     required
                   />
                 </div>
 
                 {/* Home Team */}
                 <div className="mb-6">
-                  <label className="block text-white font-semibold mb-2">
+                  <label className="block font-semibold mb-2" style={{ color: colors.text }}>
                     Home Team *
                   </label>
                   <select
@@ -369,7 +385,13 @@ const ManageGames = () => {
                         favored_team: team
                       });
                     }}
-                    className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 rounded-lg focus:ring-2 focus:border-transparent"
+                    style={{
+                      backgroundColor: isDark ? '#374151' : '#F3F4F6',
+                      border: `1px solid ${colors.border}`,
+                      color: colors.text,
+                      outlineColor: colors.brand.primary
+                    }}
                     required
                   >
                     <option value="">Select Home Team</option>
@@ -383,7 +405,7 @@ const ManageGames = () => {
 
                 {/* Visitor Team */}
                 <div className="mb-6">
-                  <label className="block text-white font-semibold mb-2">
+                  <label className="block font-semibold mb-2" style={{ color: colors.text }}>
                     Visitor Team *
                   </label>
                   <select
@@ -396,7 +418,13 @@ const ManageGames = () => {
                         underdog_team: team
                       });
                     }}
-                    className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 rounded-lg focus:ring-2 focus:border-transparent"
+                    style={{
+                      backgroundColor: isDark ? '#374151' : '#F3F4F6',
+                      border: `1px solid ${colors.border}`,
+                      color: colors.text,
+                      outlineColor: colors.brand.primary
+                    }}
                     required
                   >
                     <option value="">Select Visitor Team</option>
@@ -421,7 +449,10 @@ const ManageGames = () => {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg font-semibold shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex-1 flex items-center justify-center gap-2 px-6 py-3 text-white rounded-lg font-semibold shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: colors.brand.primary }}
+                    onMouseOver={(e) => !loading && (e.currentTarget.style.backgroundColor = colors.brand.primaryHover)}
+                    onMouseOut={(e) => !loading && (e.currentTarget.style.backgroundColor = colors.brand.primary)}
                   >
                     <FiCheck size={20} />
                     {loading ? 'Saving...' : (editingGame ? 'Update Game' : 'Create Game')}

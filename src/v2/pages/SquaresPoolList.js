@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { FiCalendar, FiUsers, FiDollarSign, FiGrid, FiLock, FiUnlock } from 'react-icons/fi';
 import { useAxios } from '../../app/contexts/AxiosContext';
 import { useUserContext } from '../contexts/UserContext';
+import { useTheme } from '../contexts/ThemeContext';
 
 /**
  * Squares Pool List Page
@@ -12,6 +13,7 @@ const SquaresPoolList = () => {
   const navigate = useNavigate();
   const axiosService = useAxios();
   const { user: currentUser, isSignedIn } = useUserContext();
+  const { colors, isDark } = useTheme();
   const [pools, setPools] = useState([]);
   const [teams, setTeams] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -109,17 +111,17 @@ const SquaresPoolList = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 p-4 md:p-8">
+    <div className="min-h-screen p-4 md:p-8" style={{ backgroundColor: colors.background }}>
       <div className="max-w-7xl mx-auto">
 
         {/* Header */}
         <div className="mb-8">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
-              <h1 className="text-4xl md:text-5xl font-bold text-white mb-2">
+              <h1 className="text-4xl md:text-5xl font-bold mb-2" style={{ color: colors.text }}>
                 Squares Pools
               </h1>
-              <p className="text-gray-300 text-lg">
+              <p className="text-lg" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>
                 Join a pool and pick your winning squares
               </p>
             </div>
@@ -130,7 +132,10 @@ const SquaresPoolList = () => {
             })() && (
               <button
                 onClick={handleCreatePool}
-                className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all duration-200 flex items-center gap-2"
+                className="text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all duration-200 flex items-center gap-2"
+                style={{ backgroundColor: colors.brand.primary }}
+                onMouseOver={(e) => e.currentTarget.style.backgroundColor = colors.brand.primaryHover}
+                onMouseOut={(e) => e.currentTarget.style.backgroundColor = colors.brand.primary}
               >
                 <FiGrid className="text-xl" />
                 Create New Pool
@@ -155,15 +160,21 @@ const SquaresPoolList = () => {
         </div>
 
         {/* Filters */}
-        <div className="mb-6 bg-gray-800 p-4 rounded-lg shadow-lg flex flex-wrap gap-4">
+        <div className="mb-6 p-4 rounded-lg shadow-lg flex flex-wrap gap-4" style={{ backgroundColor: colors.card, border: `1px solid ${colors.border}` }}>
           <div className="flex-1 min-w-[200px]">
-            <label className="block text-gray-300 text-sm font-medium mb-2">
+            <label className="block text-sm font-medium mb-2" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>
               Status
             </label>
             <select
               value={filter.status}
               onChange={(e) => setFilter({ ...filter, status: e.target.value })}
-              className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded-lg px-4 py-2 focus:outline-none focus:ring-2"
+              style={{
+                backgroundColor: isDark ? '#374151' : '#F3F4F6',
+                color: colors.text,
+                border: `1px solid ${colors.border}`,
+                outlineColor: colors.brand.primary
+              }}
             >
               <option value="all">All Status</option>
               <option value="SelectOpen">Open for Selection</option>
@@ -173,13 +184,19 @@ const SquaresPoolList = () => {
           </div>
 
           <div className="flex-1 min-w-[200px]">
-            <label className="block text-gray-300 text-sm font-medium mb-2">
+            <label className="block text-sm font-medium mb-2" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>
               League
             </label>
             <select
               value={filter.league}
               onChange={(e) => setFilter({ ...filter, league: e.target.value })}
-              className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded-lg px-4 py-2 focus:outline-none focus:ring-2"
+              style={{
+                backgroundColor: isDark ? '#374151' : '#F3F4F6',
+                color: colors.text,
+                border: `1px solid ${colors.border}`,
+                outlineColor: colors.brand.primary
+              }}
             >
               <option value="all">All Leagues</option>
               <option value="NFL">NFL</option>
@@ -243,7 +260,7 @@ const SquaresPoolList = () => {
               <div style={{
                 fontSize: '1.25rem',
                 fontWeight: 600,
-                color: "#fff",
+                color: colors.text,
                 fontFamily: '"Hubot Sans", sans-serif',
               }}>
                 Loading Square Pools...
@@ -251,9 +268,9 @@ const SquaresPoolList = () => {
             </div>
           </div>
         ) : pools.length === 0 ? (
-          <div className="text-center py-20 bg-gray-800 rounded-xl">
-            <FiGrid className="text-6xl text-gray-600 mx-auto mb-4" />
-            <p className="text-gray-400 text-xl">No pools found</p>
+          <div className="text-center py-20 rounded-xl" style={{ backgroundColor: colors.card, border: `1px solid ${colors.border}` }}>
+            <FiGrid className="text-6xl mx-auto mb-4" style={{ color: isDark ? '#6B7280' : '#9CA3AF' }} />
+            <p className="text-xl" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>No pools found</p>
             {/* Only show Create Pool button for admins */}
             {isSignedIn && (() => {
               const userRoleId = currentUser?.user?.role_id ?? currentUser?.role_id;
@@ -261,7 +278,10 @@ const SquaresPoolList = () => {
             })() && (
               <button
                 onClick={handleCreatePool}
-                className="mt-6 bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold transition-all"
+                className="mt-6 text-white px-6 py-3 rounded-lg font-semibold transition-all"
+                style={{ backgroundColor: colors.brand.primary }}
+                onMouseOver={(e) => e.currentTarget.style.backgroundColor = colors.brand.primaryHover}
+                onMouseOut={(e) => e.currentTarget.style.backgroundColor = colors.brand.primary}
               >
                 Create the First Pool
               </button>
@@ -273,10 +293,17 @@ const SquaresPoolList = () => {
               <div
                 key={pool.id}
                 onClick={() => handlePoolClick(pool.id)}
-                className="bg-gray-800 rounded-xl shadow-xl overflow-hidden hover:shadow-2xl hover:scale-105 transition-all duration-200 cursor-pointer border-2 border-gray-700 hover:border-blue-500"
+                className="rounded-xl shadow-xl overflow-hidden hover:shadow-2xl hover:scale-105 transition-all duration-200 cursor-pointer"
+                style={{
+                  backgroundColor: colors.card,
+                  border: `2px solid ${colors.border}`,
+                  transition: 'all 0.2s'
+                }}
+                onMouseOver={(e) => e.currentTarget.style.borderColor = colors.brand.primary}
+                onMouseOut={(e) => e.currentTarget.style.borderColor = colors.border}
               >
                 {/* Status and Type Badges */}
-                <div className="flex items-center justify-between px-4 py-2">
+                <div className="flex items-center justify-between px-4 py-2" style={{ backgroundColor: isDark ? '#374151' : '#F3F4F6' }}>
                   <div className={`${getStatusBadge(pool.pool_status)} px-3 py-1 text-xs font-semibold rounded-full`}>
                     {getStatusText(pool.pool_status)}
                   </div>
@@ -300,20 +327,20 @@ const SquaresPoolList = () => {
 
                 {/* Pool Info */}
                 <div className="p-6">
-                  <h3 className="text-xl font-bold text-white mb-2 line-clamp-2">
+                  <h3 className="text-xl font-bold mb-2 line-clamp-2" style={{ color: colors.text }}>
                     {pool.pool_name || pool.gridName}
                   </h3>
 
                   {/* Game Info */}
                   {pool.game && (
-                    <div className="mb-4 pb-4 border-b border-gray-700">
-                      <div className="flex items-center gap-2 text-blue-400 text-sm mb-2">
+                    <div className="mb-4 pb-4" style={{ borderBottom: `1px solid ${colors.border}` }}>
+                      <div className="flex items-center gap-2 text-sm mb-2" style={{ color: colors.brand.primary }}>
                         <span className="font-semibold">{pool.game.league || 'NFL'}</span>
                       </div>
-                      <div className="text-gray-300 text-sm font-medium">
+                      <div className="text-sm font-medium" style={{ color: colors.text }}>
                         {getTeamName(pool.game.home_team_id || pool.game.homeTeamId)} vs {getTeamName(pool.game.visitor_team_id || pool.game.visitorTeamId)}
                       </div>
-                      <div className="flex items-center gap-2 text-gray-400 text-xs mt-1">
+                      <div className="flex items-center gap-2 text-xs mt-1" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>
                         <FiCalendar />
                         {formatDate(pool.game.game_time || pool.game.game_datetime || pool.game.gameTime)}
                       </div>
@@ -325,48 +352,48 @@ const SquaresPoolList = () => {
                     {/* Progress Bar */}
                     <div>
                       <div className="flex justify-between text-sm mb-1">
-                        <span className="text-gray-400">Squares Filled</span>
-                        <span className="text-white font-semibold">
+                        <span style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>Squares Filled</span>
+                        <span className="font-semibold" style={{ color: colors.text }}>
                           {pool.squares_claimed || pool.selectedSquares || 0}/{pool.total_squares || pool.totalSquares || 100}
                         </span>
                       </div>
-                      <div className="w-full bg-gray-700 rounded-full h-2 overflow-hidden">
+                      <div className="w-full rounded-full h-2 overflow-hidden" style={{ backgroundColor: isDark ? '#374151' : '#E5E7EB' }}>
                         <div
-                          className="bg-gradient-to-r from-green-500 to-blue-500 h-full transition-all duration-500"
-                          style={{ width: `${getProgressPercentage(pool)}%` }}
+                          className="h-full transition-all duration-500"
+                          style={{ width: `${getProgressPercentage(pool)}%`, backgroundColor: colors.brand.primary }}
                         ></div>
                       </div>
                     </div>
 
                     {/* Cost per Square */}
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-gray-400 text-sm">
+                      <div className="flex items-center gap-2 text-sm" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>
                         <FiDollarSign />
                         <span>Per Square</span>
                       </div>
-                      <span className="text-green-400 font-bold text-lg">
+                      <span className="font-bold text-lg text-green-400">
                         ${parseFloat(pool.entry_fee || pool.credit_cost || pool.costPerSquare || 0).toFixed(2)}
                       </span>
                     </div>
 
                     {/* Total Pot */}
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-gray-400 text-sm">
+                      <div className="flex items-center gap-2 text-sm" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>
                         <FiUsers />
                         <span>Total Pot</span>
                       </div>
-                      <span className="text-yellow-400 font-bold text-lg">
+                      <span className="font-bold text-lg text-yellow-400">
                         ${parseFloat(pool.total_pot || pool.totalPot || 0).toFixed(2)}
                       </span>
                     </div>
 
                     {/* Access Type */}
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-gray-400 text-sm">
+                      <div className="flex items-center gap-2 text-sm" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>
                         {(pool.player_pool_type === 'CREDIT' || pool.costType === 'PasswordOpen') ? <FiLock /> : <FiUnlock />}
                         <span>Access</span>
                       </div>
-                      <span className="text-gray-300 text-sm">
+                      <span className="text-sm" style={{ color: colors.text }}>
                         {pool.player_pool_type === 'CREDIT' || pool.costType === 'PasswordOpen' ? 'Password Required' : 'Open'}
                       </span>
                     </div>
@@ -374,7 +401,10 @@ const SquaresPoolList = () => {
 
                   {/* Action Button */}
                   <button
-                    className="w-full mt-6 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white py-3 rounded-lg font-semibold transition-all duration-200 shadow-lg"
+                    className="w-full mt-6 text-white py-3 rounded-lg font-semibold transition-all duration-200 shadow-lg"
+                    style={{ backgroundColor: colors.brand.primary }}
+                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = colors.brand.primaryHover}
+                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = colors.brand.primary}
                     onClick={(e) => {
                       e.stopPropagation();
                       handlePoolClick(pool.id);

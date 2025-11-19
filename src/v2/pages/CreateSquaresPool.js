@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { FiArrowLeft, FiCheck, FiInfo } from 'react-icons/fi';
 import { useAxios } from '../../app/contexts/AxiosContext';
 import { useUserContext } from '../contexts/UserContext';
+import { useTheme } from '../contexts/ThemeContext';
 
 /**
  * Create Squares Pool Page
@@ -13,6 +14,7 @@ const CreateSquaresPool = () => {
   const navigate = useNavigate();
   const axiosService = useAxios();
   const { user: currentUser, isSignedIn, isLoaded } = useUserContext();
+  const { colors, isDark } = useTheme();
 
   const [games, setGames] = useState([]);
   const [rewardTypes, setRewardTypes] = useState([]);
@@ -259,39 +261,43 @@ const CreateSquaresPool = () => {
   const selectedRewardType = rewardTypes.find(r => r.id === formData.gameRewardTypeID);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 p-4 md:p-8">
+    <div className="min-h-screen p-4 md:p-8" style={{ backgroundColor: colors.background }}>
       <div className="max-w-4xl mx-auto">
 
         {/* Header */}
         <div className="mb-8 flex items-center gap-4">
           <button
             onClick={() => navigate('/v2/squares')}
-            className="bg-gray-700 hover:bg-gray-600 text-white p-3 rounded-lg transition-all"
+            className="text-white p-3 rounded-lg transition-all"
+            style={{ backgroundColor: colors.card, border: `1px solid ${colors.border}` }}
+            onMouseOver={(e) => e.currentTarget.style.backgroundColor = colors.cardHover}
+            onMouseOut={(e) => e.currentTarget.style.backgroundColor = colors.card}
           >
             <FiArrowLeft className="text-xl" />
           </button>
           <div>
-            <h1 className="text-3xl md:text-4xl font-bold text-white">
+            <h1 className="text-3xl md:text-4xl font-bold" style={{ color: colors.text }}>
               Create Squares Pool
             </h1>
-            <p className="text-gray-300 mt-1">Step {step} of 4</p>
+            <p className="mt-1" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>Step {step} of 4</p>
           </div>
         </div>
 
         {/* Progress Bar */}
-        <div className="mb-8 bg-gray-800 rounded-lg p-4">
+        <div className="mb-8 rounded-lg p-4" style={{ backgroundColor: colors.card, border: `1px solid ${colors.border}` }}>
           <div className="flex justify-between mb-2">
             {['Game Selection', 'Settings', 'Teams & Rules', 'Review'].map((label, idx) => (
               <div
                 key={idx}
-                className={`flex items-center gap-2 ${
-                  idx + 1 <= step ? 'text-blue-400' : 'text-gray-500'
-                }`}
+                className="flex items-center gap-2"
+                style={{ color: idx + 1 <= step ? colors.brand.primary : (isDark ? '#6B7280' : '#9CA3AF') }}
               >
                 <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${
-                    idx + 1 <= step ? 'bg-blue-500 text-white' : 'bg-gray-700 text-gray-400'
-                  }`}
+                  className="w-8 h-8 rounded-full flex items-center justify-center font-bold"
+                  style={{
+                    backgroundColor: idx + 1 <= step ? colors.brand.primary : (isDark ? '#374151' : '#E5E7EB'),
+                    color: idx + 1 <= step ? '#FFFFFF' : (isDark ? '#9CA3AF' : '#6B7280')
+                  }}
                 >
                   {idx + 1 < step ? <FiCheck /> : idx + 1}
                 </div>
@@ -299,32 +305,38 @@ const CreateSquaresPool = () => {
               </div>
             ))}
           </div>
-          <div className="w-full bg-gray-700 rounded-full h-2 overflow-hidden">
+          <div className="w-full rounded-full h-2 overflow-hidden" style={{ backgroundColor: isDark ? '#374151' : '#E5E7EB' }}>
             <div
-              className="bg-gradient-to-r from-blue-500 to-purple-500 h-full transition-all duration-300"
-              style={{ width: `${(step / 4) * 100}%` }}
+              className="h-full transition-all duration-300"
+              style={{ width: `${(step / 4) * 100}%`, backgroundColor: colors.brand.primary }}
             ></div>
           </div>
         </div>
 
         {/* Form Steps */}
-        <div className="bg-gray-800 rounded-xl shadow-2xl p-6 md:p-8 border-2 border-gray-700">
+        <div className="rounded-xl shadow-2xl p-6 md:p-8" style={{ backgroundColor: colors.card, border: `2px solid ${colors.border}` }}>
 
           {/* Step 1: Game Selection */}
           {step === 1 && (
             <div className="space-y-6">
-              <h2 className="text-2xl font-bold text-white mb-6">Select Game</h2>
+              <h2 className="text-2xl font-bold mb-6" style={{ color: colors.text }}>Select Game</h2>
 
               {/* Pool Name */}
               <div>
-                <label className="block text-gray-300 font-medium mb-2">
+                <label className="block font-medium mb-2" style={{ color: colors.text }}>
                   Pool Name *
                 </label>
                 <input
                   type="text"
                   value={formData.gridName}
                   onChange={(e) => handleChange('gridName', e.target.value)}
-                  className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded-lg px-4 py-3 focus:outline-none focus:ring-2"
+                  style={{
+                    backgroundColor: isDark ? '#374151' : '#F3F4F6',
+                    color: colors.text,
+                    border: `1px solid ${colors.border}`,
+                    outlineColor: colors.brand.primary
+                  }}
                   placeholder="Enter pool name"
                 />
                 {errors.gridName && (
@@ -334,17 +346,23 @@ const CreateSquaresPool = () => {
 
               {/* Pool Description */}
               <div>
-                <label className="block text-gray-300 font-medium mb-2">
+                <label className="block font-medium mb-2" style={{ color: colors.text }}>
                   Pool Description (Optional)
                 </label>
                 <textarea
                   value={formData.poolDescription}
                   onChange={(e) => handleChange('poolDescription', e.target.value)}
-                  className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded-lg px-4 py-3 focus:outline-none focus:ring-2"
+                  style={{
+                    backgroundColor: isDark ? '#374151' : '#F3F4F6',
+                    color: colors.text,
+                    border: `1px solid ${colors.border}`,
+                    outlineColor: colors.brand.primary
+                  }}
                   placeholder="Describe your pool rules, prize structure, or any special instructions"
                   rows="3"
                 />
-                <p className="mt-1 text-gray-400 text-sm">
+                <p className="mt-1 text-sm" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>
                   Detailed description of pool rules and details
                 </p>
               </div>
@@ -750,7 +768,10 @@ const CreateSquaresPool = () => {
             {step < 4 ? (
               <button
                 onClick={handleNext}
-                className="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg font-bold transition-all"
+                className="flex-1 text-white py-3 rounded-lg font-bold transition-all"
+                style={{ backgroundColor: colors.brand.primary }}
+                onMouseOver={(e) => e.currentTarget.style.backgroundColor = colors.brand.primaryHover}
+                onMouseOut={(e) => e.currentTarget.style.backgroundColor = colors.brand.primary}
               >
                 Next
               </button>
@@ -758,7 +779,10 @@ const CreateSquaresPool = () => {
               <button
                 onClick={handleSubmit}
                 disabled={loading}
-                className="flex-1 bg-green-500 hover:bg-green-600 disabled:bg-gray-600 disabled:cursor-not-allowed text-white py-3 rounded-lg font-bold transition-all flex items-center justify-center gap-2"
+                className="flex-1 disabled:bg-gray-600 disabled:cursor-not-allowed text-white py-3 rounded-lg font-bold transition-all flex items-center justify-center gap-2"
+                style={{ backgroundColor: loading ? undefined : colors.brand.primary }}
+                onMouseOver={(e) => !loading && (e.currentTarget.style.backgroundColor = colors.brand.primaryHover)}
+                onMouseOut={(e) => !loading && (e.currentTarget.style.backgroundColor = colors.brand.primary)}
               >
                 {loading ? (
                   <>

@@ -137,11 +137,6 @@ const Header = ({ user, onSignOut }) => {
                 Commissioner
               </a>
             )}
-            {isSignedIn && (user?.role_id === 1 || user?.role_id === 2) && (
-              <a style={navLinkStyles} onClick={() => navigate('/v2/credit-requests')}>
-                Credits
-              </a>
-            )}
             {isSignedIn && user?.role_id === 1 && (
               <a style={navLinkStyles} onClick={() => navigate('/v2/admin/settings')}>
                 Admin
@@ -282,17 +277,6 @@ const Header = ({ user, onSignOut }) => {
               }}
             >
               Commissioner
-            </a>
-          )}
-          {isSignedIn && (user?.role_id === 1 || user?.role_id === 2) && (
-            <a
-              style={navLinkStyles}
-              onClick={() => {
-                navigate('/v2/credit-requests');
-                setShowMobileMenu(false);
-              }}
-            >
-              Credits
             </a>
           )}
         </div>

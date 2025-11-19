@@ -823,19 +823,22 @@ const SquaresPoolDetail = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 p-4 md:p-8">
+    <div className="min-h-screen p-4 md:p-8" style={{ backgroundColor: colors.background }}>
       <div className="max-w-7xl mx-auto">
 
         {/* Header */}
         <div className="mb-6 flex items-center gap-4">
           <button
             onClick={() => navigate('/v2/squares')}
-            className="bg-gray-700 hover:bg-gray-600 text-white p-3 rounded-lg transition-all"
+            className="text-white p-3 rounded-lg transition-all"
+            style={{ backgroundColor: colors.card, border: `1px solid ${colors.border}` }}
+            onMouseOver={(e) => e.currentTarget.style.backgroundColor = colors.cardHover}
+            onMouseOut={(e) => e.currentTarget.style.backgroundColor = colors.card}
           >
             <FiArrowLeft className="text-xl" />
           </button>
           <div className="flex-1">
-            <h1 className="text-3xl md:text-4xl font-bold text-white">
+            <h1 className="text-3xl md:text-4xl font-bold" style={{ color: colors.text }}>
               {pool.pool_name || pool.gridName}
             </h1>
             <p className="text-gray-300 mt-1">Pool #{pool.pool_number || pool.poolNumber}</p>

@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiCalendar, FiDollarSign, FiShield, FiUsers } from 'react-icons/fi';
+import { useTheme } from '../contexts/ThemeContext';
 
 /**
  * Admin Settings Dashboard - V2 Implementation
@@ -9,6 +10,7 @@ import { FiCalendar, FiDollarSign, FiShield, FiUsers } from 'react-icons/fi';
  */
 const AdminSettings = () => {
   const navigate = useNavigate();
+  const { colors, isDark } = useTheme();
 
   const adminSections = [
     {
@@ -16,8 +18,6 @@ const AdminSettings = () => {
       description: 'Create, edit, and manage games for squares pools and betting',
       icon: <FiCalendar size={48} />,
       path: '/v2/games/manage',
-      color: 'from-blue-500 to-blue-600',
-      hoverColor: 'from-blue-600 to-blue-700',
       available: true,
     },
     {
@@ -25,8 +25,6 @@ const AdminSettings = () => {
       description: 'Configure auction settings, manage bids, and control live auctions',
       icon: <FiDollarSign size={48} />,
       path: '/v2/admin/auction',
-      color: 'from-green-500 to-green-600',
-      hoverColor: 'from-green-600 to-green-700',
       available: false,
     },
     {
@@ -34,8 +32,6 @@ const AdminSettings = () => {
       description: 'Add, edit, and organize NFL teams and their information',
       icon: <FiShield size={48} />,
       path: '/v2/admin/teams',
-      color: 'from-purple-500 to-purple-600',
-      hoverColor: 'from-purple-600 to-purple-700',
       available: false,
     },
     {
@@ -43,19 +39,17 @@ const AdminSettings = () => {
       description: 'Manage user accounts, roles, and permissions',
       icon: <FiUsers size={48} />,
       path: '/v2/admin/users',
-      color: 'from-orange-500 to-orange-600',
-      hoverColor: 'from-orange-600 to-orange-700',
       available: false,
     },
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 py-8 px-4">
+    <div className="min-h-screen py-8 px-4" style={{ backgroundColor: colors.background }}>
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-12 text-center">
-          <h1 className="text-5xl font-bold text-white mb-4">Admin Settings</h1>
-          <p className="text-gray-300 text-lg">Manage all aspects of your platform</p>
+          <h1 className="text-5xl font-bold mb-4" style={{ color: colors.text }}>Admin Settings</h1>
+          <p className="text-lg" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>Manage all aspects of your platform</p>
         </div>
 
         {/* Admin Sections Grid */}
@@ -64,15 +58,20 @@ const AdminSettings = () => {
             <div
               key={index}
               onClick={() => section.available && navigate(section.path)}
-              className={`bg-gray-800 rounded-xl shadow-xl border border-gray-700 overflow-hidden transition-all duration-300 ${
+              className={`rounded-xl shadow-xl overflow-hidden transition-all duration-300 ${
                 section.available
                   ? 'hover:scale-105 hover:shadow-2xl cursor-pointer'
                   : 'opacity-60 cursor-not-allowed'
               }`}
+              style={{
+                backgroundColor: colors.card,
+                border: `1px solid ${colors.border}`
+              }}
             >
-              {/* Card Header with Gradient */}
+              {/* Card Header */}
               <div
-                className={`bg-gradient-to-r ${section.color} px-8 py-6 flex items-center gap-4`}
+                className="px-8 py-6 flex items-center gap-4"
+                style={{ backgroundColor: colors.brand.primary }}
               >
                 <div className="text-white">{section.icon}</div>
                 <div className="flex-1">
@@ -87,7 +86,7 @@ const AdminSettings = () => {
 
               {/* Card Body */}
               <div className="px-8 py-6">
-                <p className="text-gray-300 text-lg leading-relaxed">
+                <p className="text-lg leading-relaxed" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>
                   {section.description}
                 </p>
 
@@ -98,7 +97,10 @@ const AdminSettings = () => {
                         e.stopPropagation();
                         navigate(section.path);
                       }}
-                      className={`w-full bg-gradient-to-r ${section.color} hover:${section.hoverColor} text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 flex items-center justify-center gap-2`}
+                      className="w-full text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 flex items-center justify-center gap-2"
+                      style={{ backgroundColor: colors.brand.primary }}
+                      onMouseOver={(e) => e.currentTarget.style.backgroundColor = colors.brand.primaryHover}
+                      onMouseOut={(e) => e.currentTarget.style.backgroundColor = colors.brand.primary}
                     >
                       Open Manager
                       <svg
@@ -123,9 +125,15 @@ const AdminSettings = () => {
         </div>
 
         {/* Info Card */}
-        <div className="mt-12 bg-gradient-to-r from-blue-900/50 to-purple-900/50 rounded-xl p-8 border border-blue-700">
+        <div
+          className="mt-12 rounded-xl p-8"
+          style={{
+            backgroundColor: colors.card,
+            border: `2px solid ${colors.brand.primary}`
+          }}
+        >
           <div className="flex items-start gap-4">
-            <div className="text-blue-400 flex-shrink-0">
+            <div className="flex-shrink-0" style={{ color: colors.brand.primary }}>
               <svg
                 className="w-8 h-8"
                 fill="currentColor"
@@ -139,8 +147,8 @@ const AdminSettings = () => {
               </svg>
             </div>
             <div>
-              <h3 className="text-xl font-bold text-white mb-2">Administrator Access</h3>
-              <p className="text-gray-300">
+              <h3 className="text-xl font-bold mb-2" style={{ color: colors.text }}>Administrator Access</h3>
+              <p style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>
                 You have full administrative privileges. Use these tools responsibly to manage the platform.
                 Some features are still under development and will be available soon.
               </p>

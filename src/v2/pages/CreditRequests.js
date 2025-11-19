@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiArrowLeft, FiCreditCard, FiClock, FiCheckCircle, FiXCircle, FiAlertCircle } from 'react-icons/fi';
+import { FiArrowLeft, FiCreditCard, FiAlertCircle } from 'react-icons/fi';
 import { useUserContext } from '../contexts/UserContext';
 import { useAxios } from '../../app/contexts/AxiosContext';
+import { useTheme } from '../contexts/ThemeContext';
 import SquaresApiService from '../services/squaresApiService';
+import StatusBadge from '../components/ui/StatusBadge';
 
 /**
  * Credit Requests Page
@@ -14,6 +16,7 @@ const CreditRequests = () => {
   const { user: currentUser, isSignedIn, isLoaded } = useUserContext();
   const axiosService = useAxios();
   const squaresApiService = useMemo(() => new SquaresApiService(axiosService), [axiosService]);
+  const { colors, isDark } = useTheme();
 
   const [loading, setLoading] = useState(true);
   const [poolRequests, setPoolRequests] = useState([]);
@@ -84,24 +87,6 @@ const CreditRequests = () => {
     }
   };
 
-  const getStatusBadge = (status) => {
-    const badges = {
-      pending: { icon: FiClock, color: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30', text: 'Pending' },
-      approved: { icon: FiCheckCircle, color: 'bg-green-500/20 text-green-300 border-green-500/30', text: 'Approved' },
-      denied: { icon: FiXCircle, color: 'bg-red-500/20 text-red-300 border-red-500/30', text: 'Denied' },
-    };
-
-    const badge = badges[status] || badges.pending;
-    const Icon = badge.icon;
-
-    return (
-      <span className={`px-3 py-1 rounded-full text-xs font-semibold border flex items-center gap-1 ${badge.color}`}>
-        <Icon className="text-sm" />
-        {badge.text}
-      </span>
-    );
-  };
-
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -119,14 +104,14 @@ const CreditRequests = () => {
 
   if (!isLoaded || loading) {
     return (
-      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
-        <div className="text-white text-xl">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: colors.background }}>
+        <div className="text-xl" style={{ color: colors.text }}>Loading...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-950">
+    <div className="min-h-screen" style={{ backgroundColor: colors.background }}>
       <div className="max-w-6xl mx-auto p-6">
         {/* Header */}
         <div className="mb-8">
@@ -140,14 +125,17 @@ const CreditRequests = () => {
 
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-white mb-2">Credit Requests</h1>
-              <p className="text-gray-400">View and manage your credit requests</p>
+              <h1 className="text-3xl font-bold mb-2" style={{ color: colors.text }}>Credit Requests</h1>
+              <p style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>View and manage your credit requests</p>
             </div>
 
             {isSquareAdmin && (
               <button
                 onClick={() => setShowRequestModal(true)}
-                className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-semibold transition-all flex items-center gap-2"
+                className="text-white px-6 py-3 rounded-lg font-semibold transition-all flex items-center gap-2"
+                style={{ backgroundColor: colors.brand.primary }}
+                onMouseOver={(e) => e.currentTarget.style.backgroundColor = colors.brand.primaryHover}
+                onMouseOut={(e) => e.currentTarget.style.backgroundColor = colors.brand.primary}
               >
                 <FiCreditCard />
                 Request Credits from Superadmin
@@ -158,26 +146,26 @@ const CreditRequests = () => {
 
         {/* Pool Credit Requests */}
         <div className="mb-8">
-          <h2 className="text-2xl font-bold text-white mb-4">Pool Credit Requests</h2>
+          <h2 className="text-2xl font-bold mb-4" style={{ color: colors.text }}>Pool Credit Requests</h2>
           {poolRequests.length === 0 ? (
-            <div className="bg-gray-900 rounded-xl border border-gray-800 p-8 text-center">
+            <div className="rounded-xl p-8 text-center" style={{ backgroundColor: colors.card, border: `1px solid ${colors.border}` }}>
               <FiAlertCircle className="text-gray-600 text-4xl mx-auto mb-3" />
               <p className="text-gray-400">No pool credit requests yet</p>
             </div>
           ) : (
             <div className="space-y-4">
               {poolRequests.map((request) => (
-                <div key={request.id} className="bg-gray-900 rounded-xl border border-gray-800 p-6">
+                <div key={request.id} className="rounded-xl p-6" style={{ backgroundColor: colors.card, border: `1px solid ${colors.border}` }}>
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
                     <div>
-                      <h3 className="text-white font-semibold text-lg mb-1">
+                      <h3 className="font-semibold text-lg mb-1" style={{ color: colors.text }}>
                         {request.pool?.pool_name || `Pool #${request.pool?.pool_number}`}
                       </h3>
                       <p className="text-gray-400 text-sm">
                         Requested on {formatDate(request.created_at)}
                       </p>
                     </div>
-                    {getStatusBadge(request.status)}
+                    <StatusBadge status={request.status} />
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -224,26 +212,26 @@ const CreditRequests = () => {
         {/* Admin Credit Requests (Square Admins only) */}
         {isSquareAdmin && (
           <div>
-            <h2 className="text-2xl font-bold text-white mb-4">Requests to Superadmin</h2>
+            <h2 className="text-2xl font-bold mb-4" style={{ color: colors.text }}>Requests to Superadmin</h2>
             {adminRequests.length === 0 ? (
-              <div className="bg-gray-900 rounded-xl border border-gray-800 p-8 text-center">
+              <div className="rounded-xl p-8 text-center" style={{ backgroundColor: colors.card, border: `1px solid ${colors.border}` }}>
                 <FiAlertCircle className="text-gray-600 text-4xl mx-auto mb-3" />
                 <p className="text-gray-400">No admin credit requests yet</p>
               </div>
             ) : (
               <div className="space-y-4">
                 {adminRequests.map((request) => (
-                  <div key={request.id} className="bg-gray-900 rounded-xl border border-purple-800 p-6">
+                  <div key={request.id} className="rounded-xl p-6" style={{ backgroundColor: colors.card, border: `2px solid ${colors.brand.primary}` }}>
                     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
                       <div>
-                        <h3 className="text-white font-semibold text-lg mb-1">
+                        <h3 className="font-semibold text-lg mb-1" style={{ color: colors.text }}>
                           Credit Request to Superadmin
                         </h3>
                         <p className="text-gray-400 text-sm">
                           Requested on {formatDate(request.created_at)}
                         </p>
                       </div>
-                      {getStatusBadge(request.status)}
+                      <StatusBadge status={request.status} />
                     </div>
 
                     <div className="mb-4">
@@ -285,21 +273,25 @@ const CreditRequests = () => {
           onClick={() => setShowRequestModal(false)}
         >
           <div
-            className="bg-gray-900 rounded-2xl border border-purple-700 shadow-2xl w-full max-w-md p-6 relative"
+            className="rounded-2xl shadow-2xl w-full max-w-md p-6 relative"
+            style={{ backgroundColor: colors.card, border: `2px solid ${colors.brand.primary}` }}
             onClick={(e) => e.stopPropagation()}
           >
             <button
               onClick={() => setShowRequestModal(false)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
+              className="absolute top-4 right-4 transition-colors"
+              style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}
+              onMouseOver={(e) => e.currentTarget.style.color = colors.text}
+              onMouseOut={(e) => e.currentTarget.style.color = isDark ? '#9CA3AF' : '#6B7280'}
             >
               ✕
             </button>
 
             <div className="flex items-center gap-3 mb-4">
-              <FiCreditCard className="text-purple-400 text-3xl" />
+              <FiCreditCard className="text-3xl" style={{ color: colors.brand.primary }} />
               <div>
-                <h3 className="text-2xl font-bold text-white">Request Credits</h3>
-                <p className="text-gray-400 text-sm">Request credits from Superadmin</p>
+                <h3 className="text-2xl font-bold" style={{ color: colors.text }}>Request Credits</h3>
+                <p className="text-sm" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>Request credits from Superadmin</p>
               </div>
             </div>
 
@@ -338,7 +330,21 @@ const CreditRequests = () => {
                 <button
                   onClick={handleRequestCredits}
                   disabled={submitting || !requestAmount || !requestReason.trim()}
-                  className="flex-1 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-700 disabled:cursor-not-allowed text-white px-4 py-3 rounded-lg font-semibold transition-all"
+                  className="flex-1 text-white px-4 py-3 rounded-lg font-semibold transition-all"
+                  style={{
+                    backgroundColor: (submitting || !requestAmount || !requestReason.trim()) ? (isDark ? '#374151' : '#D1D5DB') : colors.brand.primary,
+                    cursor: (submitting || !requestAmount || !requestReason.trim()) ? 'not-allowed' : 'pointer'
+                  }}
+                  onMouseOver={(e) => {
+                    if (!submitting && requestAmount && requestReason.trim()) {
+                      e.currentTarget.style.backgroundColor = colors.brand.primaryHover;
+                    }
+                  }}
+                  onMouseOut={(e) => {
+                    if (!submitting && requestAmount && requestReason.trim()) {
+                      e.currentTarget.style.backgroundColor = colors.brand.primary;
+                    }
+                  }}
                 >
                   {submitting ? 'Submitting...' : 'Submit Request'}
                 </button>
