@@ -38,7 +38,16 @@ const ManageGames = () => {
     setLoading(true);
     try {
       const response = await axiosService.get('/api/games/manage');
-      setGames(response.data.data || response.data);
+      const gamesData = response.data.data || response.data;
+
+      // Sort games by game_datetime in descending order (newest/upcoming first)
+      const sortedGames = gamesData.sort((a, b) => {
+        const dateA = new Date(a.game_datetime);
+        const dateB = new Date(b.game_datetime);
+        return dateB - dateA; // Descending order
+      });
+
+      setGames(sortedGames);
     } catch (error) {
       console.error('Error loading games:', error);
       setMessage({ type: 'error', text: 'Failed to load games. Please try again.' });

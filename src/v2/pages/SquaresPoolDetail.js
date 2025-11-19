@@ -11,52 +11,65 @@ import { QRCodeCanvas } from 'qrcode.react';
 /**
  * Reusable Loading Modal Component
  */
-const LoadingModal = ({ message, count }) => (
-  <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 backdrop-blur-sm">
-    <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-8 max-w-md w-full border-2 border-blue-500 shadow-2xl">
-      <div className="flex flex-col items-center">
-        {/* Spinning Logo */}
-        <div className="relative w-24 h-24 mb-6">
-          <svg
-            className="absolute inset-0 w-24 h-24 animate-spin"
-            viewBox="0 0 120 120"
-          >
-            <circle
-              cx="60"
-              cy="60"
-              r="54"
-              fill="none"
-              stroke="#3B82F6"
-              strokeWidth="4"
-              strokeDasharray="300 360"
-              strokeLinecap="round"
-            />
-          </svg>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <img
-              src="/assets/images/favicon.png"
-              alt="Loading"
-              className="w-12 h-12 animate-bounce"
-            />
+const LoadingModal = ({ message, count }) => {
+  const { colors, isDark } = useTheme();
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 backdrop-blur-sm">
+      <div
+        className="rounded-2xl p-8 max-w-md w-full shadow-2xl"
+        style={{
+          backgroundColor: colors.card,
+          border: `2px solid ${colors.brand.primary}`
+        }}
+      >
+        <div className="flex flex-col items-center">
+          {/* Spinning Logo */}
+          <div className="relative w-24 h-24 mb-6">
+            <svg
+              className="absolute inset-0 w-24 h-24 animate-spin"
+              viewBox="0 0 120 120"
+            >
+              <circle
+                cx="60"
+                cy="60"
+                r="54"
+                fill="none"
+                stroke={colors.brand.primary}
+                strokeWidth="4"
+                strokeDasharray="300 360"
+                strokeLinecap="round"
+              />
+            </svg>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <img
+                src="/assets/images/favicon.png"
+                alt="Loading"
+                className="w-12 h-12 animate-bounce"
+              />
+            </div>
           </div>
-        </div>
 
-        {/* Message */}
-        <h3 className="text-2xl font-bold text-white mb-2">{message}</h3>
-        {count && (
-          <p className="text-gray-300 text-center mb-4">
-            Processing {count} square{count !== 1 ? 's' : ''}...
-          </p>
-        )}
+          {/* Message */}
+          <h3 className="text-2xl font-bold mb-2" style={{ color: colors.text }}>{message}</h3>
+          {count && (
+            <p className="text-center mb-4" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>
+              Processing {count} square{count !== 1 ? 's' : ''}...
+            </p>
+          )}
 
-        {/* Progress indicator */}
-        <div className="w-full bg-gray-700 rounded-full h-2 overflow-hidden">
-          <div className="bg-gradient-to-r from-blue-500 to-blue-400 h-full rounded-full animate-pulse w-3/4"></div>
+          {/* Progress indicator */}
+          <div className="w-full rounded-full h-2 overflow-hidden" style={{ backgroundColor: isDark ? '#374151' : '#E5E7EB' }}>
+            <div
+              className="h-full rounded-full animate-pulse w-3/4"
+              style={{ backgroundColor: colors.brand.primary }}
+            ></div>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 /**
  * Pool Detail Page
@@ -714,7 +727,14 @@ const SquaresPoolDetail = () => {
   const getProgressPercentage = () => {
     if (!pool) return 0;
     const totalSquares = pool.total_squares || pool.totalSquares || 100;
-    const selectedSquares = pool.squares_claimed || pool.selectedSquares || 0;
+    // Check multiple possible property names from the API
+    const selectedSquares = pool.squares_claimed || pool.selectedSquares || pool.claimed_squares || pool.squares_selected || 0;
+
+    // Debug logging (can be removed later)
+    if (selectedSquares === 0 && pool.id) {
+      console.log('Pool detail data:', pool);
+    }
+
     return ((selectedSquares / totalSquares) * 100).toFixed(0);
   };
 
@@ -808,12 +828,15 @@ const SquaresPoolDetail = () => {
 
   if (!pool) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: colors.background }}>
         <div className="text-center">
-          <p className="text-white text-2xl mb-4">Pool not found</p>
+          <p className="text-2xl mb-4" style={{ color: colors.text }}>Pool not found</p>
           <button
             onClick={() => navigate('/v2/squares')}
-            className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg"
+            className="px-6 py-3 rounded-lg transition-all text-white font-semibold"
+            style={{ backgroundColor: colors.brand.primary }}
+            onMouseOver={(e) => e.currentTarget.style.backgroundColor = colors.brand.primaryHover}
+            onMouseOut={(e) => e.currentTarget.style.backgroundColor = colors.brand.primary}
           >
             Back to Pools
           </button>
@@ -830,12 +853,16 @@ const SquaresPoolDetail = () => {
         <div className="mb-6 flex items-center gap-4">
           <button
             onClick={() => navigate('/v2/squares')}
-            className="text-white p-3 rounded-lg transition-all"
-            style={{ backgroundColor: colors.card, border: `1px solid ${colors.border}` }}
+            className="p-3 rounded-lg transition-all"
+            style={{
+              backgroundColor: colors.card,
+              border: `1px solid ${colors.border}`,
+              color: colors.text
+            }}
             onMouseOver={(e) => e.currentTarget.style.backgroundColor = colors.cardHover}
             onMouseOut={(e) => e.currentTarget.style.backgroundColor = colors.card}
           >
-            <FiArrowLeft className="text-xl" />
+            <FiArrowLeft className="text-xl" style={{ color: colors.text }} />
           </button>
           <div className="flex-1">
             <h1 className="text-3xl md:text-4xl font-bold" style={{ color: colors.text }}>
@@ -920,7 +947,7 @@ const SquaresPoolDetail = () => {
                 {getProgressPercentage()}%
               </div>
               <div className="text-gray-400 text-sm mt-1">
-                {pool.squares_claimed || pool.selectedSquares || 0}/{pool.total_squares || pool.totalSquares || 100} squares filled
+                {pool.squares_claimed || pool.selectedSquares || pool.claimed_squares || pool.squares_selected || 0}/{pool.total_squares || pool.totalSquares || 100} squares filled
               </div>
             </div>
 

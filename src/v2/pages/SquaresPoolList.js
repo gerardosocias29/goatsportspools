@@ -92,7 +92,14 @@ const SquaresPoolList = () => {
 
   const getProgressPercentage = (pool) => {
     const totalSquares = pool.total_squares || pool.totalSquares || 100;
-    const selectedSquares = pool.squares_claimed || pool.selectedSquares || 0;
+    // Check multiple possible property names from the API
+    const selectedSquares = pool.squares_claimed || pool.selectedSquares || pool.claimed_squares || pool.squares_selected || 0;
+
+    // Debug logging (can be removed later)
+    if (selectedSquares === 0 && pool.id) {
+      console.log('Pool data:', pool);
+    }
+
     return ((selectedSquares / totalSquares) * 100).toFixed(0);
   };
 
@@ -354,7 +361,7 @@ const SquaresPoolList = () => {
                       <div className="flex justify-between text-sm mb-1">
                         <span style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>Squares Filled</span>
                         <span className="font-semibold" style={{ color: colors.text }}>
-                          {pool.squares_claimed || pool.selectedSquares || 0}/{pool.total_squares || pool.totalSquares || 100}
+                          {pool.squares_claimed || pool.selectedSquares || pool.claimed_squares || pool.squares_selected || 0}/{pool.total_squares || pool.totalSquares || 100}
                         </span>
                       </div>
                       <div className="w-full rounded-full h-2 overflow-hidden" style={{ backgroundColor: isDark ? '#374151' : '#E5E7EB' }}>

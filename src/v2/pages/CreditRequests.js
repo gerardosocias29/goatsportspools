@@ -117,7 +117,10 @@ const CreditRequests = () => {
         <div className="mb-8">
           <button
             onClick={() => navigate(-1)}
-            className="flex items-center gap-2 text-gray-400 hover:text-white mb-4 transition-colors"
+            className="flex items-center gap-2 mb-4 transition-colors"
+            style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}
+            onMouseOver={(e) => e.currentTarget.style.color = colors.text}
+            onMouseOut={(e) => e.currentTarget.style.color = isDark ? '#9CA3AF' : '#6B7280'}
           >
             <FiArrowLeft />
             Back
