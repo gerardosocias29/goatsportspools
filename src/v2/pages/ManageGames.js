@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiPlus, FiEdit2, FiTrash2, FiCheck, FiX, FiCalendar, FiDownload, FiUpload } from 'react-icons/fi';
+import { FiPlus, FiEdit2, FiTrash2, FiCheck, FiX, FiCalendar, FiDownload, FiUpload, FiTrendingUp } from 'react-icons/fi';
 import { useAxios } from '../../app/contexts/AxiosContext';
 import { useTheme } from '../contexts/ThemeContext';
+import GameScoresModal from '../components/game/GameScoresModal';
 
 /**
  * Manage Games Page - V2 Implementation
@@ -19,6 +20,8 @@ const ManageGames = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingGame, setEditingGame] = useState(null);
   const [message, setMessage] = useState(null);
+  const [showScoresModal, setShowScoresModal] = useState(false);
+  const [selectedGameForScores, setSelectedGameForScores] = useState(null);
 
   // Form state - matches V1 structure
   const [formData, setFormData] = useState({
@@ -148,6 +151,25 @@ const ManageGames = () => {
       underdog_team: null,
     });
     setEditingGame(null);
+  };
+
+  const handleOpenScores = (game) => {
+    setSelectedGameForScores(game);
+    setShowScoresModal(true);
+  };
+
+  const handleSaveScores = async (gameId, scores) => {
+    try {
+      const response = await axiosService.put(`/api/games/${gameId}/scores`, scores);
+      setMessage({ type: 'success', text: 'Game scores updated successfully!' });
+      loadGames();
+      setTimeout(() => setMessage(null), 3000);
+    } catch (error) {
+      console.error('Error saving scores:', error);
+      setMessage({ type: 'error', text: 'Failed to save scores. Please try again.' });
+      setTimeout(() => setMessage(null), 3000);
+      throw error;
+    }
   };
 
   const handleModalClose = () => {
@@ -305,37 +327,58 @@ const ManageGames = () => {
                 </div>
 
                 {/* Actions */}
-                <div className="px-6 pb-6 flex gap-2">
-                  {game.game_status === 'Final' || (game.home_team_score > 0 && game.visitor_team_score > 0) ? (
-                    // Past game - show disabled state with tooltip
-                    <div className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gray-700 text-gray-500 rounded-lg cursor-not-allowed" title="Completed games cannot be edited">
-                      <FiEdit2 size={16} />
-                      Locked
-                    </div>
-                  ) : (
+                <div className="px-6 pb-6 flex flex-col gap-2">
+                  <div className="flex gap-2">
+                    {game.game_status === 'Final' || (game.home_team_score > 0 && game.visitor_team_score > 0) ? (
+                      // Past game - show disabled state with tooltip
+                      <div className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gray-700 text-gray-500 rounded-lg cursor-not-allowed" title="Completed games cannot be edited">
+                        <FiEdit2 size={16} />
+                        Locked
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => handleEdit(game)}
+                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-white rounded-lg transition-colors duration-200"
+                        style={{ backgroundColor: colors.brand.primary }}
+                        onMouseOver={(e) => e.currentTarget.style.backgroundColor = colors.brand.primaryHover}
+                        onMouseOut={(e) => e.currentTarget.style.backgroundColor = colors.brand.primary}
+                      >
+                        <FiEdit2 size={16} />
+                        Edit
+                      </button>
+                    )}
                     <button
-                      onClick={() => handleEdit(game)}
-                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-white rounded-lg transition-colors duration-200"
-                      style={{ backgroundColor: colors.brand.primary }}
-                      onMouseOver={(e) => e.currentTarget.style.backgroundColor = colors.brand.primaryHover}
-                      onMouseOut={(e) => e.currentTarget.style.backgroundColor = colors.brand.primary}
+                      onClick={() => handleDelete(game.id)}
+                      disabled={game.game_status === 'Final'}
+                      className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg transition-colors duration-200 ${
+                        game.game_status === 'Final'
+                          ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                          : 'bg-red-600 hover:bg-red-700 text-white'
+                      }`}
+                      title={game.game_status === 'Final' ? 'Completed games cannot be deleted' : ''}
                     >
-                      <FiEdit2 size={16} />
-                      Edit
+                      <FiTrash2 size={16} />
+                      Delete
                     </button>
-                  )}
+                  </div>
                   <button
-                    onClick={() => handleDelete(game.id)}
-                    disabled={game.game_status === 'Final'}
-                    className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg transition-colors duration-200 ${
-                      game.game_status === 'Final'
-                        ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
-                        : 'bg-red-600 hover:bg-red-700 text-white'
-                    }`}
-                    title={game.game_status === 'Final' ? 'Completed games cannot be deleted' : ''}
+                    onClick={() => handleOpenScores(game)}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2 text-white rounded-lg transition-all duration-200"
+                    style={{
+                      backgroundColor: isDark ? '#1F2937' : '#374151',
+                      borderWidth: '2px',
+                      borderStyle: 'solid',
+                      borderColor: colors.brand.primary
+                    }}
+                    onMouseOver={(e) => {
+                      e.currentTarget.style.backgroundColor = colors.brand.primary;
+                    }}
+                    onMouseOut={(e) => {
+                      e.currentTarget.style.backgroundColor = isDark ? '#1F2937' : '#374151';
+                    }}
                   >
-                    <FiTrash2 size={16} />
-                    Delete
+                    <FiTrendingUp size={16} />
+                    Update Scores
                   </button>
                 </div>
               </div>
@@ -470,6 +513,18 @@ const ManageGames = () => {
               </form>
             </div>
           </div>
+        )}
+
+        {/* Game Scores Modal */}
+        {showScoresModal && selectedGameForScores && (
+          <GameScoresModal
+            game={selectedGameForScores}
+            onClose={() => {
+              setShowScoresModal(false);
+              setSelectedGameForScores(null);
+            }}
+            onSave={handleSaveScores}
+          />
         )}
       </div>
     </div>

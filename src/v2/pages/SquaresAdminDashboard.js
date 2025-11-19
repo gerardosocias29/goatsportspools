@@ -142,6 +142,22 @@ const SquaresAdminDashboard = () => {
     }
   };
 
+  const handleCalculateWinners = async (poolId) => {
+    if (!window.confirm('Calculate winners for all quarters? This will use the current game scores.')) return;
+
+    try {
+      const response = await squaresApiService.calculateAllWinners(poolId);
+      if (response.success) {
+        alert(`Winners calculated! ${response.data.winners_count || 0} winner(s) found.`);
+        await loadDashboard();
+      } else {
+        alert(response.error || 'Failed to calculate winners');
+      }
+    } catch (error) {
+      alert('Failed to calculate winners: ' + (error.message || 'Unknown error'));
+    }
+  };
+
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -323,8 +339,28 @@ const SquaresAdminDashboard = () => {
                         </h3>
                         <p className="text-gray-400 text-sm">Pool #{pool.pool_number}</p>
                       </div>
-                      <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-2 flex-wrap">
                         {getPoolStatusBadge(pool.pool_status)}
+                        <button
+                          onClick={() => handleCalculateWinners(pool.id)}
+                          className="text-white px-4 py-2 rounded-lg font-semibold transition-all flex items-center gap-2"
+                          style={{
+                            backgroundColor: isDark ? '#1F2937' : '#374151',
+                            borderWidth: '2px',
+                            borderStyle: 'solid',
+                            borderColor: colors.brand.primary
+                          }}
+                          onMouseOver={(e) => {
+                            e.currentTarget.style.backgroundColor = colors.brand.primary;
+                          }}
+                          onMouseOut={(e) => {
+                            e.currentTarget.style.backgroundColor = isDark ? '#1F2937' : '#374151';
+                          }}
+                          title="Calculate winners for all quarters"
+                        >
+                          <FiTrendingUp />
+                          Calculate Winners
+                        </button>
                         <button
                           onClick={() => navigate(`/v2/squares/pool/${pool.id}`)}
                           className="text-white px-4 py-2 rounded-lg font-semibold transition-all flex items-center gap-2"

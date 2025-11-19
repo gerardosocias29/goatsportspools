@@ -246,7 +246,7 @@ const SquaresPoolList = () => {
                     cy="60"
                     r="54"
                     fill="none"
-                    stroke="#fff"
+                    stroke={colors.brand.primary}
                     strokeWidth="4"
                     strokeDasharray="300 360"
                     strokeLinecap="round"

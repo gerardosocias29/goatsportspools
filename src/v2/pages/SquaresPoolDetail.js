@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FiUsers, FiArrowLeft, FiCalendar, FiDollarSign, FiGrid, FiLock, FiUnlock, FiTrendingUp, FiAward, FiShare2, FiDownload, FiX, FiCreditCard } from 'react-icons/fi';
 import SquaresGrid from '../components/squares/SquaresGrid';
+import WinnersDisplay from '../components/squares/WinnersDisplay';
 import { useAxios } from '../../app/contexts/AxiosContext';
 import { useUserContext } from '../contexts/UserContext';
 import { TeamTemplate } from '../../app/pages/screens/games/NFLTemplates';
@@ -764,7 +765,7 @@ const SquaresPoolDetail = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 flex items-center justify-center">
+      <div className="min-h-screen" style={{ backgroundColor: colors.background }}>
         <div style={{
           display: 'flex',
           flexDirection: 'column',
@@ -795,7 +796,7 @@ const SquaresPoolDetail = () => {
                 cy="60"
                 r="54"
                 fill="none"
-                stroke="#fff"
+                stroke={colors.brand.primary}
                 strokeWidth="4"
                 strokeDasharray="300 360"
                 strokeLinecap="round"
@@ -816,7 +817,6 @@ const SquaresPoolDetail = () => {
           <div style={{
             fontSize: '1.25rem',
             fontWeight: 600,
-            color: "#fff",
             fontFamily: '"Hubot Sans", sans-serif',
           }}>
             Loading Pool Details...
@@ -1319,6 +1319,17 @@ const SquaresPoolDetail = () => {
           </div>
         </div>
       </div>
+
+      {/* Winners Section */}
+      {winners && winners.length > 0 && (
+        <div className="mt-12">
+          <WinnersDisplay
+            pool={pool}
+            winners={winners}
+            game={pool.game}
+          />
+        </div>
+      )}
 
       {/* Join Modal */}
       {showJoinModal && (
