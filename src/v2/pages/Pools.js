@@ -113,6 +113,15 @@ const Pools = () => {
 
   const pools = [
     {
+      id: 'squares',
+      title: 'Football Squares',
+      description: 'Pick your squares on a 10x10 grid and win based on final scores. Perfect for game day with friends!',
+      emoji: '🎯',
+      status: 'live',
+      badge: 'New!',
+      route: '/v2/squares',
+    },
+    {
       id: 'ncaa-basketball-auction',
       title: 'NCAA Basketball Auction',
       description: 'Bid on your favorite NCAA basketball teams in a live auction format. Watch the stream and compete with others!',
@@ -128,15 +137,6 @@ const Pools = () => {
       status: 'live',
       badge: 'League Required',
       route: '/v2/pools/nfl',
-    },
-    {
-      id: 'squares',
-      title: 'Football Squares',
-      description: 'Pick your squares on a 10x10 grid and win based on final scores. Perfect for game day with friends!',
-      emoji: '🎯',
-      status: 'live',
-      badge: 'New!',
-      route: '/v2/squares',
     },
   ];
 
