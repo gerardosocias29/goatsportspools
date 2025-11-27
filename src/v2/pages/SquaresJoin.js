@@ -25,7 +25,9 @@ const SquaresJoin = () => {
   // Authentication guard
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
-      navigate('/v2/sign-in', { state: { returnTo: `/v2/squares/join?pool=${poolNumber}` } });
+      // Use URL param for redirect_url so Clerk can preserve it through auth flow
+      const returnUrl = encodeURIComponent(`/v2/squares/join?pool=${poolNumber}`);
+      navigate(`/v2/sign-in?redirect_url=${returnUrl}`);
     }
   }, [isSignedIn, isLoaded, poolNumber, navigate]);
 

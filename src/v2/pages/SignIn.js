@@ -1,11 +1,17 @@
 import React from 'react';
 import { SignIn } from '@clerk/clerk-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
 
 const SignInPage = () => {
   const { colors } = useTheme();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
+
+  // Get return URL from URL params (preferred) or location state (fallback)
+  const redirectUrl = searchParams.get('redirect_url');
+  const returnTo = redirectUrl ? decodeURIComponent(redirectUrl) : (location.state?.returnTo || '/v2/dashboard');
 
   const containerStyles = {
     minHeight: '100vh',
@@ -69,11 +75,11 @@ const SignInPage = () => {
         </div>
 
         {/* Clerk SignIn Component */}
-        <SignIn 
+        <SignIn
           path="/v2/sign-in"
           routing="path"
           signUpUrl="/v2/sign-up"
-          afterSignInUrl="/v2/dashboard"
+          afterSignInUrl={returnTo}
           appearance={{
             elements: {
               rootBox: {

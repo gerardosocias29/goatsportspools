@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiCalendar, FiUsers, FiDollarSign, FiGrid, FiLock, FiUnlock } from 'react-icons/fi';
+import { FiCalendar, FiUsers, FiDollarSign, FiGrid, FiLock, FiUnlock, FiPlusCircle } from 'react-icons/fi';
 import { useAxios } from '../../app/contexts/AxiosContext';
 import { useUserContext } from '../contexts/UserContext';
 import { useTheme } from '../contexts/ThemeContext';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
+import JoinPoolModal from '../components/squares/JoinPoolModal';
 import { borderRadius } from '../styles/theme';
 
 /**
@@ -22,10 +23,14 @@ const SquaresPoolList = () => {
   const [teams, setTeams] = useState([]);
   const [loading, setLoading] = useState(true);
   const [hoveredPool, setHoveredPool] = useState(null);
+  const [joinModalOpen, setJoinModalOpen] = useState(false);
   const [filter, setFilter] = useState({
     status: 'all',
     league: 'all',
   });
+
+  // Get user role
+  const userRoleId = currentUser?.user?.role_id ?? currentUser?.role_id ?? 99;
 
   useEffect(() => {
     loadTeams();
@@ -105,6 +110,14 @@ const SquaresPoolList = () => {
 
   const handleCreatePool = () => {
     navigate('/v2/squares/create');
+  };
+
+  const handleJoinSuccess = (pool) => {
+    // Reload pools list and navigate to the joined pool
+    loadPools();
+    if (pool && pool.id) {
+      navigate(`/v2/squares/pool/${pool.id}`);
+    }
   };
 
   // Shared styles
@@ -318,14 +331,18 @@ const SquaresPoolList = () => {
               <h1 style={titleStyles}>Squares Pools</h1>
               <p style={subtitleStyles}>Join a pool and pick your winning squares.</p>
             </div>
-            {isSignedIn && (() => {
-              const userRoleId = currentUser?.user?.role_id ?? currentUser?.role_id;
-              return userRoleId <= 2;
-            })() && (
-              <Button variant="primary" size="lg" icon={<FiGrid />} onClick={handleCreatePool}>
-                Create Pool
-              </Button>
-            )}
+            <div style={{ display: 'flex', gap: '0.75rem' }}>
+              {isSignedIn && (
+                <Button variant="secondary" size="lg" icon={<FiPlusCircle />} onClick={() => setJoinModalOpen(true)}>
+                  Join Pool
+                </Button>
+              )}
+              {isSignedIn && userRoleId <= 2 && (
+                <Button variant="primary" size="lg" icon={<FiGrid />} onClick={handleCreatePool}>
+                  Create Pool
+                </Button>
+              )}
+            </div>
           </div>
 
           {/* Special Launch Promotion - legacy style */}
@@ -426,17 +443,21 @@ const SquaresPoolList = () => {
         ) : pools.length === 0 ? (
           <Card hover={false} padding="xl" style={{ textAlign: 'center' }}>
             <FiGrid size={64} style={{ margin: '0 auto 1rem', color: isDark ? '#6B7280' : '#9CA3AF' }} />
-            <p style={{ fontSize: '1.1rem', color: colors.text, opacity: 0.7 }}>No pools found</p>
-            {isSignedIn && (() => {
-              const userRoleId = currentUser?.user?.role_id ?? currentUser?.role_id;
-              return userRoleId <= 2;
-            })() && (
-              <div style={{ marginTop: '1.25rem' }}>
+            <p style={{ fontSize: '1.1rem', color: colors.text, opacity: 0.7 }}>
+              {userRoleId <= 2 ? 'No pools found' : 'You haven\'t joined any pools yet'}
+            </p>
+            <div style={{ marginTop: '1.25rem', display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+              {isSignedIn && (
+                <Button variant="secondary" size="lg" icon={<FiPlusCircle />} onClick={() => setJoinModalOpen(true)}>
+                  Join a Pool
+                </Button>
+              )}
+              {isSignedIn && userRoleId <= 2 && (
                 <Button variant="primary" size="lg" onClick={handleCreatePool}>
                   Create the first pool
                 </Button>
-              </div>
-            )}
+              )}
+            </div>
           </Card>
         ) : (
           <div style={gridStyles}>
@@ -579,6 +600,13 @@ const SquaresPoolList = () => {
           </div>
         )}
       </div>
+
+      {/* Join Pool Modal */}
+      <JoinPoolModal
+        isOpen={joinModalOpen}
+        onClose={() => setJoinModalOpen(false)}
+        onSuccess={handleJoinSuccess}
+      />
     </div>
   );
 };
