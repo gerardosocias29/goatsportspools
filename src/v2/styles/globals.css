@@ -258,6 +258,25 @@ body.v2-dark .v2-glass {
   }
 }
 
+@keyframes pulse-subtle {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.03);
+  }
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 1.5s ease-in-out infinite;
+}
+
+.animate-fade-in {
+  animation: fadeIn 300ms ease-out;
+}
+
 .v2-fade-in {
   animation: fadeIn 350ms cubic-bezier(0.4, 0, 0.2, 1);
 }

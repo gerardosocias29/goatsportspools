@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FiUsers, FiArrowLeft, FiCalendar, FiDollarSign, FiGrid, FiLock, FiUnlock, FiTrendingUp, FiAward, FiShare2, FiDownload, FiX, FiCreditCard } from 'react-icons/fi';
+import { FiArrowLeft, FiCalendar, FiDollarSign, FiGrid, FiLock, FiUnlock, FiTrendingUp, FiAward, FiShare2, FiDownload, FiX, FiCreditCard, FiCheck, FiChevronDown, FiSettings } from 'react-icons/fi';
 import SquaresGrid from '../components/squares/SquaresGrid';
 import WinnersDisplay from '../components/squares/WinnersDisplay';
 import { useAxios } from '../../app/contexts/AxiosContext';
 import { useUserContext } from '../contexts/UserContext';
 import { TeamTemplate } from '../../app/pages/screens/games/NFLTemplates';
 import { useTheme } from '../contexts/ThemeContext';
+import { useToast } from '../../app/contexts/ToastContext';
 import { QRCodeCanvas } from 'qrcode.react';
 
 /**
@@ -81,6 +82,7 @@ const SquaresPoolDetail = () => {
   const { poolId } = useParams();
   const navigate = useNavigate();
   const axiosService = useAxios();
+  const showToast = useToast();
   const { user: currentUser, isSignedIn, isLoaded } = useUserContext(); // Get user from context
 
   const [pool, setPool] = useState(null);
@@ -109,6 +111,11 @@ const SquaresPoolDetail = () => {
   const [requestAmount, setRequestAmount] = useState('');
   const [requestReason, setRequestReason] = useState('');
   const [requestingCredits, setRequestingCredits] = useState(false);
+  const [showAdminControls, setShowAdminControls] = useState(false);
+  const [showScoreModal, setShowScoreModal] = useState(false);
+  const [selectedQuarter, setSelectedQuarter] = useState(null);
+  const [homeScore, setHomeScore] = useState('');
+  const [visitorScore, setVisitorScore] = useState('');
   const QRCodeCanvasComponent = QRCodeCanvas;
   const qrCanvasRef = useRef(null);
   const getCurrentUserId = (userObj = currentUser) => userObj?.user?.id || userObj?.id;
@@ -265,15 +272,44 @@ const SquaresPoolDetail = () => {
     }
   };
 
-  const handleCalculateWinner = async (quarter) => {
-    if (!window.confirm(`Calculate winner for Quarter ${quarter}?`)) return;
+  // Open score modal for a specific quarter
+  const handleOpenScoreModal = (quarter) => {
+    setSelectedQuarter(quarter);
+    // Pre-fill with existing scores if available
+    const existingWinner = winners.find(w => w.quarter === quarter);
+    if (existingWinner) {
+      setHomeScore(existingWinner.home_score?.toString() || '');
+      setVisitorScore(existingWinner.visitor_score?.toString() || '');
+    } else {
+      setHomeScore('');
+      setVisitorScore('');
+    }
+    setShowScoreModal(true);
+  };
+
+  // Close score modal
+  const handleCloseScoreModal = () => {
+    setShowScoreModal(false);
+    setSelectedQuarter(null);
+    setHomeScore('');
+    setVisitorScore('');
+  };
+
+  // Submit scores and calculate winner
+  const handleCalculateWinner = async () => {
+    if (homeScore === '' || visitorScore === '') {
+      alert('Please enter both scores');
+      return;
+    }
 
     setCalculatingWinners(true);
     try {
       await axiosService.post(`/api/squares-pools/${poolId}/calculate-winners`, {
-        quarter: quarter,
+        quarter: selectedQuarter,
+        home_score: parseInt(homeScore),
+        visitor_score: parseInt(visitorScore),
       });
-      alert(`Winner calculated for Quarter ${quarter}!`);
+      handleCloseScoreModal();
       await loadWinners();
       await loadPool(null, true);
     } catch (error) {
@@ -676,28 +712,28 @@ const SquaresPoolDetail = () => {
     return `$${amount.toFixed(2)}`;
   };
 
-  const renderProgressCircle = (percentString) => {
+  const renderProgressCircle = (percentString, size = 40) => {
     const pct = Math.min(Math.max(parseInt(percentString, 10) || 0, 0), 100);
-    const radius = 18;
+    const radius = (size / 2) - 4;
     const circumference = 2 * Math.PI * radius;
     const dashOffset = circumference - (pct / 100) * circumference;
 
     return (
       <div
         style={{
-          width: '40px',
-          height: '40px',
+          width: `${size}px`,
+          height: `${size}px`,
           position: 'relative',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
         }}
       >
-        <svg width="40" height="40" style={{ transform: 'rotate(-90deg)' }}>
-          <circle cx="20" cy="20" r={radius} fill="none" stroke={colors.border} strokeWidth="3" opacity={0.4} />
+        <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
+          <circle cx={size/2} cy={size/2} r={radius} fill="none" stroke={colors.border} strokeWidth="3" opacity={0.4} />
           <circle
-            cx="20"
-            cy="20"
+            cx={size/2}
+            cy={size/2}
             r={radius}
             fill="none"
             stroke={`url(#poolDetailProgressGradient)`}
@@ -718,7 +754,7 @@ const SquaresPoolDetail = () => {
             position: 'absolute',
             fontWeight: 600,
             color: colors.text,
-            fontSize: '0.7rem',
+            fontSize: size > 40 ? '0.8rem' : '0.65rem',
           }}
         >
           {pct}%
@@ -814,6 +850,40 @@ const SquaresPoolDetail = () => {
     return team?.background_url || team?.backgroundUrl || null;
   };
 
+  const getUserCreditBalance = () => {
+    if (!pool?.players || !currentUserIdValue) return null;
+    const player = pool.players.find(p => extractPlayerId(p) === currentUserIdValue);
+    if (player) {
+      // Check multiple possible property names for credits
+      const credits = player.credits_available ?? player.available_credits ?? player.credits ?? player.player?.credits ?? 0;
+      return parseFloat(credits).toFixed(2);
+    }
+    return null;
+  };
+
+  // Shared styles for v2 theme
+  const adminButtonStyle = {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    padding: '0.6rem 1rem',
+    borderRadius: '10px',
+    fontSize: '0.85rem',
+    fontWeight: 600,
+    cursor: 'pointer',
+    transition: 'all 150ms ease',
+    border: `1px solid ${colors.border}`,
+    backgroundColor: isDark ? colors.cardHover : '#f7f4f2',
+    color: colors.text,
+  };
+
+  const adminButtonPrimaryStyle = {
+    ...adminButtonStyle,
+    backgroundColor: colors.brand.primary,
+    borderColor: colors.brand.primary,
+    color: '#fff',
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen" style={{ backgroundColor: colors.background }}>
@@ -897,34 +967,65 @@ const SquaresPoolDetail = () => {
   }
 
   return (
-    <div style={{ backgroundColor: colors.background, minHeight: '100vh' }}>
+    <div style={{ backgroundColor: colors.background, minHeight: '100vh', paddingBottom: hasJoined ? '100px' : '2rem' }}>
       <div style={{ maxWidth: '1180px', margin: '0 auto', padding: '1.5rem 1.25rem' }}>
 
-        {/* Header */}
+        {/* Header with back button and joined status */}
         <div className="flex items-center gap-3 mb-5">
           <button
             onClick={() => navigate('/v2/squares')}
-            className="flex items-center gap-2 text-sm font-semibold px-3 py-2 rounded-lg transition-all"
-            style={{ backgroundColor: colors.card, border: `1px solid ${colors.border}`, color: colors.text }}
+            className="flex items-center justify-center transition-all"
+            style={{
+              backgroundColor: colors.card,
+              border: `1px solid ${colors.border}`,
+              color: colors.text,
+              width: '42px',
+              height: '42px',
+              borderRadius: '12px',
+            }}
           >
-            <FiArrowLeft />
+            <FiArrowLeft size={18} />
           </button>
           <div className="flex-1">
-            <h3 className="text-3xl font-bold" style={{ color: colors.text, marginBottom: '0.15rem' }}>
+            <h3 className="text-2xl md:text-3xl font-bold" style={{ color: colors.text, marginBottom: '0.15rem' }}>
               {pool.pool_name || pool.gridName}
             </h3>
-            <p style={{ color: colors.text, opacity: 0.65 }}>Pool #{pool.pool_number || pool.poolNumber}</p>
+            <p className="text-sm" style={{ color: colors.text, opacity: 0.65 }}>Pool #{pool.pool_number || pool.poolNumber}</p>
           </div>
-          {/* {pool && (
-            <div className="flex items-center gap-2">
-              <span className="px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide" style={{ backgroundColor: colors.highlight, color: colors.brand.secondary, border: `1px solid ${colors.border}` }}>
-                {pool.player_pool_type === 'CREDIT' ? 'Credit' : 'Open'}
-              </span>
-              <span className="px-3 py-1 rounded-full text-xs font-semibold" style={{ backgroundColor: colors.brand.primary + '20', color: colors.brand.primary, border: `1px solid ${colors.brand.primary}` }}>
-                {pool.pool_status || pool.gridStatus || 'Status'}
-              </span>
+
+          {/* Compact Joined Status Badge */}
+          {hasJoined ? (
+            <div
+              className="flex items-center gap-2 px-3 py-2 rounded-full"
+              style={{
+                backgroundColor: `${colors.success}15`,
+                border: `1px solid ${colors.success}40`,
+              }}
+            >
+              <div
+                className="flex items-center justify-center rounded-full"
+                style={{
+                  width: '22px',
+                  height: '22px',
+                  backgroundColor: colors.success,
+                }}
+              >
+                <FiCheck size={14} color="#fff" strokeWidth={3} />
+              </div>
+              <span className="text-sm font-semibold" style={{ color: colors.success }}>Joined</span>
             </div>
-          )} */}
+          ) : (
+            <button
+              onClick={() => setShowJoinModal(true)}
+              className="flex items-center gap-2 px-4 py-2 rounded-full font-semibold transition-all"
+              style={{
+                backgroundColor: colors.brand.primary,
+                color: '#fff',
+              }}
+            >
+              Join Pool
+            </button>
+          )}
         </div>
 
         {/* Pool Info Card */}
@@ -932,9 +1033,9 @@ const SquaresPoolDetail = () => {
           className="mb-5"
           style={{ backgroundColor: colors.card, border: `1px solid ${colors.border}`, borderRadius: '18px', padding: '18px' }}
         >
-          <div className='flex justify-between w-full'>
+          <div className='flex flex-col lg:flex-row justify-between gap-4 w-full'>
             <div className="flex items-center gap-3">
-              <div style={{ width: '48px', height: '48px', borderRadius: '12px', backgroundColor: colors.highlight, color: colors.brand.secondary, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>
+              <div style={{ width: '48px', height: '48px', borderRadius: '12px', backgroundColor: colors.highlight, color: colors.brand.secondary, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '1.5rem' }}>
                 🏈
               </div>
               <div>
@@ -944,187 +1045,412 @@ const SquaresPoolDetail = () => {
                 <div className="text-lg font-bold" style={{ color: colors.text }}>
                   {getTeamName(pool.game?.home_team_id || pool.game?.homeTeamId)} vs {getTeamName(pool.game?.visitor_team_id || pool.game?.visitorTeamId)}
                 </div>
-                <div className="text-sm" style={{ color: colors.text, opacity: 0.65 }}>
-                  <FiCalendar className="inline-block mr-1" /> {formatDate(pool.game?.game_time || pool.game?.game_datetime || pool.game?.gameTime)}
+                <div className="text-sm flex items-center gap-1" style={{ color: colors.text, opacity: 0.65 }}>
+                  <FiCalendar size={14} /> {formatDate(pool.game?.game_time || pool.game?.game_datetime || pool.game?.gameTime)}
                 </div>
               </div>
             </div>
-            <div className='flex items-center gap-2'>
-              <div style={{ backgroundColor: colors.cardHover, border: `1px solid ${colors.border}`, borderRadius: '14px', padding: '14px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between' }}>
-                {renderProgressCircle(getProgressPercentage(pool))}
-                <div className="text-xs" style={{ color: colors.text, opacity: 0.7, marginLeft: '10px' }}>
-                  Squares filled
+            <div className='flex flex-wrap items-center gap-2'>
+              <div style={{ backgroundColor: isDark ? colors.cardHover : '#f7f4f2', border: `1px solid ${colors.border}`, borderRadius: '14px', padding: '12px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minWidth: '90px' }}>
+                {renderProgressCircle(getProgressPercentage(pool), 44)}
+                <div className="text-xs mt-1" style={{ color: colors.text, opacity: 0.7 }}>
+                  Filled
                 </div>
               </div>
 
-              {pool.player_pool_type === 'CREDIT' && (
-                <div className='h-full min-w-[120px]' style={{ backgroundColor: colors.cardHover, border: `1px solid ${colors.border}`, borderRadius: '14px', padding: '14px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <div className="text-xl font-bold" style={{ color: colors.text }}>
-                    {pool.players.find(p => extractPlayerId(p) === currentUserIdValue) !== undefined && (
-                      `$${parseFloat(pool.players.find(p => extractPlayerId(p) === currentUserIdValue).credits_available).toFixed(2)}`
-                    )}
-
+              {pool.player_pool_type === 'CREDIT' && getUserCreditBalance() !== null && (
+                <div className='h-full' style={{ backgroundColor: isDark ? colors.cardHover : '#f7f4f2', border: `1px solid ${colors.border}`, borderRadius: '14px', padding: '12px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minWidth: '100px' }}>
+                  <div className="text-xl font-bold" style={{ color: colors.success }}>
+                    ${getUserCreditBalance()}
                   </div>
-                  <div className="text-xs" style={{ color: colors.text, opacity: 0.7, marginLeft: '10px' }}>
-                    Credit Balance
+                  <div className="text-xs" style={{ color: colors.text, opacity: 0.7 }}>
+                    Your Credits
                   </div>
                 </div>
               )}
 
-              <div className='h-full min-w-[120px]' style={{ backgroundColor: colors.cardHover, border: `1px solid ${colors.border}`, borderRadius: '14px', padding: '14px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div className="text-xl font-bold" style={{ color: colors.text }}>
+              <div className='h-full' style={{ backgroundColor: isDark ? colors.cardHover : '#f7f4f2', border: `1px solid ${colors.border}`, borderRadius: '14px', padding: '12px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minWidth: '90px' }}>
+                <div className="text-lg font-bold" style={{ color: colors.text }}>
                   {pool.player_pool_type || 'N/A'}
                 </div>
-                <div className="text-xs" style={{ color: colors.text, opacity: 0.7, marginLeft: '10px' }}>
-                  Pool Type
+                <div className="text-xs" style={{ color: colors.text, opacity: 0.7 }}>
+                  Type
                 </div>
               </div>
 
-              <div className='h-full min-w-[120px]' style={{ backgroundColor: colors.cardHover, border: `1px solid ${colors.border}`, borderRadius: '14px', padding: '14px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div className="text-xl font-bold" style={{ color: colors.text }}>
-                  <span className='capitalize' style={{ color: pool.pool_status === 'open' ? '#34D399' : '#F87171' }}>
-                    {pool.pool_status || 'N/A'}
-                  </span>
+              <div className='h-full' style={{ backgroundColor: isDark ? colors.cardHover : '#f7f4f2', border: `1px solid ${colors.border}`, borderRadius: '14px', padding: '12px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minWidth: '90px' }}>
+                <div className="text-lg font-bold capitalize" style={{ color: pool.pool_status === 'open' ? colors.success : colors.error }}>
+                  {pool.pool_status || 'N/A'}
                 </div>
-                <div className="text-xs" style={{ color: colors.text, opacity: 0.7, marginLeft: '10px' }}>
-                  Pool Status
+                <div className="text-xs" style={{ color: colors.text, opacity: 0.7 }}>
+                  Status
                 </div>
               </div>
-
             </div>
           </div>
         </div>
 
-        <div className="grid sm:grid-cols-6 gap-3 mb-5">
-          <div style={{ backgroundColor: colors.cardHover, border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '10px 12px' }}>
+        {/* Quick Stats Row */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+          <div style={{ backgroundColor: isDark ? colors.cardHover : '#f7f4f2', border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '12px 14px' }}>
             <div className="text-xs" style={{ color: colors.text, opacity: 0.6 }}>Entry / square</div>
             <div className="text-xl font-bold" style={{ color: colors.text }}>
               ${parseFloat(pool.entry_fee || pool.credit_cost || pool.costPerSquare || 0).toFixed(2)}
             </div>
           </div>
-          <div style={{ backgroundColor: colors.cardHover, border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '10px 12px' }}>
+          <div style={{ backgroundColor: isDark ? colors.cardHover : '#f7f4f2', border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '12px 14px' }}>
             <div className="text-xs" style={{ color: colors.text, opacity: 0.6 }}>Total pot</div>
-            <div className="text-xl font-bold" style={{ color: colors.text }}>
+            <div className="text-xl font-bold" style={{ color: colors.brand.primary }}>
               ${parseFloat(pool.total_pot || pool.totalPot || 0).toFixed(2)}
             </div>
           </div>
-          <div style={{ backgroundColor: colors.cardHover, border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '10px 12px' }}>
+          <div style={{ backgroundColor: isDark ? colors.cardHover : '#f7f4f2', border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '12px 14px' }}>
             <div className="text-xs" style={{ color: colors.text, opacity: 0.6 }}>Total Players</div>
             <div className="text-xl font-bold" style={{ color: colors.text }}>
               {pool.players?.length || pool.playerCount || 0}
             </div>
           </div>
-
-          {/* <div className='col-span-2' style={{ backgroundColor: colors.cardHover, border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '10px 12px' }}>
-            <div className="text-xs" style={{ color: colors.text, opacity: 0.6 }}>Numbers Type</div>
+          <div style={{ backgroundColor: isDark ? colors.cardHover : '#f7f4f2', border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '12px 14px' }}>
+            <div className="text-xs" style={{ color: colors.text, opacity: 0.6 }}>Max per player</div>
             <div className="text-xl font-bold" style={{ color: colors.text }}>
-              {numbersTypeLabel}
+              {pool.max_squares_per_player || pool.maxSquaresPerPlayer || '∞'}
             </div>
-          </div> */}
-          
-          
+          </div>
         </div>
 
-        {/* Admin Controls */}
+        {/* Admin Controls - Collapsible Panel */}
         {canManagePool && (
           <div
             className="mb-5"
-            style={{ backgroundColor: colors.card, border: `1px solid ${colors.border}`, borderRadius: '14px', padding: '14px' }}
+            style={{
+              backgroundColor: colors.card,
+              border: `1px solid ${colors.border}`,
+              borderRadius: '16px',
+              overflow: 'hidden',
+            }}
           >
-            <h3 className="text-lg font-bold mb-3 flex items-center gap-2" style={{ color: colors.text }}>
-              <FiAward />
-              Admin Controls
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <h4 className="font-semibold mb-2" style={{ color: colors.text }}>Calculate Winners</h4>
-                <div className="flex flex-wrap gap-2">
-                  {[1, 2, 3, 4].map((quarter) => (
-                    <button
-                      key={quarter}
-                      onClick={() => handleCalculateWinner(quarter)}
-                      disabled={calculatingWinners}
-                      className="px-3 py-2 rounded-lg font-semibold"
-                      style={{ backgroundColor: colors.cardHover, color: colors.text, border: `1px solid ${colors.border}`, opacity: calculatingWinners ? 0.6 : 1 }}
-                    >
-                      Q{quarter}
-                    </button>
-                  ))}
-                  <button
-                    onClick={handleCalculateAllWinners}
-                    disabled={calculatingWinners}
-                    className="px-4 py-2 rounded-lg font-semibold"
-                    style={{ backgroundColor: colors.brand.primary, color: '#fff', opacity: calculatingWinners ? 0.6 : 1 }}
-                  >
-                    All Quarters
-                  </button>
+            {/* Collapsible Header */}
+            <button
+              onClick={() => setShowAdminControls(!showAdminControls)}
+              className="w-full flex items-center justify-between px-5 py-4 transition-all"
+              style={{
+                backgroundColor: isDark ? 'rgba(212, 122, 62, 0.1)' : 'rgba(212, 122, 62, 0.08)',
+                borderBottom: showAdminControls ? `1px solid ${colors.border}` : 'none',
+              }}
+            >
+              <div className="flex items-center gap-3">
+                <div
+                  className="flex items-center justify-center rounded-lg"
+                  style={{
+                    width: '36px',
+                    height: '36px',
+                    backgroundColor: colors.brand.primary,
+                  }}
+                >
+                  <FiSettings size={18} color="#fff" />
+                </div>
+                <div className="text-left">
+                  <h3 className="text-base font-bold" style={{ color: colors.text }}>Admin Controls</h3>
+                  <p className="text-xs" style={{ color: colors.text, opacity: 0.6 }}>Manage pool settings, winners & credits</p>
                 </div>
               </div>
-              <div>
-                <h4 className="font-semibold mb-2" style={{ color: colors.text }}>Pool Tools</h4>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    onClick={() => setShowQRCode(true)}
-                    className="px-3 py-2 rounded-lg font-semibold"
-                    style={{ backgroundColor: colors.cardHover, color: colors.text, border: `1px solid ${colors.border}` }}
-                  >
-                    <span className="inline-flex items-center gap-2"><FiShare2 /> Share QR</span>
-                  </button>
-                  <button
-                    onClick={() => setShowWinners(!showWinners)}
-                    className="px-3 py-2 rounded-lg font-semibold"
-                    style={{ backgroundColor: colors.cardHover, color: colors.text, border: `1px solid ${colors.border}` }}
-                  >
-                    <span className="inline-flex items-center gap-2"><FiAward /> {showWinners ? 'Hide' : 'Show'} Winners</span>
-                  </button>
-                  {pool.pool_status === 'open' ? (
-                    <button
-                      onClick={handleClosePool}
-                      className="px-3 py-2 rounded-lg font-semibold"
-                      style={{ backgroundColor: colors.cardHover, color: colors.text, border: `1px solid ${colors.border}` }}
+              <div
+                className="flex items-center justify-center rounded-full transition-transform"
+                style={{
+                  width: '32px',
+                  height: '32px',
+                  backgroundColor: isDark ? colors.cardHover : '#f7f4f2',
+                  transform: showAdminControls ? 'rotate(180deg)' : 'rotate(0deg)',
+                }}
+              >
+                <FiChevronDown size={18} style={{ color: colors.text }} />
+              </div>
+            </button>
+
+            {/* Collapsible Content */}
+            {showAdminControls && (
+              <div className="p-5 space-y-5">
+                {/* Calculate Winners Section - Quarter Cards */}
+                <div
+                  style={{
+                    backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
+                    borderRadius: '12px',
+                    padding: '16px',
+                    border: `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'}`,
+                  }}
+                >
+                  <div className="flex items-center gap-3 mb-5">
+                    <div
+                      className="flex items-center justify-center rounded-lg"
+                      style={{
+                        width: '32px',
+                        height: '32px',
+                        backgroundColor: isDark ? 'rgba(212, 122, 62, 0.2)' : 'rgba(212, 122, 62, 0.15)',
+                      }}
                     >
-                      <FiLock /> Close Pool
-                    </button>
-                  ) : (
+                      <FiAward size={16} style={{ color: colors.brand.primary }} />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold" style={{ color: colors.text }}>Calculate Winners</h4>
+                      <p className="text-xs" style={{ color: colors.text, opacity: 0.5 }}>Select quarter to enter scores and calculate winner</p>
+                    </div>
+                  </div>
+
+                  {/* Quarter Cards Grid */}
+                  <div className="grid grid-cols-4 gap-3">
+                    {[1, 2, 3, 4].map((quarter) => {
+                      const quarterWinner = winners.find(w => w.quarter === quarter);
+                      const quarterLabel = quarter === 4 ? 'Final' : `Quarter ${quarter}`;
+                      const hasWinner = !!quarterWinner;
+
+                      return (
+                        <div
+                          key={quarter}
+                          onClick={() => !calculatingWinners && handleOpenScoreModal(quarter)}
+                          className="cursor-pointer transition-all hover:scale-[1.02]"
+                          style={{
+                            backgroundColor: hasWinner
+                              ? (isDark ? 'rgba(34, 197, 94, 0.1)' : 'rgba(34, 197, 94, 0.08)')
+                              : (isDark ? colors.cardHover : '#fff'),
+                            border: `2px solid ${hasWinner ? colors.success : colors.border}`,
+                            borderRadius: '14px',
+                            padding: '14px',
+                            opacity: calculatingWinners ? 0.6 : 1,
+                          }}
+                        >
+                          {/* Quarter Label */}
+                          <div
+                            className="text-center text-xs font-bold uppercase tracking-wider mb-3"
+                            style={{ color: hasWinner ? colors.success : colors.brand.primary }}
+                          >
+                            {quarterLabel}
+                          </div>
+
+                          {/* Scores Display */}
+                          <div className="flex items-center justify-center gap-3">
+                            {/* Home Team */}
+                            <div className="flex flex-col items-center">
+                              {pool.game?.home_team_id && getTeamLogo(pool.game.home_team_id) ? (
+                                <img
+                                  src={getTeamLogo(pool.game.home_team_id)}
+                                  alt="Home"
+                                  className="w-8 h-8 object-contain mb-1"
+                                />
+                              ) : (
+                                <div
+                                  className="w-8 h-8 rounded-full flex items-center justify-center mb-1 text-xs font-bold"
+                                  style={{ backgroundColor: colors.brand.primary, color: '#fff' }}
+                                >
+                                  H
+                                </div>
+                              )}
+                              <div
+                                className="text-2xl font-bold"
+                                style={{ color: colors.text }}
+                              >
+                                {quarterWinner?.home_score ?? '-'}
+                              </div>
+                            </div>
+
+                            {/* VS */}
+                            <div
+                              className="text-xs font-semibold px-2"
+                              style={{ color: colors.text, opacity: 0.4 }}
+                            >
+                              vs
+                            </div>
+
+                            {/* Visitor Team */}
+                            <div className="flex flex-col items-center">
+                              {pool.game?.visitor_team_id && getTeamLogo(pool.game.visitor_team_id) ? (
+                                <img
+                                  src={getTeamLogo(pool.game.visitor_team_id)}
+                                  alt="Away"
+                                  className="w-8 h-8 object-contain mb-1"
+                                />
+                              ) : (
+                                <div
+                                  className="w-8 h-8 rounded-full flex items-center justify-center mb-1 text-xs font-bold"
+                                  style={{ backgroundColor: colors.border, color: colors.text }}
+                                >
+                                  A
+                                </div>
+                              )}
+                              <div
+                                className="text-2xl font-bold"
+                                style={{ color: colors.text }}
+                              >
+                                {quarterWinner?.visitor_score ?? '-'}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Winner Info or Calculate Button */}
+                          <div className="mt-3 text-center">
+                            {hasWinner ? (
+                              <div
+                                className="text-xs font-semibold px-2 py-1 rounded-full inline-block"
+                                style={{
+                                  backgroundColor: `${colors.success}20`,
+                                  color: colors.success
+                                }}
+                              >
+                                <FiCheck size={12} className="inline mr-1" />
+                                Winner: {quarterWinner.player?.name?.split(' ')[0] || 'Calculated'}
+                              </div>
+                            ) : (
+                              <div
+                                className="text-xs font-semibold px-3 py-1.5 rounded-full inline-block"
+                                style={{
+                                  backgroundColor: colors.brand.primary,
+                                  color: '#fff'
+                                }}
+                              >
+                                Enter Scores
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Calculate All Button */}
+                  <div className="mt-4">
                     <button
-                      onClick={handleReopenPool}
-                      className="px-3 py-2 rounded-lg font-semibold"
-                      style={{ backgroundColor: colors.cardHover, color: colors.text, border: `1px solid ${colors.border}` }}
+                      onClick={handleCalculateAllWinners}
+                      disabled={calculatingWinners}
+                      className="w-full"
+                      style={{
+                        ...adminButtonStyle,
+                        opacity: calculatingWinners ? 0.6 : 1,
+                        justifyContent: 'center',
+                        backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
+                      }}
                     >
-                      <FiUnlock /> Reopen Pool
+                      <FiAward size={16} /> Recalculate All Winners
                     </button>
-                  )}
-                  {requiresManualAssignment && (
+                  </div>
+                </div>
+
+                {/* Pool Tools Section */}
+                <div
+                  style={{
+                    backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
+                    borderRadius: '12px',
+                    padding: '16px',
+                    border: `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'}`,
+                  }}
+                >
+                  <div className="flex items-center gap-3 mb-5">
+                    <div
+                      className="flex items-center justify-center rounded-lg"
+                      style={{
+                        width: '32px',
+                        height: '32px',
+                        backgroundColor: isDark ? 'rgba(212, 122, 62, 0.2)' : 'rgba(212, 122, 62, 0.15)',
+                      }}
+                    >
+                      <FiGrid size={16} style={{ color: colors.brand.primary }} />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold" style={{ color: colors.text }}>Pool Tools</h4>
+                      <p className="text-xs" style={{ color: colors.text, opacity: 0.5 }}>Manage pool settings and sharing</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     <button
-                      onClick={handleAssignNumbers}
-                      disabled={assigningNumbers}
-                      className="px-3 py-2 rounded-lg font-semibold"
-                      style={{ backgroundColor: colors.cardHover, color: colors.text, border: `1px solid ${colors.border}`, opacity: assigningNumbers ? 0.6 : 1 }}
+                      onClick={() => setShowQRCode(true)}
+                      style={{ ...adminButtonStyle, justifyContent: 'center', width: '100%' }}
                     >
-                      <FiGrid /> {assigningNumbers ? 'Assigning...' : 'Assign Numbers'}
+                      <FiShare2 size={16} /> Share QR
                     </button>
-                  )}
-                  {pool.player_pool_type === 'CREDIT' && (
-                    <>
+                    <button
+                      onClick={() => setShowWinners(!showWinners)}
+                      style={{ ...adminButtonStyle, justifyContent: 'center', width: '100%' }}
+                    >
+                      <FiAward size={16} /> {showWinners ? 'Hide' : 'View'} Winners
+                    </button>
+                    {pool.pool_status === 'open' ? (
+                      <button
+                        onClick={handleClosePool}
+                        style={{ ...adminButtonStyle, justifyContent: 'center', width: '100%' }}
+                      >
+                        <FiLock size={16} /> Close Pool
+                      </button>
+                    ) : (
+                      <button
+                        onClick={handleReopenPool}
+                        style={{ ...adminButtonStyle, justifyContent: 'center', width: '100%' }}
+                      >
+                        <FiUnlock size={16} /> Reopen Pool
+                      </button>
+                    )}
+                    {requiresManualAssignment && (
+                      <button
+                        onClick={handleAssignNumbers}
+                        disabled={assigningNumbers}
+                        style={{
+                          ...adminButtonStyle,
+                          opacity: assigningNumbers ? 0.6 : 1,
+                          justifyContent: 'center',
+                          width: '100%',
+                        }}
+                      >
+                        <FiGrid size={16} /> {assigningNumbers ? 'Assigning...' : 'Assign Numbers'}
+                      </button>
+                    )}
+                    {pool.player_pool_type === 'CREDIT' && (
                       <button
                         onClick={handleMakePoolFree}
-                        className="px-3 py-2 rounded-lg font-semibold"
-                        style={{ backgroundColor: colors.cardHover, color: colors.text, border: `1px solid ${colors.border}` }}
+                        style={{ ...adminButtonStyle, justifyContent: 'center', width: '100%' }}
                       >
-                        <FiDollarSign /> Make Pool Free
+                        <FiDollarSign size={16} /> Make Free
                       </button>
-                      <button
-                        onClick={handleAddCredits}
-                        className="px-3 py-2 rounded-lg font-semibold"
-                        style={{ backgroundColor: colors.cardHover, color: colors.text, border: `1px solid ${colors.border}` }}
-                      >
-                        <FiTrendingUp /> Grant Credits
-                      </button>
-                    </>
-                  )}
+                    )}
+                  </div>
                 </div>
+
+                {/* Credits Management Section - Only for Credit Pools */}
+                {pool.player_pool_type === 'CREDIT' && (
+                  <div
+                    style={{
+                      backgroundColor: isDark ? 'rgba(212, 122, 62, 0.08)' : 'rgba(212, 122, 62, 0.06)',
+                      borderRadius: '12px',
+                      padding: '16px',
+                      border: `1px solid ${colors.brand.primary}30`,
+                    }}
+                  >
+                    <div className="flex items-center gap-3 mb-5">
+                      <div
+                        className="flex items-center justify-center rounded-lg"
+                        style={{
+                          width: '32px',
+                          height: '32px',
+                          backgroundColor: colors.brand.primary,
+                        }}
+                      >
+                        <FiCreditCard size={16} color="#fff" />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-bold" style={{ color: colors.text }}>Credits Management</h4>
+                        <p className="text-xs" style={{ color: colors.text, opacity: 0.5 }}>Grant credits to pool players</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={handleAddCredits}
+                      className="w-full"
+                      style={{
+                        ...adminButtonPrimaryStyle,
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <FiTrendingUp size={16} /> Grant Credits to Players
+                    </button>
+                  </div>
+                )}
               </div>
-            </div>
+            )}
           </div>
         )}
 
@@ -1138,12 +1464,12 @@ const SquaresPoolDetail = () => {
               <FiAward />
               Winners
             </h3>
-            <div className="space-y-2">
+            <div className="grid gap-2 sm:grid-cols-2">
               {winners.map((winner, index) => (
                 <div
                   key={index}
                   style={{
-                    backgroundColor: colors.cardHover,
+                    backgroundColor: isDark ? colors.cardHover : '#f7f4f2',
                     border: `1px solid ${colors.border}`,
                     borderRadius: '12px',
                     padding: '12px',
@@ -1151,124 +1477,25 @@ const SquaresPoolDetail = () => {
                 >
                   <div className="flex justify-between items-start">
                     <div>
-                      <div className="text-sm font-semibold" style={{ color: colors.text }}>
+                      <div className="text-sm font-semibold" style={{ color: colors.brand.primary }}>
                         Quarter {winner.quarter}
                       </div>
-                      <div className="text-sm" style={{ color: colors.text, opacity: 0.75 }}>
-                        Winner: <span className="font-semibold" style={{ color: colors.text }}>{winner.player?.name || 'Unknown'}</span>
+                      <div className="text-sm" style={{ color: colors.text }}>
+                        {winner.player?.name || 'Unknown'}
                       </div>
                       <div className="text-xs" style={{ color: colors.text, opacity: 0.6 }}>
                         Square: ({winner.square?.x_coordinate}, {winner.square?.y_coordinate})
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="font-bold" style={{ color: colors.brand.primary }}>
+                      <div className="font-bold text-lg" style={{ color: colors.success }}>
                         ${parseFloat(winner.prize_amount || 0).toFixed(2)}
                       </div>
-                      <div className="text-xs" style={{ color: colors.text, opacity: 0.6 }}>Prize</div>
                     </div>
                   </div>
                 </div>
               ))}
             </div>
-          </div>
-        )}
-
-        {/* Join/Selection Controls */}
-        {!hasJoined ? (
-          <div
-            className="mb-5"
-            style={{ backgroundColor: colors.card, border: `1px solid ${colors.border}`, borderRadius: '14px', padding: '16px' }}
-          >
-            <div className="flex flex-col md:flex-row items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <FiLock style={{ color: colors.brand.secondary }} className="text-2xl" />
-                <div>
-                  <h3 className="text-lg font-bold" style={{ color: colors.text }}>Join this pool to select squares</h3>
-                  <p style={{ color: colors.text, opacity: 0.7 }}>You need to join before you can pick squares.</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setShowJoinModal(true)}
-                className="px-5 py-3 rounded-lg font-semibold transition-all"
-                style={{ backgroundColor: colors.brand.primary, color: '#fff' }}
-              >
-                Join Pool
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div
-            className="mb-5"
-            style={{ backgroundColor: colors.card, border: `1px solid ${colors.border}`, borderRadius: '14px', padding: '14px' }}
-          >
-            <div className="flex flex-col md:flex-row items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <div style={{ color: colors.brand.primary }} className="text-2xl">✓</div>
-                <div>
-                  <h3 className="text-lg font-bold" style={{ color: colors.text }}>You've joined this pool!</h3>
-                  <p style={{ color: colors.text, opacity: 0.7 }}>
-                    {selectionMode ? 'Click squares to select them' : 'Click "Select Squares" to start choosing'}
-                  </p>
-                </div>
-              </div>
-
-              {!selectionMode ? (
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => setSelectionMode(true)}
-                    disabled={pool.pool_status !== 'open'}
-                    className="px-5 py-3 rounded-lg font-semibold transition-all"
-                    style={{ backgroundColor: colors.brand.primary, color: '#fff', opacity: pool.pool_status !== 'open' ? 0.5 : 1 }}
-                  >
-                    Select Squares
-                  </button>
-                  {pool.player_pool_type === 'CREDIT' && (
-                    <button
-                      onClick={() => setShowRequestCreditsModal(true)}
-                      className="px-5 py-3 rounded-lg font-semibold transition-all"
-                      style={{ backgroundColor: colors.cardHover, color: colors.text, border: `1px solid ${colors.border}` }}
-                    >
-                      <span className="inline-flex items-center gap-2"><FiCreditCard /> Request Credits</span>
-                    </button>
-                  )}
-                </div>
-              ) : (
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => {
-                      setSelectionMode(false);
-                      setSelectedSquares([]);
-                    }}
-                    className="px-5 py-3 rounded-lg font-semibold transition-all"
-                    style={{ backgroundColor: colors.cardHover, color: colors.text, border: `1px solid ${colors.border}` }}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleConfirmSelection}
-                    disabled={selectedSquares.length === 0}
-                    className="px-6 py-3 rounded-lg font-semibold transition-all"
-                    style={{ backgroundColor: colors.brand.primary, color: '#fff', opacity: selectedSquares.length === 0 ? 0.5 : 1 }}
-                  >
-                    Confirm {selectedSquares.length > 0 && `(${selectedSquares.length})`}
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {selectionMode && selectedSquares.length > 0 && (
-              <div style={{ marginTop: '12px', backgroundColor: colors.cardHover, borderRadius: '10px', padding: '12px', border: `1px solid ${colors.border}` }}>
-                <div className="flex justify-between items-center" style={{ color: colors.text }}>
-                  <span className="font-semibold">
-                    {selectedSquares.length} square{selectedSquares.length !== 1 ? 's' : ''} selected
-                  </span>
-                  <span className="font-bold" style={{ color: colors.brand.primary }}>
-                    Total: ${getTotalCost()}
-                  </span>
-                </div>
-              </div>
-            )}
           </div>
         )}
 
@@ -1292,14 +1519,21 @@ const SquaresPoolDetail = () => {
                   visitorTeamBackground: getTeamBackground(pool.game?.visitor_team_id || pool.game?.visitorTeamId),
                   homeTeamName: getTeamName(pool.game?.home_team_id || pool.game?.homeTeamId),
                   visitorTeamName: getTeamName(pool.game?.visitor_team_id || pool.game?.visitorTeamId),
-                  xAxisNumbers: pool.x_numbers || [],
-                  yAxisNumbers: pool.y_numbers || [],
+                  xAxisNumbers: pool.x_numbers && pool.x_numbers.length > 0 ? pool.x_numbers : null,
+                  yAxisNumbers: pool.y_numbers && pool.y_numbers.length > 0 ? pool.y_numbers : null,
                 }}
                 squares={pool.squares || []}
                 onSquareSelect={handleSquareSelection}
                 currentPlayerID={currentPlayerId}
                 selectionMode={selectionMode}
                 disabled={!hasJoined || pool.pool_status !== 'open'}
+                onLimitReached={(maxSquares, owned, selected) => {
+                  showToast({
+                    severity: 'warn',
+                    summary: 'Selection Limit Reached',
+                    detail: `You can only have ${maxSquares} squares maximum. You already own ${owned} and have ${selected} selected.`,
+                  });
+                }}
               />
             );
           })()}
@@ -1386,12 +1620,151 @@ const SquaresPoolDetail = () => {
         </div>
       )}
 
+      {/* Floating Bottom Bar - Select Squares (Only when joined) */}
+      {hasJoined && (
+        <div
+          className="fixed bottom-0 left-0 right-0 z-40"
+          style={{
+            background: isDark
+              ? 'linear-gradient(to top, rgba(22, 28, 41, 0.98) 0%, rgba(22, 28, 41, 0.95) 100%)'
+              : 'linear-gradient(to top, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0.95) 100%)',
+            borderTop: `1px solid ${colors.border}`,
+            backdropFilter: 'blur(12px)',
+            boxShadow: '0 -4px 20px rgba(0, 0, 0, 0.1)',
+          }}
+        >
+          <div style={{ maxWidth: '1180px', margin: '0 auto', padding: '1rem 1.25rem' }}>
+            {!selectionMode ? (
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div
+                    className="flex items-center justify-center rounded-xl"
+                    style={{
+                      width: '44px',
+                      height: '44px',
+                      backgroundColor: isDark ? colors.cardHover : '#f7f4f2',
+                      border: `1px solid ${colors.border}`,
+                    }}
+                  >
+                    <FiGrid size={20} style={{ color: colors.brand.primary }} />
+                  </div>
+                  <div>
+                    <p className="font-semibold" style={{ color: colors.text }}>
+                      Ready to pick squares?
+                    </p>
+                    <p className="text-sm" style={{ color: colors.text, opacity: 0.6 }}>
+                      {pool.pool_status === 'open' ? 'Pool is open for selection' : 'Pool is currently closed'}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  {pool.player_pool_type === 'CREDIT' && (
+                    <button
+                      onClick={() => setShowRequestCreditsModal(true)}
+                      className="hidden sm:flex items-center gap-2 px-4 py-3 rounded-xl font-semibold transition-all"
+                      style={{
+                        backgroundColor: isDark ? colors.cardHover : '#f7f4f2',
+                        border: `1px solid ${colors.border}`,
+                        color: colors.text,
+                      }}
+                    >
+                      <FiCreditCard size={18} /> Request Credits
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setSelectionMode(true)}
+                    disabled={pool.pool_status !== 'open'}
+                    className="flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all"
+                    style={{
+                      backgroundColor: pool.pool_status === 'open' ? colors.brand.primary : colors.border,
+                      color: pool.pool_status === 'open' ? '#fff' : colors.text,
+                      opacity: pool.pool_status !== 'open' ? 0.6 : 1,
+                    }}
+                  >
+                    <FiGrid size={18} /> Select Squares
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-4 w-full sm:w-auto">
+                  <div
+                    className="flex-1 sm:flex-none flex items-center gap-3 px-4 py-3 rounded-xl"
+                    style={{
+                      backgroundColor: isDark ? colors.cardHover : '#f7f4f2',
+                      border: `1px solid ${colors.border}`,
+                    }}
+                  >
+                    <div className="text-center sm:text-left">
+                      <p className="text-xs" style={{ color: colors.text, opacity: 0.6 }}>Selected</p>
+                      <p className="text-lg font-bold" style={{ color: colors.brand.primary }}>
+                        {selectedSquares.length} square{selectedSquares.length !== 1 ? 's' : ''}
+                      </p>
+                    </div>
+                  </div>
+                  {parseFloat(pool.entry_fee || pool.credit_cost || 0) > 0 && (
+                    <div
+                      className="flex-1 sm:flex-none flex items-center gap-3 px-4 py-3 rounded-xl"
+                      style={{
+                        backgroundColor: isDark ? colors.cardHover : '#f7f4f2',
+                        border: `1px solid ${colors.border}`,
+                      }}
+                    >
+                      <div className="text-center sm:text-left">
+                        <p className="text-xs" style={{ color: colors.text, opacity: 0.6 }}>Total Cost</p>
+                        <p className="text-lg font-bold" style={{ color: colors.success }}>
+                          ${getTotalCost()}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <div className="flex items-center gap-3 w-full sm:w-auto">
+                  <button
+                    onClick={() => {
+                      setSelectionMode(false);
+                      setSelectedSquares([]);
+                    }}
+                    className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold transition-all"
+                    style={{
+                      backgroundColor: isDark ? colors.cardHover : '#f7f4f2',
+                      border: `1px solid ${colors.border}`,
+                      color: colors.text,
+                    }}
+                  >
+                    <FiX size={18} /> Cancel
+                  </button>
+                  <button
+                    onClick={handleConfirmSelection}
+                    disabled={selectedSquares.length === 0}
+                    className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold transition-all"
+                    style={{
+                      backgroundColor: selectedSquares.length > 0 ? colors.brand.primary : colors.border,
+                      color: selectedSquares.length > 0 ? '#fff' : colors.text,
+                      opacity: selectedSquares.length === 0 ? 0.6 : 1,
+                    }}
+                  >
+                    <FiCheck size={18} /> Confirm Selection
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Join Modal */}
       {showJoinModal && (
         <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-800 rounded-xl p-8 max-w-md w-full border-2 border-gray-700">
-            <h2 className="text-2xl font-bold text-white mb-4">Join Pool</h2>
-            <p className="text-gray-300 mb-6">
+          <div
+            className="rounded-2xl p-6 max-w-md w-full"
+            style={{
+              backgroundColor: colors.card,
+              border: `1px solid ${colors.border}`,
+            }}
+          >
+            <h2 className="text-2xl font-bold mb-2" style={{ color: colors.text }}>Join Pool</h2>
+            <p className="mb-6" style={{ color: colors.text, opacity: 0.7 }}>
               {pool.player_pool_type === 'CREDIT'
                 ? 'Enter the pool password to join'
                 : 'Click join to enter this pool'}
@@ -1399,14 +1772,19 @@ const SquaresPoolDetail = () => {
 
             {pool.player_pool_type === 'CREDIT' && (
               <div className="mb-6">
-                <label className="block text-gray-300 font-medium mb-2">
+                <label className="block font-medium mb-2" style={{ color: colors.text }}>
                   Pool Password
                 </label>
                 <input
                   type="password"
                   value={joinPassword}
                   onChange={(e) => setJoinPassword(e.target.value)}
-                  className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded-lg px-4 py-3 focus:outline-none focus:ring-2"
+                  style={{
+                    backgroundColor: isDark ? colors.cardHover : '#f7f4f2',
+                    border: `1px solid ${colors.border}`,
+                    color: colors.text,
+                  }}
                   placeholder="Enter password"
                   onKeyPress={(e) => e.key === 'Enter' && handleJoinPool()}
                 />
@@ -1414,7 +1792,7 @@ const SquaresPoolDetail = () => {
             )}
 
             {joinError && (
-              <div className="mb-4 bg-red-500 bg-opacity-20 border border-red-500 text-red-300 px-4 py-3 rounded-lg">
+              <div className="mb-4 px-4 py-3 rounded-lg" style={{ backgroundColor: `${colors.error}20`, border: `1px solid ${colors.error}`, color: colors.error }}>
                 {joinError}
               </div>
             )}
@@ -1426,13 +1804,19 @@ const SquaresPoolDetail = () => {
                   setJoinError('');
                   setJoinPassword('');
                 }}
-                className="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-3 rounded-lg font-semibold transition-all"
+                className="flex-1 py-3 rounded-lg font-semibold transition-all"
+                style={{
+                  backgroundColor: isDark ? colors.cardHover : '#f7f4f2',
+                  border: `1px solid ${colors.border}`,
+                  color: colors.text,
+                }}
               >
                 Cancel
               </button>
               <button
                 onClick={handleJoinPool}
-                className="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg font-bold transition-all"
+                className="flex-1 py-3 rounded-lg font-bold transition-all"
+                style={{ backgroundColor: colors.brand.primary, color: '#fff' }}
               >
                 Join
               </button>
@@ -1445,25 +1829,35 @@ const SquaresPoolDetail = () => {
       {showCreditsModal && (
         <div className="fixed inset-0 bg-black bg-opacity-80 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={closeCreditsModal}>
           <div
-            className="bg-gray-900 rounded-2xl border border-gray-700 shadow-2xl w-full max-w-3xl p-6 relative"
+            className="rounded-2xl shadow-2xl w-full max-w-3xl p-6 relative"
+            style={{
+              backgroundColor: colors.card,
+              border: `1px solid ${colors.border}`,
+            }}
             onClick={(e) => e.stopPropagation()}
           >
             <button
               onClick={closeCreditsModal}
-              className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
+              className="absolute top-4 right-4 transition-colors"
+              style={{ color: colors.text, opacity: 0.6 }}
               aria-label="Close credits modal"
             >
               <FiX className="text-2xl" />
             </button>
             <div className="flex items-center gap-3 mb-4">
-              <FiCreditCard className="text-indigo-400 text-3xl" />
+              <div
+                className="flex items-center justify-center rounded-lg"
+                style={{ width: '40px', height: '40px', backgroundColor: colors.brand.primary }}
+              >
+                <FiCreditCard size={20} color="#fff" />
+              </div>
               <div>
-                <h3 className="text-2xl font-bold text-white">Grant Credits</h3>
-                <p className="text-gray-400 text-sm">View joined players and manage their credits for this pool.</p>
+                <h3 className="text-2xl font-bold" style={{ color: colors.text }}>Grant Credits</h3>
+                <p className="text-sm" style={{ color: colors.text, opacity: 0.6 }}>View joined players and manage their credits for this pool.</p>
               </div>
             </div>
             {!canGrantCredits && (
-              <div className="mb-4 bg-yellow-900 bg-opacity-30 border border-yellow-600 text-yellow-200 px-4 py-3 rounded-lg text-sm">
+              <div className="mb-4 px-4 py-3 rounded-lg text-sm" style={{ backgroundColor: `${colors.warning}20`, border: `1px solid ${colors.warning}`, color: colors.warning }}>
                 Only Super Admins can add credits. You can still review each player's current balance.
               </div>
             )}
@@ -1474,9 +1868,9 @@ const SquaresPoolDetail = () => {
             )}
             <div className="max-h-[420px] overflow-y-auto space-y-4 pr-1">
               {creditsLoading ? (
-                <div className="text-center text-gray-300 py-12">Loading players...</div>
+                <div className="text-center py-12" style={{ color: colors.text, opacity: 0.6 }}>Loading players...</div>
               ) : poolPlayers.length === 0 ? (
-                <div className="text-center text-gray-400 py-12">No players have joined this pool yet.</div>
+                <div className="text-center py-12" style={{ color: colors.text, opacity: 0.6 }}>No players have joined this pool yet.</div>
               ) : (
                 poolPlayers.map((player) => {
                   const playerId = extractPlayerId(player);
@@ -1485,15 +1879,22 @@ const SquaresPoolDetail = () => {
                   const email = getPlayerEmail(player);
                   const availableCredits = getPlayerAvailableCredits(player);
                   return (
-                    <div key={playerId} className="bg-gray-800 rounded-xl border border-gray-700 p-4 space-y-4">
+                    <div
+                      key={playerId}
+                      className="rounded-xl p-4 space-y-4"
+                      style={{
+                        backgroundColor: isDark ? colors.cardHover : '#f7f4f2',
+                        border: `1px solid ${colors.border}`,
+                      }}
+                    >
                       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div>
-                          <p className="text-white font-semibold">{name}</p>
-                          {email && <p className="text-gray-400 text-sm">{email}</p>}
+                          <p className="font-semibold" style={{ color: colors.text }}>{name}</p>
+                          {email && <p className="text-sm" style={{ color: colors.text, opacity: 0.6 }}>{email}</p>}
                         </div>
-                        <div className="text-sm text-gray-300">
-                          <p className="text-gray-400 text-xs uppercase tracking-wide">Available Credits</p>
-                          <p className="text-green-400 font-bold text-xl">{formatCurrency(availableCredits)}</p>
+                        <div className="text-sm">
+                          <p className="text-xs uppercase tracking-wide" style={{ color: colors.text, opacity: 0.6 }}>Available Credits</p>
+                          <p className="font-bold text-xl" style={{ color: colors.success }}>{formatCurrency(availableCredits)}</p>
                         </div>
                       </div>
                       <div className="flex flex-col sm:flex-row gap-3">
@@ -1506,12 +1907,21 @@ const SquaresPoolDetail = () => {
                           value={creditAmounts[playerId] ?? ''}
                           onChange={(e) => handleCreditsInputChange(playerId, e.target.value)}
                           disabled={!canGrantCredits}
-                          className="flex-1 bg-gray-900 text-white border border-gray-700 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-60"
+                          className="flex-1 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 disabled:opacity-60"
+                          style={{
+                            backgroundColor: colors.card,
+                            border: `1px solid ${colors.border}`,
+                            color: colors.text,
+                          }}
                         />
                         <button
                           onClick={() => handleGrantCreditsToPlayer(playerId)}
                           disabled={!canGrantCredits || creditsLoading}
-                          className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-700 disabled:cursor-not-allowed text-white px-5 py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition-all"
+                          className="px-5 py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                          style={{
+                            backgroundColor: canGrantCredits ? colors.brand.primary : colors.border,
+                            color: canGrantCredits ? '#fff' : colors.text,
+                          }}
                         >
                           <FiTrendingUp />
                           Add Credits
@@ -1530,19 +1940,24 @@ const SquaresPoolDetail = () => {
       {showQRCode && (
         <div className="fixed inset-0 bg-black bg-opacity-80 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={closeQRCodeModal}>
           <div
-            className="bg-gray-900 rounded-2xl border border-gray-700 shadow-2xl w-full max-w-lg p-6 relative"
+            className="rounded-2xl shadow-2xl w-full max-w-lg p-6 relative"
+            style={{
+              backgroundColor: colors.card,
+              border: `1px solid ${colors.border}`,
+            }}
             onClick={(e) => e.stopPropagation()}
           >
             <button
               onClick={closeQRCodeModal}
-              className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
+              className="absolute top-4 right-4 transition-colors"
+              style={{ color: colors.text, opacity: 0.6 }}
               aria-label="Close QR modal"
             >
               <FiX className="text-2xl" />
             </button>
             <div className="flex flex-col items-center gap-4">
-              <h3 className="text-2xl font-bold text-white text-center">Share Pool</h3>
-              <p className="text-gray-400 text-center text-sm">Scan or download the QR code to invite players to this pool.</p>
+              <h3 className="text-2xl font-bold text-center" style={{ color: colors.text }}>Share Pool</h3>
+              <p className="text-center text-sm" style={{ color: colors.text, opacity: 0.6 }}>Scan or download the QR code to invite players to this pool.</p>
               <div className="relative bg-white p-4 rounded-2xl shadow-inner w-full flex items-center justify-center min-h-[18rem]">
                 {effectiveJoinUrl && QRCodeCanvasComponent ? (
                   <>
@@ -1571,31 +1986,46 @@ const SquaresPoolDetail = () => {
                     className="w-64 h-64 sm:w-72 sm:h-72 object-contain"
                   />
                 ) : (
-                  <div className="text-red-500 text-sm">QR code not available.</div>
+                  <div style={{ color: colors.error }} className="text-sm">QR code not available.</div>
                 )}
               </div>
               {effectiveJoinUrl && (
-                <div className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3">
-                  <p className="text-gray-400 text-xs uppercase">Join Link</p>
-                  <p className="text-white text-sm font-mono break-all">{effectiveJoinUrl}</p>
+                <div
+                  className="w-full rounded-lg px-4 py-3"
+                  style={{
+                    backgroundColor: isDark ? colors.cardHover : '#f7f4f2',
+                    border: `1px solid ${colors.border}`,
+                  }}
+                >
+                  <p className="text-xs uppercase" style={{ color: colors.text, opacity: 0.6 }}>Join Link</p>
+                  <p className="text-sm font-mono break-all" style={{ color: colors.text }}>{effectiveJoinUrl}</p>
                 </div>
               )}
               <div className="text-center">
-                <p className="text-gray-300 text-sm">Pool Number</p>
-                <p className="text-white text-xl font-bold">{poolNumberDisplay || 'N/A'}</p>
+                <p className="text-sm" style={{ color: colors.text, opacity: 0.7 }}>Pool Number</p>
+                <p className="text-xl font-bold" style={{ color: colors.text }}>{poolNumberDisplay || 'N/A'}</p>
               </div>
               <div className="flex flex-col sm:flex-row gap-3 w-full">
                 <button
                   onClick={handleDownloadQRCode}
                   disabled={downloadingQR || (!effectiveJoinUrl && !fallbackQrImage)}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:cursor-not-allowed text-white px-4 py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition-all"
+                  className="flex-1 px-4 py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                  style={{
+                    backgroundColor: colors.brand.primary,
+                    color: '#fff',
+                  }}
                 >
                   <FiDownload />
                   {downloadingQR ? 'Downloading...' : 'Download QR Code'}
                 </button>
                 <button
                   onClick={closeQRCodeModal}
-                  className="flex-1 bg-gray-800 hover:bg-gray-700 text-white px-4 py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition-all"
+                  className="flex-1 px-4 py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition-all"
+                  style={{
+                    backgroundColor: isDark ? colors.cardHover : '#f7f4f2',
+                    border: `1px solid ${colors.border}`,
+                    color: colors.text,
+                  }}
                 >
                   <FiX />
                   Close
@@ -1610,28 +2040,38 @@ const SquaresPoolDetail = () => {
       {showRequestCreditsModal && (
         <div className="fixed inset-0 bg-black bg-opacity-80 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={closeRequestCreditsModal}>
           <div
-            className="bg-gray-900 rounded-2xl border border-purple-700 shadow-2xl w-full max-w-md p-6 relative"
+            className="rounded-2xl shadow-2xl w-full max-w-md p-6 relative"
+            style={{
+              backgroundColor: colors.card,
+              border: `1px solid ${colors.brand.primary}`,
+            }}
             onClick={(e) => e.stopPropagation()}
           >
             <button
               onClick={closeRequestCreditsModal}
-              className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
+              className="absolute top-4 right-4 transition-colors"
+              style={{ color: colors.text, opacity: 0.6 }}
               aria-label="Close request credits modal"
             >
               <FiX className="text-2xl" />
             </button>
 
             <div className="flex items-center gap-3 mb-4">
-              <FiCreditCard className="text-purple-400 text-3xl" />
+              <div
+                className="flex items-center justify-center rounded-lg"
+                style={{ width: '40px', height: '40px', backgroundColor: colors.brand.primary }}
+              >
+                <FiCreditCard size={20} color="#fff" />
+              </div>
               <div>
-                <h3 className="text-2xl font-bold text-white">Request Credits</h3>
-                <p className="text-gray-400 text-sm">Request credits from the pool commissioner</p>
+                <h3 className="text-2xl font-bold" style={{ color: colors.text }}>Request Credits</h3>
+                <p className="text-sm" style={{ color: colors.text, opacity: 0.6 }}>Request credits from the pool commissioner</p>
               </div>
             </div>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-gray-300 text-sm font-semibold mb-2">
+                <label className="block text-sm font-semibold mb-2" style={{ color: colors.text }}>
                   Amount *
                 </label>
                 <input
@@ -1641,12 +2081,17 @@ const SquaresPoolDetail = () => {
                   placeholder="Enter amount"
                   value={requestAmount}
                   onChange={(e) => setRequestAmount(e.target.value)}
-                  className="w-full bg-gray-800 text-white border border-gray-700 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full rounded-lg px-4 py-3 focus:outline-none focus:ring-2"
+                  style={{
+                    backgroundColor: isDark ? colors.cardHover : '#f7f4f2',
+                    border: `1px solid ${colors.border}`,
+                    color: colors.text,
+                  }}
                 />
               </div>
 
               <div>
-                <label className="block text-gray-300 text-sm font-semibold mb-2">
+                <label className="block text-sm font-semibold mb-2" style={{ color: colors.text }}>
                   Reason (Optional)
                 </label>
                 <textarea
@@ -1654,25 +2099,203 @@ const SquaresPoolDetail = () => {
                   placeholder="Why do you need these credits?"
                   value={requestReason}
                   onChange={(e) => setRequestReason(e.target.value)}
-                  className="w-full bg-gray-800 text-white border border-gray-700 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
+                  className="w-full rounded-lg px-4 py-3 focus:outline-none focus:ring-2 resize-none"
+                  style={{
+                    backgroundColor: isDark ? colors.cardHover : '#f7f4f2',
+                    border: `1px solid ${colors.border}`,
+                    color: colors.text,
+                  }}
                 />
               </div>
 
               <div className="flex gap-3 mt-6">
                 <button
                   onClick={closeRequestCreditsModal}
-                  className="flex-1 bg-gray-700 hover:bg-gray-600 text-white px-4 py-3 rounded-lg font-semibold transition-all"
+                  className="flex-1 px-4 py-3 rounded-lg font-semibold transition-all"
+                  style={{
+                    backgroundColor: isDark ? colors.cardHover : '#f7f4f2',
+                    border: `1px solid ${colors.border}`,
+                    color: colors.text,
+                  }}
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleRequestCredits}
                   disabled={requestingCredits || !requestAmount}
-                  className="flex-1 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-700 disabled:cursor-not-allowed text-white px-4 py-3 rounded-lg font-semibold transition-all flex items-center justify-center gap-2"
+                  className="flex-1 px-4 py-3 rounded-lg font-semibold transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                  style={{
+                    backgroundColor: colors.brand.primary,
+                    color: '#fff',
+                  }}
                 >
                   {requestingCredits ? 'Submitting...' : 'Submit Request'}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Score Entry Modal for Calculate Winner */}
+      {showScoreModal && selectedQuarter && (
+        <div className="fixed inset-0 bg-black bg-opacity-80 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={handleCloseScoreModal}>
+          <div
+            className="rounded-2xl shadow-2xl w-full max-w-md p-6 relative"
+            style={{
+              backgroundColor: colors.card,
+              border: `1px solid ${colors.brand.primary}`,
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={handleCloseScoreModal}
+              className="absolute top-4 right-4 transition-colors"
+              style={{ color: colors.text, opacity: 0.6 }}
+              aria-label="Close score modal"
+            >
+              <FiX className="text-2xl" />
+            </button>
+
+            {/* Modal Header */}
+            <div className="text-center mb-6">
+              <div
+                className="inline-flex items-center justify-center rounded-full px-4 py-1 mb-3"
+                style={{
+                  backgroundColor: `${colors.brand.primary}20`,
+                  color: colors.brand.primary,
+                }}
+              >
+                <span className="text-sm font-bold">
+                  {selectedQuarter === 4 ? 'FINAL' : `QUARTER ${selectedQuarter}`}
+                </span>
+              </div>
+              <h3 className="text-xl font-bold" style={{ color: colors.text }}>Enter Scores</h3>
+              <p className="text-sm mt-1" style={{ color: colors.text, opacity: 0.6 }}>
+                Enter the cumulative score at the end of {selectedQuarter === 4 ? 'the game' : `Q${selectedQuarter}`}
+              </p>
+            </div>
+
+            {/* Score Inputs */}
+            <div className="flex items-center justify-center gap-6 mb-6">
+              {/* Home Team */}
+              <div className="flex flex-col items-center flex-1">
+                {pool?.game?.home_team_id && getTeamLogo(pool.game.home_team_id) ? (
+                  <img
+                    src={getTeamLogo(pool.game.home_team_id)}
+                    alt="Home"
+                    className="w-16 h-16 object-contain mb-2"
+                  />
+                ) : (
+                  <div
+                    className="w-16 h-16 rounded-full flex items-center justify-center mb-2 text-lg font-bold"
+                    style={{ backgroundColor: colors.brand.primary, color: '#fff' }}
+                  >
+                    H
+                  </div>
+                )}
+                <p className="text-xs font-semibold mb-2 text-center" style={{ color: colors.text, opacity: 0.7 }}>
+                  {getTeamName(pool?.game?.home_team_id) || 'Home'}
+                </p>
+                <input
+                  type="number"
+                  min="0"
+                  value={homeScore}
+                  onChange={(e) => setHomeScore(e.target.value)}
+                  placeholder="0"
+                  className="w-20 h-16 text-center text-3xl font-bold rounded-xl focus:outline-none focus:ring-2"
+                  style={{
+                    backgroundColor: isDark ? colors.cardHover : '#f7f4f2',
+                    border: `2px solid ${colors.border}`,
+                    color: colors.text,
+                  }}
+                />
+              </div>
+
+              {/* VS Divider */}
+              <div
+                className="text-lg font-bold"
+                style={{ color: colors.text, opacity: 0.3 }}
+              >
+                vs
+              </div>
+
+              {/* Visitor Team */}
+              <div className="flex flex-col items-center flex-1">
+                {pool?.game?.visitor_team_id && getTeamLogo(pool.game.visitor_team_id) ? (
+                  <img
+                    src={getTeamLogo(pool.game.visitor_team_id)}
+                    alt="Away"
+                    className="w-16 h-16 object-contain mb-2"
+                  />
+                ) : (
+                  <div
+                    className="w-16 h-16 rounded-full flex items-center justify-center mb-2 text-lg font-bold"
+                    style={{ backgroundColor: colors.border, color: colors.text }}
+                  >
+                    A
+                  </div>
+                )}
+                <p className="text-xs font-semibold mb-2 text-center" style={{ color: colors.text, opacity: 0.7 }}>
+                  {getTeamName(pool?.game?.visitor_team_id) || 'Away'}
+                </p>
+                <input
+                  type="number"
+                  min="0"
+                  value={visitorScore}
+                  onChange={(e) => setVisitorScore(e.target.value)}
+                  placeholder="0"
+                  className="w-20 h-16 text-center text-3xl font-bold rounded-xl focus:outline-none focus:ring-2"
+                  style={{
+                    backgroundColor: isDark ? colors.cardHover : '#f7f4f2',
+                    border: `2px solid ${colors.border}`,
+                    color: colors.text,
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Winning Square Preview */}
+            {homeScore !== '' && visitorScore !== '' && (
+              <div
+                className="text-center p-3 rounded-xl mb-4"
+                style={{
+                  backgroundColor: isDark ? 'rgba(212, 122, 62, 0.1)' : 'rgba(212, 122, 62, 0.08)',
+                  border: `1px solid ${colors.brand.primary}30`,
+                }}
+              >
+                <p className="text-xs" style={{ color: colors.text, opacity: 0.6 }}>Winning Square Coordinates</p>
+                <p className="text-lg font-bold" style={{ color: colors.brand.primary }}>
+                  ({parseInt(homeScore) % 10}, {parseInt(visitorScore) % 10})
+                </p>
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex gap-3">
+              <button
+                onClick={handleCloseScoreModal}
+                className="flex-1 px-4 py-3 rounded-xl font-semibold transition-all"
+                style={{
+                  backgroundColor: isDark ? colors.cardHover : '#f7f4f2',
+                  border: `1px solid ${colors.border}`,
+                  color: colors.text,
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleCalculateWinner}
+                disabled={calculatingWinners || homeScore === '' || visitorScore === ''}
+                className="flex-1 px-4 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                style={{
+                  backgroundColor: colors.brand.primary,
+                  color: '#fff',
+                }}
+              >
+                <FiAward size={18} />
+                {calculatingWinners ? 'Calculating...' : 'Calculate Winner'}
+              </button>
             </div>
           </div>
         </div>
@@ -1704,9 +2327,3 @@ const SquaresPoolDetail = () => {
 };
 
 export default SquaresPoolDetail;
-
-
-
-
-
-

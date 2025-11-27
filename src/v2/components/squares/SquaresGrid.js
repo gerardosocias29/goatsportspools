@@ -12,13 +12,29 @@ const SquaresGrid = ({
   currentPlayerID,
   selectionMode = false,
   disabled = false,
+  onLimitReached,
 }) => {
   const [selectedSquares, setSelectedSquares] = useState([]);
   const [hoveredSquare, setHoveredSquare] = useState(null);
+  const [highlightedPlayerId, setHighlightedPlayerId] = useState(null);
 
   // Parse axis numbers
   const xNumbers = grid.xAxisNumbers || null;
   const yNumbers = grid.yAxisNumbers || null;
+
+  // Get max squares per player limit
+  const maxSquaresPerPlayer = grid.max_squares_per_player || grid.maxSquaresPerPlayer || null;
+
+  // Count squares already owned by current user
+  const currentUserOwnedCount = squares.filter(s => {
+    const squarePlayerId = parseInt(s.player_id);
+    const currentPlayerId = parseInt(currentPlayerID);
+    return !isNaN(squarePlayerId) && !isNaN(currentPlayerId) && squarePlayerId === currentPlayerId;
+  }).length;
+
+  // Calculate remaining slots available for selection
+  const remainingSlots = maxSquaresPerPlayer ? maxSquaresPerPlayer - currentUserOwnedCount : Infinity;
+  const canSelectMore = remainingSlots > selectedSquares.length;
 
   const isSquareSelected = (square) => {
     // Only compare using normalized snake_case fields
@@ -51,16 +67,43 @@ const SquaresGrid = ({
     return isOwner;
   };
 
-  const handleSquareClick = (square) => {
-    if (disabled || !selectionMode) return;
+  // Check if a square should be highlighted (belongs to highlighted player)
+  const isSquareHighlighted = (square) => {
+    if (!highlightedPlayerId) return false;
+    return parseInt(square.player_id) === highlightedPlayerId;
+  };
 
+  // Get info about the highlighted player
+  const getHighlightedPlayerInfo = () => {
+    if (!highlightedPlayerId) return null;
+    const playerSquares = squares.filter(s => parseInt(s.player_id) === highlightedPlayerId);
+    if (playerSquares.length === 0) return null;
+    const firstSquare = playerSquares[0];
+    return {
+      name: firstSquare?.player?.name || firstSquare?.playerName || 'Unknown Player',
+      count: playerSquares.length
+    };
+  };
+
+  const handleSquareClick = (square) => {
+    // If clicking an owned square - toggle highlight for that owner (works anytime)
     if (isSquareOwned(square)) {
-      // If owned by current user, allow deselection in some modes
-      if (isSquareOwnedByCurrentUser(square)) {
-        return; // Can't deselect already purchased squares
+      const ownerId = parseInt(square.player_id);
+      if (highlightedPlayerId === ownerId) {
+        // Clicking same owner again - clear highlight
+        setHighlightedPlayerId(null);
+      } else {
+        // Highlight this owner's squares
+        setHighlightedPlayerId(ownerId);
       }
-      return; // Can't select owned squares
+      return;
     }
+
+    // Clicking empty square clears highlight
+    setHighlightedPlayerId(null);
+
+    // Rest of selection logic only works in selection mode
+    if (disabled || !selectionMode) return;
 
     // Toggle selection
     if (isSquareSelected(square)) {
@@ -69,6 +112,14 @@ const SquaresGrid = ({
         prev.filter(s => !(s.x_coordinate === square.x_coordinate && s.y_coordinate === square.y_coordinate))
       );
     } else {
+      // Check if user can select more squares (hasn't reached limit)
+      if (!canSelectMore) {
+        // Already at limit - notify and don't allow more selections
+        if (onLimitReached) {
+          onLimitReached(maxSquaresPerPlayer, currentUserOwnedCount, selectedSquares.length);
+        }
+        return;
+      }
       // Select: add this square to selection
       setSelectedSquares(prev => [...prev, square]);
     }
@@ -155,11 +206,8 @@ const SquaresGrid = ({
 
             {/* Top Numbers Row (X Axis) */}
             <div className="flex mb-2">
-              {
-                xNumbers && (
-                  <div className="w-12"></div> // Spacer for corner
-                )
-              }
+              {/* Spacer for corner - always show to align with Y-axis column */}
+              <div className="w-12"></div>
               <div className="flex-1 grid grid-cols-10 gap-1 md:gap-2">
                 <div className='col-span-10 flex justify-center mb-2'>
                   {/* X Axis Label */}
@@ -182,9 +230,15 @@ const SquaresGrid = ({
                     </div>
                   ))
                 ) : (
-                  <div className="col-span-10 text-center text-gray-500 text-sm py-2">
-                    Numbers not assigned yet
-                  </div>
+                  // Show 10 "?" placeholder boxes when numbers not assigned
+                  Array.from({ length: 10 }).map((_, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-center justify-center h-10 bg-gray-300 text-gray-500 font-bold text-sm md:text-base rounded shadow opacity-60"
+                    >
+                      ?
+                    </div>
+                  ))
                 )}
               </div>
             </div>
@@ -225,9 +279,15 @@ const SquaresGrid = ({
                       </div>
                     ))
                   ) : (
-                    <div className="text-gray-500 text-xs flex items-center justify-center" style={{ height: '100%', minHeight: '180px', transform: 'rotate(-90deg)' }}>
-                      <span style={{ display: 'inline-block', transform: 'rotate(0)' }}>Not assigned</span>
-                    </div>
+                    // Show 10 "?" placeholder boxes when numbers not assigned
+                    Array.from({ length: 10 }).map((_, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-center justify-center w-10 h-full min-h-[50px] md:min-h-[60px] lg:min-h-[70px] bg-gray-300 text-gray-500 font-bold text-sm md:text-base rounded shadow opacity-60"
+                      >
+                        ?
+                      </div>
+                    ))
                   )}
               </div>
 
@@ -244,7 +304,8 @@ const SquaresGrid = ({
                         isHovered={hoveredSquare?.x_coordinate === xIdx && hoveredSquare?.y_coordinate === yIdx}
                         isOwned={isSquareOwned(square)}
                         isCurrentUser={isSquareOwnedByCurrentUser(square)}
-                        disabled={disabled || isSquareOwned(square)}
+                        isHighlighted={isSquareHighlighted(square)}
+                        disabled={disabled}
                         onClick={handleSquareClick}
                         onMouseEnter={handleMouseEnter}
                         onMouseLeave={handleMouseLeave}
@@ -257,6 +318,30 @@ const SquaresGrid = ({
             </div>
           </div>
         </div>
+
+        {/* Highlighted Player Info Banner */}
+        {highlightedPlayerId && (() => {
+          const info = getHighlightedPlayerInfo();
+          if (!info) return null;
+          return (
+            <div className="mt-4 p-3 bg-purple-100 border-2 border-purple-400 rounded-lg flex items-center justify-between animate-fade-in">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-sm font-bold">{info.count}</span>
+                </div>
+                <p className="text-purple-900 font-semibold">
+                  Showing {info.count} square{info.count !== 1 ? 's' : ''} owned by <span className="font-bold">{info.name}</span>
+                </p>
+              </div>
+              <button
+                onClick={() => setHighlightedPlayerId(null)}
+                className="px-3 py-1 bg-purple-200 hover:bg-purple-300 text-purple-800 rounded-md text-sm font-medium transition-colors"
+              >
+                Clear
+              </button>
+            </div>
+          );
+        })()}
 
         {/* Legend */}
         <div className="mt-6 flex flex-wrap justify-center gap-4 text-sm">
@@ -276,19 +361,42 @@ const SquaresGrid = ({
             <div className="w-6 h-6 bg-blue-500 border-2 border-blue-700 rounded"></div>
             <span>Other Players</span>
           </div>
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 bg-purple-200 border-2 border-purple-500 rounded ring-2 ring-purple-400"></div>
+            <span>Highlighted</span>
+          </div>
         </div>
 
         {/* Selection Info */}
-        {selectionMode && selectedSquares.length > 0 && (
-          <div className="mt-4 p-4 bg-blue-50 border-2 border-blue-300 rounded-lg">
-            <p className="text-center text-blue-900 font-semibold">
-              {selectedSquares.length} square{selectedSquares.length !== 1 ? 's' : ''} selected
-              {grid.costPerSquare > 0 && (
-                <span className="ml-2">
-                  (${(selectedSquares.length * grid.costPerSquare).toFixed(2)})
-                </span>
-              )}
-            </p>
+        {selectionMode && (
+          <div className={`mt-4 p-4 rounded-lg border-2 ${!canSelectMore && selectedSquares.length > 0 ? 'bg-orange-50 border-orange-300' : 'bg-blue-50 border-blue-300'}`}>
+            {selectedSquares.length > 0 ? (
+              <p className={`text-center font-semibold ${!canSelectMore ? 'text-orange-900' : 'text-blue-900'}`}>
+                {selectedSquares.length} square{selectedSquares.length !== 1 ? 's' : ''} selected
+                {grid.costPerSquare > 0 && (
+                  <span className="ml-2">
+                    (${(selectedSquares.length * grid.costPerSquare).toFixed(2)})
+                  </span>
+                )}
+                {maxSquaresPerPlayer && (
+                  <span className="ml-2 text-sm opacity-75">
+                    • {remainingSlots - selectedSquares.length} remaining of {maxSquaresPerPlayer} max
+                  </span>
+                )}
+              </p>
+            ) : (
+              maxSquaresPerPlayer && (
+                <p className="text-center text-blue-900 font-semibold">
+                  You have {currentUserOwnedCount} of {maxSquaresPerPlayer} squares
+                  {remainingSlots > 0 ? ` • ${remainingSlots} more available` : ' • Limit reached'}
+                </p>
+              )
+            )}
+            {!canSelectMore && selectedSquares.length > 0 && (
+              <p className="text-center text-orange-700 text-sm mt-1">
+                Maximum selection reached ({maxSquaresPerPlayer} squares per player)
+              </p>
+            )}
           </div>
         )}
       </div>
