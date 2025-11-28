@@ -19,10 +19,11 @@ export const UserProvider = ({ children }) => {
       const clerkToken = Cookies.get('__session');
       axiosService.get('/api/user-details', { token: clerkToken })
         .then((response) => {
+          const jwtToken = response.data.token;
           // Store the new JWT token
-          login(response.data.token);
-          // Then fetch user data with the new token
-          return axiosService.get('/api/me_user');
+          login(jwtToken);
+          // Fetch user data with the new token explicitly passed
+          return axiosService.get('/api/me_user', { token: jwtToken });
         })
         .then((response) => {
           setUser(response.data.user || response.data);
