@@ -45,7 +45,7 @@ const LoadingModal = ({ message, count }) => {
             </svg>
             <div className="absolute inset-0 flex items-center justify-center">
               <img
-                src="/assets/images/favicon.png"
+                src="/img/v2_logo.png"
                 alt="Loading"
                 className="w-12 h-12 animate-bounce"
               />
@@ -924,7 +924,7 @@ const SquaresPoolDetail = () => {
               />
             </svg>
             <img
-              src="/assets/images/favicon.png"
+              src="/img/v2_logo.png"
               alt="Loading"
               style={{
                 width: '64px',
@@ -1972,8 +1972,8 @@ const SquaresPoolDetail = () => {
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                       <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-lg border border-gray-200">
                         <img
-                          src="/assets/images/favicon.png"
-                          alt="GOAT Sports Pools"
+                          src="/img/v2_logo.png"
+                          alt="OKRNG"
                           className="w-10 h-10 object-contain"
                         />
                       </div>

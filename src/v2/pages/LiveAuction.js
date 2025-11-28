@@ -395,7 +395,7 @@ const LiveAuction = ({ channel }) => {
             />
           </svg>
           <img
-            src="/assets/images/favicon.png"
+            src="/img/v2_logo.png"
             alt="Loading"
             style={{
               width: '64px',

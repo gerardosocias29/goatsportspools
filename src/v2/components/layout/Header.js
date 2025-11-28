@@ -110,11 +110,11 @@ const Header = ({ user, onSignOut }) => {
         {/* Logo */}
         <div style={logoStyles} onClick={() => navigate('/')}>
           <img
-            src="/assets/images/favicon.png"
-            alt="GoatSportsPools"
+            src="/img/v2_logo.png"
+            alt="OKRNG"
             style={{ height: '32px', width: 'auto' }}
           />
-          <span>GoatSportsPools</span>
+          <span>OKRNG</span>
         </div>
 
         {/* Desktop Navigation - Only show on desktop */}

@@ -66,11 +66,11 @@ const SignInPage = () => {
         <div style={logoContainerStyles} onClick={() => navigate('/')}>
           <div style={logoStyles}>
             <img
-              src="/assets/images/favicon.png"
-              alt="GoatSportsPools"
+              src="/img/v2_logo.png"
+              alt="OKRNG"
               style={{ height: '48px', width: 'auto' }}
             />
-            <span style={logoTextStyles}>GoatSportsPools</span>
+            <span style={logoTextStyles}>OKRNG</span>
           </div>
         </div>
 

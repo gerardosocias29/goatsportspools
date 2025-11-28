@@ -235,7 +235,7 @@ const Home = () => {
             {/* Testimonial 1 */}
             <div style={testimonialStyles}>
               <div style={quoteStyles}>
-                "GOAT Sports Pools has completely changed how we do our office football pool.
+                "OKRNG has completely changed how we do our office football pool.
                 Everything is automated and transparent. Love it!"
               </div>
               <div style={authorStyles}>
@@ -289,7 +289,7 @@ const Home = () => {
                 Ready to Get Started?
               </h2>
               <p style={{ ...sectionDescStyles, marginBottom: '2rem' }}>
-                Join thousands of sports fans who trust GOAT Sports Pools for their betting needs.
+                Join thousands of sports fans who trust OKRNG for their betting needs.
               </p>
               <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
                 <Button variant="primary" size="xl" onClick={() => navigate('/sign-up')}>

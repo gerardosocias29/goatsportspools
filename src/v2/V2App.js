@@ -67,7 +67,7 @@ const LoadingFallback = () => (
 
       {/* Logo */}
       <img
-        src="/assets/images/favicon.png"
+        src="/img/v2_logo.png"
         alt="Loading"
         style={{
           width: '64px',
@@ -163,7 +163,7 @@ const V2AppContent = () => {
 
             {/* Logo */}
             <img
-              src="/assets/images/favicon.png"
+              src="/img/v2_logo.png"
               alt="Loading"
               style={{
                 width: '64px',

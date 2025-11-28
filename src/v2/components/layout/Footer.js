@@ -233,11 +233,11 @@ const Footer = () => {
         <div style={bottomStyles}>
           <div style={logoStyles}>
             <img
-              src="/assets/images/favicon.png"
-              alt="GoatSportsPools"
+              src="/img/v2_logo.png"
+              alt="OKRNG"
               style={{ height: '32px', width: 'auto' }}
             />
-            <span>GoatSportsPools</span>
+            <span>OKRNG</span>
           </div>
 
           <div style={socialLinksStyles}>
@@ -326,7 +326,7 @@ const Footer = () => {
         </div>
 
         <div style={copyrightStyles}>
-          © {new Date().getFullYear()} GOAT Sports Pools. All rights reserved.
+          © {new Date().getFullYear()} OKRNG. All rights reserved.
         </div>
       </div>
     </footer>
