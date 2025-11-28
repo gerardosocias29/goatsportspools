@@ -1,19 +1,29 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useUser as useClerkUser } from '@clerk/clerk-react';
 import { useAxios } from '../../app/contexts/AxiosContext';
+import { AuthContext } from '../../app/contexts/AuthContext';
+import Cookies from 'js-cookie';
 
 const UserContext = createContext(null);
 
 export const UserProvider = ({ children }) => {
-  const { isSignedIn, isLoaded } = useClerkUser();
+  const { isSignedIn, isLoaded, user: clerkUser } = useClerkUser();
   const axiosService = useAxios();
+  const { login } = useContext(AuthContext);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (isSignedIn && isLoaded) {
-      // Fetch user data once
-      axiosService.get('/api/me_user')
+      // First get fresh JWT token from user-details using Clerk session
+      const clerkToken = Cookies.get('__session');
+      axiosService.get('/api/user-details', { token: clerkToken })
+        .then((response) => {
+          // Store the new JWT token
+          login(response.data.token);
+          // Then fetch user data with the new token
+          return axiosService.get('/api/me_user');
+        })
         .then((response) => {
           setUser(response.data.user || response.data);
           setLoading(false);
@@ -26,7 +36,7 @@ export const UserProvider = ({ children }) => {
       setUser(null);
       setLoading(false);
     }
-  }, [isSignedIn, isLoaded]);
+  }, [isSignedIn, isLoaded, clerkUser?.id]);
 
   const refreshUser = async () => {
     try {
