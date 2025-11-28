@@ -119,7 +119,7 @@ const Pools = () => {
       emoji: '🎯',
       status: 'live',
       badge: 'New!',
-      route: '/v2/squares',
+      route: '/squares',
     },
     {
       id: 'ncaa-basketball-auction',
@@ -127,7 +127,7 @@ const Pools = () => {
       description: 'Bid on your favorite NCAA basketball teams in a live auction format. Watch the stream and compete with others!',
       emoji: '🏀',
       status: 'live',
-      route: '/v2/pools/ncaa-basketball-auction',
+      route: '/pools/ncaa-basketball-auction',
     },
     {
       id: 'nfl-betting',
@@ -136,7 +136,7 @@ const Pools = () => {
       emoji: '🏈',
       status: 'live',
       badge: 'League Required',
-      route: '/v2/pools/nfl',
+      route: '/pools/nfl',
     },
   ];
 

@@ -162,7 +162,7 @@ const JoinPoolModal = ({ isOpen, onClose, onSuccess }) => {
     try {
       const url = new URL(data);
 
-      // First check query parameters (e.g., /v2/squares/join?pool=ABC123)
+      // First check query parameters (e.g., /squares/join?pool=ABC123)
       const poolParam = url.searchParams.get('pool');
       if (poolParam) {
         setPoolNumber(poolParam.toUpperCase());
@@ -171,7 +171,7 @@ const JoinPoolModal = ({ isOpen, onClose, onSuccess }) => {
         return;
       }
 
-      // Then check path segments (e.g., /v2/squares/pool/ABC123)
+      // Then check path segments (e.g., /squares/pool/ABC123)
       const pathParts = url.pathname.split('/');
       const poolIdx = pathParts.findIndex(p => p === 'pool' || p === 'join');
       if (poolIdx >= 0 && pathParts[poolIdx + 1]) {

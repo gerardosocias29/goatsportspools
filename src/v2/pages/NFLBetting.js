@@ -540,7 +540,7 @@ const NFLBetting = () => {
           <p style={{ ...subtitleStyles, marginBottom: '2rem', fontSize: '1.125rem' }}>
             You need to join a league before you can place bets on NFL games. Join a league to get started!
           </p>
-          <Button variant="primary" size="lg" onClick={() => navigate('/v2/leagues')}>
+          <Button variant="primary" size="lg" onClick={() => navigate('/leagues')}>
             Browse Leagues
           </Button>
         </Card>

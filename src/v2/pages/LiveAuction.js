@@ -29,7 +29,7 @@ const LiveAuction = ({ channel }) => {
   // Initial data fetch
   useEffect(() => {
     if (!auctionId) {
-      navigate('/v2/pools/ncaa-basketball-auction');
+      navigate('/pools/ncaa-basketball-auction');
       return;
     }
 
@@ -163,7 +163,7 @@ const LiveAuction = ({ channel }) => {
       channel.bind('active-auction-event-all', (data) => {
         if (data.status !== 'live') {
           alert('The auction has ended!');
-          navigate('/v2/pools/ncaa-basketball-auction');
+          navigate('/pools/ncaa-basketball-auction');
         }
       });
     }
@@ -211,10 +211,10 @@ const LiveAuction = ({ channel }) => {
   const handleBack = async () => {
     try {
       await axiosService.post(`/api/auctions/${auctionId}/${currentUser?.id}/leave`);
-      navigate('/v2/pools/ncaa-basketball-auction');
+      navigate('/pools/ncaa-basketball-auction');
     } catch (error) {
       console.error('Error leaving auction:', error);
-      navigate('/v2/pools/ncaa-basketball-auction');
+      navigate('/pools/ncaa-basketball-auction');
     }
   };
 

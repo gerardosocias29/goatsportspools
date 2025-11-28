@@ -102,7 +102,7 @@ const Footer = () => {
             <h4 style={titleStyles}>Company</h4>
             <a
               style={linkStyles}
-              onClick={() => navigate('/v2/about')}
+              onClick={() => navigate('/about')}
               onMouseEnter={(e) => e.target.style.opacity = '1'}
               onMouseLeave={(e) => e.target.style.opacity = '0.7'}
             >
@@ -110,7 +110,7 @@ const Footer = () => {
             </a>
             <a
               style={linkStyles}
-              onClick={() => navigate('/v2/contact')}
+              onClick={() => navigate('/contact')}
               onMouseEnter={(e) => e.target.style.opacity = '1'}
               onMouseLeave={(e) => e.target.style.opacity = '0.7'}
             >
@@ -118,7 +118,7 @@ const Footer = () => {
             </a>
             <a
               style={linkStyles}
-              onClick={() => navigate('/v2/careers')}
+              onClick={() => navigate('/careers')}
               onMouseEnter={(e) => e.target.style.opacity = '1'}
               onMouseLeave={(e) => e.target.style.opacity = '0.7'}
             >
@@ -131,7 +131,7 @@ const Footer = () => {
             <h4 style={titleStyles}>Product</h4>
             <a
               style={linkStyles}
-              onClick={() => navigate('/v2/pools')}
+              onClick={() => navigate('/pools')}
               onMouseEnter={(e) => e.target.style.opacity = '1'}
               onMouseLeave={(e) => e.target.style.opacity = '0.7'}
             >
@@ -139,7 +139,7 @@ const Footer = () => {
             </a>
             <a
               style={linkStyles}
-              onClick={() => navigate('/v2/leagues')}
+              onClick={() => navigate('/leagues')}
               onMouseEnter={(e) => e.target.style.opacity = '1'}
               onMouseLeave={(e) => e.target.style.opacity = '0.7'}
             >
@@ -147,7 +147,7 @@ const Footer = () => {
             </a>
             <a
               style={linkStyles}
-              onClick={() => navigate('/v2/betting')}
+              onClick={() => navigate('/betting')}
               onMouseEnter={(e) => e.target.style.opacity = '1'}
               onMouseLeave={(e) => e.target.style.opacity = '0.7'}
             >
@@ -155,7 +155,7 @@ const Footer = () => {
             </a>
             <a
               style={linkStyles}
-              onClick={() => navigate('/v2/features')}
+              onClick={() => navigate('/features')}
               onMouseEnter={(e) => e.target.style.opacity = '1'}
               onMouseLeave={(e) => e.target.style.opacity = '0.7'}
             >
@@ -168,7 +168,7 @@ const Footer = () => {
             <h4 style={titleStyles}>Resources</h4>
             <a
               style={linkStyles}
-              onClick={() => navigate('/v2/help')}
+              onClick={() => navigate('/help')}
               onMouseEnter={(e) => e.target.style.opacity = '1'}
               onMouseLeave={(e) => e.target.style.opacity = '0.7'}
             >
@@ -176,7 +176,7 @@ const Footer = () => {
             </a>
             <a
               style={linkStyles}
-              onClick={() => navigate('/v2/blog')}
+              onClick={() => navigate('/blog')}
               onMouseEnter={(e) => e.target.style.opacity = '1'}
               onMouseLeave={(e) => e.target.style.opacity = '0.7'}
             >
@@ -184,7 +184,7 @@ const Footer = () => {
             </a>
             <a
               style={linkStyles}
-              onClick={() => navigate('/v2/guides')}
+              onClick={() => navigate('/guides')}
               onMouseEnter={(e) => e.target.style.opacity = '1'}
               onMouseLeave={(e) => e.target.style.opacity = '0.7'}
             >
@@ -192,7 +192,7 @@ const Footer = () => {
             </a>
             <a
               style={linkStyles}
-              onClick={() => navigate('/v2/faq')}
+              onClick={() => navigate('/faq')}
               onMouseEnter={(e) => e.target.style.opacity = '1'}
               onMouseLeave={(e) => e.target.style.opacity = '0.7'}
             >
@@ -205,7 +205,7 @@ const Footer = () => {
             <h4 style={titleStyles}>Legal</h4>
             <a
               style={linkStyles}
-              onClick={() => navigate('/v2/privacy')}
+              onClick={() => navigate('/privacy')}
               onMouseEnter={(e) => e.target.style.opacity = '1'}
               onMouseLeave={(e) => e.target.style.opacity = '0.7'}
             >
@@ -213,7 +213,7 @@ const Footer = () => {
             </a>
             <a
               style={linkStyles}
-              onClick={() => navigate('/v2/terms')}
+              onClick={() => navigate('/terms')}
               onMouseEnter={(e) => e.target.style.opacity = '1'}
               onMouseLeave={(e) => e.target.style.opacity = '0.7'}
             >
@@ -221,7 +221,7 @@ const Footer = () => {
             </a>
             <a
               style={linkStyles}
-              onClick={() => navigate('/v2/responsible-gaming')}
+              onClick={() => navigate('/responsible-gaming')}
               onMouseEnter={(e) => e.target.style.opacity = '1'}
               onMouseLeave={(e) => e.target.style.opacity = '0.7'}
             >

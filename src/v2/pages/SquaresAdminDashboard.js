@@ -36,7 +36,7 @@ const SquaresAdminDashboard = () => {
 
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
-      navigate('/v2/sign-in', { state: { returnTo: '/v2/squares/admin' } });
+      navigate('/sign-in', { state: { returnTo: '/squares/admin' } });
     }
   }, [isSignedIn, isLoaded, navigate]);
 
@@ -210,7 +210,7 @@ const SquaresAdminDashboard = () => {
               </p>
             </div>
             <button
-              onClick={() => navigate('/v2/squares/create')}
+              onClick={() => navigate('/squares/create')}
               className="px-6 py-3 rounded-lg font-semibold transition-all flex items-center gap-2 text-white"
               style={{ backgroundColor: colors.brand.primary }}
               onMouseOver={(e) => e.target.style.backgroundColor = colors.brand.primaryHover}
@@ -319,7 +319,7 @@ const SquaresAdminDashboard = () => {
                 <FiGrid className="text-6xl text-gray-600 mx-auto mb-4" />
                 <p className="text-gray-400 text-xl mb-6">No pools created yet</p>
                 <button
-                  onClick={() => navigate('/v2/squares/create')}
+                  onClick={() => navigate('/squares/create')}
                   className="text-white px-6 py-3 rounded-lg font-semibold transition-all"
                   style={{ backgroundColor: colors.brand.primary }}
                   onMouseOver={(e) => e.currentTarget.style.backgroundColor = colors.brand.primaryHover}
@@ -362,7 +362,7 @@ const SquaresAdminDashboard = () => {
                           Calculate Winners
                         </button>
                         <button
-                          onClick={() => navigate(`/v2/squares/pool/${pool.id}`)}
+                          onClick={() => navigate(`/squares/pool/${pool.id}`)}
                           className="text-white px-4 py-2 rounded-lg font-semibold transition-all flex items-center gap-2"
                           style={{ backgroundColor: colors.brand.primary }}
                           onMouseOver={(e) => e.currentTarget.style.backgroundColor = colors.brand.primaryHover}

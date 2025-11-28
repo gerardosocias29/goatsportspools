@@ -118,7 +118,7 @@ const V2AppContent = () => {
   }, [isSignedIn, user, pusher]);
 
   const handleSignOut = () => {
-    window.location.href = '/v2/sign-in';
+    window.location.href = '/sign-in';
   };
 
   if (loading) {
@@ -200,7 +200,6 @@ const V2AppContent = () => {
                 <Routes>
                   {/* Public Routes */}
                   <Route path="/" element={<Home />} />
-                  <Route path="/v2" element={<Home />} />
 
                   {/* Protected Routes */}
                   <Route
@@ -209,7 +208,7 @@ const V2AppContent = () => {
                       isSignedIn ? (
                         <Dashboard user={user} />
                       ) : (
-                        <Navigate to="/v2/sign-in" replace />
+                        <Navigate to="/sign-in" replace />
                       )
                     }
                   />
@@ -223,7 +222,7 @@ const V2AppContent = () => {
                       isSignedIn ? (
                         <LiveAuction channel={channel} />
                       ) : (
-                        <Navigate to="/v2/sign-in" replace />
+                        <Navigate to="/sign-in" replace />
                       )
                     }
                   />
@@ -233,7 +232,7 @@ const V2AppContent = () => {
                       isSignedIn ? (
                         <NFLBetting />
                       ) : (
-                        <Navigate to="/v2/sign-in" replace />
+                        <Navigate to="/sign-in" replace />
                       )
                     }
                   />
@@ -252,7 +251,7 @@ const V2AppContent = () => {
                       isSignedIn ? (
                         <CreateSquaresPool />
                       ) : (
-                        <Navigate to="/v2/sign-in" replace />
+                        <Navigate to="/sign-in" replace />
                       )
                     }
                   />
@@ -262,7 +261,7 @@ const V2AppContent = () => {
                       isSignedIn ? (
                         <SquaresAdminDashboard />
                       ) : (
-                        <Navigate to="/v2/sign-in" replace />
+                        <Navigate to="/sign-in" replace />
                       )
                     }
                   />
@@ -272,7 +271,7 @@ const V2AppContent = () => {
                       isSignedIn ? (
                         <ManageGames />
                       ) : (
-                        <Navigate to="/v2/sign-in" replace />
+                        <Navigate to="/sign-in" replace />
                       )
                     }
                   />
@@ -284,7 +283,7 @@ const V2AppContent = () => {
                       isSignedIn && user?.role_id === 1 ? (
                         <AdminSettings />
                       ) : (
-                        <Navigate to="/v2" replace />
+                        <Navigate to="/" replace />
                       )
                     }
                   />
@@ -294,7 +293,7 @@ const V2AppContent = () => {
                       isSignedIn && user?.role_id === 1 ? (
                         <ComingSoon title="Manage Auction" />
                       ) : (
-                        <Navigate to="/v2" replace />
+                        <Navigate to="/" replace />
                       )
                     }
                   />
@@ -304,7 +303,7 @@ const V2AppContent = () => {
                       isSignedIn && user?.role_id === 1 ? (
                         <ComingSoon title="Manage Teams" />
                       ) : (
-                        <Navigate to="/v2" replace />
+                        <Navigate to="/" replace />
                       )
                     }
                   />
@@ -314,7 +313,7 @@ const V2AppContent = () => {
                       isSignedIn && user?.role_id === 1 ? (
                         <ComingSoon title="User Management" />
                       ) : (
-                        <Navigate to="/v2" replace />
+                        <Navigate to="/" replace />
                       )
                     }
                   />
@@ -324,8 +323,8 @@ const V2AppContent = () => {
                   <Route path="/settings" element={<ComingSoon title="Settings" />} />
                   <Route path="/activity" element={<ComingSoon title="Activity" />} />
 
-                  {/* Catch all - redirect to v2 home */}
-                  <Route path="*" element={<Navigate to="/v2" replace />} />
+                  {/* Catch all - redirect to home */}
+                  <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
               </Layout>
             }

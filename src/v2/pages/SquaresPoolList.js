@@ -105,18 +105,18 @@ const SquaresPoolList = () => {
   };
 
   const handlePoolClick = (poolId) => {
-    navigate(`/v2/squares/pool/${poolId}`);
+    navigate(`/squares/pool/${poolId}`);
   };
 
   const handleCreatePool = () => {
-    navigate('/v2/squares/create');
+    navigate('/squares/create');
   };
 
   const handleJoinSuccess = (pool) => {
     // Reload pools list and navigate to the joined pool
     loadPools();
     if (pool && pool.id) {
-      navigate(`/v2/squares/pool/${pool.id}`);
+      navigate(`/squares/pool/${pool.id}`);
     }
   };
 

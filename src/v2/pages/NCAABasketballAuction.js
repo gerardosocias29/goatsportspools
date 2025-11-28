@@ -51,7 +51,7 @@ const NCAABasketballAuction = () => {
   const handleJoinAuction = async (auction) => {
     try {
       await axiosService.get(`/api/auctions/${auction.id}/join`);
-      navigate(`/v2/pools/live-auction?auction_id=${auction.id}`);
+      navigate(`/pools/live-auction?auction_id=${auction.id}`);
     } catch (error) {
       console.error('Error joining auction:', error);
     }
@@ -61,7 +61,7 @@ const NCAABasketballAuction = () => {
     if (!liveAuction) return;
     try {
       await axiosService.get(`/api/auctions/${liveAuction.id}/join`);
-      navigate(`/v2/pools/live-auction?auction_id=${liveAuction.id}`);
+      navigate(`/pools/live-auction?auction_id=${liveAuction.id}`);
     } catch (error) {
       console.error('Error joining live auction:', error);
     }

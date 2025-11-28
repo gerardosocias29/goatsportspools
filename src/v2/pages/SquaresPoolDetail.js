@@ -143,13 +143,13 @@ const SquaresPoolDetail = () => {
     if (!baseUrl) return '';
 
     const normalizedBase = baseUrl.replace(/\/$/, '');
-    return `${normalizedBase}/v2/squares/join?pool=${poolNumber}`;
+    return `${normalizedBase}/squares/join?pool=${poolNumber}`;
   };
 
   // Authentication guard - redirect to sign-in if not authenticated
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
-      navigate('/v2/sign-in', { state: { returnTo: `/v2/squares/pool/${poolId}` } });
+      navigate('/sign-in', { state: { returnTo: `/squares/pool/${poolId}` } });
     }
   }, [isSignedIn, isLoaded, poolId, navigate]);
 
@@ -953,7 +953,7 @@ const SquaresPoolDetail = () => {
         <div className="text-center">
           <p className="text-2xl mb-4" style={{ color: colors.text }}>Pool not found</p>
           <button
-            onClick={() => navigate('/v2/squares')}
+            onClick={() => navigate('/squares')}
             className="px-6 py-3 rounded-lg transition-all text-white font-semibold"
             style={{ backgroundColor: colors.brand.primary }}
             onMouseOver={(e) => e.currentTarget.style.backgroundColor = colors.brand.primaryHover}
@@ -973,7 +973,7 @@ const SquaresPoolDetail = () => {
         {/* Header with back button and joined status */}
         <div className="flex items-center gap-3 mb-5">
           <button
-            onClick={() => navigate('/v2/squares')}
+            onClick={() => navigate('/squares')}
             className="flex items-center justify-center transition-all"
             style={{
               backgroundColor: colors.card,

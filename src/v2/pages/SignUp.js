@@ -54,7 +54,7 @@ const SignUpPage = () => {
     <div style={containerStyles}>
       <div style={contentStyles} className="v2-fade-in">
         {/* Logo and Brand */}
-        <div style={logoContainerStyles} onClick={() => navigate('/v2')}>
+        <div style={logoContainerStyles} onClick={() => navigate('/')}>
           <div style={logoStyles}>
             <img
               src="/assets/images/favicon.png"
@@ -67,10 +67,10 @@ const SignUpPage = () => {
 
         {/* Clerk SignUp Component */}
         <SignUp
-          path="/v2/sign-up"
+          path="/sign-up"
           routing="path"
-          signInUrl="/v2/sign-in"
-          afterSignUpUrl="/v2/dashboard"
+          signInUrl="/sign-in"
+          afterSignUpUrl="/dashboard"
            
            appearance={{
             elements: {

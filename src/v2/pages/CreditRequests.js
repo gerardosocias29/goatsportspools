@@ -31,7 +31,7 @@ const CreditRequests = () => {
 
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
-      navigate('/v2/sign-in', { state: { returnTo: '/v2/credit-requests' } });
+      navigate('/sign-in', { state: { returnTo: '/credit-requests' } });
     }
   }, [isSignedIn, isLoaded, navigate]);
 

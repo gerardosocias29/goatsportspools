@@ -212,7 +212,7 @@ const Dashboard = ({ user }) => {
                 cursor: 'pointer',
                 transition: 'all 150ms cubic-bezier(0.4, 0, 0.2, 1)',
               }}
-              onClick={() => navigate('/v2/pools/1')}
+              onClick={() => navigate('/pools/1')}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '0.75rem' }}>
                 <div>
@@ -248,7 +248,7 @@ const Dashboard = ({ user }) => {
                 cursor: 'pointer',
                 transition: 'all 150ms cubic-bezier(0.4, 0, 0.2, 1)',
               }}
-              onClick={() => navigate('/v2/pools/2')}
+              onClick={() => navigate('/pools/2')}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '0.75rem' }}>
                 <div>
@@ -282,7 +282,7 @@ const Dashboard = ({ user }) => {
                 cursor: 'pointer',
                 transition: 'all 150ms cubic-bezier(0.4, 0, 0.2, 1)',
               }}
-              onClick={() => navigate('/v2/pools/3')}
+              onClick={() => navigate('/pools/3')}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '0.75rem' }}>
                 <div>
@@ -310,7 +310,7 @@ const Dashboard = ({ user }) => {
           </div>
 
           <CardFooter>
-            <Button variant="outline" fullWidth onClick={() => navigate('/v2/pools')}>
+            <Button variant="outline" fullWidth onClick={() => navigate('/pools')}>
               View All Pools
             </Button>
           </CardFooter>
@@ -386,7 +386,7 @@ const Dashboard = ({ user }) => {
           </div>
 
           <CardFooter>
-            <Button variant="ghost" fullWidth onClick={() => navigate('/v2/activity')}>
+            <Button variant="ghost" fullWidth onClick={() => navigate('/activity')}>
               View All Activity
             </Button>
           </CardFooter>
@@ -397,7 +397,7 @@ const Dashboard = ({ user }) => {
       <div style={{ marginTop: '3rem' }}>
         <h2 style={sectionTitleStyles}>Quick Actions</h2>
         <div style={gridStyles}>
-          <Card padding="lg" hover onClick={() => navigate('/v2/pools/create')}>
+          <Card padding="lg" hover onClick={() => navigate('/pools/create')}>
             <div style={{ textAlign: 'center' }}>
               <div
                 style={{
@@ -426,7 +426,7 @@ const Dashboard = ({ user }) => {
             </div>
           </Card>
 
-          <Card padding="lg" hover onClick={() => navigate('/v2/leagues/join')}>
+          <Card padding="lg" hover onClick={() => navigate('/leagues/join')}>
             <div style={{ textAlign: 'center' }}>
               <div
                 style={{
@@ -457,7 +457,7 @@ const Dashboard = ({ user }) => {
             </div>
           </Card>
 
-          <Card padding="lg" hover onClick={() => navigate('/v2/betting')}>
+          <Card padding="lg" hover onClick={() => navigate('/betting')}>
             <div style={{ textAlign: 'center' }}>
               <div
                 style={{

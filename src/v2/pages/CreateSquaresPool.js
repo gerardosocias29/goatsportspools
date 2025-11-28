@@ -78,7 +78,7 @@ const CreateSquaresPool = () => {
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
       // Not signed in - redirect to sign-in
-      navigate('/v2/sign-in', { state: { returnTo: '/v2/squares/create' } });
+      navigate('/sign-in', { state: { returnTo: '/squares/create' } });
       return;
     }
 
@@ -87,7 +87,7 @@ const CreateSquaresPool = () => {
       // Only role_id 1 (Superadmin) and role_id 2 (Square Admin) can create pools
       if (userRoleId > 2) {
         alert('You do not have permission to create pools. Only admins can create pools.');
-        navigate('/v2/squares');
+        navigate('/squares');
       }
     }
   }, [isSignedIn, isLoaded, currentUser, navigate]);
@@ -272,7 +272,7 @@ const CreateSquaresPool = () => {
       const response = await axiosService.post('/api/squares-pools', requestData);
       if (response.data) {
         alert('Pool created successfully!');
-        navigate(`/v2/squares/pool/${response.data.id || response.data.data?.id}`);
+        navigate(`/squares/pool/${response.data.id || response.data.data?.id}`);
       }
     } catch (error) {
       const errorMsg = error.response?.data?.message || error.response?.data?.errors || error.message;
@@ -357,7 +357,7 @@ const CreateSquaresPool = () => {
         {/* Header */}
         <div className="mb-8 flex items-center gap-4">
           <button
-            onClick={() => navigate('/v2/squares')}
+            onClick={() => navigate('/squares')}
             className="flex items-center justify-center transition-all"
             style={{
               backgroundColor: colors.card,

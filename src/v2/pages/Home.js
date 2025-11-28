@@ -292,10 +292,10 @@ const Home = () => {
                 Join thousands of sports fans who trust GOAT Sports Pools for their betting needs.
               </p>
               <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-                <Button variant="primary" size="xl" onClick={() => navigate('/v2/sign-up')}>
+                <Button variant="primary" size="xl" onClick={() => navigate('/sign-up')}>
                   Create Free Account
                 </Button>
-                <Button variant="outline" size="xl" onClick={() => navigate('/v2/demo')}>
+                <Button variant="outline" size="xl" onClick={() => navigate('/demo')}>
                   Schedule Demo
                 </Button>
               </div>

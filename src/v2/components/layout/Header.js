@@ -108,7 +108,7 @@ const Header = ({ user, onSignOut }) => {
     <header style={headerStyles}>
       <div style={containerStyles}>
         {/* Logo */}
-        <div style={logoStyles} onClick={() => navigate('/v2')}>
+        <div style={logoStyles} onClick={() => navigate('/')}>
           <img
             src="/assets/images/favicon.png"
             alt="GoatSportsPools"
@@ -120,25 +120,25 @@ const Header = ({ user, onSignOut }) => {
         {/* Desktop Navigation - Only show on desktop */}
         {!isMobile && (
           <nav style={{ ...navStylesDesktop, display: 'flex' }}>
-            <a style={navLinkStyles} onClick={() => navigate('/v2')}>
+            <a style={navLinkStyles} onClick={() => navigate('/')}>
               Home
             </a>
-            <a style={navLinkStyles} onClick={() => navigate('/v2/pools')}>
+            <a style={navLinkStyles} onClick={() => navigate('/pools')}>
               Pools
             </a>
-            <a style={navLinkStyles} onClick={() => navigate('/v2/leagues')}>
+            <a style={navLinkStyles} onClick={() => navigate('/leagues')}>
               Freeroll League
             </a>
-            <a style={navLinkStyles} onClick={() => navigate('/v2/betting')}>
+            <a style={navLinkStyles} onClick={() => navigate('/betting')}>
               Auction Madness
             </a>
             {isSignedIn && (user?.role_id === 1 || user?.role_id === 2) && (
-              <a style={navLinkStyles} onClick={() => navigate('/v2/squares/admin')}>
+              <a style={navLinkStyles} onClick={() => navigate('/squares/admin')}>
                 Commissioner
               </a>
             )}
             {isSignedIn && user?.role_id === 1 && (
-              <a style={navLinkStyles} onClick={() => navigate('/v2/admin/settings')}>
+              <a style={navLinkStyles} onClick={() => navigate('/admin/settings')}>
                 Admin
               </a>
             )}
@@ -197,16 +197,13 @@ const Header = ({ user, onSignOut }) => {
                   {clerkUser.fullName}
                 </p>
               )}
-              <UserButton afterSignOutUrl='/v2/logout' />
+              <UserButton afterSignOutUrl='/sign-in' />
             </div>
           )}
 
           {!isSignedIn && (
             <div style={{ display: 'flex', gap: '0.75rem' }}>
-              {/* <Button variant="ghost" size="md" onClick={() => navigate('/v2/sign-in')}>
-                Sign In
-              </Button> */}
-              <Button variant="primary" size="md" onClick={() => navigate('/v2/sign-in')}>
+              <Button variant="primary" size="md" onClick={() => navigate('/sign-in')}>
                 Sign In
               </Button>
             </div>
@@ -235,7 +232,7 @@ const Header = ({ user, onSignOut }) => {
           <a
             style={navLinkStyles}
             onClick={() => {
-              navigate('/v2');
+              navigate('/');
               setShowMobileMenu(false);
             }}
           >
@@ -244,7 +241,7 @@ const Header = ({ user, onSignOut }) => {
           <a
             style={navLinkStyles}
             onClick={() => {
-              navigate('/v2/pools');
+              navigate('/pools');
               setShowMobileMenu(false);
             }}
           >
@@ -253,7 +250,7 @@ const Header = ({ user, onSignOut }) => {
           <a
             style={navLinkStyles}
             onClick={() => {
-              navigate('/v2/leagues');
+              navigate('/leagues');
               setShowMobileMenu(false);
             }}
           >
@@ -262,7 +259,7 @@ const Header = ({ user, onSignOut }) => {
           <a
             style={navLinkStyles}
             onClick={() => {
-              navigate('/v2/betting');
+              navigate('/betting');
               setShowMobileMenu(false);
             }}
           >
@@ -272,7 +269,7 @@ const Header = ({ user, onSignOut }) => {
             <a
               style={navLinkStyles}
               onClick={() => {
-                navigate('/v2/squares/admin');
+                navigate('/squares/admin');
                 setShowMobileMenu(false);
               }}
             >

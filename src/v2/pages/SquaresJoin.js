@@ -26,8 +26,8 @@ const SquaresJoin = () => {
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
       // Use URL param for redirect_url so Clerk can preserve it through auth flow
-      const returnUrl = encodeURIComponent(`/v2/squares/join?pool=${poolNumber}`);
-      navigate(`/v2/sign-in?redirect_url=${returnUrl}`);
+      const returnUrl = encodeURIComponent(`/squares/join?pool=${poolNumber}`);
+      navigate(`/sign-in?redirect_url=${returnUrl}`);
     }
   }, [isSignedIn, isLoaded, poolNumber, navigate]);
 
@@ -64,7 +64,7 @@ const SquaresJoin = () => {
       });
 
       // Redirect to pool detail
-      navigate(`/v2/squares/pool/${pool.id}`);
+      navigate(`/squares/pool/${pool.id}`);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to join pool');
       setJoining(false);
@@ -91,7 +91,7 @@ const SquaresJoin = () => {
             <h1 className="text-2xl font-bold text-white mb-2">Pool Not Found</h1>
             <p className="text-gray-300 mb-6">{error}</p>
             <button
-              onClick={() => navigate('/v2/squares')}
+              onClick={() => navigate('/squares')}
               className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold transition-all"
             >
               Browse All Pools
@@ -155,7 +155,7 @@ const SquaresJoin = () => {
 
         <div className="flex gap-3">
           <button
-            onClick={() => navigate('/v2/squares')}
+            onClick={() => navigate('/squares')}
             className="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-3 rounded-lg font-semibold transition-all"
           >
             Cancel
