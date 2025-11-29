@@ -132,12 +132,12 @@ const Header = ({ user, onSignOut }) => {
             <a style={navLinkStyles} onClick={() => navigate('/betting')}>
               Auction Madness
             </a>
-            {isSignedIn && (user?.role_id === 1 || user?.role_id === 2) && (
+            {isSignedIn && (user?.role_id == 1 || user?.role_id == 2) && (
               <a style={navLinkStyles} onClick={() => navigate('/squares/admin')}>
                 Commissioner
               </a>
             )}
-            {isSignedIn && user?.role_id === 1 && (
+            {isSignedIn && user?.role_id == 1 && (
               <a style={navLinkStyles} onClick={() => navigate('/admin/settings')}>
                 Admin
               </a>
@@ -265,7 +265,7 @@ const Header = ({ user, onSignOut }) => {
           >
             Auction Madness
           </a>
-          {isSignedIn && (user?.role_id === 1 || user?.role_id === 2) && (
+          {isSignedIn && (user?.role_id == 1 || user?.role_id == 2) && (
             <a
               style={navLinkStyles}
               onClick={() => {

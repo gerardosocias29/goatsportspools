@@ -149,7 +149,9 @@ const SquaresPoolDetail = () => {
   // Authentication guard - redirect to sign-in if not authenticated
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
-      navigate('/sign-in', { state: { returnTo: `/squares/pool/${poolId}` } });
+      // Use query param for redirect so external links (from emails) work properly
+      const returnUrl = encodeURIComponent(`/squares/pool/${poolId}`);
+      navigate(`/sign-in?redirect_url=${returnUrl}`);
     }
   }, [isSignedIn, isLoaded, poolId, navigate]);
 
@@ -765,9 +767,10 @@ const SquaresPoolDetail = () => {
 
   const currentUserIdValue = getCurrentUserId();
   const roleId = getCurrentUserRole();
-  const isSuperAdmin = roleId === 1; // Only role_id 1 is superadmin
-  const isSquareAdmin = roleId === 2; // role_id 2 is Square Admin
-  const isPoolOwner = pool && (pool.admin_id === currentUserIdValue || pool.created_by === currentUserIdValue);
+  // Use == for loose comparison to handle both string and number role_id
+  const isSuperAdmin = roleId == 1; // Only role_id 1 is superadmin
+  const isSquareAdmin = roleId == 2; // role_id 2 is Square Admin
+  const isPoolOwner = pool && (pool.admin_id == currentUserIdValue || pool.created_by == currentUserIdValue);
 
   // Superadmin can manage ALL pools, Square Admin can only manage their own pools
   const canManagePool = currentUser && pool && (

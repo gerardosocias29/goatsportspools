@@ -32,7 +32,7 @@ const SquaresAdminDashboard = () => {
   const [processingRequest, setProcessingRequest] = useState(null);
 
   const userRoleId = currentUser?.user?.role_id ?? currentUser?.role_id;
-  const isSuperadmin = userRoleId === 1;
+  const isSuperadmin = userRoleId == 1; // Use == for loose comparison (string/number)
 
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
