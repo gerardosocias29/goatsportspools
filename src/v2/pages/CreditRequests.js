@@ -4,7 +4,7 @@ import { FiArrowLeft, FiCreditCard, FiAlertCircle } from 'react-icons/fi';
 import { useUserContext } from '../contexts/UserContext';
 import { useAxios } from '../../app/contexts/AxiosContext';
 import { useTheme } from '../contexts/ThemeContext';
-import { useToast } from '../contexts/ToastContext';
+import { useToast } from '../../app/contexts/ToastContext';
 import SquaresApiService from '../services/squaresApiService';
 import StatusBadge from '../components/ui/StatusBadge';
 

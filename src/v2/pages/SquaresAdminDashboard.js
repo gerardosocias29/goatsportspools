@@ -4,7 +4,7 @@ import { FiGrid, FiDollarSign, FiUsers, FiTrendingUp, FiPlus, FiEye, FiAlertCirc
 import { useUserContext } from '../contexts/UserContext';
 import { useAxios } from '../../app/contexts/AxiosContext';
 import { useTheme } from '../contexts/ThemeContext';
-import { useToast } from '../contexts/ToastContext';
+import { useToast } from '../../app/contexts/ToastContext';
 import SquaresApiService from '../services/squaresApiService';
 import StatusBadge from '../components/ui/StatusBadge';
 import ConfirmModal from '../components/ui/ConfirmModal';

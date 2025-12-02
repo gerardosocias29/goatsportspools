@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FiX, FiSave, FiTrendingUp } from 'react-icons/fi';
 import { useTheme } from '../../contexts/ThemeContext';
-import { useToast } from '../../contexts/ToastContext';
+import { useToast } from '../../../app/contexts/ToastContext';
 
 /**
  * GameScoresModal Component

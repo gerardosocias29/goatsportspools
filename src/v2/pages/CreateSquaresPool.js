@@ -4,7 +4,7 @@ import { FiArrowLeft, FiCheck, FiInfo, FiSearch, FiChevronDown, FiCalendar, FiX 
 import { useAxios } from '../../app/contexts/AxiosContext';
 import { useUserContext } from '../contexts/UserContext';
 import { useTheme } from '../contexts/ThemeContext';
-import { useToast } from '../contexts/ToastContext';
+import { useToast } from '../../app/contexts/ToastContext';
 
 /**
  * Create Squares Pool Page
