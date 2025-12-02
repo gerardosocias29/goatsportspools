@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAxios } from '../../app/contexts/AxiosContext';
+import { useToast } from '../contexts/ToastContext';
 import ReactPlayer from 'react-player';
 import Card, { CardHeader, CardTitle, CardDescription } from '../components/ui/Card';
 import Button from '../components/ui/Button';
@@ -12,6 +13,7 @@ const LiveAuction = ({ channel }) => {
   const { colors } = useTheme();
   const navigate = useNavigate();
   const axiosService = useAxios();
+  const { showToast } = useToast();
   const [searchParams] = useSearchParams();
   const auctionId = searchParams.get('auction_id');
 
@@ -162,7 +164,7 @@ const LiveAuction = ({ channel }) => {
 
       channel.bind('active-auction-event-all', (data) => {
         if (data.status !== 'live') {
-          alert('The auction has ended!');
+          showToast({ severity: 'info', summary: 'Auction Ended', detail: 'The auction has ended!' });
           navigate('/pools/ncaa-basketball-auction');
         }
       });
@@ -198,10 +200,10 @@ const LiveAuction = ({ channel }) => {
           setIsUserWinning(true);
         }
       } else {
-        alert(response.data.message);
+        showToast({ severity: 'warn', summary: 'Bid Failed', detail: response.data.message });
       }
     } catch (error) {
-      alert(error.response?.data?.message || 'Unable to place bid');
+      showToast({ severity: 'error', summary: 'Error', detail: error.response?.data?.message || 'Unable to place bid' });
     } finally {
       setIsBidding(false);
     }

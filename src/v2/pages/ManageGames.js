@@ -4,6 +4,7 @@ import { FiPlus, FiEdit2, FiTrash2, FiCheck, FiX, FiCalendar, FiDownload, FiUplo
 import { useAxios } from '../../app/contexts/AxiosContext';
 import { useTheme } from '../contexts/ThemeContext';
 import GameScoresModal from '../components/game/GameScoresModal';
+import ConfirmModal from '../components/ui/ConfirmModal';
 
 /**
  * Manage Games Page - V2 Implementation
@@ -22,6 +23,16 @@ const ManageGames = () => {
   const [message, setMessage] = useState(null);
   const [showScoresModal, setShowScoresModal] = useState(false);
   const [selectedGameForScores, setSelectedGameForScores] = useState(null);
+
+  // Confirm modal states
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    confirmText: 'Confirm',
+    variant: 'warning',
+    onConfirm: () => {},
+  });
 
   // Form state - matches V1 structure
   const [formData, setFormData] = useState({
@@ -120,7 +131,7 @@ const ManageGames = () => {
     setShowModal(true);
   };
 
-  const handleDelete = async (gameId) => {
+  const handleDelete = (gameId) => {
     // Find the game to check its status
     const game = games.find(g => g.id === gameId);
     if (game && game.game_status === 'Final') {
@@ -129,17 +140,25 @@ const ManageGames = () => {
       return;
     }
 
-    if (!window.confirm('Are you sure you want to delete this game?')) return;
-
-    try {
-      const response = await axiosService.delete(`/api/games/${gameId}`);
-      setMessage({ type: 'success', text: 'Game deleted successfully!' });
-      loadGames();
-      setTimeout(() => setMessage(null), 3000);
-    } catch (error) {
-      console.error('Error deleting game:', error);
-      setMessage({ type: 'error', text: error.response?.data?.message || 'An error occurred while deleting the game' });
-    }
+    setConfirmModal({
+      isOpen: true,
+      title: 'Delete Game',
+      message: 'Are you sure you want to delete this game? This action cannot be undone.',
+      confirmText: 'Delete',
+      variant: 'danger',
+      onConfirm: async () => {
+        setConfirmModal(prev => ({ ...prev, isOpen: false }));
+        try {
+          await axiosService.delete(`/api/games/${gameId}`);
+          setMessage({ type: 'success', text: 'Game deleted successfully!' });
+          loadGames();
+          setTimeout(() => setMessage(null), 3000);
+        } catch (error) {
+          console.error('Error deleting game:', error);
+          setMessage({ type: 'error', text: error.response?.data?.message || 'An error occurred while deleting the game' });
+        }
+      },
+    });
   };
 
   const resetForm = () => {
@@ -526,6 +545,17 @@ const ManageGames = () => {
             onSave={handleSaveScores}
           />
         )}
+
+        {/* Confirm Modal */}
+        <ConfirmModal
+          isOpen={confirmModal.isOpen}
+          onClose={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+          onConfirm={confirmModal.onConfirm}
+          title={confirmModal.title}
+          message={confirmModal.message}
+          confirmText={confirmModal.confirmText}
+          variant={confirmModal.variant}
+        />
       </div>
     </div>
   );

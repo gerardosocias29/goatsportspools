@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FiX, FiSave, FiTrendingUp } from 'react-icons/fi';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useToast } from '../../contexts/ToastContext';
 
 /**
  * GameScoresModal Component
@@ -9,6 +10,7 @@ import { useTheme } from '../../contexts/ThemeContext';
  */
 const GameScoresModal = ({ game, onClose, onSave }) => {
   const { colors, isDark } = useTheme();
+  const { showToast } = useToast();
   const [scores, setScores] = useState({
     q1_home: '',
     q1_visitor: '',
@@ -52,7 +54,7 @@ const GameScoresModal = ({ game, onClose, onSave }) => {
       onClose();
     } catch (error) {
       console.error('Error saving scores:', error);
-      alert('Failed to save scores. Please try again.');
+      showToast({ severity: 'error', summary: 'Error', detail: 'Failed to save scores. Please try again.' });
     } finally {
       setSaving(false);
     }

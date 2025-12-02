@@ -4,6 +4,7 @@ import { FiArrowLeft, FiCheck, FiInfo, FiSearch, FiChevronDown, FiCalendar, FiX 
 import { useAxios } from '../../app/contexts/AxiosContext';
 import { useUserContext } from '../contexts/UserContext';
 import { useTheme } from '../contexts/ThemeContext';
+import { useToast } from '../contexts/ToastContext';
 
 /**
  * Create Squares Pool Page
@@ -15,6 +16,7 @@ const CreateSquaresPool = () => {
   const axiosService = useAxios();
   const { user: currentUser, isSignedIn, isLoaded } = useUserContext();
   const { colors, isDark } = useTheme();
+  const { showToast } = useToast();
 
   const [games, setGames] = useState([]);
   const [rewardTypes, setRewardTypes] = useState([]);
@@ -86,7 +88,7 @@ const CreateSquaresPool = () => {
       const userRoleId = currentUser?.user?.role_id ?? currentUser?.role_id;
       // Only role_id 1 (Superadmin) and role_id 2 (Square Admin) can create pools
       if (userRoleId > 2) {
-        alert('You do not have permission to create pools. Only admins can create pools.');
+        showToast({ severity: 'error', summary: 'Access Denied', detail: 'You do not have permission to create pools. Only admins can create pools.' });
         navigate('/squares');
       }
     }
@@ -271,13 +273,13 @@ const CreateSquaresPool = () => {
 
       const response = await axiosService.post('/api/squares-pools', requestData);
       if (response.data) {
-        alert('Pool created successfully!');
+        showToast({ severity: 'success', summary: 'Success', detail: 'Pool created successfully!' });
         navigate(`/squares/pool/${response.data.id || response.data.data?.id}`);
       }
     } catch (error) {
       const errorMsg = error.response?.data?.message || error.response?.data?.errors || error.message;
       const errorText = typeof errorMsg === 'object' ? JSON.stringify(errorMsg) : errorMsg;
-      alert('Failed to create pool: ' + errorText);
+      showToast({ severity: 'error', summary: 'Error', detail: 'Failed to create pool: ' + errorText });
     } finally {
       setLoading(false);
     }
@@ -1037,10 +1039,16 @@ const CreateSquaresPool = () => {
                 <label className="block font-medium mb-2" style={{ color: colors.text }}>
                   X-Axis Team (Horizontal) *
                 </label>
-                <input
-                  type="text"
+                <select
                   value={formData.xAxisTeam}
-                  onChange={(e) => handleChange('xAxisTeam', e.target.value)}
+                  onChange={(e) => {
+                    const newValue = e.target.value;
+                    // If selecting same team as Y-Axis, swap them
+                    if (newValue === formData.yAxisTeam && formData.yAxisTeam) {
+                      handleChange('yAxisTeam', formData.xAxisTeam);
+                    }
+                    handleChange('xAxisTeam', newValue);
+                  }}
                   className="w-full rounded-lg px-4 py-3 focus:outline-none focus:ring-2"
                   style={{
                     backgroundColor: isDark ? '#374151' : '#F3F4F6',
@@ -1048,8 +1056,25 @@ const CreateSquaresPool = () => {
                     border: `1px solid ${colors.border}`,
                     outlineColor: colors.brand.primary
                   }}
-                  placeholder="Enter team name"
-                />
+                  disabled={!selectedGame}
+                >
+                  <option value="">Select team</option>
+                  {selectedGame && (
+                    <>
+                      <option value={selectedGame.home_team?.name || selectedGame.home_team || selectedGame.homeTeam}>
+                        {selectedGame.home_team?.name || selectedGame.home_team || selectedGame.homeTeam} (Home)
+                      </option>
+                      <option value={selectedGame.visitor_team?.name || selectedGame.visitor_team || selectedGame.visitorTeam}>
+                        {selectedGame.visitor_team?.name || selectedGame.visitor_team || selectedGame.visitorTeam} (Away)
+                      </option>
+                    </>
+                  )}
+                </select>
+                {!selectedGame && (
+                  <p className="mt-1 text-sm" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>
+                    Select a game first to choose teams
+                  </p>
+                )}
                 {errors.xAxisTeam && (
                   <p className="mt-1 text-red-400 text-sm">{errors.xAxisTeam}</p>
                 )}
@@ -1060,10 +1085,16 @@ const CreateSquaresPool = () => {
                 <label className="block font-medium mb-2" style={{ color: colors.text }}>
                   Y-Axis Team (Vertical) *
                 </label>
-                <input
-                  type="text"
+                <select
                   value={formData.yAxisTeam}
-                  onChange={(e) => handleChange('yAxisTeam', e.target.value)}
+                  onChange={(e) => {
+                    const newValue = e.target.value;
+                    // If selecting same team as X-Axis, swap them
+                    if (newValue === formData.xAxisTeam && formData.xAxisTeam) {
+                      handleChange('xAxisTeam', formData.yAxisTeam);
+                    }
+                    handleChange('yAxisTeam', newValue);
+                  }}
                   className="w-full rounded-lg px-4 py-3 focus:outline-none focus:ring-2"
                   style={{
                     backgroundColor: isDark ? '#374151' : '#F3F4F6',
@@ -1071,8 +1102,25 @@ const CreateSquaresPool = () => {
                     border: `1px solid ${colors.border}`,
                     outlineColor: colors.brand.primary
                   }}
-                  placeholder="Enter team name"
-                />
+                  disabled={!selectedGame}
+                >
+                  <option value="">Select team</option>
+                  {selectedGame && (
+                    <>
+                      <option value={selectedGame.home_team?.name || selectedGame.home_team || selectedGame.homeTeam}>
+                        {selectedGame.home_team?.name || selectedGame.home_team || selectedGame.homeTeam} (Home)
+                      </option>
+                      <option value={selectedGame.visitor_team?.name || selectedGame.visitor_team || selectedGame.visitorTeam}>
+                        {selectedGame.visitor_team?.name || selectedGame.visitor_team || selectedGame.visitorTeam} (Away)
+                      </option>
+                    </>
+                  )}
+                </select>
+                {!selectedGame && (
+                  <p className="mt-1 text-sm" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>
+                    Select a game first to choose teams
+                  </p>
+                )}
                 {errors.yAxisTeam && (
                   <p className="mt-1 text-red-400 text-sm">{errors.yAxisTeam}</p>
                 )}
@@ -1087,6 +1135,7 @@ const CreateSquaresPool = () => {
                   type="number"
                   min="1"
                   max="100"
+                  step="1"
                   value={formData.maxSquaresPerPlayer || ''}
                   onChange={(e) => handleChange('maxSquaresPerPlayer', parseInt(e.target.value) || null)}
                   className="w-full rounded-lg px-4 py-3 focus:outline-none focus:ring-2"

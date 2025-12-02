@@ -4,8 +4,10 @@ import { FiGrid, FiDollarSign, FiUsers, FiTrendingUp, FiPlus, FiEye, FiAlertCirc
 import { useUserContext } from '../contexts/UserContext';
 import { useAxios } from '../../app/contexts/AxiosContext';
 import { useTheme } from '../contexts/ThemeContext';
+import { useToast } from '../contexts/ToastContext';
 import SquaresApiService from '../services/squaresApiService';
 import StatusBadge from '../components/ui/StatusBadge';
+import ConfirmModal from '../components/ui/ConfirmModal';
 
 /**
  * Commissioner Dashboard
@@ -17,6 +19,7 @@ const SquaresAdminDashboard = () => {
   const axiosService = useAxios();
   const squaresApiService = useMemo(() => new SquaresApiService(axiosService), [axiosService]);
   const { colors, isDark } = useTheme();
+  const { showToast } = useToast();
 
   const [pools, setPools] = useState([]);
   const [creditRequests, setCreditRequests] = useState([]);
@@ -30,6 +33,16 @@ const SquaresAdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('pools'); // 'pools', 'credit-requests', 'admin-requests'
   const [processingRequest, setProcessingRequest] = useState(null);
+
+  // Confirm modal states
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    confirmText: 'Confirm',
+    variant: 'warning',
+    onConfirm: () => {},
+  });
 
   const userRoleId = currentUser?.user?.role_id ?? currentUser?.role_id;
   const isSuperadmin = userRoleId == 1; // Use == for loose comparison (string/number)
@@ -97,26 +110,34 @@ const SquaresAdminDashboard = () => {
     }
   };
 
-  const handleApproveRequest = async (requestId, isAdminRequest = false) => {
-    if (!window.confirm('Approve this credit request?')) return;
+  const handleApproveRequest = (requestId, isAdminRequest = false) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Approve Credit Request',
+      message: 'Are you sure you want to approve this credit request?',
+      confirmText: 'Approve',
+      variant: 'info',
+      onConfirm: async () => {
+        setConfirmModal(prev => ({ ...prev, isOpen: false }));
+        setProcessingRequest(requestId);
+        try {
+          const response = isAdminRequest
+            ? await squaresApiService.updateAdminCreditRequest(requestId, 'approved')
+            : await squaresApiService.updateCreditRequest(requestId, 'approved');
 
-    setProcessingRequest(requestId);
-    try {
-      const response = isAdminRequest
-        ? await squaresApiService.updateAdminCreditRequest(requestId, 'approved')
-        : await squaresApiService.updateCreditRequest(requestId, 'approved');
-
-      if (response.success) {
-        alert('Credit request approved successfully!');
-        await loadDashboard();
-      } else {
-        alert(response.error || 'Failed to approve request');
-      }
-    } catch (error) {
-      alert('Failed to approve request: ' + (error.message || 'Unknown error'));
-    } finally {
-      setProcessingRequest(null);
-    }
+          if (response.success) {
+            showToast({ severity: 'success', summary: 'Approved', detail: 'Credit request approved successfully!' });
+            await loadDashboard();
+          } else {
+            showToast({ severity: 'error', summary: 'Error', detail: response.error || 'Failed to approve request' });
+          }
+        } catch (error) {
+          showToast({ severity: 'error', summary: 'Error', detail: 'Failed to approve request: ' + (error.message || 'Unknown error') });
+        } finally {
+          setProcessingRequest(null);
+        }
+      },
+    });
   };
 
   const handleDenyRequest = async (requestId, isAdminRequest = false) => {
@@ -130,32 +151,40 @@ const SquaresAdminDashboard = () => {
         : await squaresApiService.updateCreditRequest(requestId, 'denied', reason);
 
       if (response.success) {
-        alert('Credit request denied.');
+        showToast({ severity: 'success', summary: 'Denied', detail: 'Credit request denied.' });
         await loadDashboard();
       } else {
-        alert(response.error || 'Failed to deny request');
+        showToast({ severity: 'error', summary: 'Error', detail: response.error || 'Failed to deny request' });
       }
     } catch (error) {
-      alert('Failed to deny request: ' + (error.message || 'Unknown error'));
+      showToast({ severity: 'error', summary: 'Error', detail: 'Failed to deny request: ' + (error.message || 'Unknown error') });
     } finally {
       setProcessingRequest(null);
     }
   };
 
-  const handleCalculateWinners = async (poolId) => {
-    if (!window.confirm('Calculate winners for all quarters? This will use the current game scores.')) return;
-
-    try {
-      const response = await squaresApiService.calculateAllWinners(poolId);
-      if (response.success) {
-        alert(`Winners calculated! ${response.data.winners_count || 0} winner(s) found.`);
-        await loadDashboard();
-      } else {
-        alert(response.error || 'Failed to calculate winners');
-      }
-    } catch (error) {
-      alert('Failed to calculate winners: ' + (error.message || 'Unknown error'));
-    }
+  const handleCalculateWinners = (poolId) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Calculate All Winners',
+      message: 'Calculate winners for all quarters? This will use the current game scores.',
+      confirmText: 'Calculate',
+      variant: 'info',
+      onConfirm: async () => {
+        setConfirmModal(prev => ({ ...prev, isOpen: false }));
+        try {
+          const response = await squaresApiService.calculateAllWinners(poolId);
+          if (response.success) {
+            showToast({ severity: 'success', summary: 'Success', detail: `Winners calculated! ${response.data.winners_count || 0} winner(s) found.` });
+            await loadDashboard();
+          } else {
+            showToast({ severity: 'error', summary: 'Error', detail: response.error || 'Failed to calculate winners' });
+          }
+        } catch (error) {
+          showToast({ severity: 'error', summary: 'Error', detail: 'Failed to calculate winners: ' + (error.message || 'Unknown error') });
+        }
+      },
+    });
   };
 
   const formatDate = (dateString) => {
@@ -528,6 +557,17 @@ const SquaresAdminDashboard = () => {
           </div>
         )}
       </div>
+
+      {/* Confirm Modal */}
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={confirmModal.onConfirm}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        confirmText={confirmModal.confirmText}
+        variant={confirmModal.variant}
+      />
     </div>
   );
 };

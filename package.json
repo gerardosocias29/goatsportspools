@@ -33,6 +33,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
+    "dev": "react-scripts start",
     "build": "react-scripts build",
     "new-build": "BUILD_PATH='./build2' react-scripts build",
     "build-and-rename": "npm run new-build && mv -T ./build2 ./build",

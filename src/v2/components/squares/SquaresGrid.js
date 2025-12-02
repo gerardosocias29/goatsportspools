@@ -13,6 +13,10 @@ const SquaresGrid = ({
   selectionMode = false,
   disabled = false,
   onLimitReached,
+  onInsufficientCredits,
+  // Credit-based selection limiting (for CREDIT pool type)
+  userCredits = null, // User's available credits (null means no credit check)
+  costPerSquare = 0, // Cost per square in credits
 }) => {
   const [selectedSquares, setSelectedSquares] = useState([]);
   const [hoveredSquare, setHoveredSquare] = useState(null);
@@ -32,9 +36,16 @@ const SquaresGrid = ({
     return !isNaN(squarePlayerId) && !isNaN(currentPlayerId) && squarePlayerId === currentPlayerId;
   }).length;
 
-  // Calculate remaining slots available for selection
+  // Calculate remaining slots available for selection (based on max per player limit)
   const remainingSlots = maxSquaresPerPlayer ? maxSquaresPerPlayer - currentUserOwnedCount : Infinity;
-  const canSelectMore = remainingSlots > selectedSquares.length;
+
+  // Calculate max affordable squares based on credits
+  const maxAffordableSquares = userCredits !== null && costPerSquare > 0
+    ? Math.floor(userCredits / costPerSquare)
+    : Infinity;
+
+  // Can select more if both limits allow
+  const canSelectMore = remainingSlots > selectedSquares.length && maxAffordableSquares > selectedSquares.length;
 
   const isSquareSelected = (square) => {
     // Only compare using normalized snake_case fields
@@ -112,14 +123,23 @@ const SquaresGrid = ({
         prev.filter(s => !(s.x_coordinate === square.x_coordinate && s.y_coordinate === square.y_coordinate))
       );
     } else {
-      // Check if user can select more squares (hasn't reached limit)
-      if (!canSelectMore) {
-        // Already at limit - notify and don't allow more selections
+      // Check if user can select more squares (hasn't reached max per player limit)
+      if (maxSquaresPerPlayer && remainingSlots <= selectedSquares.length) {
         if (onLimitReached) {
           onLimitReached(maxSquaresPerPlayer, currentUserOwnedCount, selectedSquares.length);
         }
         return;
       }
+
+      // Check if user can afford more squares (credit-based pools)
+      if (maxAffordableSquares <= selectedSquares.length) {
+        if (onInsufficientCredits) {
+          const totalCost = (selectedSquares.length + 1) * costPerSquare;
+          onInsufficientCredits(userCredits, costPerSquare, totalCost);
+        }
+        return;
+      }
+
       // Select: add this square to selection
       setSelectedSquares(prev => [...prev, square]);
     }

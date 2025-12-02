@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { FiArrowLeft, FiCalendar, FiDollarSign, FiGrid, FiLock, FiUnlock, FiTrendingUp, FiAward, FiShare2, FiDownload, FiX, FiCreditCard, FiCheck, FiChevronDown, FiSettings } from 'react-icons/fi';
 import SquaresGrid from '../components/squares/SquaresGrid';
 import WinnersDisplay from '../components/squares/WinnersDisplay';
+import ConfirmModal from '../components/ui/ConfirmModal';
 import { useAxios } from '../../app/contexts/AxiosContext';
 import { useUserContext } from '../contexts/UserContext';
 import { TeamTemplate } from '../../app/pages/screens/games/NFLTemplates';
@@ -116,6 +117,17 @@ const SquaresPoolDetail = () => {
   const [selectedQuarter, setSelectedQuarter] = useState(null);
   const [homeScore, setHomeScore] = useState('');
   const [visitorScore, setVisitorScore] = useState('');
+
+  // Confirm modal states
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    confirmText: 'Confirm',
+    variant: 'warning',
+    onConfirm: () => {},
+  });
+
   const QRCodeCanvasComponent = QRCodeCanvas;
   const qrCanvasRef = useRef(null);
   const getCurrentUserId = (userObj = currentUser) => userObj?.user?.id || userObj?.id;
@@ -268,7 +280,7 @@ const SquaresPoolDetail = () => {
       setSelectionMode(false);
     } catch (error) {
       console.error('Error selecting squares:', error);
-      alert('Failed to select squares: ' + (error.response?.data?.message || error.message));
+      showToast({ severity: 'error', summary: 'Error', detail: 'Failed to select squares: ' + (error.response?.data?.message || error.message) });
     } finally {
       setConfirmingSquares(false);
     }
@@ -300,7 +312,7 @@ const SquaresPoolDetail = () => {
   // Submit scores and calculate winner
   const handleCalculateWinner = async () => {
     if (homeScore === '' || visitorScore === '') {
-      alert('Please enter both scores');
+      showToast({ severity: 'warn', summary: 'Missing Scores', detail: 'Please enter both scores' });
       return;
     }
 
@@ -315,70 +327,102 @@ const SquaresPoolDetail = () => {
       await loadWinners();
       await loadPool(null, true);
     } catch (error) {
-      alert('Failed to calculate winner: ' + (error.response?.data?.message || error.message));
+      showToast({ severity: 'error', summary: 'Error', detail: 'Failed to calculate winner: ' + (error.response?.data?.message || error.message) });
     } finally {
       setCalculatingWinners(false);
     }
   };
 
-  const handleCalculateAllWinners = async () => {
-    if (!window.confirm('Calculate winners for all 4 quarters?')) return;
-
-    setCalculatingWinners(true);
-    try {
-      await axiosService.post(`/api/squares-pools/${poolId}/calculate-all-winners`);
-      alert('Winners calculated for all quarters!');
-      await loadWinners();
-      await loadPool(null, true);
-    } catch (error) {
-      alert('Failed to calculate winners: ' + (error.response?.data?.message || error.message));
-    } finally {
-      setCalculatingWinners(false);
-    }
+  const handleCalculateAllWinners = () => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Calculate All Winners',
+      message: 'Calculate winners for all 4 quarters? This will use the current game scores.',
+      confirmText: 'Calculate',
+      variant: 'info',
+      onConfirm: async () => {
+        setConfirmModal(prev => ({ ...prev, isOpen: false }));
+        setCalculatingWinners(true);
+        try {
+          await axiosService.post(`/api/squares-pools/${poolId}/calculate-all-winners`);
+          showToast({ severity: 'success', summary: 'Success', detail: 'Winners calculated for all quarters!' });
+          await loadWinners();
+          await loadPool(null, true);
+        } catch (error) {
+          showToast({ severity: 'error', summary: 'Error', detail: 'Failed to calculate winners: ' + (error.response?.data?.message || error.message) });
+        } finally {
+          setCalculatingWinners(false);
+        }
+      },
+    });
   };
 
-  const handleClosePool = async () => {
-    if (!window.confirm('Are you sure you want to close this pool? No new squares can be selected after closing.')) return;
-
-    setUpdatingPool(true);
-    try {
-      await axiosService.post(`/api/squares-pools/${poolId}/close`);
-      await loadPool(null, true);
-    } catch (error) {
-      alert('Failed to close pool: ' + (error.response?.data?.message || error.message));
-    } finally {
-      setUpdatingPool(false);
-    }
+  const handleClosePool = () => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Close Pool',
+      message: 'Are you sure you want to close this pool? No new squares can be selected after closing.',
+      confirmText: 'Close Pool',
+      variant: 'warning',
+      onConfirm: async () => {
+        setConfirmModal(prev => ({ ...prev, isOpen: false }));
+        setUpdatingPool(true);
+        try {
+          await axiosService.post(`/api/squares-pools/${poolId}/close`);
+          await loadPool(null, true);
+        } catch (error) {
+          showToast({ severity: 'error', summary: 'Error', detail: 'Failed to close pool: ' + (error.response?.data?.message || error.message) });
+        } finally {
+          setUpdatingPool(false);
+        }
+      },
+    });
   };
 
-  const handleReopenPool = async () => {
-    if (!window.confirm('Are you sure you want to reopen this pool for square selection?')) return;
-
-    setUpdatingPool(true);
-    try {
-      await axiosService.post(`/api/squares-pools/${poolId}/reopen`);
-      await loadPool(null, true);
-    } catch (error) {
-      alert('Failed to reopen pool: ' + (error.response?.data?.message || error.message));
-    } finally {
-      setUpdatingPool(false);
-    }
+  const handleReopenPool = () => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Reopen Pool',
+      message: 'Are you sure you want to reopen this pool for square selection?',
+      confirmText: 'Reopen',
+      variant: 'info',
+      onConfirm: async () => {
+        setConfirmModal(prev => ({ ...prev, isOpen: false }));
+        setUpdatingPool(true);
+        try {
+          await axiosService.post(`/api/squares-pools/${poolId}/reopen`);
+          await loadPool(null, true);
+        } catch (error) {
+          showToast({ severity: 'error', summary: 'Error', detail: 'Failed to reopen pool: ' + (error.response?.data?.message || error.message) });
+        } finally {
+          setUpdatingPool(false);
+        }
+      },
+    });
   };
 
-  const handleMakePoolFree = async () => {
-    if (!window.confirm('Change this pool to FREE? All players will be able to select squares without credits.')) return;
-
-    setUpdatingPool(true);
-    try {
-      await axiosService.patch(`/api/squares-pools/${poolId}/settings`, {
-        player_pool_type: 'OPEN'
-      });
-      await loadPool(null, true);
-    } catch (error) {
-      alert('Failed to update pool: ' + (error.response?.data?.message || error.message));
-    } finally {
-      setUpdatingPool(false);
-    }
+  const handleMakePoolFree = () => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Make Pool Free',
+      message: 'Change this pool to FREE? All players will be able to select squares without credits.',
+      confirmText: 'Make Free',
+      variant: 'warning',
+      onConfirm: async () => {
+        setConfirmModal(prev => ({ ...prev, isOpen: false }));
+        setUpdatingPool(true);
+        try {
+          await axiosService.patch(`/api/squares-pools/${poolId}/settings`, {
+            player_pool_type: 'OPEN'
+          });
+          await loadPool(null, true);
+        } catch (error) {
+          showToast({ severity: 'error', summary: 'Error', detail: 'Failed to update pool: ' + (error.response?.data?.message || error.message) });
+        } finally {
+          setUpdatingPool(false);
+        }
+      },
+    });
   };
 
   const extractPlayerId = (player) => {
@@ -574,11 +618,11 @@ const SquaresPoolDetail = () => {
     const amount = parseFloat(creditAmounts[playerId]);
     const numericPlayerId = parseInt(playerId, 10);
     if (isNaN(amount) || amount <= 0) {
-      alert('Enter a valid credit amount greater than zero.');
+      showToast({ severity: 'warn', summary: 'Invalid Amount', detail: 'Enter a valid credit amount greater than zero.' });
       return;
     }
     if (isNaN(numericPlayerId)) {
-      alert('Invalid player selected.');
+      showToast({ severity: 'error', summary: 'Error', detail: 'Invalid player selected.' });
       return;
     }
 
@@ -592,7 +636,7 @@ const SquaresPoolDetail = () => {
       await fetchAndStorePoolPlayers();
       await loadPool(null, true);
     } catch (error) {
-      alert('Failed to add credits: ' + (error.response?.data?.message || error.message));
+      showToast({ severity: 'error', summary: 'Error', detail: 'Failed to add credits: ' + (error.response?.data?.message || error.message) });
     } finally {
       setCreditsLoading(false);
     }
@@ -608,7 +652,7 @@ const SquaresPoolDetail = () => {
   const handleRequestCredits = async () => {
     const amount = parseFloat(requestAmount);
     if (isNaN(amount) || amount <= 0) {
-      alert('Please enter a valid amount greater than zero.');
+      showToast({ severity: 'warn', summary: 'Invalid Amount', detail: 'Please enter a valid amount greater than zero.' });
       return;
     }
 
@@ -623,14 +667,14 @@ const SquaresPoolDetail = () => {
       );
 
       if (response.data) {
-        alert('Credit request submitted successfully! The pool commissioner will review your request.');
+        showToast({ severity: 'success', summary: 'Request Submitted', detail: 'Credit request submitted successfully! The pool commissioner will review your request.' });
         setShowRequestCreditsModal(false);
         setRequestAmount('');
         setRequestReason('');
       }
     } catch (error) {
       const errorMessage = error.response?.data?.error || error.response?.data?.message || 'Failed to request credits';
-      alert(errorMessage);
+      showToast({ severity: 'error', summary: 'Error', detail: errorMessage });
     } finally {
       setRequestingCredits(false);
     }
@@ -642,24 +686,32 @@ const SquaresPoolDetail = () => {
     setRequestReason('');
   };
 
-  const handleAssignNumbers = async () => {
-    if (!window.confirm('Assign random numbers to this pool now? This cannot be undone.')) return;
-
-    setAssigningNumbers(true);
-    try {
-      await axiosService.post(`/api/squares-pools/${poolId}/assign-numbers`);
-      await loadPool(null, true);
-      alert('Numbers assigned successfully!');
-    } catch (error) {
-      alert('Failed to assign numbers: ' + (error.response?.data?.message || error.message));
-    } finally {
-      setAssigningNumbers(false);
-    }
+  const handleAssignNumbers = () => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Assign Numbers',
+      message: 'Assign random numbers to this pool now? This action cannot be undone.',
+      confirmText: 'Assign Numbers',
+      variant: 'danger',
+      onConfirm: async () => {
+        setConfirmModal(prev => ({ ...prev, isOpen: false }));
+        setAssigningNumbers(true);
+        try {
+          await axiosService.post(`/api/squares-pools/${poolId}/assign-numbers`);
+          await loadPool(null, true);
+          showToast({ severity: 'success', summary: 'Success', detail: 'Numbers assigned successfully!' });
+        } catch (error) {
+          showToast({ severity: 'error', summary: 'Error', detail: 'Failed to assign numbers: ' + (error.response?.data?.message || error.message) });
+        } finally {
+          setAssigningNumbers(false);
+        }
+      },
+    });
   };
 
   const handleDownloadQRCode = () => {
     if (!effectiveJoinUrl && !fallbackQrImage) {
-      alert('QR code is not available yet.');
+      showToast({ severity: 'warn', summary: 'Not Available', detail: 'QR code is not available yet.' });
       return;
     }
 
@@ -685,7 +737,7 @@ const SquaresPoolDetail = () => {
       }
     } catch (error) {
       console.error('Error downloading QR code:', error);
-      alert('Failed to download QR code. Please try again.');
+      showToast({ severity: 'error', summary: 'Error', detail: 'Failed to download QR code. Please try again.' });
     } finally {
       setDownloadingQR(false);
     }
@@ -855,7 +907,8 @@ const SquaresPoolDetail = () => {
 
   const getUserCreditBalance = () => {
     if (!pool?.players || !currentUserIdValue) return null;
-    const player = pool.players.find(p => extractPlayerId(p) === currentUserIdValue);
+    // Use == for loose comparison to handle string/number type differences
+    const player = pool.players.find(p => extractPlayerId(p) == currentUserIdValue);
     if (player) {
       // Check multiple possible property names for credits
       const credits = player.credits_available ?? player.available_credits ?? player.credits ?? player.player?.credits ?? 0;
@@ -1061,7 +1114,7 @@ const SquaresPoolDetail = () => {
                 </div>
               </div>
 
-              {pool.player_pool_type === 'CREDIT' && getUserCreditBalance() !== null && (
+              {/* {pool.player_pool_type === 'CREDIT' && getUserCreditBalance() !== null && (
                 <div className='h-full' style={{ backgroundColor: isDark ? colors.cardHover : '#f7f4f2', border: `1px solid ${colors.border}`, borderRadius: '14px', padding: '12px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minWidth: '100px' }}>
                   <div className="text-xl font-bold" style={{ color: colors.success }}>
                     ${getUserCreditBalance()}
@@ -1070,7 +1123,16 @@ const SquaresPoolDetail = () => {
                     Your Credits
                   </div>
                 </div>
-              )}
+              )} */}
+
+              <div className='h-full' style={{ backgroundColor: isDark ? colors.cardHover : '#f7f4f2', border: `1px solid ${colors.border}`, borderRadius: '14px', padding: '12px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minWidth: '100px' }}>
+                <div className="text-xl font-bold" style={{ color: colors.success }}>
+                  ${getUserCreditBalance() || '0.00'}
+                </div>
+                <div className="text-xs" style={{ color: colors.text, opacity: 0.7 }}>
+                  Your Credits
+                </div>
+              </div>
 
               <div className='h-full' style={{ backgroundColor: isDark ? colors.cardHover : '#f7f4f2', border: `1px solid ${colors.border}`, borderRadius: '14px', padding: '12px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minWidth: '90px' }}>
                 <div className="text-lg font-bold" style={{ color: colors.text }}>
@@ -1537,6 +1599,15 @@ const SquaresPoolDetail = () => {
                     detail: `You can only have ${maxSquares} squares maximum. You already own ${owned} and have ${selected} selected.`,
                   });
                 }}
+                onInsufficientCredits={(credits, costPerSquare, totalCost) => {
+                  showToast({
+                    severity: 'warn',
+                    summary: 'Insufficient Credits',
+                    detail: `You have ${credits} credits but need ${totalCost} credits to select this square (${costPerSquare} per square).`,
+                  });
+                }}
+                userCredits={pool.player_pool_type === 'CREDIT' ? parseFloat(getUserCreditBalance() || 0) : null}
+                costPerSquare={parseFloat(pool.credit_cost || pool.entry_fee || pool.costPerSquare || 0)}
               />
             );
           })()}
@@ -2325,6 +2396,17 @@ const SquaresPoolDetail = () => {
           message="Updating Pool"
         />
       )}
+
+      {/* Confirm Modal */}
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={confirmModal.onConfirm}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        confirmText={confirmModal.confirmText}
+        variant={confirmModal.variant}
+      />
     </div>
   );
 };
