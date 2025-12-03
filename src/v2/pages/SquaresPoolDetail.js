@@ -16,6 +16,21 @@ import { QRCodeCanvas } from 'qrcode.react';
  */
 const LoadingModal = ({ message, count }) => {
   const { colors, isDark } = useTheme();
+  const [progress, setProgress] = useState(0);
+
+  // Animate progress bar
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setProgress(prev => {
+        // Reset to 0 when reaching 100, creating a continuous loop
+        if (prev >= 100) return 0;
+        // Increment by random amount for natural feel
+        return prev + Math.random() * 15 + 5;
+      });
+    }, 200);
+
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 backdrop-blur-sm">
@@ -61,11 +76,15 @@ const LoadingModal = ({ message, count }) => {
             </p>
           )}
 
-          {/* Progress indicator */}
+          {/* Animated Progress indicator */}
           <div className="w-full rounded-full h-2 overflow-hidden" style={{ backgroundColor: isDark ? '#374151' : '#E5E7EB' }}>
             <div
-              className="h-full rounded-full animate-pulse w-3/4"
-              style={{ backgroundColor: colors.brand.primary }}
+              className="h-full rounded-full transition-all duration-200 ease-out"
+              style={{
+                backgroundColor: colors.brand.primary,
+                width: `${Math.min(progress, 100)}%`,
+                boxShadow: `0 0 10px ${colors.brand.primary}40`
+              }}
             ></div>
           </div>
         </div>
