@@ -197,7 +197,66 @@ const Header = ({ user, onSignOut }) => {
                   {clerkUser.fullName}
                 </p>
               )}
-              <UserButton afterSignOutUrl='/sign-in' />
+              <UserButton afterSignOutUrl='/sign-in'>
+                <UserButton.MenuItems>
+                  <UserButton.Action
+                    label="Deposit"
+                    labelIcon={
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="12" y1="8" x2="12" y2="16" />
+                        <line x1="8" y1="12" x2="16" y2="12" />
+                      </svg>
+                    }
+                    onClick={() => navigate('/deposit')}
+                  />
+                  <UserButton.Action
+                    label="Withdraw"
+                    labelIcon={
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+                        <line x1="1" y1="10" x2="23" y2="10" />
+                      </svg>
+                    }
+                    onClick={() => navigate('/withdraw')}
+                  />
+                  <UserButton.Action
+                    label="Notifications"
+                    labelIcon={
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                      </svg>
+                    }
+                    onClick={() => navigate('/notifications')}
+                  />
+                  <UserButton.Action
+                    label="Promotions"
+                    labelIcon={
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <rect x="3" y="8" width="18" height="14" rx="2" ry="2" />
+                        <path d="M12 8V3" />
+                        <path d="M8 8V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v3" />
+                        <path d="M12 12v4" />
+                      </svg>
+                    }
+                    onClick={() => navigate('/promotions')}
+                  />
+                  <UserButton.Action label="manageAccount" />
+                  <UserButton.Action
+                    label="Help Center"
+                    labelIcon={
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                        <line x1="12" y1="17" x2="12.01" y2="17" />
+                      </svg>
+                    }
+                    onClick={() => navigate('/help')}
+                  />
+                  <UserButton.Action label="signOut" />
+                </UserButton.MenuItems>
+              </UserButton>
             </div>
           )}
 
