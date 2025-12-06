@@ -23,7 +23,7 @@ body {
 }
 
 label, .main, a {
-  color: #453f65 !important;
+  color: #453f65;
 }
 
 .p-toast .p-toast-message .p-toast-message-content {
