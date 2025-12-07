@@ -323,9 +323,16 @@ const CreateSquaresPool = () => {
       };
 
       const response = await axiosService.post('/api/squares-pools', requestData);
-      if (response.data) {
+      if (response.data?.status) {
         showToast({ severity: 'success', summary: 'Success', detail: 'Pool created successfully!' });
-        navigate(`/squares/pool/${response.data.id || response.data.data?.id}`);
+        // API returns: { status: true, data: { id: ... }, pool_number: ... }
+        const poolId = response.data.data?.id || response.data.id;
+        if (poolId) {
+          navigate(`/squares/pool/${poolId}`);
+        } else {
+          // Fallback to squares list if no ID
+          navigate('/squares');
+        }
       }
     } catch (error) {
       const errorMsg = error.response?.data?.message || error.response?.data?.errors || error.message;
