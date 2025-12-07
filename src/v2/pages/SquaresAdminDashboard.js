@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiGrid, FiDollarSign, FiUsers, FiTrendingUp, FiPlus, FiEye, FiAlertCircle, FiCreditCard, FiCheckCircle, FiXCircle } from 'react-icons/fi';
+import { FiGrid, FiDollarSign, FiUsers, FiTrendingUp, FiPlus, FiEye, FiAlertCircle, FiCreditCard, FiCheckCircle, FiXCircle, FiSend, FiFileText } from 'react-icons/fi';
 import { useUserContext } from '../contexts/UserContext';
+import { useUser } from '@clerk/clerk-react';
 import { useAxios } from '../../app/contexts/AxiosContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useToast } from '../../app/contexts/ToastContext';
@@ -16,6 +17,7 @@ import ConfirmModal from '../components/ui/ConfirmModal';
 const SquaresAdminDashboard = () => {
   const navigate = useNavigate();
   const { user: currentUser, isSignedIn, isLoaded } = useUserContext();
+  const { user: clerkUser } = useUser();
   const axiosService = useAxios();
   const squaresApiService = useMemo(() => new SquaresApiService(axiosService), [axiosService]);
   const { colors, isDark } = useTheme();
@@ -34,6 +36,17 @@ const SquaresAdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('pools'); // 'pools', 'credit-requests', 'admin-requests'
   const [processingRequest, setProcessingRequest] = useState(null);
 
+  // Application form state for non-admins
+  const [applicationForm, setApplicationForm] = useState({
+    fullName: '',
+    email: '',
+    reason: '',
+    experience: '',
+    agreeToTerms: false,
+  });
+  const [applicationStatus, setApplicationStatus] = useState(null); // null, 'pending', 'approved', 'denied'
+  const [submittingApplication, setSubmittingApplication] = useState(false);
+
   // Confirm modal states
   const [confirmModal, setConfirmModal] = useState({
     isOpen: false,
@@ -46,6 +59,7 @@ const SquaresAdminDashboard = () => {
 
   const userRoleId = currentUser?.user?.role_id ?? currentUser?.role_id;
   const isSuperadmin = userRoleId == 1; // Use == for loose comparison (string/number)
+  const isAdmin = userRoleId == 1 || userRoleId == 2; // Superadmin or Square Admin
 
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
@@ -53,11 +67,26 @@ const SquaresAdminDashboard = () => {
     }
   }, [isSignedIn, isLoaded, navigate]);
 
+  // Pre-fill application form with Clerk user data
   useEffect(() => {
-    if (isSignedIn) {
-      loadDashboard();
+    if (clerkUser && !isAdmin) {
+      setApplicationForm(prev => ({
+        ...prev,
+        fullName: clerkUser.fullName || '',
+        email: clerkUser.primaryEmailAddress?.emailAddress || '',
+      }));
+      // Check if user already has a pending application
+      checkApplicationStatus();
     }
-  }, [isSignedIn]);
+  }, [clerkUser, isAdmin]);
+
+  useEffect(() => {
+    if (isSignedIn && isAdmin) {
+      loadDashboard();
+    } else if (isSignedIn && !isAdmin) {
+      setLoading(false);
+    }
+  }, [isSignedIn, isAdmin]);
 
   const loadDashboard = async () => {
     setLoading(true);
@@ -107,6 +136,54 @@ const SquaresAdminDashboard = () => {
       console.error('Error loading dashboard:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Check if non-admin user has a pending application
+  const checkApplicationStatus = async () => {
+    try {
+      const response = await axiosService.get('/api/squares-admin-applications/my-status');
+      if (response.data && response.data.status) {
+        setApplicationStatus(response.data.status);
+      }
+    } catch (error) {
+      // No application exists yet, that's fine
+      console.log('No existing application found');
+    }
+  };
+
+  // Handle application form submission
+  const handleApplicationSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!applicationForm.agreeToTerms) {
+      showToast({ severity: 'error', summary: 'Error', detail: 'You must agree to the terms to apply.' });
+      return;
+    }
+
+    if (!applicationForm.reason.trim()) {
+      showToast({ severity: 'error', summary: 'Error', detail: 'Please provide a reason for your application.' });
+      return;
+    }
+
+    setSubmittingApplication(true);
+    try {
+      const response = await axiosService.post('/api/squares-admin-applications', {
+        full_name: applicationForm.fullName,
+        email: applicationForm.email,
+        reason: applicationForm.reason,
+        experience: applicationForm.experience,
+      });
+
+      if (response.data) {
+        setApplicationStatus('pending');
+        showToast({ severity: 'success', summary: 'Application Submitted', detail: 'Your application has been submitted for review.' });
+      }
+    } catch (error) {
+      const errorMsg = error.response?.data?.message || 'Failed to submit application';
+      showToast({ severity: 'error', summary: 'Error', detail: errorMsg });
+    } finally {
+      setSubmittingApplication(false);
     }
   };
 
@@ -219,6 +296,217 @@ const SquaresAdminDashboard = () => {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: colors.background }}>
         <div style={{ color: colors.text }} className="text-xl">Loading...</div>
+      </div>
+    );
+  }
+
+  // Non-admin view: Show application form
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen p-6" style={{ backgroundColor: colors.background }}>
+        <div className="max-w-2xl mx-auto">
+          {/* Header */}
+          <div className="mb-8 text-center">
+            <h1 className="text-4xl font-bold mb-2" style={{ color: colors.text }}>
+              Become a Commissioner
+            </h1>
+            <p style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>
+              Apply to become a Squares Pool commissioner and create your own pools
+            </p>
+          </div>
+
+          {/* Application Status Message */}
+          {applicationStatus === 'pending' && (
+            <div
+              className="rounded-xl p-6 mb-8 text-center"
+              style={{
+                backgroundColor: isDark ? 'rgba(251, 191, 36, 0.1)' : 'rgba(251, 191, 36, 0.2)',
+                border: `1px solid ${isDark ? '#F59E0B' : '#D97706'}`
+              }}
+            >
+              <FiFileText className="text-5xl mx-auto mb-4" style={{ color: '#F59E0B' }} />
+              <h2 className="text-2xl font-bold mb-2" style={{ color: colors.text }}>
+                Application Pending
+              </h2>
+              <p style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>
+                Your application is currently under review. We'll notify you once a decision has been made.
+              </p>
+            </div>
+          )}
+
+          {applicationStatus === 'approved' && (
+            <div
+              className="rounded-xl p-6 mb-8 text-center"
+              style={{
+                backgroundColor: isDark ? 'rgba(34, 197, 94, 0.1)' : 'rgba(34, 197, 94, 0.2)',
+                border: `1px solid ${isDark ? '#22C55E' : '#16A34A'}`
+              }}
+            >
+              <FiCheckCircle className="text-5xl mx-auto mb-4" style={{ color: '#22C55E' }} />
+              <h2 className="text-2xl font-bold mb-2" style={{ color: colors.text }}>
+                Application Approved!
+              </h2>
+              <p style={{ color: isDark ? '#9CA3AF' : '#6B7280' }} className="mb-4">
+                Congratulations! Your application has been approved. Please refresh the page to access the Commissioner Dashboard.
+              </p>
+              <button
+                onClick={() => window.location.reload()}
+                className="px-6 py-3 rounded-lg font-semibold text-white"
+                style={{ backgroundColor: colors.brand.primary }}
+              >
+                Refresh Page
+              </button>
+            </div>
+          )}
+
+          {applicationStatus === 'denied' && (
+            <div
+              className="rounded-xl p-6 mb-8 text-center"
+              style={{
+                backgroundColor: isDark ? 'rgba(239, 68, 68, 0.1)' : 'rgba(239, 68, 68, 0.2)',
+                border: `1px solid ${isDark ? '#EF4444' : '#DC2626'}`
+              }}
+            >
+              <FiXCircle className="text-5xl mx-auto mb-4" style={{ color: '#EF4444' }} />
+              <h2 className="text-2xl font-bold mb-2" style={{ color: colors.text }}>
+                Application Denied
+              </h2>
+              <p style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>
+                Unfortunately, your application was not approved at this time. Please contact support for more information.
+              </p>
+            </div>
+          )}
+
+          {/* Application Form - only show if no status */}
+          {!applicationStatus && (
+            <div
+              className="rounded-xl p-6"
+              style={{ backgroundColor: colors.card, border: `1px solid ${colors.border}` }}
+            >
+              <h2 className="text-2xl font-bold mb-6" style={{ color: colors.text }}>
+                Commissioner Application
+              </h2>
+
+              <form onSubmit={handleApplicationSubmit} className="space-y-6">
+                {/* Full Name */}
+                <div>
+                  <label className="block font-medium mb-2" style={{ color: colors.text }}>
+                    Full Name
+                  </label>
+                  <input
+                    type="text"
+                    value={applicationForm.fullName}
+                    onChange={(e) => setApplicationForm(prev => ({ ...prev, fullName: e.target.value }))}
+                    className="w-full rounded-lg px-4 py-3 focus:outline-none focus:ring-2"
+                    style={{
+                      backgroundColor: isDark ? '#374151' : '#F3F4F6',
+                      color: colors.text,
+                      border: `1px solid ${colors.border}`,
+                    }}
+                    placeholder="Your full name"
+                    required
+                  />
+                </div>
+
+                {/* Email */}
+                <div>
+                  <label className="block font-medium mb-2" style={{ color: colors.text }}>
+                    Email Address
+                  </label>
+                  <input
+                    type="email"
+                    value={applicationForm.email}
+                    onChange={(e) => setApplicationForm(prev => ({ ...prev, email: e.target.value }))}
+                    className="w-full rounded-lg px-4 py-3 focus:outline-none focus:ring-2"
+                    style={{
+                      backgroundColor: isDark ? '#374151' : '#F3F4F6',
+                      color: colors.text,
+                      border: `1px solid ${colors.border}`,
+                    }}
+                    placeholder="your@email.com"
+                    required
+                  />
+                </div>
+
+                {/* Reason */}
+                <div>
+                  <label className="block font-medium mb-2" style={{ color: colors.text }}>
+                    Why do you want to become a Commissioner? *
+                  </label>
+                  <textarea
+                    value={applicationForm.reason}
+                    onChange={(e) => setApplicationForm(prev => ({ ...prev, reason: e.target.value }))}
+                    className="w-full rounded-lg px-4 py-3 focus:outline-none focus:ring-2"
+                    style={{
+                      backgroundColor: isDark ? '#374151' : '#F3F4F6',
+                      color: colors.text,
+                      border: `1px solid ${colors.border}`,
+                    }}
+                    placeholder="Tell us why you want to create and manage pools..."
+                    rows="4"
+                    required
+                  />
+                </div>
+
+                {/* Experience */}
+                <div>
+                  <label className="block font-medium mb-2" style={{ color: colors.text }}>
+                    Experience / Background (Optional)
+                  </label>
+                  <textarea
+                    value={applicationForm.experience}
+                    onChange={(e) => setApplicationForm(prev => ({ ...prev, experience: e.target.value }))}
+                    className="w-full rounded-lg px-4 py-3 focus:outline-none focus:ring-2"
+                    style={{
+                      backgroundColor: isDark ? '#374151' : '#F3F4F6',
+                      color: colors.text,
+                      border: `1px solid ${colors.border}`,
+                    }}
+                    placeholder="Any relevant experience running pools, sports knowledge, etc."
+                    rows="3"
+                  />
+                </div>
+
+                {/* Terms Agreement */}
+                <div className="flex items-start gap-3">
+                  <input
+                    type="checkbox"
+                    id="agreeToTerms"
+                    checked={applicationForm.agreeToTerms}
+                    onChange={(e) => setApplicationForm(prev => ({ ...prev, agreeToTerms: e.target.checked }))}
+                    className="mt-1 w-5 h-5 rounded"
+                    style={{ accentColor: colors.brand.primary }}
+                  />
+                  <label htmlFor="agreeToTerms" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>
+                    I agree to follow OKRNG's guidelines and terms for commissioners. I understand that I will be responsible for managing my pools fairly and honestly.
+                  </label>
+                </div>
+
+                {/* Submit Button */}
+                <button
+                  type="submit"
+                  disabled={submittingApplication}
+                  className="w-full py-4 rounded-lg font-bold text-white transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ backgroundColor: colors.brand.primary }}
+                  onMouseOver={(e) => !submittingApplication && (e.currentTarget.style.backgroundColor = colors.brand.primaryHover)}
+                  onMouseOut={(e) => !submittingApplication && (e.currentTarget.style.backgroundColor = colors.brand.primary)}
+                >
+                  {submittingApplication ? (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white"></div>
+                      Submitting...
+                    </>
+                  ) : (
+                    <>
+                      <FiSend />
+                      Submit Application
+                    </>
+                  )}
+                </button>
+              </form>
+            </div>
+          )}
+        </div>
       </div>
     );
   }

@@ -29,10 +29,10 @@ const AdminSettings = () => {
     },
     {
       title: 'Manage Teams',
-      description: 'Add, edit, and organize NFL teams and their information',
+      description: 'Add, edit, and organize teams by league (NFL, NBA, PBA)',
       icon: <FiShield size={48} />,
       path: '/admin/teams',
-      available: false,
+      available: true,
     },
     {
       title: 'User Management',

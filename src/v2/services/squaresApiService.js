@@ -232,11 +232,11 @@ class SquaresApiService {
 
   /**
    * Get player's joined pools
-   * GET /api/squares-pools/my-pools
+   * GET /api/squares-pools/my-joined
    */
   async getMyPools() {
     try {
-      const response = await this.axios.get('/api/squares-pools/my-pools');
+      const response = await this.axios.get('/api/squares-pools/my-joined');
       return { success: true, data: response.data.data || response.data };
     } catch (error) {
       console.error('Error fetching my pools:', error);

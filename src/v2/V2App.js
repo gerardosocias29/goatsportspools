@@ -23,6 +23,7 @@ const SquaresJoin = lazy(() => import('./pages/SquaresJoin'));
 const CreateSquaresPool = lazy(() => import('./pages/CreateSquaresPool'));
 const SquaresAdminDashboard = lazy(() => import('./pages/SquaresAdminDashboard'));
 const ManageGames = lazy(() => import('./pages/ManageGames'));
+const ManageTeams = lazy(() => import('./pages/ManageTeams'));
 const AdminSettings = lazy(() => import('./pages/AdminSettings'));
 const CreditRequests = lazy(() => import('./pages/CreditRequests'));
 
@@ -300,8 +301,8 @@ const V2AppContent = () => {
                   <Route
                     path="/admin/teams"
                     element={
-                      isSignedIn && user?.role_id === 1 ? (
-                        <ComingSoon title="Manage Teams" />
+                      isSignedIn && user?.role_id <= 2 ? (
+                        <ManageTeams />
                       ) : (
                         <Navigate to="/" replace />
                       )

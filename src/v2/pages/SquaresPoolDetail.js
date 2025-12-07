@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FiArrowLeft, FiCalendar, FiDollarSign, FiGrid, FiLock, FiUnlock, FiTrendingUp, FiAward, FiShare2, FiDownload, FiX, FiCreditCard, FiCheck, FiChevronDown, FiSettings } from 'react-icons/fi';
+import { FiArrowLeft, FiCalendar, FiDollarSign, FiGrid, FiLock, FiUnlock, FiTrendingUp, FiAward, FiShare2, FiDownload, FiX, FiCreditCard, FiCheck, FiChevronDown, FiSettings, FiShuffle } from 'react-icons/fi';
 import SquaresGrid from '../components/squares/SquaresGrid';
 import WinnersDisplay from '../components/squares/WinnersDisplay';
 import ConfirmModal from '../components/ui/ConfirmModal';
@@ -126,6 +126,8 @@ const SquaresPoolDetail = () => {
   const [creditsLoading, setCreditsLoading] = useState(false);
   const [downloadingQR, setDownloadingQR] = useState(false);
   const [assigningNumbers, setAssigningNumbers] = useState(false);
+  const [xAxisNumbers, setXAxisNumbers] = useState(['', '', '', '', '', '', '', '', '', '']);
+  const [yAxisNumbers, setYAxisNumbers] = useState(['', '', '', '', '', '', '', '', '', '']);
   const [poolPlayersNotice, setPoolPlayersNotice] = useState({ type: '', message: '' });
   const [showRequestCreditsModal, setShowRequestCreditsModal] = useState(false);
   const [requestAmount, setRequestAmount] = useState('');
@@ -705,12 +707,136 @@ const SquaresPoolDetail = () => {
     setRequestReason('');
   };
 
+  // Generate random shuffled array of 0-9
+  const generateRandomNumbers = () => {
+    const numbers = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+    for (let i = numbers.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [numbers[i], numbers[j]] = [numbers[j], numbers[i]];
+    }
+    return numbers.map(n => n.toString());
+  };
+
+  const handleRandomizeXAxis = () => {
+    setXAxisNumbers(generateRandomNumbers());
+  };
+
+  const handleRandomizeYAxis = () => {
+    setYAxisNumbers(generateRandomNumbers());
+  };
+
+  const handleXAxisChange = (index, value) => {
+    // Only allow single digit 0-9
+    if (value === '' || (value.length === 1 && /^[0-9]$/.test(value))) {
+      const newNumbers = [...xAxisNumbers];
+      newNumbers[index] = value;
+      setXAxisNumbers(newNumbers);
+
+      // Auto-focus next input when a number is entered
+      if (value !== '' && index < 9) {
+        const nextInput = document.getElementById(`x-axis-${index + 1}`);
+        if (nextInput) nextInput.focus();
+      }
+    }
+  };
+
+  const handleYAxisChange = (index, value) => {
+    // Only allow single digit 0-9
+    if (value === '' || (value.length === 1 && /^[0-9]$/.test(value))) {
+      const newNumbers = [...yAxisNumbers];
+      newNumbers[index] = value;
+      setYAxisNumbers(newNumbers);
+
+      // Auto-focus next input when a number is entered
+      if (value !== '' && index < 9) {
+        const nextInput = document.getElementById(`y-axis-${index + 1}`);
+        if (nextInput) nextInput.focus();
+      }
+    }
+  };
+
+  const handleAxisKeyDown = (e, axis, index) => {
+    // Handle backspace - go to previous input if current is empty
+    if (e.key === 'Backspace') {
+      const currentNumbers = axis === 'x' ? xAxisNumbers : yAxisNumbers;
+      if (currentNumbers[index] === '' && index > 0) {
+        e.preventDefault();
+        const prevInput = document.getElementById(`${axis}-axis-${index - 1}`);
+        if (prevInput) {
+          prevInput.focus();
+          // Clear the previous input
+          if (axis === 'x') {
+            const newNumbers = [...xAxisNumbers];
+            newNumbers[index - 1] = '';
+            setXAxisNumbers(newNumbers);
+          } else {
+            const newNumbers = [...yAxisNumbers];
+            newNumbers[index - 1] = '';
+            setYAxisNumbers(newNumbers);
+          }
+        }
+      }
+    }
+    // Handle arrow keys for navigation
+    else if (e.key === 'ArrowLeft' && index > 0) {
+      e.preventDefault();
+      const prevInput = document.getElementById(`${axis}-axis-${index - 1}`);
+      if (prevInput) prevInput.focus();
+    }
+    else if (e.key === 'ArrowRight' && index < 9) {
+      e.preventDefault();
+      const nextInput = document.getElementById(`${axis}-axis-${index + 1}`);
+      if (nextInput) nextInput.focus();
+    }
+  };
+
+  const validateAxisNumbers = (numbers) => {
+    // Check all 10 slots are filled
+    if (numbers.some(n => n === '')) return false;
+    // Check all are unique
+    const numSet = new Set(numbers);
+    return numSet.size === 10;
+  };
+
+  const canSubmitAxisNumbers = validateAxisNumbers(xAxisNumbers) && validateAxisNumbers(yAxisNumbers);
+
+  const handleAssignAxisNumbers = () => {
+    if (!canSubmitAxisNumbers) {
+      showToast({ severity: 'error', summary: 'Invalid Numbers', detail: 'Each axis must have unique numbers 0-9' });
+      return;
+    }
+
+    setConfirmModal({
+      isOpen: true,
+      title: 'Assign Axis Numbers',
+      message: 'Assign these numbers to the pool? This action cannot be undone.',
+      confirmText: 'Assign Numbers',
+      variant: 'danger',
+      onConfirm: async () => {
+        setConfirmModal(prev => ({ ...prev, isOpen: false }));
+        setAssigningNumbers(true);
+        try {
+          await axiosService.post(`/api/squares-pools/${poolId}/assign-numbers-manual`, {
+            x_numbers: xAxisNumbers.map(n => parseInt(n)),
+            y_numbers: yAxisNumbers.map(n => parseInt(n)),
+          });
+          await loadPool(null, true);
+          showToast({ severity: 'success', summary: 'Success', detail: 'Numbers assigned successfully!' });
+        } catch (error) {
+          showToast({ severity: 'error', summary: 'Error', detail: 'Failed to assign numbers: ' + (error.response?.data?.message || error.message) });
+        } finally {
+          setAssigningNumbers(false);
+        }
+      },
+    });
+  };
+
   const handleAssignNumbers = () => {
     setConfirmModal({
       isOpen: true,
-      title: 'Assign Numbers',
-      message: 'Assign random numbers to this pool now? This action cannot be undone.',
-      confirmText: 'Assign Numbers',
+      title: 'Randomize All Numbers',
+      message: 'Generate random numbers for both X and Y axes now? This action cannot be undone.',
+      confirmText: 'Randomize Now',
       variant: 'danger',
       onConfirm: async () => {
         setConfirmModal(prev => ({ ...prev, isOpen: false }));
@@ -873,6 +999,8 @@ const SquaresPoolDetail = () => {
     (Array.isArray(pool?.y_numbers) ? pool?.y_numbers?.length : pool?.y_numbers)
   );
   const requiresManualAssignment = numbersType === 'AdminTrigger' && !numbersAssigned;
+  // Show assign button for any pool without numbers (fallback for TimeSet failures, etc.)
+  const canAssignNumbers = !numbersAssigned && numbersType !== 'Ascending';
   const numbersTypeLabel = (() => {
     switch (numbersType) {
       case 'Ascending':
@@ -1470,20 +1598,6 @@ const SquaresPoolDetail = () => {
                         <FiUnlock size={16} /> Reopen Pool
                       </button>
                     )}
-                    {requiresManualAssignment && (
-                      <button
-                        onClick={handleAssignNumbers}
-                        disabled={assigningNumbers}
-                        style={{
-                          ...adminButtonStyle,
-                          opacity: assigningNumbers ? 0.6 : 1,
-                          justifyContent: 'center',
-                          width: '100%',
-                        }}
-                      >
-                        <FiGrid size={16} /> {assigningNumbers ? 'Assigning...' : 'Assign Numbers'}
-                      </button>
-                    )}
                     {pool.player_pool_type === 'CREDIT' && (
                       <button
                         onClick={handleMakePoolFree}
@@ -1494,6 +1608,159 @@ const SquaresPoolDetail = () => {
                     )}
                   </div>
                 </div>
+
+                {/* Axis Numbers Assignment Section - Only show when numbers not assigned */}
+                {canAssignNumbers && (
+                  <div
+                    style={{
+                      backgroundColor: isDark ? 'rgba(59, 130, 246, 0.08)' : 'rgba(59, 130, 246, 0.06)',
+                      borderRadius: '12px',
+                      padding: '16px',
+                      border: `1px solid ${isDark ? 'rgba(59, 130, 246, 0.3)' : 'rgba(59, 130, 246, 0.2)'}`,
+                    }}
+                  >
+                    <div className="flex items-center gap-3 mb-5">
+                      <div
+                        className="flex items-center justify-center rounded-lg"
+                        style={{
+                          width: '32px',
+                          height: '32px',
+                          backgroundColor: '#3B82F6',
+                        }}
+                      >
+                        <FiGrid size={16} color="#fff" />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-bold" style={{ color: colors.text }}>Assign Axis Numbers</h4>
+                        <p className="text-xs" style={{ color: colors.text, opacity: 0.5 }}>
+                          {numbersType === 'AdminTrigger' ? 'Manual assignment required' : 'Numbers not yet assigned'}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* X-Axis Numbers */}
+                    <div className="mb-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="text-sm font-semibold" style={{ color: colors.text }}>
+                          X-Axis (Top Row) - {pool.homeTeam?.name || pool.home_team?.name || 'Home Team'}
+                        </label>
+                        <button
+                          onClick={handleRandomizeXAxis}
+                          className="flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-semibold transition-all hover:scale-105"
+                          style={{
+                            backgroundColor: '#3B82F6',
+                            color: '#fff',
+                          }}
+                        >
+                          <FiShuffle size={12} /> Random
+                        </button>
+                      </div>
+                      <div className="grid grid-cols-10 gap-1">
+                        {xAxisNumbers.map((num, idx) => (
+                          <input
+                            key={`x-${idx}`}
+                            id={`x-axis-${idx}`}
+                            type="text"
+                            inputMode="numeric"
+                            value={num}
+                            onChange={(e) => handleXAxisChange(idx, e.target.value)}
+                            onKeyDown={(e) => handleAxisKeyDown(e, 'x', idx)}
+                            onFocus={(e) => e.target.select()}
+                            maxLength={1}
+                            className="w-full text-center font-bold rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            style={{
+                              backgroundColor: isDark ? '#374151' : '#F3F4F6',
+                              color: colors.text,
+                              border: `1px solid ${num !== '' && xAxisNumbers.filter(n => n === num).length > 1 ? '#EF4444' : colors.border}`,
+                              padding: '8px 4px',
+                              fontSize: '14px',
+                            }}
+                            placeholder={idx.toString()}
+                          />
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Y-Axis Numbers */}
+                    <div className="mb-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="text-sm font-semibold" style={{ color: colors.text }}>
+                          Y-Axis (Left Column) - {pool.visitorTeam?.name || pool.visitor_team?.name || 'Away Team'}
+                        </label>
+                        <button
+                          onClick={handleRandomizeYAxis}
+                          className="flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-semibold transition-all hover:scale-105"
+                          style={{
+                            backgroundColor: '#3B82F6',
+                            color: '#fff',
+                          }}
+                        >
+                          <FiShuffle size={12} /> Random
+                        </button>
+                      </div>
+                      <div className="grid grid-cols-10 gap-1">
+                        {yAxisNumbers.map((num, idx) => (
+                          <input
+                            key={`y-${idx}`}
+                            id={`y-axis-${idx}`}
+                            type="text"
+                            inputMode="numeric"
+                            value={num}
+                            onChange={(e) => handleYAxisChange(idx, e.target.value)}
+                            onKeyDown={(e) => handleAxisKeyDown(e, 'y', idx)}
+                            onFocus={(e) => e.target.select()}
+                            maxLength={1}
+                            className="w-full text-center font-bold rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            style={{
+                              backgroundColor: isDark ? '#374151' : '#F3F4F6',
+                              color: colors.text,
+                              border: `1px solid ${num !== '' && yAxisNumbers.filter(n => n === num).length > 1 ? '#EF4444' : colors.border}`,
+                              padding: '8px 4px',
+                              fontSize: '14px',
+                            }}
+                            placeholder={idx.toString()}
+                          />
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Validation Message */}
+                    {!canSubmitAxisNumbers && (xAxisNumbers.some(n => n !== '') || yAxisNumbers.some(n => n !== '')) && (
+                      <p className="text-xs text-yellow-500 mb-3">
+                        Each axis must have all unique numbers from 0-9
+                      </p>
+                    )}
+
+                    {/* Action Buttons */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <button
+                        onClick={handleAssignAxisNumbers}
+                        disabled={!canSubmitAxisNumbers || assigningNumbers}
+                        className="flex items-center justify-center gap-2 py-2.5 rounded-lg font-semibold transition-all"
+                        style={{
+                          backgroundColor: canSubmitAxisNumbers ? '#10B981' : (isDark ? '#374151' : '#E5E7EB'),
+                          color: canSubmitAxisNumbers ? '#fff' : (isDark ? '#6B7280' : '#9CA3AF'),
+                          opacity: assigningNumbers ? 0.6 : 1,
+                          cursor: canSubmitAxisNumbers && !assigningNumbers ? 'pointer' : 'not-allowed',
+                        }}
+                      >
+                        <FiCheck size={16} /> {assigningNumbers ? 'Assigning...' : 'Apply Numbers'}
+                      </button>
+                      <button
+                        onClick={handleAssignNumbers}
+                        disabled={assigningNumbers}
+                        className="flex items-center justify-center gap-2 py-2.5 rounded-lg font-semibold transition-all"
+                        style={{
+                          backgroundColor: '#3B82F6',
+                          color: '#fff',
+                          opacity: assigningNumbers ? 0.6 : 1,
+                        }}
+                      >
+                        <FiShuffle size={16} /> Randomize All
+                      </button>
+                    </div>
+                  </div>
+                )}
 
                 {/* Credits Management Section - Only for Credit Pools */}
                 {pool.player_pool_type === 'CREDIT' && (

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../contexts/ThemeContext';
 import { UserButton, useUser } from '@clerk/clerk-react';
 import Button from '../ui/Button';
+import LuckyCoin from '../ui/LuckyCoin';
 
 const Header = ({ user, onSignOut }) => {
   const { colors, isDark, toggleTheme } = useTheme();
@@ -107,14 +108,17 @@ const Header = ({ user, onSignOut }) => {
   return (
     <header style={headerStyles}>
       <div style={containerStyles}>
-        {/* Logo */}
-        <div style={logoStyles} onClick={() => navigate('/')}>
-          <img
-            src="/img/v2_logo.png"
-            alt="OKRNG"
-            style={{ height: '32px', width: 'auto' }}
-          />
-          <span>OKRNG</span>
+        {/* Logo and Lucky Coin */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <div style={logoStyles} onClick={() => navigate('/')}>
+            <img
+              src="/img/v2_logo.png"
+              alt="OKRNG"
+              style={{ height: '32px', width: 'auto' }}
+            />
+            <span>OKRNG</span>
+          </div>
+          <LuckyCoin />
         </div>
 
         {/* Desktop Navigation - Only show on desktop */}
@@ -132,7 +136,7 @@ const Header = ({ user, onSignOut }) => {
             <a style={navLinkStyles} onClick={() => navigate('/betting')}>
               Auction Madness
             </a>
-            {isSignedIn && (user?.role_id == 1 || user?.role_id == 2) && (
+            {isSignedIn && (
               <a style={navLinkStyles} onClick={() => navigate('/squares/admin')}>
                 Commissioner
               </a>

@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiPlus, FiEdit2, FiTrash2, FiCheck, FiX, FiCalendar, FiDownload, FiUpload, FiTrendingUp } from 'react-icons/fi';
+import { FiPlus, FiEdit2, FiTrash2, FiCheck, FiX, FiCalendar, FiDownload, FiUpload, FiTrendingUp, FiArrowLeft } from 'react-icons/fi';
 import { useAxios } from '../../app/contexts/AxiosContext';
 import { useTheme } from '../contexts/ThemeContext';
 import GameScoresModal from '../components/game/GameScoresModal';
@@ -16,7 +16,7 @@ const ManageGames = () => {
   const axiosService = useAxios();
   const { colors, isDark } = useTheme();
   const [games, setGames] = useState([]);
-  const [teams, setTeams] = useState([]);
+  const [allTeams, setAllTeams] = useState([]); // All teams from API
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editingGame, setEditingGame] = useState(null);
@@ -37,11 +37,18 @@ const ManageGames = () => {
   // Form state - matches V1 structure
   const [formData, setFormData] = useState({
     game_datetime: '',
+    league: 'NFL',
     home_team: null,
     visitor_team: null,
     favored_team: null,
     underdog_team: null,
   });
+
+  // Filter teams by selected league for the form dropdowns
+  const teams = useMemo(() => {
+    if (!formData.league) return allTeams;
+    return allTeams.filter(t => !t.league || t.league === formData.league);
+  }, [allTeams, formData.league]);
 
   useEffect(() => {
     loadGames();
@@ -72,7 +79,7 @@ const ManageGames = () => {
   const loadTeams = async () => {
     try {
       const response = await axiosService.get('/api/teams');
-      setTeams(response.data);
+      setAllTeams(response.data);
     } catch (error) {
       console.error('Error loading teams:', error);
       setMessage({ type: 'error', text: 'Failed to load teams. Please try again.' });
@@ -117,12 +124,13 @@ const ManageGames = () => {
 
     setEditingGame(game);
 
-    // Find team objects from teams array
-    const homeTeamObj = teams.find(t => t.name === game.home_team?.name || t.name === game.home_team);
-    const visitorTeamObj = teams.find(t => t.name === game.visitor_team?.name || t.name === game.visitor_team);
+    // Find team objects from allTeams array (not filtered teams)
+    const homeTeamObj = allTeams.find(t => t.name === game.home_team?.name || t.name === game.home_team);
+    const visitorTeamObj = allTeams.find(t => t.name === game.visitor_team?.name || t.name === game.visitor_team);
 
     setFormData({
       game_datetime: game.game_datetime?.substring(0, 16) || '',
+      league: game.league || 'NFL',
       home_team: homeTeamObj || null,
       visitor_team: visitorTeamObj || null,
       favored_team: homeTeamObj || null,
@@ -164,6 +172,7 @@ const ManageGames = () => {
   const resetForm = () => {
     setFormData({
       game_datetime: '',
+      league: 'NFL',
       home_team: null,
       visitor_team: null,
       favored_team: null,
@@ -224,7 +233,23 @@ const ManageGames = () => {
 
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-6" style={{ color: colors.text }}>Game Management</h1>
+          <div className="flex items-center gap-4 mb-6">
+            <button
+              onClick={() => navigate(-1)}
+              className="flex items-center justify-center transition-all hover:scale-105"
+              style={{
+                backgroundColor: colors.card,
+                border: `1px solid ${colors.border}`,
+                color: colors.text,
+                width: '42px',
+                height: '42px',
+                borderRadius: '12px',
+              }}
+            >
+              <FiArrowLeft size={18} />
+            </button>
+            <h1 className="text-4xl font-bold" style={{ color: colors.text }}>Game Management</h1>
+          </div>
 
           <div className="flex flex-wrap gap-4 items-center justify-between">
             {/* Import/Export Buttons (Disabled) */}
@@ -298,13 +323,20 @@ const ManageGames = () => {
                         })}
                       </span>
                     </div>
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                      game.game_status === 'Final'
-                        ? 'bg-green-500/20 text-green-300'
-                        : 'bg-yellow-500/20 text-yellow-300'
-                    }`}>
-                      {game.game_status || 'Scheduled'}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      {game.league && (
+                        <span className="px-2 py-1 rounded-full text-xs font-semibold bg-white/20 text-white">
+                          {game.league === 'NFL' && '🏈 '}{game.league === 'NBA' && '🏀 '}{game.league === 'PBA' && '🎳 '}{game.league}
+                        </span>
+                      )}
+                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                        game.game_status === 'Final'
+                          ? 'bg-green-500/20 text-green-300'
+                          : 'bg-yellow-500/20 text-yellow-300'
+                      }`}>
+                        {game.game_status || 'Scheduled'}
+                      </span>
+                    </div>
                   </div>
                 </div>
 
@@ -421,6 +453,30 @@ const ManageGames = () => {
               </h2>
 
               <form onSubmit={handleSubmit}>
+                {/* League Selection */}
+                <div className="mb-6">
+                  <label className="block font-semibold mb-2" style={{ color: colors.text }}>
+                    League *
+                  </label>
+                  <div className="flex flex-wrap gap-3">
+                    {['NFL', 'NBA', 'PBA'].map(league => (
+                      <button
+                        key={league}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, league })}
+                        className="px-4 py-3 rounded-lg font-semibold transition-all"
+                        style={{
+                          backgroundColor: formData.league === league ? colors.brand.primary : (isDark ? '#374151' : '#E5E7EB'),
+                          color: formData.league === league ? '#FFFFFF' : colors.text,
+                          border: `2px solid ${formData.league === league ? colors.brand.primary : colors.border}`,
+                        }}
+                      >
+                        {league === 'NFL' && '🏈 '}{league === 'NBA' && '🏀 '}{league === 'PBA' && '🎳 '}{league}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 {/* Game Date & Time */}
                 <div className="mb-6">
                   <label className="block font-semibold mb-2" style={{ color: colors.text }}>
