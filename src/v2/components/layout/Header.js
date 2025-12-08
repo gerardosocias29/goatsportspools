@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../contexts/ThemeContext';
 import { UserButton, useUser } from '@clerk/clerk-react';
+import { FiX } from 'react-icons/fi';
 import Button from '../ui/Button';
 import LuckyCoin from '../ui/LuckyCoin';
 
@@ -10,6 +11,7 @@ const Header = ({ user, onSignOut }) => {
   const { isSignedIn, user: clerkUser, isLoaded } = useUser();
   const navigate = useNavigate();
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [luckyResults, setLuckyResults] = useState(null);
 
   const headerStyles = {
     position: 'sticky',
@@ -105,7 +107,51 @@ const Header = ({ user, onSignOut }) => {
     transition: 'all 150ms cubic-bezier(0.4, 0, 0.2, 1)',
   };
 
+  // Styles for the sticky results bar
+  const resultsBarStyles = {
+    position: 'sticky',
+    top: '64px',
+    left: 0,
+    right: 0,
+    backgroundColor: isDark ? 'rgba(34, 197, 94, 0.1)' : 'rgba(34, 197, 94, 0.15)',
+    borderBottom: `1px solid ${isDark ? '#22c55e' : '#16a34a'}`,
+    padding: '8px 0',
+    zIndex: 1199,
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+  };
+
+  const resultsContentStyles = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    fontSize: '14px',
+    fontWeight: 600,
+    color: colors.text,
+  };
+
+  const separatorStyles = {
+    color: isDark ? '#4B5563' : '#9CA3AF',
+    fontSize: '12px',
+  };
+
+  const dismissButtonStyles = {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '4px',
+    backgroundColor: 'transparent',
+    border: 'none',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    color: isDark ? '#9CA3AF' : '#6B7280',
+    transition: 'all 150ms ease',
+    marginLeft: '8px',
+  };
+
   return (
+    <>
     <header style={headerStyles}>
       <div style={containerStyles}>
         {/* Logo and Lucky Coin */}
@@ -118,7 +164,7 @@ const Header = ({ user, onSignOut }) => {
             />
             <span>OKRNG</span>
           </div>
-          <LuckyCoin />
+          <LuckyCoin onResultsChange={setLuckyResults} />
         </div>
 
         {/* Desktop Navigation - Only show on desktop */}
@@ -342,6 +388,42 @@ const Header = ({ user, onSignOut }) => {
         </div>
       )}
     </header>
+
+    {/* Sticky Lucky Results Bar - shows below header when results exist */}
+    {luckyResults && (
+      <div style={resultsBarStyles}>
+        <div style={resultsContentStyles}>
+          <span>{luckyResults.num10}</span>
+          <span style={separatorStyles}>|</span>
+          <span style={{ color: luckyResults.colorHex }}>{luckyResults.color}</span>
+          <span style={separatorStyles}>|</span>
+          <span>{luckyResults.num100}</span>
+          <span style={separatorStyles}>|</span>
+          <span>{luckyResults.coin}</span>
+          <span style={separatorStyles}>|</span>
+          <span>{luckyResults.num1000}</span>
+          <span style={separatorStyles}>|</span>
+          <span style={{ color: luckyResults.suitColor, fontSize: '16px' }}>{luckyResults.suit}</span>
+
+          {/* Dismiss button */}
+          <button
+            onClick={() => setLuckyResults(null)}
+            style={dismissButtonStyles}
+            onMouseOver={(e) => {
+              e.currentTarget.style.backgroundColor = isDark ? '#374151' : '#E5E7EB';
+              e.currentTarget.style.color = colors.text;
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent';
+              e.currentTarget.style.color = isDark ? '#9CA3AF' : '#6B7280';
+            }}
+          >
+            <FiX size={16} />
+          </button>
+        </div>
+      </div>
+    )}
+    </>
   );
 };
 

@@ -21,7 +21,7 @@ const SquaresAdminDashboard = () => {
   const axiosService = useAxios();
   const squaresApiService = useMemo(() => new SquaresApiService(axiosService), [axiosService]);
   const { colors, isDark } = useTheme();
-  const { showToast } = useToast();
+  const showToast = useToast();
 
   const [pools, setPools] = useState([]);
   const [creditRequests, setCreditRequests] = useState([]);
@@ -294,8 +294,64 @@ const SquaresAdminDashboard = () => {
 
   if (!isLoaded || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: colors.background }}>
-        <div style={{ color: colors.text }} className="text-xl">Loading...</div>
+      <div className="min-h-screen" style={{ backgroundColor: colors.background }}>
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: 'calc(100vh - 64px)',
+          gap: '2rem',
+        }}>
+          <div style={{
+            position: 'relative',
+            width: '120px',
+            height: '120px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}>
+            <svg
+              style={{
+                position: 'absolute',
+                width: '120px',
+                height: '120px',
+                animation: 'spin 1.5s linear infinite'
+              }}
+              viewBox="0 0 120 120"
+            >
+              <circle
+                cx="60"
+                cy="60"
+                r="54"
+                fill="none"
+                stroke={colors.brand.primary}
+                strokeWidth="4"
+                strokeDasharray="300 360"
+                strokeLinecap="round"
+              />
+            </svg>
+            <img
+              src="/img/v2_logo.png"
+              alt="Loading"
+              style={{
+                width: '64px',
+                height: '64px',
+                position: 'relative',
+                zIndex: 1,
+                animation: 'bounce 1s ease-in-out infinite'
+              }}
+            />
+          </div>
+          <div style={{
+            color: colors.text,
+            fontSize: '1.25rem',
+            fontWeight: 600,
+            fontFamily: '"Hubot Sans", sans-serif',
+          }}>
+            Loading Commissioner Dashboard...
+          </div>
+        </div>
       </div>
     );
   }
@@ -519,10 +575,20 @@ const SquaresAdminDashboard = () => {
         <div className="mb-8">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
-              <h1 className="text-4xl font-bold mb-2" style={{ color: colors.text }}>
+              <h1 style={{
+                fontSize: '3rem',
+                fontWeight: 800,
+                fontFamily: '"Hubot Sans", sans-serif',
+                marginBottom: '0.5rem',
+                color: colors.text,
+              }}>
                 Commissioner Dashboard
               </h1>
-              <p style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>
+              <p style={{
+                fontSize: '1.25rem',
+                color: colors.text,
+                opacity: 0.7,
+              }}>
                 Manage your pools and credit requests
               </p>
             </div>
@@ -590,51 +656,157 @@ const SquaresAdminDashboard = () => {
           </div>
         </div>
 
-        {/* Tabs */}
-        <div className="flex gap-2 mb-6" style={{ borderBottom: `1px solid ${colors.border}` }}>
+        {/* Tabs - Matching Pools.js Style */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          gap: '0.5rem',
+          marginBottom: '2rem',
+          padding: '0.25rem',
+          backgroundColor: colors.highlight,
+          borderRadius: '12px',
+          width: 'fit-content',
+          margin: '0 auto 2rem',
+        }}>
+          {/* My Pools Tab */}
           <button
             onClick={() => setActiveTab('pools')}
-            className="px-6 py-3 font-semibold transition-all"
             style={{
-              color: activeTab === 'pools' ? colors.brand.primary : (isDark ? '#9CA3AF' : '#6B7280'),
-              borderBottom: activeTab === 'pools' ? `2px solid ${colors.brand.primary}` : 'none'
+              padding: '0.75rem 2rem',
+              fontSize: '1rem',
+              fontWeight: 600,
+              color: activeTab === 'pools' ? colors.card : colors.text,
+              backgroundColor: activeTab === 'pools' ? colors.brand.primary : 'transparent',
+              border: 'none',
+              borderRadius: '10px',
+              cursor: 'pointer',
+              transition: 'all 150ms ease',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
             }}
           >
-            My Pools ({pools.length})
+            <FiGrid size={18} />
+            <span>My Pools</span>
+            <span
+              style={{
+                marginLeft: '0.25rem',
+                padding: '0.125rem 0.5rem',
+                borderRadius: '9999px',
+                fontSize: '0.75rem',
+                fontWeight: 600,
+                backgroundColor: activeTab === 'pools' ? 'rgba(255,255,255,0.2)' : (isDark ? '#374151' : '#E5E7EB'),
+                color: activeTab === 'pools' ? '#fff' : colors.text,
+              }}
+            >
+              {pools.length}
+            </span>
           </button>
+
+          {/* Credit Requests Tab */}
           <button
             onClick={() => setActiveTab('credit-requests')}
-            className="px-6 py-3 font-semibold transition-all"
             style={{
-              color: activeTab === 'credit-requests' ? colors.brand.primary : (isDark ? '#9CA3AF' : '#6B7280'),
-              borderBottom: activeTab === 'credit-requests' ? `2px solid ${colors.brand.primary}` : 'none'
+              padding: '0.75rem 2rem',
+              fontSize: '1rem',
+              fontWeight: 600,
+              color: activeTab === 'credit-requests' ? colors.card : colors.text,
+              backgroundColor: activeTab === 'credit-requests' ? colors.brand.primary : 'transparent',
+              border: 'none',
+              borderRadius: '10px',
+              cursor: 'pointer',
+              transition: 'all 150ms ease',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
             }}
           >
-            Credit Requests ({creditRequests.filter(r => r.status === 'pending').length})
+            <FiCreditCard size={18} />
+            <span>Credit Requests</span>
+            {creditRequests.filter(r => r.status === 'pending').length > 0 && (
+              <span
+                style={{
+                  marginLeft: '0.25rem',
+                  padding: '0.125rem 0.5rem',
+                  borderRadius: '9999px',
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  backgroundColor: activeTab === 'credit-requests' ? 'rgba(255,255,255,0.2)' : '#EF4444',
+                  color: '#fff',
+                  animation: 'pulse 2s infinite',
+                }}
+              >
+                {creditRequests.filter(r => r.status === 'pending').length}
+              </span>
+            )}
           </button>
+
+          {/* Admin Requests Tab (Superadmin only) */}
           {isSuperadmin && (
             <button
               onClick={() => setActiveTab('admin-requests')}
-              className="px-6 py-3 font-semibold transition-all"
               style={{
-                color: activeTab === 'admin-requests' ? colors.brand.primary : (isDark ? '#9CA3AF' : '#6B7280'),
-                borderBottom: activeTab === 'admin-requests' ? `2px solid ${colors.brand.primary}` : 'none'
+                padding: '0.75rem 2rem',
+                fontSize: '1rem',
+                fontWeight: 600,
+                color: activeTab === 'admin-requests' ? colors.card : colors.text,
+                backgroundColor: activeTab === 'admin-requests' ? colors.brand.primary : 'transparent',
+                border: 'none',
+                borderRadius: '10px',
+                cursor: 'pointer',
+                transition: 'all 150ms ease',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
               }}
             >
-              Admin Requests ({adminCreditRequests.filter(r => r.status === 'pending').length})
+              <FiUsers size={18} />
+              <span>Admin Requests</span>
+              {adminCreditRequests.filter(r => r.status === 'pending').length > 0 && (
+                <span
+                  style={{
+                    marginLeft: '0.25rem',
+                    padding: '0.125rem 0.5rem',
+                    borderRadius: '9999px',
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    backgroundColor: activeTab === 'admin-requests' ? 'rgba(255,255,255,0.2)' : '#8B5CF6',
+                    color: '#fff',
+                    animation: 'pulse 2s infinite',
+                  }}
+                >
+                  {adminCreditRequests.filter(r => r.status === 'pending').length}
+                </span>
+              )}
             </button>
           )}
         </div>
 
         {/* Content */}
         {activeTab === 'pools' && (
-          <div className="rounded-xl p-6" style={{ backgroundColor: colors.card, border: `1px solid ${colors.border}` }}>
-            <h2 className="text-2xl font-bold mb-6" style={{ color: colors.text, marginBottom: '1.5rem' }}>Your Pools</h2>
+          <div className="space-y-6">
+            {/* Section Header */}
+            <div className="flex items-center justify-between">
+              <h2 style={{ fontSize: '1.5rem', fontWeight: 700, fontFamily: '"Hubot Sans", sans-serif', color: colors.text }}>Pool Reports</h2>
+              <button
+                onClick={() => navigate('/squares/create')}
+                className="px-4 py-2 rounded-lg font-semibold transition-all flex items-center gap-2 text-white"
+                style={{ backgroundColor: colors.brand.primary }}
+                onMouseOver={(e) => e.target.style.backgroundColor = colors.brand.primaryHover}
+                onMouseOut={(e) => e.target.style.backgroundColor = colors.brand.primary}
+              >
+                <FiPlus size={16} />
+                New Pool
+              </button>
+            </div>
 
             {pools.length === 0 ? (
-              <div className="text-center py-12">
-                <FiGrid className="text-6xl text-gray-600 mx-auto mb-4" />
-                <p className="text-gray-400 text-xl mb-6">No pools created yet</p>
+              <div className="rounded-xl p-12 text-center" style={{ backgroundColor: colors.card, border: `1px solid ${colors.border}` }}>
+                <FiGrid className="text-6xl mx-auto mb-4" style={{ color: isDark ? '#4B5563' : '#9CA3AF' }} />
+                <p className="text-xl mb-2" style={{ color: colors.text }}>No pools created yet</p>
+                <p className="mb-6" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>
+                  Create your first pool to start managing squares games
+                </p>
                 <button
                   onClick={() => navigate('/squares/create')}
                   className="text-white px-6 py-3 rounded-lg font-semibold transition-all"
@@ -646,124 +818,205 @@ const SquaresAdminDashboard = () => {
                 </button>
               </div>
             ) : (
-              <div className="space-y-4">
-                {pools.map((pool) => (
-                  <div key={pool.id} className="rounded-lg p-4" style={{ backgroundColor: colors.cardHover, border: `1px solid ${colors.border}` }}>
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-lg mb-1" style={{ color: colors.text }}>
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                {pools.map((pool) => {
+                  // Calculate pool stats - use claimed_squares from API (not claimed_squares_count)
+                  const claimedSquares = pool.claimed_squares || pool.claimed_squares_count || 0;
+                  const totalSquares = 100;
+                  const fillPercentage = ((claimedSquares / totalSquares) * 100).toFixed(0);
+                  const playersCount = pool.players_count || 0;
+                  const entryFee = parseFloat(pool.entry_fee || pool.credit_cost || 0);
+                  const estimatedPot = pool.total_pot || (entryFee * claimedSquares);
+
+                  return (
+                    <div
+                      key={pool.id}
+                      className="rounded-xl overflow-hidden flex flex-col"
+                      style={{ backgroundColor: colors.card, border: `1px solid ${colors.border}` }}
+                    >
+                      {/* Pool Header */}
+                      <div className="p-4 border-b" style={{ borderColor: colors.border }}>
+                        <div className="flex items-start justify-between gap-2 mb-2">
+                          <div
+                            className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+                            style={{
+                              backgroundColor: pool.pool_status === 'open' ? 'rgba(34, 197, 94, 0.2)' :
+                                             pool.pool_status === 'closed' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(251, 191, 36, 0.2)',
+                            }}
+                          >
+                            <FiGrid
+                              size={18}
+                              style={{
+                                color: pool.pool_status === 'open' ? '#22C55E' :
+                                       pool.pool_status === 'closed' ? '#EF4444' : '#F59E0B',
+                              }}
+                            />
+                          </div>
+                          {getPoolStatusBadge(pool.pool_status)}
+                        </div>
+                        <h3 className="font-bold text-lg truncate" style={{ color: colors.text }}>
                           {pool.pool_name}
                         </h3>
-                        <p className="text-gray-400 text-sm">Pool #{pool.pool_number}</p>
+                        <div className="flex items-center gap-2 text-xs mt-1" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>
+                          <span>#{pool.pool_number}</span>
+                          <span>•</span>
+                          <span>{pool.game?.league || 'N/A'}</span>
+                          {pool.game?.game_datetime && (
+                            <>
+                              <span>•</span>
+                              <span>{new Date(pool.game.game_datetime).toLocaleDateString()}</span>
+                            </>
+                          )}
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        {getPoolStatusBadge(pool.pool_status)}
-                        <button
-                          onClick={() => handleCalculateWinners(pool.id)}
-                          className="text-white px-4 py-2 rounded-lg font-semibold transition-all flex items-center gap-2"
-                          style={{
-                            backgroundColor: isDark ? '#1F2937' : '#374151',
-                            borderWidth: '2px',
-                            borderStyle: 'solid',
-                            borderColor: colors.brand.primary
-                          }}
-                          onMouseOver={(e) => {
-                            e.currentTarget.style.backgroundColor = colors.brand.primary;
-                          }}
-                          onMouseOut={(e) => {
-                            e.currentTarget.style.backgroundColor = isDark ? '#1F2937' : '#374151';
-                          }}
-                          title="Calculate winners for all quarters"
-                        >
-                          <FiTrendingUp />
-                          Calculate Winners
-                        </button>
+
+                      {/* Pool Stats */}
+                      <div className="p-4 flex-1">
+                        <div className="grid grid-cols-3 gap-3 mb-4">
+                          <div className="text-center">
+                            <div className="flex items-center justify-center gap-1 mb-1">
+                              <FiUsers size={14} className="text-blue-500" />
+                            </div>
+                            <p className="text-lg font-bold" style={{ color: colors.text }}>{playersCount}</p>
+                            <p className="text-xs" style={{ color: isDark ? '#6B7280' : '#9CA3AF' }}>Players</p>
+                          </div>
+                          <div className="text-center">
+                            <div className="flex items-center justify-center gap-1 mb-1">
+                              <FiGrid size={14} className="text-green-500" />
+                            </div>
+                            <p className="text-lg font-bold" style={{ color: colors.text }}>{claimedSquares}</p>
+                            <p className="text-xs" style={{ color: isDark ? '#6B7280' : '#9CA3AF' }}>Squares</p>
+                          </div>
+                          <div className="text-center">
+                            <div className="flex items-center justify-center gap-1 mb-1">
+                              <FiDollarSign size={14} className="text-orange-500" />
+                            </div>
+                            <p className="text-lg font-bold" style={{ color: colors.text }}>{formatCurrency(estimatedPot)}</p>
+                            <p className="text-xs" style={{ color: isDark ? '#6B7280' : '#9CA3AF' }}>Pot</p>
+                          </div>
+                        </div>
+
+                        {/* Progress Bar */}
+                        <div className="mb-2">
+                          <div className="flex justify-between text-xs mb-1" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>
+                            <span>Grid Fill</span>
+                            <span className="font-semibold">{fillPercentage}%</span>
+                          </div>
+                          <div className="w-full h-2 rounded-full overflow-hidden" style={{ backgroundColor: isDark ? '#374151' : '#E5E7EB' }}>
+                            <div
+                              className="h-full rounded-full transition-all duration-300"
+                              style={{
+                                width: `${fillPercentage}%`,
+                                backgroundColor: parseInt(fillPercentage) >= 75 ? '#22C55E' :
+                                                parseInt(fillPercentage) >= 50 ? '#F59E0B' : colors.brand.primary,
+                              }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="p-4 pt-0">
                         <button
                           onClick={() => navigate(`/squares/pool/${pool.id}`)}
-                          className="text-white px-4 py-2 rounded-lg font-semibold transition-all flex items-center gap-2"
+                          className="w-full text-white py-2.5 rounded-lg text-sm font-semibold transition-all flex items-center justify-center gap-2"
                           style={{ backgroundColor: colors.brand.primary }}
                           onMouseOver={(e) => e.currentTarget.style.backgroundColor = colors.brand.primaryHover}
                           onMouseOut={(e) => e.currentTarget.style.backgroundColor = colors.brand.primary}
                         >
-                          <FiEye />
-                          View
+                          <FiEye size={16} />
+                          View Pool
                         </button>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
         )}
 
         {activeTab === 'credit-requests' && (
-          <div className="rounded-xl p-6" style={{ backgroundColor: colors.card, border: `1px solid ${colors.border}` }}>
-            <h2 className="text-2xl font-bold mb-6" style={{ color: colors.text, marginBottom: '1.5rem' }}>Player Credit Requests</h2>
+          <div className="space-y-6">
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 700, fontFamily: '"Hubot Sans", sans-serif', color: colors.text }}>Player Credit Requests</h2>
 
             {creditRequests.length === 0 ? (
-              <div className="text-center py-12">
-                <FiAlertCircle className="text-6xl text-gray-600 mx-auto mb-4" />
+              <div className="rounded-xl p-12 text-center" style={{ backgroundColor: colors.card, border: `1px solid ${colors.border}` }}>
+                <FiAlertCircle className="text-6xl mx-auto mb-4" style={{ color: isDark ? '#4B5563' : '#9CA3AF' }} />
                 <p className="text-xl" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>No credit requests</p>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                 {creditRequests.map((request) => (
-                  <div key={request.id} className="rounded-lg p-6" style={{ backgroundColor: colors.cardHover, border: `1px solid ${colors.border}` }}>
-                    <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-4">
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-lg mb-1" style={{ color: colors.text }}>
-                          {request.pool?.pool_name || `Pool #${request.pool?.pool_number}`}
-                        </h3>
-                        <p className="text-gray-400 text-sm mb-2">
-                          From: {request.requester?.name || request.requester?.email}
-                        </p>
-                        <p className="text-gray-400 text-xs">
-                          Requested on {formatDate(request.created_at)}
-                        </p>
+                  <div
+                    key={request.id}
+                    className="rounded-xl overflow-hidden flex flex-col"
+                    style={{ backgroundColor: colors.card, border: `1px solid ${colors.border}` }}
+                  >
+                    {/* Request Header */}
+                    <div className="p-4 border-b" style={{ borderColor: colors.border }}>
+                      <div className="flex items-start justify-between gap-2 mb-2">
+                        <div
+                          className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+                          style={{ backgroundColor: 'rgba(59, 130, 246, 0.2)' }}
+                        >
+                          <FiCreditCard size={18} className="text-blue-500" />
+                        </div>
+                        <StatusBadge status={request.status} />
                       </div>
-                      <StatusBadge status={request.status} />
+                      <h3 className="font-bold truncate" style={{ color: colors.text }}>
+                        {request.pool?.pool_name || `Pool #${request.pool?.pool_number}`}
+                      </h3>
+                      <p className="text-xs mt-1" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>
+                        From: {request.requester?.name || request.requester?.email}
+                      </p>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                      <div>
-                        <p className="text-gray-400 text-xs uppercase tracking-wide mb-1">Amount</p>
-                        <p className="text-white font-bold text-2xl">{formatCurrency(request.amount)}</p>
+                    {/* Request Details */}
+                    <div className="p-4 flex-1">
+                      <div className="text-center mb-4">
+                        <p className="text-xs uppercase tracking-wide mb-1" style={{ color: isDark ? '#6B7280' : '#9CA3AF' }}>Amount Requested</p>
+                        <p className="font-bold text-2xl" style={{ color: colors.text }}>{formatCurrency(request.amount)}</p>
                       </div>
 
                       {request.reason && (
-                        <div>
-                          <p className="text-gray-400 text-xs uppercase tracking-wide mb-1">Reason</p>
-                          <p className="text-gray-300">{request.reason}</p>
+                        <div className="mb-4">
+                          <p className="text-xs uppercase tracking-wide mb-1" style={{ color: isDark ? '#6B7280' : '#9CA3AF' }}>Reason</p>
+                          <p className="text-sm line-clamp-2" style={{ color: isDark ? '#D1D5DB' : '#4B5563' }}>{request.reason}</p>
+                        </div>
+                      )}
+
+                      <p className="text-xs" style={{ color: isDark ? '#6B7280' : '#9CA3AF' }}>
+                        {formatDate(request.created_at)}
+                      </p>
+
+                      {request.status !== 'pending' && request.admin_note && (
+                        <div className="mt-3 pt-3 border-t" style={{ borderColor: colors.border }}>
+                          <p className="text-xs uppercase tracking-wide mb-1" style={{ color: isDark ? '#6B7280' : '#9CA3AF' }}>Admin Note</p>
+                          <p className="text-sm" style={{ color: isDark ? '#D1D5DB' : '#4B5563' }}>{request.admin_note}</p>
                         </div>
                       )}
                     </div>
 
+                    {/* Actions */}
                     {request.status === 'pending' && (
-                      <div className="flex gap-3 pt-4 border-t border-gray-700">
+                      <div className="p-4 pt-0 flex gap-2">
                         <button
                           onClick={() => handleApproveRequest(request.id)}
                           disabled={processingRequest === request.id}
-                          className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-700 text-white px-4 py-2 rounded-lg font-semibold transition-all flex items-center justify-center gap-2"
+                          className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-700 text-white px-3 py-2.5 rounded-lg font-semibold transition-all flex items-center justify-center gap-1 text-sm"
                         >
-                          <FiCheckCircle />
+                          <FiCheckCircle size={16} />
                           Approve
                         </button>
                         <button
                           onClick={() => handleDenyRequest(request.id)}
                           disabled={processingRequest === request.id}
-                          className="flex-1 bg-red-600 hover:bg-red-700 disabled:bg-gray-700 text-white px-4 py-2 rounded-lg font-semibold transition-all flex items-center justify-center gap-2"
+                          className="flex-1 bg-red-600 hover:bg-red-700 disabled:bg-gray-700 text-white px-3 py-2.5 rounded-lg font-semibold transition-all flex items-center justify-center gap-1 text-sm"
                         >
-                          <FiXCircle />
+                          <FiXCircle size={16} />
                           Deny
                         </button>
-                      </div>
-                    )}
-
-                    {request.status !== 'pending' && request.admin_note && (
-                      <div className="mt-4 pt-4 border-t border-gray-700">
-                        <p className="text-gray-400 text-xs uppercase tracking-wide mb-1">Admin Note</p>
-                        <p className="text-gray-300">{request.admin_note}</p>
                       </div>
                     )}
                   </div>
@@ -774,68 +1027,86 @@ const SquaresAdminDashboard = () => {
         )}
 
         {activeTab === 'admin-requests' && isSuperadmin && (
-          <div className="rounded-xl p-6" style={{ backgroundColor: colors.card, border: `1px solid ${colors.border}` }}>
-            <h2 className="text-2xl font-bold mb-6" style={{ color: colors.text, marginBottom: '1.5rem' }}>Square Admin Credit Requests</h2>
+          <div className="space-y-6">
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 700, fontFamily: '"Hubot Sans", sans-serif', color: colors.text }}>Square Admin Credit Requests</h2>
 
             {adminCreditRequests.length === 0 ? (
-              <div className="text-center py-12">
-                <FiAlertCircle className="text-6xl text-gray-600 mx-auto mb-4" />
+              <div className="rounded-xl p-12 text-center" style={{ backgroundColor: colors.card, border: `1px solid ${colors.border}` }}>
+                <FiAlertCircle className="text-6xl mx-auto mb-4" style={{ color: isDark ? '#4B5563' : '#9CA3AF' }} />
                 <p className="text-xl" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>No admin credit requests</p>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                 {adminCreditRequests.map((request) => (
-                  <div key={request.id} className="bg-gray-800 rounded-lg border border-purple-700 p-6">
-                    <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-4">
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-lg mb-1" style={{ color: colors.text }}>
-                          Credit Request from Square Admin
-                        </h3>
-                        <p className="text-gray-400 text-sm mb-2">
-                          From: {request.requester?.name || request.requester?.email}
-                        </p>
-                        <p className="text-gray-400 text-xs">
-                          Requested on {formatDate(request.created_at)}
-                        </p>
+                  <div
+                    key={request.id}
+                    className="rounded-xl overflow-hidden flex flex-col"
+                    style={{ backgroundColor: colors.card, border: `1px solid ${isDark ? '#7C3AED' : '#A78BFA'}` }}
+                  >
+                    {/* Request Header */}
+                    <div className="p-4 border-b" style={{ borderColor: isDark ? '#7C3AED' : '#A78BFA' }}>
+                      <div className="flex items-start justify-between gap-2 mb-2">
+                        <div
+                          className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+                          style={{ backgroundColor: 'rgba(139, 92, 246, 0.2)' }}
+                        >
+                          <FiUsers size={18} className="text-purple-500" />
+                        </div>
+                        <StatusBadge status={request.status} />
                       </div>
-                      <StatusBadge status={request.status} />
+                      <h3 className="font-bold truncate" style={{ color: colors.text }}>
+                        Square Admin Request
+                      </h3>
+                      <p className="text-xs mt-1" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>
+                        From: {request.requester?.name || request.requester?.email}
+                      </p>
                     </div>
 
-                    <div className="mb-4">
-                      <p className="text-gray-400 text-xs uppercase tracking-wide mb-1">Amount</p>
-                      <p className="text-white font-bold text-2xl">{formatCurrency(request.amount)}</p>
+                    {/* Request Details */}
+                    <div className="p-4 flex-1">
+                      <div className="text-center mb-4">
+                        <p className="text-xs uppercase tracking-wide mb-1" style={{ color: isDark ? '#6B7280' : '#9CA3AF' }}>Amount Requested</p>
+                        <p className="font-bold text-2xl" style={{ color: colors.text }}>{formatCurrency(request.amount)}</p>
+                      </div>
+
+                      {request.reason && (
+                        <div className="mb-4">
+                          <p className="text-xs uppercase tracking-wide mb-1" style={{ color: isDark ? '#6B7280' : '#9CA3AF' }}>Reason</p>
+                          <p className="text-sm line-clamp-2" style={{ color: isDark ? '#D1D5DB' : '#4B5563' }}>{request.reason}</p>
+                        </div>
+                      )}
+
+                      <p className="text-xs" style={{ color: isDark ? '#6B7280' : '#9CA3AF' }}>
+                        {formatDate(request.created_at)}
+                      </p>
+
+                      {request.status !== 'pending' && request.admin_note && (
+                        <div className="mt-3 pt-3 border-t" style={{ borderColor: colors.border }}>
+                          <p className="text-xs uppercase tracking-wide mb-1" style={{ color: isDark ? '#6B7280' : '#9CA3AF' }}>Admin Note</p>
+                          <p className="text-sm" style={{ color: isDark ? '#D1D5DB' : '#4B5563' }}>{request.admin_note}</p>
+                        </div>
+                      )}
                     </div>
 
-                    <div className="mb-4">
-                      <p className="text-gray-400 text-xs uppercase tracking-wide mb-1">Reason</p>
-                      <p className="text-gray-300">{request.reason}</p>
-                    </div>
-
+                    {/* Actions */}
                     {request.status === 'pending' && (
-                      <div className="flex gap-3 pt-4 border-t border-gray-700">
+                      <div className="p-4 pt-0 flex gap-2">
                         <button
                           onClick={() => handleApproveRequest(request.id, true)}
                           disabled={processingRequest === request.id}
-                          className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-700 text-white px-4 py-2 rounded-lg font-semibold transition-all flex items-center justify-center gap-2"
+                          className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-700 text-white px-3 py-2.5 rounded-lg font-semibold transition-all flex items-center justify-center gap-1 text-sm"
                         >
-                          <FiCheckCircle />
+                          <FiCheckCircle size={16} />
                           Approve
                         </button>
                         <button
                           onClick={() => handleDenyRequest(request.id, true)}
                           disabled={processingRequest === request.id}
-                          className="flex-1 bg-red-600 hover:bg-red-700 disabled:bg-gray-700 text-white px-4 py-2 rounded-lg font-semibold transition-all flex items-center justify-center gap-2"
+                          className="flex-1 bg-red-600 hover:bg-red-700 disabled:bg-gray-700 text-white px-3 py-2.5 rounded-lg font-semibold transition-all flex items-center justify-center gap-1 text-sm"
                         >
-                          <FiXCircle />
+                          <FiXCircle size={16} />
                           Deny
                         </button>
-                      </div>
-                    )}
-
-                    {request.status !== 'pending' && request.admin_note && (
-                      <div className="mt-4 pt-4 border-t border-gray-700">
-                        <p className="text-gray-400 text-xs uppercase tracking-wide mb-1">Admin Note</p>
-                        <p className="text-gray-300">{request.admin_note}</p>
                       </div>
                     )}
                   </div>

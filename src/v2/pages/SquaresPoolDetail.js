@@ -14,14 +14,20 @@ import { QRCodeCanvas } from 'qrcode.react';
 /**
  * Reusable Loading Modal Component
  */
-const LoadingModal = ({ message, count }) => {
+const LoadingModal = ({ message, count, current, total }) => {
   const { colors, isDark } = useTheme();
-  const [progress, setProgress] = useState(0);
+  const [animatedProgress, setAnimatedProgress] = useState(0);
 
-  // Animate progress bar
+  // Use real progress if provided, otherwise animate
+  const hasRealProgress = current !== undefined && total !== undefined && total > 0;
+  const realProgress = hasRealProgress ? (current / total) * 100 : 0;
+
+  // Animate progress bar (only when no real progress)
   useEffect(() => {
+    if (hasRealProgress) return;
+
     const interval = setInterval(() => {
-      setProgress(prev => {
+      setAnimatedProgress(prev => {
         // Reset to 0 when reaching 100, creating a continuous loop
         if (prev >= 100) return 0;
         // Increment by random amount for natural feel
@@ -30,7 +36,9 @@ const LoadingModal = ({ message, count }) => {
     }, 200);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [hasRealProgress]);
+
+  const displayProgress = hasRealProgress ? realProgress : animatedProgress;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 backdrop-blur-sm">
@@ -70,11 +78,15 @@ const LoadingModal = ({ message, count }) => {
 
           {/* Message */}
           <h3 className="text-2xl font-bold mb-2" style={{ color: colors.text }}>{message}</h3>
-          {count && (
+          {hasRealProgress ? (
+            <p className="text-center mb-4 text-lg font-semibold" style={{ color: colors.brand.primary }}>
+              Processing {current}/{total} square{total !== 1 ? 's' : ''}
+            </p>
+          ) : count ? (
             <p className="text-center mb-4" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>
               Processing {count} square{count !== 1 ? 's' : ''}...
             </p>
-          )}
+          ) : null}
 
           {/* Animated Progress indicator */}
           <div className="w-full rounded-full h-2 overflow-hidden" style={{ backgroundColor: isDark ? '#374151' : '#E5E7EB' }}>
@@ -82,7 +94,7 @@ const LoadingModal = ({ message, count }) => {
               className="h-full rounded-full transition-all duration-200 ease-out"
               style={{
                 backgroundColor: colors.brand.primary,
-                width: `${Math.min(progress, 100)}%`,
+                width: `${Math.min(displayProgress, 100)}%`,
                 boxShadow: `0 0 10px ${colors.brand.primary}40`
               }}
             ></div>
@@ -138,6 +150,7 @@ const SquaresPoolDetail = () => {
   const [selectedQuarter, setSelectedQuarter] = useState(null);
   const [homeScore, setHomeScore] = useState('');
   const [visitorScore, setVisitorScore] = useState('');
+  const [claimProgress, setClaimProgress] = useState({ current: 0, total: 0 });
 
   // Confirm modal states
   const [confirmModal, setConfirmModal] = useState({
@@ -287,9 +300,12 @@ const SquaresPoolDetail = () => {
     if (selectedSquares.length === 0) return;
 
     setConfirmingSquares(true);
+    setClaimProgress({ current: 0, total: selectedSquares.length });
     try {
-      // Backend expects individual square claims, but we can batch them
-      for (const square of selectedSquares) {
+      // Backend expects individual square claims, process them one by one with progress tracking
+      for (let i = 0; i < selectedSquares.length; i++) {
+        const square = selectedSquares[i];
+        setClaimProgress({ current: i + 1, total: selectedSquares.length });
         await axiosService.post(`/api/squares-pools/${poolId}/claim-square`, {
           x_coordinate: square.x_coordinate,
           y_coordinate: square.y_coordinate,
@@ -299,11 +315,13 @@ const SquaresPoolDetail = () => {
       await loadPool(null, true);
       setSelectedSquares([]);
       setSelectionMode(false);
+      showToast({ severity: 'success', summary: 'Success', detail: `Successfully claimed ${selectedSquares.length} square${selectedSquares.length !== 1 ? 's' : ''}!` });
     } catch (error) {
       console.error('Error selecting squares:', error);
       showToast({ severity: 'error', summary: 'Error', detail: 'Failed to select squares: ' + (error.response?.data?.message || error.message) });
     } finally {
       setConfirmingSquares(false);
+      setClaimProgress({ current: 0, total: 0 });
     }
   };
 
@@ -1176,7 +1194,7 @@ const SquaresPoolDetail = () => {
         {/* Header with back button and joined status */}
         <div className="flex items-center gap-3 mb-5">
           <button
-            onClick={() => navigate('/squares')}
+            onClick={() => navigate(-1)}
             className="flex items-center justify-center transition-all"
             style={{
               backgroundColor: colors.card,
@@ -2665,7 +2683,8 @@ const SquaresPoolDetail = () => {
       {confirmingSquares && (
         <LoadingModal
           message="Confirming Squares"
-          count={selectedSquares.length}
+          current={claimProgress.current}
+          total={claimProgress.total}
         />
       )}
 

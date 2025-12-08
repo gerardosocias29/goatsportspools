@@ -6,6 +6,7 @@ import { useUser } from '@clerk/clerk-react';
 import Layout from './components/layout/Layout';
 // Import fonts only - not the full globals.css to avoid conflicts with v1
 import './styles/v2-scoped.css';
+import { useTheme } from './contexts/ThemeContext';
 
 // Lazy load all page components for better performance
 const Home = lazy(() => import('./pages/Home'));
@@ -27,12 +28,17 @@ const ManageTeams = lazy(() => import('./pages/ManageTeams'));
 const AdminSettings = lazy(() => import('./pages/AdminSettings'));
 const CreditRequests = lazy(() => import('./pages/CreditRequests'));
 
+
+
 // Loading fallback component for lazy-loaded routes
-const LoadingFallback = () => (
+const LoadingFallback = () => {
+  const { colors } = useTheme();
+  return (
   <div style={{
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
+    flexDirection: 'column',
     minHeight: '100vh',
     backgroundColor: '#FAF6F2'
   }}>
@@ -79,8 +85,17 @@ const LoadingFallback = () => (
         }}
       />
     </div>
+    <div style={{
+      color: colors.text,
+      fontSize: '1.25rem',
+      fontWeight: 600,
+      fontFamily: '"Hubot Sans", sans-serif',
+    }}>
+      OKRNG
+    </div>
   </div>
-);
+  );
+};
 
 // Inner component that uses UserContext
 const V2AppContent = () => {
@@ -88,6 +103,7 @@ const V2AppContent = () => {
   const { user, loading } = useUserContext();
   const [pusher, setPusher] = useState(null);
   const [channel, setChannel] = useState(null);
+  const { colors } = useTheme();
 
   useEffect(() => {
     // Initialize Pusher for real-time auction updates when user is signed in
@@ -129,6 +145,7 @@ const V2AppContent = () => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
+          flexDirection: 'column',
           minHeight: '100vh',
           backgroundColor: '#FAF6F2'
         }}>
@@ -174,6 +191,14 @@ const V2AppContent = () => {
                 animation: 'bounce 1s ease-in-out infinite'
               }}
             />
+          </div>
+          <div style={{
+            color: colors.text,
+            fontSize: '1.25rem',
+            fontWeight: 600,
+            fontFamily: '"Hubot Sans", sans-serif',
+          }}>
+            OKRNG
           </div>
         </div>
       </Layout>

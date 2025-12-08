@@ -49,7 +49,7 @@ const CreateSquaresPool = () => {
   const axiosService = useAxios();
   const { user: currentUser, isSignedIn, isLoaded } = useUserContext();
   const { colors, isDark } = useTheme();
-  const { showToast } = useToast();
+  const showToast = useToast();
 
   const [games, setGames] = useState([]);
   const [rewardTypes, setRewardTypes] = useState([]);
@@ -208,6 +208,27 @@ const CreateSquaresPool = () => {
     });
   }, [games, formData.gameDate, formData.league]);
 
+  // Get dates that have games for the selected league (for calendar dots)
+  const datesWithGames = useMemo(() => {
+    const dates = new Set();
+    const now = new Date();
+    games.forEach(game => {
+      const gameTime = game.game_datetime || game.game_time || game.gameTime;
+      if (!gameTime) return;
+
+      const gameDate = new Date(gameTime);
+      // Only include future games that match the league
+      const isFuture = gameDate > now;
+      const leagueMatch = !formData.league || !game.league || game.league.toUpperCase() === formData.league.toUpperCase();
+
+      if (isFuture && leagueMatch) {
+        // Store as YYYY-MM-DD format for easy comparison
+        dates.add(gameDate.toISOString().split('T')[0]);
+      }
+    });
+    return dates;
+  }, [games, formData.league]);
+
   const selectedGame = games.find(g => g.id === parseInt(formData.gameID) || g.gameID === parseInt(formData.gameID));
 
   // Validation functions for each step
@@ -222,6 +243,7 @@ const CreateSquaresPool = () => {
 
       case 2: // Game Date
         if (!formData.gameDate) newErrors.gameDate = 'Game date is required';
+        else if (filteredGames.length === 0) newErrors.gameDate = 'No games available for this date. Please select a different date.';
         break;
 
       case 3: // Select Game
@@ -357,7 +379,7 @@ const CreateSquaresPool = () => {
         {/* Header */}
         <div className="mb-8 flex items-center gap-4">
           <button
-            onClick={() => navigate('/squares')}
+            onClick={() => navigate(-1)}
             className="flex items-center justify-center transition-all"
             style={{
               backgroundColor: colors.card,
@@ -423,8 +445,7 @@ const CreateSquaresPool = () => {
                   className="w-full rounded-lg px-4 py-3 focus:outline-none focus:ring-2"
                   style={inputStyles}
                 >
-                  <option value="2024">2024</option>
-                  <option value="2025">2025</option>
+                   <option value="2025">2025</option>
                   <option value="2026">2026</option>
                 </select>
               </InputField>
@@ -452,7 +473,7 @@ const CreateSquaresPool = () => {
             <div className="space-y-6">
               <h2 className="text-2xl font-bold mb-6" style={{ color: colors.text }}>Select Game Date</h2>
 
-              <InputField label="Game Date" required error={errors.gameDate} hint="Select the date of the game" colors={colors} isDark={isDark}>
+              <InputField label="Game Date" required error={errors.gameDate} hint="Select a date - dots indicate available games" colors={colors} isDark={isDark}>
                 <input
                   type="date"
                   value={formData.gameDate}
@@ -462,10 +483,66 @@ const CreateSquaresPool = () => {
                 />
               </InputField>
 
+              {/* Quick date buttons for dates with games */}
+              {datesWithGames.size > 0 && (
+                <div>
+                  <label className="block text-sm font-medium mb-2" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>
+                    Dates with {formData.league} games (click to select):
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {Array.from(datesWithGames)
+                      .sort()
+                      .slice(0, 14) // Show max 14 upcoming dates
+                      .map(dateStr => {
+                        const date = new Date(dateStr + 'T00:00:00');
+                        const isSelected = formData.gameDate === dateStr;
+                        const gamesOnDate = games.filter(g => {
+                          const gt = g.game_datetime || g.game_time || g.gameTime;
+                          if (!gt) return false;
+                          const gd = new Date(gt);
+                          return gd.toISOString().split('T')[0] === dateStr &&
+                                 (!formData.league || !g.league || g.league.toUpperCase() === formData.league.toUpperCase());
+                        }).length;
+
+                        return (
+                          <button
+                            key={dateStr}
+                            type="button"
+                            onClick={() => handleChange('gameDate', dateStr)}
+                            className="relative px-3 py-2 rounded-lg text-sm font-medium transition-all"
+                            style={{
+                              backgroundColor: isSelected ? colors.brand.primary : (isDark ? '#374151' : '#F3F4F6'),
+                              color: isSelected ? '#fff' : colors.text,
+                              border: `2px solid ${isSelected ? colors.brand.primary : 'transparent'}`,
+                            }}
+                          >
+                            <span>{date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</span>
+                            {/* Game count dot */}
+                            <span
+                              className="absolute -top-1 -right-1 flex items-center justify-center text-xs font-bold rounded-full"
+                              style={{
+                                width: '18px',
+                                height: '18px',
+                                backgroundColor: '#10B981',
+                                color: '#fff',
+                              }}
+                            >
+                              {gamesOnDate}
+                            </span>
+                          </button>
+                        );
+                      })}
+                  </div>
+                </div>
+              )}
+
               <div className="p-4 rounded-lg" style={{ backgroundColor: isDark ? '#1F2937' : '#F9FAFB' }}>
-                <p className="text-sm" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>
+                <p className={`text-sm font-medium ${filteredGames.length > 0 ? 'text-green-400' : 'text-yellow-400'}`}>
                   <FiInfo className="inline mr-2" />
-                  {filteredGames.length} game(s) found for {formData.league} on {new Date(formData.gameDate).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+                  {filteredGames.length} game(s) found for {formData.league} on {formData.gameDate ? new Date(formData.gameDate + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }) : 'selected date'}
+                  {filteredGames.length === 0 && formData.gameDate && (
+                    <span className="block mt-1 text-red-400">Please select a date with available games to continue.</span>
+                  )}
                 </p>
               </div>
             </div>

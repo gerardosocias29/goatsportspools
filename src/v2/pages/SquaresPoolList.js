@@ -591,7 +591,7 @@ const SquaresPoolList = () => {
                         handlePoolClick(pool.id);
                       }}
                     >
-                      {(pool.pool_status === 'open' || pool.pool_status === 'SelectOpen') ? 'Join & Select Squares' : 'View Pool'}
+                      {pool.user_joined ? 'View & Select Squares' : ((pool.pool_status === 'open' || pool.pool_status === 'SelectOpen') ? 'Join & Select Squares' : 'View Pool')}
                     </Button>
                   </div>
                 </div>
