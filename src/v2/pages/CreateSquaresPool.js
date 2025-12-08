@@ -254,10 +254,11 @@ const CreateSquaresPool = () => {
         if (formData.costPerSquare < 0) {
           newErrors.costPerSquare = 'Cost cannot be negative';
         }
-        const totalReward = formData.reward1_percent + formData.reward2_percent + formData.reward3_percent + formData.reward4_percent;
-        if (totalReward !== 100) {
-          newErrors.rewardPercentages = `Quarter payouts must total 100% (currently ${totalReward}%)`;
-        }
+        // Quarter payouts validation hidden for now - using default 25% each
+        // const totalReward = formData.reward1_percent + formData.reward2_percent + formData.reward3_percent + formData.reward4_percent;
+        // if (totalReward !== 100) {
+        //   newErrors.rewardPercentages = `Quarter payouts must total 100% (currently ${totalReward}%)`;
+        // }
         break;
     }
 
@@ -731,7 +732,8 @@ const CreateSquaresPool = () => {
                 </select>
               </InputField>
 
-              <div className="border-t pt-4" style={{ borderColor: colors.border }}>
+              {/* Quarter Payout Percentages - Hidden for now */}
+              {/* <div className="border-t pt-4" style={{ borderColor: colors.border }}>
                 <label className="block font-medium mb-4" style={{ color: colors.text }}>
                   Quarter Payout Percentages (must total 100%)
                 </label>
@@ -762,7 +764,7 @@ const CreateSquaresPool = () => {
                   {(formData.reward1_percent + formData.reward2_percent + formData.reward3_percent + formData.reward4_percent) === 100 ? ' ✓' : ' (must equal 100%)'}
                 </p>
                 {errors.rewardPercentages && <p className="mt-1 text-red-400 text-sm">{errors.rewardPercentages}</p>}
-              </div>
+              </div> */}
 
               {/* Review Summary */}
               <div className="border-t pt-6 mt-6" style={{ borderColor: colors.border }}>
