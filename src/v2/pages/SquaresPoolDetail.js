@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FiArrowLeft, FiCalendar, FiDollarSign, FiGrid, FiLock, FiUnlock, FiTrendingUp, FiAward, FiShare2, FiDownload, FiX, FiCreditCard, FiCheck, FiChevronDown, FiSettings, FiShuffle } from 'react-icons/fi';
+import { FiArrowLeft, FiCalendar, FiDollarSign, FiGrid, FiLock, FiUnlock, FiTrendingUp, FiAward, FiShare2, FiDownload, FiX, FiCreditCard, FiCheck, FiChevronDown, FiSettings, FiShuffle, FiArrowUp } from 'react-icons/fi';
 import SquaresGrid from '../components/squares/SquaresGrid';
 import WinnersDisplay from '../components/squares/WinnersDisplay';
 import ConfirmModal from '../components/ui/ConfirmModal';
@@ -872,6 +872,29 @@ const SquaresPoolDetail = () => {
     });
   };
 
+  const handleAssignAscendingNumbers = () => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Assign Ascending Numbers',
+      message: 'Assign numbers 0-9 in ascending order for both X and Y axes? This action cannot be undone.',
+      confirmText: 'Assign 0-9',
+      variant: 'primary',
+      onConfirm: async () => {
+        setConfirmModal(prev => ({ ...prev, isOpen: false }));
+        setAssigningNumbers(true);
+        try {
+          await axiosService.post(`/api/squares-pools/${poolId}/assign-numbers-ascending`);
+          await loadPool(null, true);
+          showToast({ severity: 'success', summary: 'Success', detail: 'Numbers assigned in ascending order (0-9)!' });
+        } catch (error) {
+          showToast({ severity: 'error', summary: 'Error', detail: 'Failed to assign numbers: ' + (error.response?.data?.message || error.message) });
+        } finally {
+          setAssigningNumbers(false);
+        }
+      },
+    });
+  };
+
   const handleDownloadQRCode = () => {
     if (!effectiveJoinUrl && !fallbackQrImage) {
       showToast({ severity: 'warn', summary: 'Not Available', detail: 'QR code is not available yet.' });
@@ -1017,8 +1040,9 @@ const SquaresPoolDetail = () => {
     (Array.isArray(pool?.y_numbers) ? pool?.y_numbers?.length : pool?.y_numbers)
   );
   const requiresManualAssignment = numbersType === 'AdminTrigger' && !numbersAssigned;
-  // Show assign button for any pool without numbers (fallback for TimeSet failures, etc.)
-  const canAssignNumbers = !numbersAssigned && numbersType !== 'Ascending';
+  // Show assign button for any pool without numbers
+  // For Ascending pools, numbers should be auto-assigned at creation, but show UI as fallback if they're null
+  const canAssignNumbers = !numbersAssigned;
   const numbersTypeLabel = (() => {
     switch (numbersType) {
       case 'Ascending':
@@ -1660,7 +1684,7 @@ const SquaresPoolDetail = () => {
                     <div className="mb-4">
                       <div className="flex items-center justify-between mb-2">
                         <label className="text-sm font-semibold" style={{ color: colors.text }}>
-                          X-Axis (Top Row) - {pool.homeTeam?.name || pool.home_team?.name || 'Home Team'}
+                          X-Axis (Top Row) - Winning Team
                         </label>
                         <button
                           onClick={handleRandomizeXAxis}
@@ -1703,7 +1727,7 @@ const SquaresPoolDetail = () => {
                     <div className="mb-4">
                       <div className="flex items-center justify-between mb-2">
                         <label className="text-sm font-semibold" style={{ color: colors.text }}>
-                          Y-Axis (Left Column) - {pool.visitorTeam?.name || pool.visitor_team?.name || 'Away Team'}
+                          Y-Axis (Left Column) - Losing Team
                         </label>
                         <button
                           onClick={handleRandomizeYAxis}
@@ -1763,6 +1787,18 @@ const SquaresPoolDetail = () => {
                         }}
                       >
                         <FiCheck size={16} /> {assigningNumbers ? 'Assigning...' : 'Apply Numbers'}
+                      </button>
+                      <button
+                        onClick={handleAssignAscendingNumbers}
+                        disabled={assigningNumbers}
+                        className="flex items-center justify-center gap-2 py-2.5 rounded-lg font-semibold transition-all"
+                        style={{
+                          backgroundColor: '#10B981',
+                          color: '#fff',
+                          opacity: assigningNumbers ? 0.6 : 1,
+                        }}
+                      >
+                        <FiArrowUp size={16} /> Ascending (0-9)
                       </button>
                       <button
                         onClick={handleAssignNumbers}
@@ -1927,8 +1963,18 @@ const SquaresPoolDetail = () => {
             <div className="space-y-2" style={{ color: colors.text, opacity: 0.8 }}>
               <div className="flex items-start gap-3">
                 <span style={{ color: colors.brand.primary, fontWeight: 800 }}>•</span>
-                <p>Max {pool.max_squares_per_player || pool.maxSquaresPerPlayer || 'Unlimited'} squares per player</p>
+                <p>Max {pool.max_squares_per_player || pool.maxSquaresPerPlayer
+                  ? `${pool.max_squares_per_player || pool.maxSquaresPerPlayer} squares per player`
+                  : pool.entry_fee > 0
+                    ? 'squares based on available credits'
+                    : 'Unlimited squares per player'}</p>
               </div>
+              {pool.entry_fee > 0 && (
+                <div className="flex items-start gap-3">
+                  <span style={{ color: colors.brand.primary, fontWeight: 800 }}>•</span>
+                  <p>Cost: ${parseFloat(pool.entry_fee).toFixed(2)} per square</p>
+                </div>
+              )}
               <div className="flex items-start gap-3">
                 <span style={{ color: colors.brand.primary, fontWeight: 800 }}>•</span>
                 <p>Numbers assignment: {numbersTypeLabel}</p>
@@ -1968,19 +2014,23 @@ const SquaresPoolDetail = () => {
             <div className="space-y-2" style={{ color: colors.text, opacity: 0.8 }}>
               <div className="flex items-start gap-3">
                 <span style={{ color: colors.brand.primary, fontWeight: 800 }}>1.</span>
-                <p>Select your squares on the 10x10 grid.</p>
+                <p>Select your squares on the 10x10 grid{pool.max_squares_per_player
+                  ? ` (max ${pool.max_squares_per_player} per player)`
+                  : pool.entry_fee > 0
+                    ? ' (limited by your credits)'
+                    : ''}.</p>
               </div>
               <div className="flex items-start gap-3">
                 <span style={{ color: colors.brand.primary, fontWeight: 800 }}>2.</span>
-                <p>Numbers (0-9) are assigned to each axis.</p>
+                <p>Numbers (0-9) are assigned to each axis{numbersType === 'Ascending' ? ' in ascending order' : numbersType === 'AdminTrigger' ? ' by admin' : ' randomly'}.</p>
               </div>
               <div className="flex items-start gap-3">
                 <span style={{ color: colors.brand.primary, fontWeight: 800 }}>3.</span>
-                <p>Winners determined by last digit of each team's score.</p>
+                <p>X-axis = Winning team's last digit, Y-axis = Losing team's last digit.</p>
               </div>
               <div className="flex items-start gap-3">
                 <span style={{ color: colors.brand.primary, fontWeight: 800 }}>4.</span>
-                <p>Prizes distributed based on reward structure.</p>
+                <p>Prizes distributed{pool.entry_fee > 0 ? ` from $${(pool.entry_fee * 100).toFixed(0)} total pot` : ''} based on reward structure.</p>
               </div>
             </div>
           </div>
@@ -2143,12 +2193,12 @@ const SquaresPoolDetail = () => {
           >
             <h2 className="text-2xl font-bold mb-2" style={{ color: colors.text }}>Join Pool</h2>
             <p className="mb-6" style={{ color: colors.text, opacity: 0.7 }}>
-              {pool.player_pool_type === 'CREDIT'
+              {pool.password || pool.has_password
                 ? 'Enter the pool password to join'
                 : 'Click join to enter this pool'}
             </p>
 
-            {pool.player_pool_type === 'CREDIT' && (
+            {(pool.password || pool.has_password) && (
               <div className="mb-6">
                 <label className="block font-medium mb-2" style={{ color: colors.text }}>
                   Pool Password

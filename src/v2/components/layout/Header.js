@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../contexts/ThemeContext';
 import { UserButton, useUser } from '@clerk/clerk-react';
-import { FiX } from 'react-icons/fi';
 import Button from '../ui/Button';
 import LuckyCoin from '../ui/LuckyCoin';
 
@@ -125,29 +124,24 @@ const Header = ({ user, onSignOut }) => {
   const resultsContentStyles = {
     display: 'flex',
     alignItems: 'center',
-    gap: '12px',
+    justifyContent: 'center',
+    gap: '40px',
     fontSize: '14px',
     fontWeight: 600,
     color: colors.text,
+    width: '100%',
+    maxWidth: '700px',
+    padding: '0 16px',
   };
 
-  const separatorStyles = {
-    color: isDark ? '#4B5563' : '#9CA3AF',
-    fontSize: '12px',
-  };
-
-  const dismissButtonStyles = {
+  const resultItemStyles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: '4px',
-    backgroundColor: 'transparent',
-    border: 'none',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    color: isDark ? '#9CA3AF' : '#6B7280',
-    transition: 'all 150ms ease',
-    marginLeft: '8px',
+    padding: '6px 14px',
+    borderRadius: '20px',
+    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)',
+    minWidth: '40px',
   };
 
   return (
@@ -393,33 +387,12 @@ const Header = ({ user, onSignOut }) => {
     {luckyResults && (
       <div style={resultsBarStyles}>
         <div style={resultsContentStyles}>
-          <span>{luckyResults.num10}</span>
-          <span style={separatorStyles}>|</span>
-          <span style={{ color: luckyResults.colorHex }}>{luckyResults.color}</span>
-          <span style={separatorStyles}>|</span>
-          <span>{luckyResults.num100}</span>
-          <span style={separatorStyles}>|</span>
-          <span>{luckyResults.coin}</span>
-          <span style={separatorStyles}>|</span>
-          <span>{luckyResults.num1000}</span>
-          <span style={separatorStyles}>|</span>
-          <span style={{ color: luckyResults.suitColor, fontSize: '16px' }}>{luckyResults.suit}</span>
-
-          {/* Dismiss button */}
-          <button
-            onClick={() => setLuckyResults(null)}
-            style={dismissButtonStyles}
-            onMouseOver={(e) => {
-              e.currentTarget.style.backgroundColor = isDark ? '#374151' : '#E5E7EB';
-              e.currentTarget.style.color = colors.text;
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.backgroundColor = 'transparent';
-              e.currentTarget.style.color = isDark ? '#9CA3AF' : '#6B7280';
-            }}
-          >
-            <FiX size={16} />
-          </button>
+          <span style={resultItemStyles}>{luckyResults.num10}</span>
+          <span style={{ ...resultItemStyles, color: luckyResults.colorHex }}>{luckyResults.color}</span>
+          <span style={resultItemStyles}>{luckyResults.num100}</span>
+          <span style={resultItemStyles}>{luckyResults.coin}</span>
+          <span style={resultItemStyles}>{luckyResults.num1000}</span>
+          <span style={{ ...resultItemStyles, color: luckyResults.suitColor, fontSize: '16px' }}>{luckyResults.suit}</span>
         </div>
       </div>
     )}

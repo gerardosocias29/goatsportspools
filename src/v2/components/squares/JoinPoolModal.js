@@ -417,7 +417,7 @@ const JoinPoolModal = ({ isOpen, onClose, onSuccess }) => {
                   <div style={{ fontSize: '0.875rem', color: colors.text, opacity: 0.7, marginTop: '0.25rem' }}>
                     {poolInfo.claimed_squares || 0}/100 squares filled • ${poolInfo.entry_fee || 0}/square
                   </div>
-                  {poolInfo.password && (
+                  {(poolInfo.has_password || poolInfo.password) && (
                     <div style={{ fontSize: '0.75rem', color: colors.brand.primary, marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                       <FiKey size={12} />
                       Password required
@@ -428,7 +428,7 @@ const JoinPoolModal = ({ isOpen, onClose, onSuccess }) => {
 
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: colors.text }}>
-                  Password {poolInfo?.password ? '*' : '(if required)'}
+                  Password {(poolInfo?.has_password || poolInfo?.password) ? '*' : '(if required)'}
                 </label>
                 <input
                   type="password"

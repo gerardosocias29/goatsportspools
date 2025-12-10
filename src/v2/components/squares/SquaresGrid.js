@@ -226,18 +226,22 @@ const SquaresGrid = ({
 
             {/* Top Numbers Row (X Axis) */}
             <div className="flex mb-2">
-              {/* Spacer for corner - always show to align with Y-axis column */}
-              <div className="w-12"></div>
+              {/* Spacer for corner - matches Y-axis label and numbers column widths */}
+              <div className="flex items-center mr-2 max-h-10">
+                <div
+                  className="invisible flex items-center justify-center border rounded-lg shadow-md px-2 py-6 bg-gradient-to-b from-red-600 to-red-500"
+                  style={{ writingMode: 'vertical-rl', textOrientation: 'mixed', transform: 'rotate(180deg)' }}
+                >
+                  <p className="font-bold text-white select-none text-lg whitespace-nowrap">Losing Team</p>
+                </div>
+              </div>
+              {/* Spacer for Y numbers column */}
+              <div className="w-10 mr-2"></div>
               <div className="flex-1 grid grid-cols-10 gap-1 md:gap-2">
                 <div className='col-span-10 flex justify-center mb-2'>
-                  {/* X Axis Label */}
-                  <div className="flex items-center gap-2 border rounded-lg shadow-md px-4 min-w-[250px]" style={{
-                    backgroundImage: `url(${grid.homeTeamBackground})`,
-                    backgroundSize: 'cover', // Ensures the image covers the entire div
-                    backgroundPosition: 'center', // Centers the image within the div
-                  }}>
-                    <img src={grid.homeTeamLogo} className="w-[50px]"/>
-                    <p className="font-bold text-white select-none">{grid.homeTeamName}</p>
+                  {/* X Axis Label - Winning Team */}
+                  <div className="flex items-center justify-center gap-2 border rounded-lg shadow-md px-6 py-2 bg-gradient-to-r from-green-600 to-green-500">
+                    <p className="font-bold text-white select-none text-lg">Winning Team</p>
                   </div>
                 </div>
                 {xNumbers ? (
@@ -265,31 +269,19 @@ const SquaresGrid = ({
 
             {/* Grid Rows with Y Numbers */}
             <div className="flex">
-              {/* Y Numbers Column with Vertical Team Label */}
-              <div className="relative h-auto flex flex-col gap-1 md:gap-2 mr-2">
-                {/* Vertically Centered, Rotated Label */}
+              {/* Y Axis Label - Losing Team (positioned to the left) */}
+              <div className="flex items-center mr-2">
                 <div
-                  className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-[130%] flex justify-left -rotate-90"
-                  style={{ width: '60px', zIndex: 2 }}
+                  className="flex items-center justify-center border rounded-lg shadow-md px-2 py-6 bg-gradient-to-b from-red-600 to-red-500"
+                  style={{ writingMode: 'vertical-rl', textOrientation: 'mixed', transform: 'rotate(180deg)' }}
                 >
-                  <div
-                    className="flex flex-col items-center gap-2 border rounded-lg shadow-md px-2 py-2 min-w-[50px]"
-                    style={{
-                      backgroundImage: `url(${grid.visitorTeamBackground})`,
-                      backgroundSize: 'cover',
-                      backgroundPosition: 'center',
-                      transform: 'rotate(-90deg)',
-                      minHeight: '260px',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      display: 'flex',
-                    }}
-                  >
-                    <img src={grid.visitorTeamLogo} className="w-[50px] mb-2" style={{ transform: 'none' }} />
-                    <p className="font-bold text-white select-none whitespace-nowrap" style={{ transform: 'none', writingMode: 'vertical-rl', textAlign: 'center' }}>{grid.visitorTeamName}</p>
-                  </div>
+                  <p className="font-bold text-white select-none text-lg whitespace-nowrap">Losing Team</p>
                 </div>
-                  {yNumbers ? (
+              </div>
+
+              {/* Y Numbers Column */}
+              <div className="flex flex-col gap-1 md:gap-2 mr-2">
+                {yNumbers ? (
                     yNumbers.map((num, idx) => (
                       <div
                         key={idx}

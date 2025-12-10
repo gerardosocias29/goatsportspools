@@ -276,11 +276,11 @@ const CreateSquaresPool = () => {
         if (formData.costPerSquare < 0) {
           newErrors.costPerSquare = 'Cost cannot be negative';
         }
-        // Quarter payouts validation hidden for now - using default 25% each
-        // const totalReward = formData.reward1_percent + formData.reward2_percent + formData.reward3_percent + formData.reward4_percent;
-        // if (totalReward !== 100) {
-        //   newErrors.rewardPercentages = `Quarter payouts must total 100% (currently ${totalReward}%)`;
-        // }
+        // Quarter payouts validation - must total 100%
+        const totalReward = formData.reward1_percent + formData.reward2_percent + formData.reward3_percent + formData.reward4_percent;
+        if (totalReward !== 100) {
+          newErrors.rewardPercentages = `Quarter payouts must total 100% (currently ${totalReward}%)`;
+        }
         break;
     }
 
@@ -809,8 +809,8 @@ const CreateSquaresPool = () => {
                 </select>
               </InputField>
 
-              {/* Quarter Payout Percentages - Hidden for now */}
-              {/* <div className="border-t pt-4" style={{ borderColor: colors.border }}>
+              {/* Quarter Payout Percentages */}
+              <div className="border-t pt-4" style={{ borderColor: colors.border }}>
                 <label className="block font-medium mb-4" style={{ color: colors.text }}>
                   Quarter Payout Percentages (must total 100%)
                 </label>
@@ -818,7 +818,7 @@ const CreateSquaresPool = () => {
                   {['reward1_percent', 'reward2_percent', 'reward3_percent', 'reward4_percent'].map((field, idx) => (
                     <div key={field}>
                       <label className="block text-sm mb-1" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>
-                        Q{idx + 1} {idx === 3 ? '(Final)' : ''} Payout %
+                        {idx === 0 ? 'Q1 Payout %' : idx === 1 ? 'Half (Q2) Payout %' : idx === 2 ? 'Q3 Payout %' : 'Final (Q4) Payout %'}
                       </label>
                       <input
                         type="number"
@@ -841,7 +841,7 @@ const CreateSquaresPool = () => {
                   {(formData.reward1_percent + formData.reward2_percent + formData.reward3_percent + formData.reward4_percent) === 100 ? ' ✓' : ' (must equal 100%)'}
                 </p>
                 {errors.rewardPercentages && <p className="mt-1 text-red-400 text-sm">{errors.rewardPercentages}</p>}
-              </div> */}
+              </div>
 
               {/* Review Summary */}
               <div className="border-t pt-6 mt-6" style={{ borderColor: colors.border }}>
