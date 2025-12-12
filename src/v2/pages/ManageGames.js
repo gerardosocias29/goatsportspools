@@ -92,9 +92,16 @@ const ManageGames = () => {
     setMessage(null);
 
     try {
+      // Detect user's timezone and send with request
+      const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      const requestData = {
+        ...formData,
+        timezone: userTimezone // Add user's timezone (e.g., 'America/New_York', 'Asia/Singapore')
+      };
+
       const response = editingGame
-        ? await axiosService.post(`/api/games/update/${editingGame.id}`, formData)
-        : await axiosService.post('/api/games/create', formData);
+        ? await axiosService.post(`/api/games/update/${editingGame.id}`, requestData)
+        : await axiosService.post('/api/games/create', requestData);
 
       if (response.data.status) {
         setMessage({ type: 'success', text: response.data.message || 'Game saved successfully!' });
