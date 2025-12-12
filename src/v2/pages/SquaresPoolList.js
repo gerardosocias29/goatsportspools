@@ -568,10 +568,10 @@ const SquaresPoolList = () => {
 
                     <div className='flex flex-col items-center p-3 bg-gray-100 rounded-md' style={statTileStyles}>
                       <span style={{ color: colors.text, fontWeight: 800 }}>
-                        {parseFloat(pool.total_pot || pool.totalPot || 0).toFixed(2)}
+                        {parseFloat(pool.custom_payout || pool.total_pot || pool.totalPot || 0).toFixed(2)}
                       </span>
                       <span style={{ fontSize: '0.75rem', color: colors.text, opacity: 0.7 }}>
-                        Total Pot
+                        Payout
                       </span>
                     </div>
                   </div>

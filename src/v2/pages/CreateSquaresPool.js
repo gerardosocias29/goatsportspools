@@ -87,6 +87,7 @@ const CreateSquaresPool = () => {
 
     // Step 6: Fees & Rewards
     costPerSquare: 10.00,
+    customPayout: null, // null = auto-calculate, otherwise use custom amount
     rewardsType: 'CreditsRewards',
     gameRewardTypeID: 1,
     reward1_percent: 25,
@@ -335,6 +336,7 @@ const CreateSquaresPool = () => {
         password: formData.poolType === 'CREDIT' ? formData.poolPassword : null,
         entry_fee: formData.costPerSquare,
         credit_cost: formData.costPerSquare,
+        custom_payout: formData.customPayout,
         max_squares_per_player: formData.maxSquaresPerPlayer,
         close_datetime: formData.closeDate,
         number_assign_datetime: formData.numbersAssignDate,
@@ -793,7 +795,7 @@ const CreateSquaresPool = () => {
             <div className="space-y-6">
               <h2 className="text-2xl font-bold mb-6" style={{ color: colors.text }}>Fees & Rewards</h2>
 
-              <InputField label="Cost Per Square" error={errors.costPerSquare} hint={`Total pot: ${((formData.costPerSquare || 0) * 100).toFixed(2)}`} colors={colors} isDark={isDark}>
+              <InputField label="Cost Per Square" error={errors.costPerSquare} hint={`Calculated pot (if all squares filled): ${((formData.costPerSquare || 0) * 100).toFixed(2)}`} colors={colors} isDark={isDark}>
                 <input
                   type="number"
                   step="0.01"
@@ -804,7 +806,23 @@ const CreateSquaresPool = () => {
                   style={inputStyles}
                 />
               </InputField>
-
+              <InputField 
+                label="Custom Payout (Optional)" 
+                hint={formData.customPayout ? `Custom payout will be used instead of calculated amount` : `Leave empty to auto-calculate payout from entry fees`}
+                colors={colors} 
+                isDark={isDark}
+              >
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={formData.customPayout || ''}
+                  onChange={(e) => handleChange('customPayout', e.target.value ? parseFloat(e.target.value) : null)}
+                  className="w-full rounded-lg px-4 py-3 focus:outline-none focus:ring-2"
+                  style={inputStyles}
+                  placeholder="Leave empty for auto-calculation"
+                />
+              </InputField>
               <InputField label="Reward Distribution" colors={colors} isDark={isDark}>
                 <select
                   value={formData.gameRewardTypeID}
@@ -864,6 +882,7 @@ const CreateSquaresPool = () => {
                   <p style={{ color: colors.text }}><strong>Numbers:</strong> {formData.numbersType}</p>
                   <p style={{ color: colors.text }}><strong>Pool Type:</strong> {formData.poolType}</p>
                   <p style={{ color: colors.text }}><strong>Cost:</strong> {formData.costPerSquare?.toFixed(2)} per square</p>
+                  <p style={{ color: colors.text }}><strong>Payout:</strong> {formData.customPayout ? `${formData.customPayout.toFixed(2)} (custom)` : `${((formData.costPerSquare || 0) * 100).toFixed(2)} (auto-calculated)`}</p>
                 </div>
               </div>
             </div>

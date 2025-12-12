@@ -900,7 +900,7 @@ const SquaresAdminDashboard = () => {
                   const totalSquares = 100;
                   const fillPercentage = getProgressPercentage(pool);
                   const entryFee = parseFloat(pool.entry_fee || pool.credit_cost || 0);
-                  const estimatedPot = pool.total_pot || (entryFee * claimedSquares);
+                  const estimatedPot = pool.custom_payout || pool.total_pot || (entryFee * claimedSquares);
 
                   return (
                     <div
@@ -1037,7 +1037,7 @@ const SquaresAdminDashboard = () => {
                               {formatCurrency(estimatedPot)}
                             </span>
                             <span className="text-xs" style={{ color: isDark ? '#6B7280' : '#9CA3AF' }}>
-                              Total Pot
+                              Payout
                             </span>
                           </div>
                         </div>

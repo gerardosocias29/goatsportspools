@@ -1357,9 +1357,9 @@ const SquaresPoolDetail = () => {
             </div>
           </div>
           <div style={{ backgroundColor: isDark ? colors.cardHover : '#f7f4f2', border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '12px 14px' }}>
-            <div className="text-xs" style={{ color: colors.text, opacity: 0.6 }}>Total pot</div>
+            <div className="text-xs" style={{ color: colors.text, opacity: 0.6 }}>Payout</div>
             <div className="text-xl font-bold" style={{ color: colors.brand.primary }}>
-              {parseFloat(pool.total_pot || pool.totalPot || 0).toFixed(2)}
+              {parseFloat(pool.custom_payout || pool.total_pot || pool.totalPot || 0).toFixed(2)}
             </div>
           </div>
           <div style={{ backgroundColor: isDark ? colors.cardHover : '#f7f4f2', border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '12px 14px' }}>
@@ -2032,10 +2032,10 @@ const SquaresPoolDetail = () => {
                 <span style={{ color: colors.brand.primary, fontWeight: 800 }}>3.</span>
                 <p>X-axis = Winning team's last digit, Y-axis = Losing team's last digit.</p>
               </div>
-              {/* <div className="flex items-start gap-3">
+              <div className="flex items-start gap-3">
                 <span style={{ color: colors.brand.primary, fontWeight: 800 }}>4.</span>
-                <p>Prizes distributed{pool.entry_fee > 0 ? ` from ${(pool.entry_fee * 100).toFixed(0)} total pot` : ''} based on reward structure.</p>
-              </div> */}
+                <p>Prizes distributed{pool.entry_fee > 0 ? ` from ${parseFloat(pool.custom_payout || pool.total_pot || (pool.entry_fee * 100)).toFixed(2)} payout` : ''} based on reward structure.</p>
+              </div>
             </div>
           </div>
         </div>
