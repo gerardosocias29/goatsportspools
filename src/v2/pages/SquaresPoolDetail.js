@@ -294,6 +294,10 @@ const SquaresPoolDetail = () => {
 
   const handleSquareSelection = (squares) => {
     setSelectedSquares(squares);
+    // Auto-enter selection mode when user selects a square
+    if (squares.length > 0 && !selectionMode) {
+      setSelectionMode(true);
+    }
   };
 
   const handleConfirmSelection = async () => {
@@ -2048,8 +2052,8 @@ const SquaresPoolDetail = () => {
         </div>
       )}
 
-      {/* Floating Bottom Bar - Select Squares (Only when joined) */}
-      {hasJoined && (
+      {/* Floating Bottom Bar - Shows when squares are selected */}
+      {hasJoined && selectedSquares.length > 0 && (
         <div
           className="fixed bottom-0 left-0 right-0 z-40"
           style={{
@@ -2062,60 +2066,23 @@ const SquaresPoolDetail = () => {
           }}
         >
           <div style={{ maxWidth: '1180px', margin: '0 auto', padding: '1rem 1.25rem' }}>
-            {!selectionMode ? (
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <div
-                    className="flex items-center justify-center rounded-xl"
-                    style={{
-                      width: '44px',
-                      height: '44px',
-                      backgroundColor: isDark ? colors.cardHover : '#f7f4f2',
-                      border: `1px solid ${colors.border}`,
-                    }}
-                  >
-                    <FiGrid size={20} style={{ color: colors.brand.primary }} />
-                  </div>
-                  <div>
-                    <p className="font-semibold" style={{ color: colors.text }}>
-                      Ready to pick squares?
-                    </p>
-                    <p className="text-sm" style={{ color: colors.text, opacity: 0.6 }}>
-                      {pool.pool_status === 'open' ? 'Pool is open for selection' : 'Pool is currently closed'}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-4 w-full sm:w-auto">
+                <div
+                  className="flex-1 sm:flex-none flex items-center gap-3 px-4 py-3 rounded-xl"
+                  style={{
+                    backgroundColor: isDark ? colors.cardHover : '#f7f4f2',
+                    border: `1px solid ${colors.border}`,
+                  }}
+                >
+                  <div className="text-center sm:text-left">
+                    <p className="text-xs" style={{ color: colors.text, opacity: 0.6 }}>Selected</p>
+                    <p className="text-lg font-bold" style={{ color: colors.brand.primary }}>
+                      {selectedSquares.length} square{selectedSquares.length !== 1 ? 's' : ''}
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  {pool.player_pool_type === 'CREDIT' && (
-                    <button
-                      onClick={() => setShowRequestCreditsModal(true)}
-                      className="hidden sm:flex items-center gap-2 px-4 py-3 rounded-xl font-semibold transition-all"
-                      style={{
-                        backgroundColor: isDark ? colors.cardHover : '#f7f4f2',
-                        border: `1px solid ${colors.border}`,
-                        color: colors.text,
-                      }}
-                    >
-                      <FiCreditCard size={18} /> Request Credits
-                    </button>
-                  )}
-                  <button
-                    onClick={() => setSelectionMode(true)}
-                    disabled={pool.pool_status !== 'open'}
-                    className="flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all"
-                    style={{
-                      backgroundColor: pool.pool_status === 'open' ? colors.brand.primary : colors.border,
-                      color: pool.pool_status === 'open' ? '#fff' : colors.text,
-                      opacity: pool.pool_status !== 'open' ? 0.6 : 1,
-                    }}
-                  >
-                    <FiGrid size={18} /> Select Squares
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="flex items-center gap-4 w-full sm:w-auto">
+                {parseFloat(pool.entry_fee || pool.credit_cost || 0) > 0 && (
                   <div
                     className="flex-1 sm:flex-none flex items-center gap-3 px-4 py-3 rounded-xl"
                     style={{
@@ -2124,59 +2091,41 @@ const SquaresPoolDetail = () => {
                     }}
                   >
                     <div className="text-center sm:text-left">
-                      <p className="text-xs" style={{ color: colors.text, opacity: 0.6 }}>Selected</p>
-                      <p className="text-lg font-bold" style={{ color: colors.brand.primary }}>
-                        {selectedSquares.length} square{selectedSquares.length !== 1 ? 's' : ''}
+                      <p className="text-xs" style={{ color: colors.text, opacity: 0.6 }}>Total Cost</p>
+                      <p className="text-lg font-bold" style={{ color: colors.success }}>
+                        ${getTotalCost()}
                       </p>
                     </div>
                   </div>
-                  {parseFloat(pool.entry_fee || pool.credit_cost || 0) > 0 && (
-                    <div
-                      className="flex-1 sm:flex-none flex items-center gap-3 px-4 py-3 rounded-xl"
-                      style={{
-                        backgroundColor: isDark ? colors.cardHover : '#f7f4f2',
-                        border: `1px solid ${colors.border}`,
-                      }}
-                    >
-                      <div className="text-center sm:text-left">
-                        <p className="text-xs" style={{ color: colors.text, opacity: 0.6 }}>Total Cost</p>
-                        <p className="text-lg font-bold" style={{ color: colors.success }}>
-                          ${getTotalCost()}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-                <div className="flex items-center gap-3 w-full sm:w-auto">
-                  <button
-                    onClick={() => {
-                      setSelectionMode(false);
-                      setSelectedSquares([]);
-                    }}
-                    className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold transition-all"
-                    style={{
-                      backgroundColor: isDark ? colors.cardHover : '#f7f4f2',
-                      border: `1px solid ${colors.border}`,
-                      color: colors.text,
-                    }}
-                  >
-                    <FiX size={18} /> Cancel
-                  </button>
-                  <button
-                    onClick={handleConfirmSelection}
-                    disabled={selectedSquares.length === 0}
-                    className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold transition-all"
-                    style={{
-                      backgroundColor: selectedSquares.length > 0 ? colors.brand.primary : colors.border,
-                      color: selectedSquares.length > 0 ? '#fff' : colors.text,
-                      opacity: selectedSquares.length === 0 ? 0.6 : 1,
-                    }}
-                  >
-                    <FiCheck size={18} /> Confirm Selection
-                  </button>
-                </div>
+                )}
               </div>
-            )}
+              <div className="flex items-center gap-3 w-full sm:w-auto">
+                <button
+                  onClick={() => {
+                    setSelectionMode(false);
+                    setSelectedSquares([]);
+                  }}
+                  className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold transition-all"
+                  style={{
+                    backgroundColor: isDark ? colors.cardHover : '#f7f4f2',
+                    border: `1px solid ${colors.border}`,
+                    color: colors.text,
+                  }}
+                >
+                  <FiX size={18} /> Cancel
+                </button>
+                <button
+                  onClick={handleConfirmSelection}
+                  className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold transition-all"
+                  style={{
+                    backgroundColor: colors.brand.primary,
+                    color: '#fff',
+                  }}
+                >
+                  <FiCheck size={18} /> Submit
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

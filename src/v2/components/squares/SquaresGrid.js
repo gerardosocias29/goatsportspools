@@ -113,8 +113,8 @@ const SquaresGrid = ({
     // Clicking empty square clears highlight
     setHighlightedPlayerId(null);
 
-    // Rest of selection logic only works in selection mode
-    if (disabled || !selectionMode) return;
+    // Can't select if disabled
+    if (disabled) return;
 
     // Toggle selection
     if (isSquareSelected(square)) {
@@ -146,7 +146,7 @@ const SquaresGrid = ({
   };
 
   const handleMouseEnter = (square) => {
-    if (!disabled && selectionMode) {
+    if (!disabled && !isSquareOwned(square)) {
       setHoveredSquare(square);
     }
   };
