@@ -129,12 +129,12 @@ const Hero = () => {
   };
 
   return (
-    <section style={heroStyles}>
+    <section style={heroStyles} className='h-[100vh]'>
       {/* Background Decorations */}
       <div style={decoration1Styles} />
       <div style={decoration2Styles} />
 
-      <div style={containerStyles}>
+      <div style={containerStyles} className='h-full flex items-center justify-center'>
         <div style={contentStyles} className="v2-fade-in">
           {/* Badge */}
           <div style={badgeStyles}>
@@ -179,14 +179,14 @@ const Hero = () => {
           </div>
 
           {/* Stats */}
-          <div style={statsContainerStyles} className="v2-glass">
+          {/* <div style={statsContainerStyles} className="v2-glass">
             <div style={statStyles}>
               <div style={statValueStyles}>10K+</div>
               <div style={statLabelStyles}>Active Users</div>
             </div>
 
             <div style={statStyles}>
-              <div style={statValueStyles}>$2M+</div>
+              <div style={statValueStyles}>2M+</div>
               <div style={statLabelStyles}>Pool Prizes</div>
             </div>
 
@@ -199,7 +199,7 @@ const Hero = () => {
               <div style={statValueStyles}>99.9%</div>
               <div style={statLabelStyles}>Uptime</div>
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
     </section>

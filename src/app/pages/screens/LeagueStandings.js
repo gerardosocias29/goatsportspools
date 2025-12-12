@@ -112,25 +112,25 @@ const LeagueStandings = ({currentUser}) => {
       if(wager_result !== "pending"){
         return <p className="text-center font-bold">-</p>
       }
-      return <p className="text-center font-bold">${Number(wager_amount).toFixed(2)} / ${Number(wager_win_amount).toFixed(2)}</p>
+      return <p className="text-center font-bold">{Number(wager_amount).toFixed(2)} / {Number(wager_win_amount).toFixed(2)}</p>
     }
 
     if(rowData.wager_result !== "pending"){
       return <p className="text-center font-bold">-</p>
     }
 
-    return <p className="text-center font-bold">${Number(rowData.wager_amount).toFixed(2)} / ${Number(rowData.wager_win_amount).toFixed(2)}</p>
+    return <p className="text-center font-bold">{Number(rowData.wager_amount).toFixed(2)} / {Number(rowData.wager_win_amount).toFixed(2)}</p>
   }
 
   const WinLossTemplate = (value, rowData, field) => {
     if(rowData.bet_group != null){
       const { wager_amount, wager_win_amount, wager_result } = rowData.bet_group;
 
-      const new_amount = wager_result === "win" ? "$" + Number(wager_win_amount).toFixed(2) : (wager_result === "lose" ? "-$" +Number(wager_amount).toFixed(2) : '-')
+      const new_amount = wager_result === "win" ? Number(wager_win_amount).toFixed(2) : (wager_result === "lose" ? "-" + Number(wager_amount).toFixed(2) : '-')
       return <p className="text-center font-bold">{new_amount}</p>
     }
 
-    const amount = rowData.wager_result === "win" ? "$" + Number(rowData.wager_win_amount).toFixed(2) : (rowData.wager_result === "lose" ? "-$" +Number(rowData.wager_amount).toFixed(2) : '-')
+    const amount = rowData.wager_result === "win" ? Number(rowData.wager_win_amount).toFixed(2) : (rowData.wager_result === "lose" ? "-" + Number(rowData.wager_amount).toFixed(2) : '-')
     return <p className="text-center font-bold">{amount}</p>
   }
 

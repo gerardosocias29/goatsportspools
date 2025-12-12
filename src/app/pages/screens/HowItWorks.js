@@ -3,10 +3,10 @@ const HowItWorks = () => {
     <>
       <div className="flex flex-col gap-5 p-5">
         <div className="text-primary text-3xl font-semibold">
-          Win $200 in Our Inaugural Season!
+          Win 200 in Our Inaugural Season!
         </div>
         <p className="text-lg">
-          All players participating in our inaugural season have a chance to win $200! Enter this wagering league for FREE, and the player with the highest balance after Week 8 will receive $200.
+          All players participating in our inaugural season have a chance to win 200! Enter this wagering league for FREE, and the player with the highest balance after Week 8 will receive 200.
         </p>
         <p className="text-lg font-semibold">
           <a href="/signup">Register for free now!</a>
@@ -42,14 +42,14 @@ const HowItWorks = () => {
             <li>
               <b>Optional: Increase Your Balance</b>
               <ul className="list-disc list-inside space-y-1 pl-5">
-                <li>For $10, you can receive an additional 3,000 GOAT wagering units, bringing your total initial balance to 6,000.</li>
+                <li>For 10, you can receive an additional 3,000 GOAT wagering units, bringing your total initial balance to 6,000.</li>
                 <li>This option is available only after your initial registration.</li>
               </ul>
             </li>
             <li>
               <b>Rebuy Option</b>
               <ul className="list-disc list-inside space-y-1 pl-5">
-                <li>If you lose your entire balance, you can rebuy for $40. After rebuying, your balance will be refilled with 30,000 GOAT wagering units.</li>
+                <li>If you lose your entire balance, you can rebuy for 40. After rebuying, your balance will be refilled with 30,000 GOAT wagering units.</li>
                 <li><b>Unlimited Rebuys:</b> Allowed until November 16th at 1 p.m.</li>
               </ul>
             </li>
@@ -65,24 +65,24 @@ const HowItWorks = () => {
 
           <div className="text-primary text-2xl font-semibold">Prizes and Prize Pool</div>
           <p className="text-lg">
-            <b>Highest Balance on October 29th:</b> Wins $200. This prize is provided by GOAT and will not be deducted from the total prize pool.
+            <b>Highest Balance on October 29th:</b> Wins 200. This prize is provided by GOAT and will not be deducted from the total prize pool.
           </p>
           <p className="text-lg">
             <b>Total Prize Pool Example:</b>
             <ul className="list-disc list-inside space-y-2">
-              <li>11 initial buy-ins of $10 each: $110</li>
-              <li>8 rebuys of $40 each: $320</li>
+              <li>11 initial buy-ins of 10 each: 110</li>
+              <li>8 rebuys of 40 each: 320</li>
             </ul>
-            Total Prize Pool: $430
+            Total Prize Pool: 430
           </p>
           <p className="text-lg">
-            <b>Additional Contribution:</b> GOAT Sportspools will contribute at least $100 to the final prize pool.
+            <b>Additional Contribution:</b> GOAT Sportspools will contribute at least 100 to the final prize pool.
           </p>
           <p className="text-lg">
             <b>Prize Distribution:</b>
             <ul className="list-disc list-inside space-y-2">
-              <li>The highest balance at the end of the wagering season will win $430.</li>
-              <li>The second-highest balance will win $100.</li>
+              <li>The highest balance at the end of the wagering season will win 430.</li>
+              <li>The second-highest balance will win 100.</li>
             </ul>
           </p>
 

@@ -79,7 +79,7 @@ const AdminBidding = ({ pusher, channel, auctionId }) => {
         showToast({
           severity: response.data.status ? 'success' : 'error',
           summary: response.data.status ? 'Bid Placed' : 'Bid Error',
-          detail: response.data.status ? `Successfully placed bid of $${data.bid_amount}` : response.data.message,
+          detail: response.data.status ? `Successfully placed bid of ${data.bid_amount}` : response.data.message,
         });
       })
       .catch((error) => {
@@ -239,7 +239,7 @@ const AdminBidding = ({ pusher, channel, auctionId }) => {
           severity: 'info',
           summary: 'Item Auction Ended',
           detail: activeItem.bids?.length > 0 
-            ? `Item sold to ${activeItem.bids[0].user?.name} for $${activeItem.bids[0].bid_amount}`
+            ? `Item sold to ${activeItem.bids[0].user?.name} for ${activeItem.bids[0].bid_amount}`
             : 'Item Auction ended with no bids',
         });
 
@@ -350,7 +350,7 @@ const AdminBidding = ({ pusher, channel, auctionId }) => {
                   <Button 
                     key={item.id}
                     // disabled={item.sold_to != null}
-                    tooltip={item.sold_to && `This item is sold to ${item?.bids[0]?.user?.name} for $${Number(item.sold_amount).toFixed(2)}`}
+                    tooltip={item.sold_to && `This item is sold to ${item?.bids[0]?.user?.name} for ${Number(item.sold_amount).toFixed(2)}`}
                     data-pr-position="top"
                     className={`
                       ${activeItem?.id === item.id 
@@ -432,8 +432,8 @@ const AdminBidding = ({ pusher, channel, auctionId }) => {
                       />
                       <Button
                         type="button"
-                        icon={"pi pi-dollar"}
-                        tooltip={`Place Bid: $${customBidAmount}`}
+                        icon={"pi pi-arrow-up"}
+                        tooltip={`Place Bid: ${customBidAmount}`}
                         className={`p-button-success border-none`}
                         disabled={!hasStarted}
                         onClick={() => handlePlaceBid(customBidAmount, (userOnBid && userOnBid.id || null))}
@@ -521,7 +521,7 @@ const AdminBidding = ({ pusher, channel, auctionId }) => {
               {/* Bidding Details Section */}
               <div>
                 <h2 className="text-2xl font-bold mb-4 flex items-center">
-                  <i className="pi pi-dollar text-green-500 mr-2"></i>
+                  <i className="pi pi-credit-card text-green-500 mr-2"></i>
                   Bidding Details
                 </h2>
                 
@@ -548,8 +548,8 @@ const AdminBidding = ({ pusher, channel, auctionId }) => {
                           </p>
                           <p className="text-2xl font-bold text-green-600">
                             {activeItem?.bids[0]
-                              ? `$${Number(activeItem?.bids[0].bid_amount).toFixed(2)}`
-                              : "$0.00"}
+                              ? `${Number(activeItem?.bids[0].bid_amount).toFixed(2)}`
+                              : "0.00"}
                           </p>
                         </div>
                       </div>
@@ -604,8 +604,7 @@ const AdminBidding = ({ pusher, channel, auctionId }) => {
                               value={activeItem.minimum_bid}
                               disabled
                               className="w-full"
-                              mode="currency"
-                              currency="USD"
+                              mode="decimal"
                               locale="en-US"
                               inputClassName="w-[100px]"
                             />
@@ -617,7 +616,7 @@ const AdminBidding = ({ pusher, channel, auctionId }) => {
                             <div className="mt-4 text-xs p-3 bg-green-50 border border-green-200 rounded-lg">
                               <p className="font-medium text-center text-green-800 mb-2">Next Minimum Bid</p>
                               <div className="text-center gap-2 text-2xl font-bold text-green-800">
-                                ${Number(currentBidAmount).toFixed(2)}
+                                {Number(currentBidAmount).toFixed(2)}
                               </div>
                             </div>
                           </div>
@@ -661,7 +660,7 @@ const AdminBidding = ({ pusher, channel, auctionId }) => {
                                   `}
                                 >
                                   <td className="px-4 py-3 whitespace-nowrap">
-                                    <span className="font-medium text-green-600">${Number(bid.bid_amount).toFixed(2)}</span>
+                                    <span className="font-medium text-green-600">{Number(bid.bid_amount).toFixed(2)}</span>
                                   </td>
                                   <td className="px-4 py-3 whitespace-nowrap">
                                     <div className="flex items-center">

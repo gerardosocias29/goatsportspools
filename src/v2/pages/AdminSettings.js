@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiCalendar, FiDollarSign, FiShield, FiUsers } from 'react-icons/fi';
+import { FiCalendar, FiShield, FiUsers } from 'react-icons/fi';
 import { useTheme } from '../contexts/ThemeContext';
 
 /**
@@ -23,7 +23,7 @@ const AdminSettings = () => {
     {
       title: 'Manage Auction',
       description: 'Configure auction settings, manage bids, and control live auctions',
-      icon: <FiDollarSign size={48} />,
+      icon: <FiShield size={48} />,
       path: '/admin/auction',
       available: false,
     },

@@ -258,7 +258,7 @@ const ManageAuction = ({pusher, channel, currentUser}) => {
                       <span className="font-medium text-center">{team.owner?.name || "-"}</span>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
-                      <span className="font-medium text-center text-green-600">{!team.sold_amount ? '-' : '$' + Number(team.sold_amount).toFixed(2)}</span>
+                      <span className="font-medium text-center text-green-600">{!team.sold_amount ? '-' : Number(team.sold_amount).toFixed(2)}</span>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
                       {
@@ -313,7 +313,7 @@ const ManageAuction = ({pusher, channel, currentUser}) => {
                       <span className="text-center">{owner.auctions[0]?.total_budget || "∞"}</span>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
-                      <span className="text-center text-green-600 font-bold">{(owner.total_sold_amount) ? `$${Number(owner.total_sold_amount).toFixed(2)}` : "-"}</span>
+                      <span className="text-center text-green-600 font-bold">{(owner.total_sold_amount) ? `${Number(owner.total_sold_amount).toFixed(2)}` : "-"}</span>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
                       {

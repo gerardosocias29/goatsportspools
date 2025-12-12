@@ -494,7 +494,7 @@ const Leagues = () => {
                   {joined && (
                     <div style={statRowStyles}>
                       <span style={statLabelStyles}>Your Balance:</span>
-                      <span style={balanceStyles}>${balance.toFixed(2)}</span>
+                      <span style={balanceStyles}>{balance.toFixed(2)}</span>
                     </div>
                   )}
 

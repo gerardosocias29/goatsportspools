@@ -188,7 +188,7 @@ const Home = () => {
             </Card>
 
             {/* Feature 5 */}
-            <Card padding="lg" hover>
+            {/* <Card padding="lg" hover>
               <div style={featureIconStyles}>
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M12 2L2 7l10 5 10-5-10-5z" />
@@ -202,10 +202,10 @@ const Home = () => {
               <p style={{ fontSize: '1rem', opacity: 0.8, lineHeight: 1.6 }}>
                 Football, basketball, baseball, hockey, and more. All your favorite sports in one place.
               </p>
-            </Card>
+            </Card> */}
 
             {/* Feature 6 */}
-            <Card padding="lg" hover>
+            {/* <Card padding="lg" hover>
               <div style={featureIconStyles}>
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
@@ -218,7 +218,7 @@ const Home = () => {
               <p style={{ fontSize: '1rem', opacity: 0.8, lineHeight: 1.6 }}>
                 Bank-level encryption and instant payouts. Your money is always safe and accessible.
               </p>
-            </Card>
+            </Card> */}
           </div>
         </div>
       </section>
@@ -289,7 +289,7 @@ const Home = () => {
                 Ready to Get Started?
               </h2>
               <p style={{ ...sectionDescStyles, marginBottom: '2rem' }}>
-                Join thousands of sports fans who trust OKRNG for their betting needs.
+                Trusted by sports fans for a smarter betting experience with OKRNG.
               </p>
               <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
                 <Button variant="primary" size="xl" onClick={() => navigate('/sign-up')}>

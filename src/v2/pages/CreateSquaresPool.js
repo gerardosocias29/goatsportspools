@@ -193,10 +193,13 @@ const CreateSquaresPool = () => {
       if (!gameTime) return false;
 
       const gameDate = new Date(gameTime);
-      const selectedDate = new Date(formData.gameDate);
+      // Create selected date in local timezone at midnight
+      const selectedDate = new Date(formData.gameDate + 'T00:00:00');
 
-      // Check if game is on the selected date
-      const sameDate = gameDate.toDateString() === selectedDate.toDateString();
+      // Check if game is on the selected date (compare local dates)
+      const gameDateLocal = new Date(gameDate.getFullYear(), gameDate.getMonth(), gameDate.getDate());
+      const selectedDateLocal = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate());
+      const sameDate = gameDateLocal.getTime() === selectedDateLocal.getTime();
 
       // Check if game is in the future
       const isFuture = gameDate > new Date();
@@ -222,8 +225,11 @@ const CreateSquaresPool = () => {
       const leagueMatch = !formData.league || !game.league || game.league.toUpperCase() === formData.league.toUpperCase();
 
       if (isFuture && leagueMatch) {
-        // Store as YYYY-MM-DD format for easy comparison
-        dates.add(gameDate.toISOString().split('T')[0]);
+        // Store as YYYY-MM-DD format in local timezone
+        const year = gameDate.getFullYear();
+        const month = String(gameDate.getMonth() + 1).padStart(2, '0');
+        const day = String(gameDate.getDate()).padStart(2, '0');
+        dates.add(`${year}-${month}-${day}`);
       }
     });
     return dates;
@@ -500,7 +506,12 @@ const CreateSquaresPool = () => {
                           const gt = g.game_datetime || g.game_time || g.gameTime;
                           if (!gt) return false;
                           const gd = new Date(gt);
-                          return gd.toISOString().split('T')[0] === dateStr &&
+                          // Compare using local date
+                          const year = gd.getFullYear();
+                          const month = String(gd.getMonth() + 1).padStart(2, '0');
+                          const day = String(gd.getDate()).padStart(2, '0');
+                          const gdDateStr = `${year}-${month}-${day}`;
+                          return gdDateStr === dateStr &&
                                  (!formData.league || !g.league || g.league.toUpperCase() === formData.league.toUpperCase());
                         }).length;
 
@@ -782,7 +793,7 @@ const CreateSquaresPool = () => {
             <div className="space-y-6">
               <h2 className="text-2xl font-bold mb-6" style={{ color: colors.text }}>Fees & Rewards</h2>
 
-              <InputField label="Cost Per Square ($)" error={errors.costPerSquare} hint={`Total pot: $${((formData.costPerSquare || 0) * 100).toFixed(2)}`} colors={colors} isDark={isDark}>
+              <InputField label="Cost Per Square" error={errors.costPerSquare} hint={`Total pot: ${((formData.costPerSquare || 0) * 100).toFixed(2)}`} colors={colors} isDark={isDark}>
                 <input
                   type="number"
                   step="0.01"
@@ -852,7 +863,7 @@ const CreateSquaresPool = () => {
                   {selectedGame && <p style={{ color: colors.text }}><strong>Game:</strong> {selectedGame.home_team?.name || selectedGame.home_team} vs {selectedGame.visitor_team?.name || selectedGame.visitor_team}</p>}
                   <p style={{ color: colors.text }}><strong>Numbers:</strong> {formData.numbersType}</p>
                   <p style={{ color: colors.text }}><strong>Pool Type:</strong> {formData.poolType}</p>
-                  <p style={{ color: colors.text }}><strong>Cost:</strong> ${formData.costPerSquare?.toFixed(2)} per square</p>
+                  <p style={{ color: colors.text }}><strong>Cost:</strong> {formData.costPerSquare?.toFixed(2)} per square</p>
                 </div>
               </div>
             </div>

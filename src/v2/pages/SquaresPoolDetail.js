@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FiArrowLeft, FiCalendar, FiDollarSign, FiGrid, FiLock, FiUnlock, FiTrendingUp, FiAward, FiShare2, FiDownload, FiX, FiCreditCard, FiCheck, FiChevronDown, FiSettings, FiShuffle, FiArrowUp } from 'react-icons/fi';
+import { FiArrowLeft, FiCalendar, FiGrid, FiLock, FiUnlock, FiTrendingUp, FiAward, FiShare2, FiDownload, FiX, FiCreditCard, FiCheck, FiChevronDown, FiSettings, FiShuffle, FiArrowUp } from 'react-icons/fi';
 import SquaresGrid from '../components/squares/SquaresGrid';
 import WinnersDisplay from '../components/squares/WinnersDisplay';
 import ConfirmModal from '../components/ui/ConfirmModal';
@@ -953,7 +953,7 @@ const SquaresPoolDetail = () => {
 
   const formatCurrency = (value) => {
     const amount = Number(value || 0);
-    return `$${amount.toFixed(2)}`;
+    return `${amount.toFixed(2)}`;
   };
 
   const renderProgressCircle = (percentString, size = 40) => {
@@ -1310,7 +1310,7 @@ const SquaresPoolDetail = () => {
               {/* {pool.player_pool_type === 'CREDIT' && getUserCreditBalance() !== null && (
                 <div className='h-full' style={{ backgroundColor: isDark ? colors.cardHover : '#f7f4f2', border: `1px solid ${colors.border}`, borderRadius: '14px', padding: '12px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minWidth: '100px' }}>
                   <div className="text-xl font-bold" style={{ color: colors.success }}>
-                    ${getUserCreditBalance()}
+                    {getUserCreditBalance()}
                   </div>
                   <div className="text-xs" style={{ color: colors.text, opacity: 0.7 }}>
                     Your Credits
@@ -1320,7 +1320,7 @@ const SquaresPoolDetail = () => {
 
               <div className='h-full' style={{ backgroundColor: isDark ? colors.cardHover : '#f7f4f2', border: `1px solid ${colors.border}`, borderRadius: '14px', padding: '12px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minWidth: '100px' }}>
                 <div className="text-xl font-bold" style={{ color: colors.success }}>
-                  ${getUserCreditBalance() || '0.00'}
+                  {getUserCreditBalance() || '0.00'}
                 </div>
                 <div className="text-xs" style={{ color: colors.text, opacity: 0.7 }}>
                   Your Credits
@@ -1353,13 +1353,13 @@ const SquaresPoolDetail = () => {
           <div style={{ backgroundColor: isDark ? colors.cardHover : '#f7f4f2', border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '12px 14px' }}>
             <div className="text-xs" style={{ color: colors.text, opacity: 0.6 }}>Entry / square</div>
             <div className="text-xl font-bold" style={{ color: colors.text }}>
-              ${parseFloat(pool.entry_fee || pool.credit_cost || pool.costPerSquare || 0).toFixed(2)}
+              {parseFloat(pool.entry_fee || pool.credit_cost || pool.costPerSquare || 0).toFixed(2)}
             </div>
           </div>
           <div style={{ backgroundColor: isDark ? colors.cardHover : '#f7f4f2', border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '12px 14px' }}>
             <div className="text-xs" style={{ color: colors.text, opacity: 0.6 }}>Total pot</div>
             <div className="text-xl font-bold" style={{ color: colors.brand.primary }}>
-              ${parseFloat(pool.total_pot || pool.totalPot || 0).toFixed(2)}
+              {parseFloat(pool.total_pot || pool.totalPot || 0).toFixed(2)}
             </div>
           </div>
           <div style={{ backgroundColor: isDark ? colors.cardHover : '#f7f4f2', border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '12px 14px' }}>
@@ -1649,7 +1649,7 @@ const SquaresPoolDetail = () => {
                         onClick={handleMakePoolFree}
                         style={{ ...adminButtonStyle, justifyContent: 'center', width: '100%' }}
                       >
-                        <FiDollarSign size={16} /> Make Free
+                        <FiCreditCard size={16} /> Make Free
                       </button>
                     )}
                   </div>
@@ -1898,7 +1898,7 @@ const SquaresPoolDetail = () => {
                     </div>
                     <div className="text-right">
                       <div className="font-bold text-lg" style={{ color: colors.success }}>
-                        ${parseFloat(winner.prize_amount || 0).toFixed(2)}
+                        {parseFloat(winner.prize_amount || 0).toFixed(2)}
                       </div>
                     </div>
                   </div>
@@ -1976,7 +1976,7 @@ const SquaresPoolDetail = () => {
               {pool.entry_fee > 0 && (
                 <div className="flex items-start gap-3">
                   <span style={{ color: colors.brand.primary, fontWeight: 800 }}>•</span>
-                  <p>Cost: ${parseFloat(pool.entry_fee).toFixed(2)} per square</p>
+                  <p>Cost: {parseFloat(pool.entry_fee).toFixed(2)} per square</p>
                 </div>
               )}
               <div className="flex items-start gap-3">
@@ -2032,10 +2032,10 @@ const SquaresPoolDetail = () => {
                 <span style={{ color: colors.brand.primary, fontWeight: 800 }}>3.</span>
                 <p>X-axis = Winning team's last digit, Y-axis = Losing team's last digit.</p>
               </div>
-              <div className="flex items-start gap-3">
+              {/* <div className="flex items-start gap-3">
                 <span style={{ color: colors.brand.primary, fontWeight: 800 }}>4.</span>
-                <p>Prizes distributed{pool.entry_fee > 0 ? ` from $${(pool.entry_fee * 100).toFixed(0)} total pot` : ''} based on reward structure.</p>
-              </div>
+                <p>Prizes distributed{pool.entry_fee > 0 ? ` from ${(pool.entry_fee * 100).toFixed(0)} total pot` : ''} based on reward structure.</p>
+              </div> */}
             </div>
           </div>
         </div>

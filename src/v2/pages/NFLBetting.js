@@ -571,7 +571,7 @@ const NFLBetting = () => {
             ))}
           </select>
           <div style={balanceStyles}>
-            Balance: <span style={balanceValueStyles}>${selectedLeague?.balance?.toFixed(2) || '0.00'}</span>
+            Balance: <span style={balanceValueStyles}>{selectedLeague?.balance?.toFixed(2) || '0.00'}</span>
           </div>
         </div>
       </div>

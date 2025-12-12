@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiGrid, FiDollarSign, FiUsers, FiTrendingUp, FiPlus, FiEye, FiAlertCircle, FiCreditCard, FiCheckCircle, FiXCircle, FiSend, FiFileText, FiCalendar, FiLock, FiUnlock } from 'react-icons/fi';
+import { FiGrid, FiUsers, FiTrendingUp, FiPlus, FiEye, FiAlertCircle, FiCreditCard, FiCheckCircle, FiXCircle, FiSend, FiFileText, FiCalendar, FiLock, FiUnlock } from 'react-icons/fi';
 import { useUserContext } from '../contexts/UserContext';
 import { useUser } from '@clerk/clerk-react';
 import { useAxios } from '../../app/contexts/AxiosContext';
@@ -313,7 +313,7 @@ const SquaresAdminDashboard = () => {
   };
 
   const formatCurrency = (amount) => {
-    return `$${parseFloat(amount || 0).toFixed(2)}`;
+    return `${parseFloat(amount || 0).toFixed(2)}`;
   };
 
   // Team helper functions
@@ -736,7 +736,7 @@ const SquaresAdminDashboard = () => {
                 <p className="text-white text-4xl font-bold mt-2">{formatCurrency(stats.totalRevenue)}</p>
               </div>
               <div className="bg-orange-500/30 p-4 rounded-lg">
-                <FiDollarSign className="text-white text-3xl" />
+                <FiCreditCard className="text-white text-3xl" />
               </div>
             </div>
           </div>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiCalendar, FiUsers, FiDollarSign, FiGrid, FiLock, FiUnlock, FiPlusCircle } from 'react-icons/fi';
+import { FiCalendar, FiUsers, FiGrid, FiLock, FiUnlock, FiPlusCircle } from 'react-icons/fi';
 import { useAxios } from '../../app/contexts/AxiosContext';
 import { useUserContext } from '../contexts/UserContext';
 import { useTheme } from '../contexts/ThemeContext';
@@ -559,7 +559,7 @@ const SquaresPoolList = () => {
                   <div style={infoRowStyles}>
                     <div className='flex flex-col items-center p-3 bg-gray-100 rounded-md' style={statTileStyles}>
                       <span style={{ color: colors.text, fontWeight: 800 }}>
-                        ${parseFloat(pool.entry_fee || pool.credit_cost || pool.costPerSquare || 0).toFixed(2)}
+                        {parseFloat(pool.entry_fee || pool.credit_cost || pool.costPerSquare || 0).toFixed(2)}
                       </span>
                       <span style={{ fontSize: '0.75rem', color: colors.text, opacity: 0.7 }}>
                         Per Square
@@ -568,7 +568,7 @@ const SquaresPoolList = () => {
 
                     <div className='flex flex-col items-center p-3 bg-gray-100 rounded-md' style={statTileStyles}>
                       <span style={{ color: colors.text, fontWeight: 800 }}>
-                        ${parseFloat(pool.total_pot || pool.totalPot || 0).toFixed(2)}
+                        {parseFloat(pool.total_pot || pool.totalPot || 0).toFixed(2)}
                       </span>
                       <span style={{ fontSize: '0.75rem', color: colors.text, opacity: 0.7 }}>
                         Total Pot

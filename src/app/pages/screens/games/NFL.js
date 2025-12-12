@@ -136,7 +136,7 @@ const NFL = ({currentUser, refreshCurrentUser}) => {
     return (
       <>
         <div className="flex gap-2 justify-center">
-          <p className="text-green-500 font-bold">${Number(bet_amount || 0).toFixed(2)}</p>/<p className="text-green-500 font-bold">${Number(win_amount || 0).toFixed(2) }</p>
+          <p className="text-green-500 font-bold">{Number(bet_amount || 0).toFixed(2)}</p>/<p className="text-green-500 font-bold">{Number(win_amount || 0).toFixed(2) }</p>
         </div>
       </>
     );
@@ -793,11 +793,11 @@ const NFL = ({currentUser, refreshCurrentUser}) => {
                   </div>
                   <div className="text-xl flex items-center gap-1 justify-end">
                     <span>Potential Payout:</span>
-                    <span className="font-bold text-green-500">${parlayWinnings.payout || 0.00}</span>
+                    <span className="font-bold text-green-500">{parlayWinnings.payout || 0.00}</span>
                   </div>
                   <div className="text-xl flex items-center gap-1 justify-end">
                     <span>Total Returns:</span>
-                    <span className="font-bold text-green-500">${parlayWinnings.return || 0.00}</span>
+                    <span className="font-bold text-green-500">{parlayWinnings.return || 0.00}</span>
                   </div>
                 </>
               )
@@ -821,11 +821,11 @@ const NFL = ({currentUser, refreshCurrentUser}) => {
                   </div>
                   <div className="text-xl flex items-center gap-1 justify-end">
                     <span>Potential Payout:</span>
-                    <span className="font-bold text-green-500">${teaserWinnings.payout || 0.00}</span>
+                    <span className="font-bold text-green-500">{teaserWinnings.payout || 0.00}</span>
                   </div>
                   <div className="text-xl flex items-center gap-1 justify-end">
                     <span>Total Returns:</span>
-                    <span className="font-bold text-green-500">${teaserWinnings.return || 0.00}</span>
+                    <span className="font-bold text-green-500">{teaserWinnings.return || 0.00}</span>
                   </div>
                 </>
               )

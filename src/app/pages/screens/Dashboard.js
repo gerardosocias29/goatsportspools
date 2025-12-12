@@ -40,7 +40,7 @@ const Dashboard = () => {
               </div>
               <div>
                 <div className="flex flex-row items-center justify-center rounded-lg p-3 border-[2px]">
-                  <i className="pi pi-dollar text-xl"></i>
+                  <i className="pi pi-credit-card text-xl"></i>
                 </div>
               </div>
             </div>

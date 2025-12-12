@@ -86,7 +86,7 @@ const UserAuction = ({ channel, auctionId, currentUser }) => {
       showToast({
         severity: response.data.status ? 'success' : 'error',
         summary: response.data.status ? 'Bid Placed' : 'Bid Error',
-        detail: response.data.status ? `Successfully placed bid of $${bid_amount}` : response.data.message,
+        detail: response.data.status ? `Successfully placed bid of ${bid_amount}` : response.data.message,
       });
       
       // Update bid history
@@ -280,15 +280,15 @@ const UserAuction = ({ channel, auctionId, currentUser }) => {
                   <div className="grid grid-cols-3 gap-3 mt-3">
                     <div className="bg-gray-50 p-3 border rounded-md">
                       <p className="text-sm text-gray-500">Starting Bid</p>
-                      <p className="text-lg font-semibold">${activeItem.starting_bid}</p>
+                      <p className="text-lg font-semibold">{activeItem.starting_bid}</p>
                     </div>
                     <div className="bg-gray-50 p-3 border rounded-md">
                       <p className="text-sm text-gray-500">Minimum Bid Increment</p>
-                      <p className="text-lg font-semibold">${activeItem.minimum_bid}</p>
+                      <p className="text-lg font-semibold">{activeItem.minimum_bid}</p>
                     </div>
                     <div className="bg-green-50 border-green-800 border p-3 rounded-md">
                       <p className="text-sm text-green-800">Current Bid</p>
-                      <p className="text-lg text-green-800 font-semibold">${activeItem.bids?.length > 0 ? activeItem.bids[0].bid_amount : "-"}</p>
+                      <p className="text-lg text-green-800 font-semibold">{activeItem.bids?.length > 0 ? activeItem.bids[0].bid_amount : "-"}</p>
                     </div>
                   </div>
                 </>
@@ -310,7 +310,7 @@ const UserAuction = ({ channel, auctionId, currentUser }) => {
               <div className="mb-4">
                 <Button
                   type="button"
-                  label={`Bid for $${currentBidAmount}`}
+                  label={`Bid for ${currentBidAmount}`}
                   className="w-full p-button-primary rounded-lg"
                   loading={isBidding}
                   onClick={() => handlePlaceBid()}
@@ -323,9 +323,8 @@ const UserAuction = ({ channel, auctionId, currentUser }) => {
                     min={1} 
                     value={customBidAmount} 
                     onChange={(e) => setCustomBidAmount(e.value)} 
-                    mode="currency" 
-                    currency="USD"
                     locale="en-US"
+                    mode="decimal"
                     className="w-full"
                     placeholder="Custom Bid Amount"
                   />
@@ -362,7 +361,7 @@ const UserAuction = ({ channel, auctionId, currentUser }) => {
                       <tbody className="divide-y divide-gray-200">
                         {bidHistory.map((bid, index) => (
                           <tr key={index} className={bid.user_id === currentUser.id ? 'bg-blue-50' : ''}>
-                            <td className="py-2 px-3 text-sm font-medium">${Number(bid.bid_amount).toFixed(2)}</td>
+                            <td className="py-2 px-3 text-sm font-medium">{Number(bid.bid_amount).toFixed(2)}</td>
                             <td className="py-2 px-3 text-sm font-medium">{members.find((e) => e.user_id == bid.user_id)?.user.name || "-"}</td>
                             <td className="py-2 px-3 text-sm text-gray-500">{convertUTCToTimeZone(bid?.created_at, 'DD/MM/YYYY hh:mm A')}</td>
                           </tr>
