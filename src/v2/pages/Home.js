@@ -224,7 +224,7 @@ const Home = () => {
       </section>
 
       {/* Testimonials Section */}
-      <section style={{ ...sectionStyles, backgroundColor: isDark ? 'rgba(30, 39, 54, 0.3)' : 'rgba(250, 246, 242, 0.5)' }}>
+      {/* <section style={{ ...sectionStyles, backgroundColor: isDark ? 'rgba(30, 39, 54, 0.3)' : 'rgba(250, 246, 242, 0.5)' }}>
         <div style={containerStyles}>
           <h2 style={sectionTitleStyles}>Loved by Sports Fans</h2>
           <p style={sectionDescStyles}>
@@ -232,7 +232,6 @@ const Home = () => {
           </p>
 
           <div style={gridStyles}>
-            {/* Testimonial 1 */}
             <div style={testimonialStyles}>
               <div style={quoteStyles}>
                 "OKRNG has completely changed how we do our office football pool.
@@ -247,7 +246,6 @@ const Home = () => {
               </div>
             </div>
 
-            {/* Testimonial 2 */}
             <div style={testimonialStyles}>
               <div style={quoteStyles}>
                 "The live updates during games are incredible. I can track all my bets and pools
@@ -262,7 +260,6 @@ const Home = () => {
               </div>
             </div>
 
-            {/* Testimonial 3 */}
             <div style={testimonialStyles}>
               <div style={quoteStyles}>
                 "Finally, a platform that makes it easy to run multiple pools at once.
@@ -278,7 +275,7 @@ const Home = () => {
             </div>
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* CTA Section */}
       <section style={sectionStyles}>
