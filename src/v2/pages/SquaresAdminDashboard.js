@@ -963,7 +963,7 @@ const SquaresAdminDashboard = () => {
                                     className="w-6 h-6 object-contain"
                                   />
                                 )}
-                                <span className="font-bold text-white text-xs truncate">
+                                <span className="font-bold text-xs truncate" style={{ color: getTeamBackground(pool.game?.home_team_id) ? 'white' : 'black' }}>
                                   {getTeamName(pool.game?.home_team_id)}
                                 </span>
                               </div>
@@ -982,7 +982,7 @@ const SquaresAdminDashboard = () => {
                                     className="w-6 h-6 object-contain"
                                   />
                                 )}
-                                <span className="font-bold text-white text-xs truncate">
+                                <span className="font-bold text-xs truncate" style={{ color: getTeamBackground(pool.game?.visitor_team_id) ? 'white' : 'black' }}>
                                   {getTeamName(pool.game?.visitor_team_id)}
                                 </span>
                               </div>
