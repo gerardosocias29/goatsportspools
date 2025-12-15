@@ -407,11 +407,12 @@ const SquaresPoolDetail = () => {
         visitor_score: parseInt(visitorScore),
       });
 
-      handleCloseScoreModal();
       await loadWinners();
       await loadPool(null, true);
+      handleCloseScoreModal();
       showToast({ severity: 'success', summary: 'Success', detail: 'Scores updated and winner calculated!' });
     } catch (error) {
+      handleCloseScoreModal();
       showToast({ severity: 'error', summary: 'Error', detail: 'Failed to calculate winner: ' + (error.response?.data?.message || error.message) });
     } finally {
       setCalculatingWinners(false);
