@@ -4,6 +4,7 @@ import { FiArrowLeft, FiCalendar, FiGrid, FiLock, FiUnlock, FiTrendingUp, FiAwar
 import SquaresGrid from '../components/squares/SquaresGrid';
 import WinnersDisplay from '../components/squares/WinnersDisplay';
 import ConfirmModal from '../components/ui/ConfirmModal';
+import MobileSquareSelector from '../components/squares/MobileSquareSelector';
 import { useAxios } from '../../app/contexts/AxiosContext';
 import { useUserContext } from '../contexts/UserContext';
 import { TeamTemplate } from '../../app/pages/screens/games/NFLTemplates';
@@ -151,6 +152,18 @@ const SquaresPoolDetail = () => {
   const [homeScore, setHomeScore] = useState('');
   const [visitorScore, setVisitorScore] = useState('');
   const [claimProgress, setClaimProgress] = useState({ current: 0, total: 0 });
+  const [showMobileSelector, setShowMobileSelector] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Detect mobile device
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768); // md breakpoint
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Confirm modal states
   const [confirmModal, setConfirmModal] = useState({
@@ -361,14 +374,43 @@ const SquaresPoolDetail = () => {
 
     setCalculatingWinners(true);
     try {
+      // First, update the game scores in the database
+      if (pool.game?.id) {
+        const scoreUpdate = {};
+        const homeScoreInt = parseInt(homeScore);
+        const visitorScoreInt = parseInt(visitorScore);
+
+        // Map quarter to the appropriate score fields
+        if (selectedQuarter === 1) {
+          scoreUpdate.q1_home = homeScoreInt;
+          scoreUpdate.q1_visitor = visitorScoreInt;
+        } else if (selectedQuarter === 2) {
+          scoreUpdate.half_home = homeScoreInt;
+          scoreUpdate.half_visitor = visitorScoreInt;
+        } else if (selectedQuarter === 3) {
+          scoreUpdate.q3_home = homeScoreInt;
+          scoreUpdate.q3_visitor = visitorScoreInt;
+        } else if (selectedQuarter === 4) {
+          scoreUpdate.final_home = homeScoreInt;
+          scoreUpdate.final_visitor = visitorScoreInt;
+          scoreUpdate.game_status = 'Final';
+        }
+
+        // Update game scores
+        await axiosService.put(`/api/games/${pool.game.id}/scores`, scoreUpdate);
+      }
+
+      // Then calculate the winner for this quarter
       await axiosService.post(`/api/squares-pools/${poolId}/calculate-winners`, {
         quarter: selectedQuarter,
         home_score: parseInt(homeScore),
         visitor_score: parseInt(visitorScore),
       });
+
       handleCloseScoreModal();
       await loadWinners();
       await loadPool(null, true);
+      showToast({ severity: 'success', summary: 'Success', detail: 'Scores updated and winner calculated!' });
     } catch (error) {
       showToast({ severity: 'error', summary: 'Error', detail: 'Failed to calculate winner: ' + (error.response?.data?.message || error.message) });
     } finally {
@@ -2039,6 +2081,78 @@ const SquaresPoolDetail = () => {
             </div>
           </div>
         </div>
+
+        {/* Quarter Payout Percentages */}
+        {pool.game_reward_type && (
+          <div className="mt-5">
+            <div
+              style={{ backgroundColor: colors.card, border: `1px solid ${colors.border}`, borderRadius: '14px', padding: '14px' }}
+            >
+              <h3 className="text-lg font-bold mb-3" style={{ color: colors.text }}>Payout Distribution</h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {/* Q1 */}
+                {pool.game_reward_type.reward1_percent > 0 && (
+                  <div
+                    className="p-3 rounded-lg text-center"
+                    style={{ backgroundColor: isDark ? '#374151' : '#F3F4F6' }}
+                  >
+                    <div className="text-sm font-medium" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>
+                      1st Quarter
+                    </div>
+                    <div className="text-2xl font-bold mt-1" style={{ color: colors.brand.primary }}>
+                      {pool.game_reward_type.reward1_percent}%
+                    </div>
+                  </div>
+                )}
+                {/* Half */}
+                {pool.game_reward_type.reward2_percent > 0 && (
+                  <div
+                    className="p-3 rounded-lg text-center"
+                    style={{ backgroundColor: isDark ? '#374151' : '#F3F4F6' }}
+                  >
+                    <div className="text-sm font-medium" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>
+                      Halftime
+                    </div>
+                    <div className="text-2xl font-bold mt-1" style={{ color: colors.brand.primary }}>
+                      {pool.game_reward_type.reward2_percent}%
+                    </div>
+                  </div>
+                )}
+                {/* Q3 */}
+                {pool.game_reward_type.reward3_percent > 0 && (
+                  <div
+                    className="p-3 rounded-lg text-center"
+                    style={{ backgroundColor: isDark ? '#374151' : '#F3F4F6' }}
+                  >
+                    <div className="text-sm font-medium" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>
+                      3rd Quarter
+                    </div>
+                    <div className="text-2xl font-bold mt-1" style={{ color: colors.brand.primary }}>
+                      {pool.game_reward_type.reward3_percent}%
+                    </div>
+                  </div>
+                )}
+                {/* Final */}
+                {pool.game_reward_type.reward4_percent > 0 && (
+                  <div
+                    className="p-3 rounded-lg text-center"
+                    style={{ backgroundColor: isDark ? '#374151' : '#F3F4F6' }}
+                  >
+                    <div className="text-sm font-medium" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>
+                      Final Score
+                    </div>
+                    <div className="text-2xl font-bold mt-1" style={{ color: colors.brand.primary }}>
+                      {pool.game_reward_type.reward4_percent}%
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div className="mt-3 text-center text-sm" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>
+                Total Payout: {pool.custom_payout ? `$${parseFloat(pool.custom_payout).toFixed(2)} (custom)` : pool.entry_fee > 0 ? `$${(parseFloat(pool.entry_fee) * 100).toFixed(2)}` : 'TBD'}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Winners Section */}
@@ -2115,7 +2229,13 @@ const SquaresPoolDetail = () => {
                   <FiX size={18} /> Cancel
                 </button>
                 <button
-                  onClick={handleConfirmSelection}
+                  onClick={() => {
+                    if (isMobile) {
+                      setShowMobileSelector(true);
+                    } else {
+                      handleConfirmSelection();
+                    }
+                  }}
                   className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold transition-all"
                   style={{
                     backgroundColor: colors.brand.primary,
@@ -2700,6 +2820,22 @@ const SquaresPoolDetail = () => {
           message="Updating Pool"
         />
       )}
+
+      {/* Mobile Square Selector Modal */}
+      <MobileSquareSelector
+        isOpen={showMobileSelector}
+        onClose={() => setShowMobileSelector(false)}
+        selectedSquares={selectedSquares}
+        onConfirm={() => {
+          setShowMobileSelector(false);
+          handleConfirmSelection();
+        }}
+        costPerSquare={parseFloat(pool?.credit_cost || pool?.entry_fee || 0)}
+        userCredits={pool?.player_pool_type === 'CREDIT' ? parseFloat(getUserCreditBalance() || 0) : null}
+        maxSquaresPerPlayer={pool?.max_squares_per_player}
+        currentUserOwnedCount={pool?.squares?.filter(s => parseInt(s.player_id) === getCurrentUserId()).length || 0}
+        poolType={pool?.player_pool_type}
+      />
 
       {/* Confirm Modal */}
       <ConfirmModal

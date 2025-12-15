@@ -274,6 +274,15 @@ const CreateSquaresPool = () => {
         break;
 
       case 5: // Player Settings
+        if (!formData.closeDate) {
+          newErrors.closeDate = 'Pool closes date/time is required';
+        } else if (selectedGame) {
+          const closeDate = new Date(formData.closeDate);
+          const gameTime = new Date(selectedGame.game_datetime || selectedGame.game_time || selectedGame.gameTime);
+          if (closeDate >= gameTime) {
+            newErrors.closeDate = 'Pool must close before the game starts';
+          }
+        }
         if (formData.poolType === 'CREDIT' && !formData.poolPassword.trim()) {
           newErrors.poolPassword = 'Password is required for credit pools';
         }
@@ -730,6 +739,24 @@ const CreateSquaresPool = () => {
                     </SelectButton>
                   ))}
                 </div>
+              </InputField>
+
+              <InputField
+                label="Pool Selection Closes"
+                required
+                error={errors.closeDate}
+                hint={selectedGame ? `Must be before game start: ${new Date(selectedGame.game_datetime || selectedGame.game_time).toLocaleString()}` : "When should square selection automatically close?"}
+                colors={colors}
+                isDark={isDark}
+              >
+                <input
+                  type="datetime-local"
+                  value={formData.closeDate}
+                  onChange={(e) => handleChange('closeDate', e.target.value)}
+                  max={selectedGame ? new Date(selectedGame.game_datetime || selectedGame.game_time).toISOString().slice(0, 16) : undefined}
+                  className="w-full rounded-lg px-4 py-3 focus:outline-none focus:ring-2"
+                  style={inputStyles}
+                />
               </InputField>
 
               <InputField label="Pool Type" required error={errors.poolType} colors={colors} isDark={isDark}>
