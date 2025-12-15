@@ -2772,7 +2772,18 @@ const SquaresPoolDetail = () => {
               >
                 <p className="text-xs" style={{ color: colors.text, opacity: 0.6 }}>Winning Square Coordinates</p>
                 <p className="text-lg font-bold" style={{ color: colors.brand.primary }}>
-                  ({parseInt(homeScore) % 10}, {parseInt(visitorScore) % 10})
+                  {(() => {
+                    const homeScoreInt = parseInt(homeScore);
+                    const visitorScoreInt = parseInt(visitorScore);
+                    const homeLastDigit = homeScoreInt % 10;
+                    const visitorLastDigit = visitorScoreInt % 10;
+                    
+                    // X-axis = winning team, Y-axis = losing team (matches backend logic)
+                    const xCoord = homeScoreInt >= visitorScoreInt ? homeLastDigit : visitorLastDigit;
+                    const yCoord = homeScoreInt >= visitorScoreInt ? visitorLastDigit : homeLastDigit;
+                    
+                    return `(${xCoord}, ${yCoord})`;
+                  })()}
                 </p>
               </div>
             )}
