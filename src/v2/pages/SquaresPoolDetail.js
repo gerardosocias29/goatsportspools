@@ -401,7 +401,7 @@ const SquaresPoolDetail = () => {
       }
 
       // Then calculate the winner for this quarter
-      await axiosService.post(`/api/squares-pools/${poolId}/calculate-winners`, {
+      const winnerResponse = await axiosService.post(`/api/squares-pools/${poolId}/calculate-winners`, {
         quarter: selectedQuarter,
         home_score: parseInt(homeScore),
         visitor_score: parseInt(visitorScore),
@@ -410,7 +410,13 @@ const SquaresPoolDetail = () => {
       await loadWinners();
       await loadPool(null, true);
       handleCloseScoreModal();
-      showToast({ severity: 'success', summary: 'Success', detail: 'Scores updated and winner calculated!' });
+      
+      // Check if winner was found or square is unclaimed
+      if (winnerResponse.data.status === false && winnerResponse.data.unclaimed) {
+        showToast({ severity: 'warn', summary: 'No Winner', detail: winnerResponse.data.message });
+      } else {
+        showToast({ severity: 'success', summary: 'Success', detail: 'Scores updated and winner calculated!' });
+      }
     } catch (error) {
       handleCloseScoreModal();
       showToast({ severity: 'error', summary: 'Error', detail: 'Failed to calculate winner: ' + (error.response?.data?.message || error.message) });
