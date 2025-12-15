@@ -1555,7 +1555,8 @@ const SquaresPoolDetail = () => {
                                 className="text-2xl font-bold"
                                 style={{ color: colors.text }}
                               >
-                                {quarterWinner?.home_score ?? '-'}
+                                {quarterWinner?.home_score ?? 
+                                  (pool.game?.[`home_q${quarter}_score`] ?? '-')}
                               </div>
                             </div>
 
@@ -1587,7 +1588,8 @@ const SquaresPoolDetail = () => {
                                 className="text-2xl font-bold"
                                 style={{ color: colors.text }}
                               >
-                                {quarterWinner?.visitor_score ?? '-'}
+                                {quarterWinner?.visitor_score ?? 
+                                  (pool.game?.[`visitor_q${quarter}_score`] ?? '-')}
                               </div>
                             </div>
                           </div>
