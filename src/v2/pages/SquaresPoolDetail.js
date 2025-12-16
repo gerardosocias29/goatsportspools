@@ -1458,15 +1458,21 @@ const SquaresPoolDetail = () => {
 
                       const hasScores = homeScore !== null && homeScore !== undefined && visitorScore !== null && visitorScore !== undefined;
 
+                      // Check if scores have changed since winner was calculated
+                      const scoresChanged = hasWinner && hasScores &&
+                        (quarterWinner.home_score !== homeScore || quarterWinner.visitor_score !== visitorScore);
+
                       return (
                         <div
                           key={quarter}
                           className="transition-all"
                           style={{
-                            backgroundColor: hasWinner
+                            backgroundColor: scoresChanged
+                              ? (isDark ? 'rgba(239, 68, 68, 0.1)' : 'rgba(239, 68, 68, 0.08)')
+                              : hasWinner
                               ? (isDark ? 'rgba(34, 197, 94, 0.1)' : 'rgba(34, 197, 94, 0.08)')
                               : (isDark ? colors.cardHover : '#fff'),
-                            border: `2px solid ${hasWinner ? colors.success : colors.border}`,
+                            border: `2px solid ${scoresChanged ? colors.error : hasWinner ? colors.success : colors.border}`,
                             borderRadius: '14px',
                             padding: '14px',
                             opacity: calculatingWinners ? 0.6 : 1,
@@ -1555,8 +1561,50 @@ const SquaresPoolDetail = () => {
                               </button>
                             )}
 
-                            {/* If has scores but no winner, show "Calculate Winner" button */}
-                            {hasScores && !hasWinner && (
+                            {/* If scores changed, show warning and recalculate button */}
+                            {scoresChanged && (
+                              <>
+                                <div
+                                  className="text-xs px-2 py-1 rounded-lg text-center"
+                                  style={{
+                                    backgroundColor: `${colors.error}20`,
+                                    color: colors.error
+                                  }}
+                                >
+                                  ⚠ Scores Changed
+                                </div>
+                                <button
+                                  onClick={async () => {
+                                    if (calculatingWinners) return;
+                                    setCalculatingWinners(true);
+                                    try {
+                                      await axiosService.post(`/api/squares-pools/${poolId}/calculate-winners`, {
+                                        quarter: quarter,
+                                        home_score: homeScore,
+                                        visitor_score: visitorScore,
+                                      });
+                                      await loadWinners();
+                                      await loadPool(null, true);
+                                      showToast({ severity: 'success', summary: 'Success', detail: 'Winner recalculated!' });
+                                    } catch (error) {
+                                      showToast({ severity: 'error', summary: 'Error', detail: 'Failed to recalculate winner: ' + (error.response?.data?.message || error.message) });
+                                    } finally {
+                                      setCalculatingWinners(false);
+                                    }
+                                  }}
+                                  className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-all hover:scale-105"
+                                  style={{
+                                    backgroundColor: colors.error,
+                                    color: '#fff'
+                                  }}
+                                >
+                                  Recalculate Winner
+                                </button>
+                              </>
+                            )}
+
+                            {/* If has scores but no winner (and scores didn't change), show "Calculate Winner" button */}
+                            {hasScores && !hasWinner && !scoresChanged && (
                               <button
                                 onClick={async () => {
                                   if (calculatingWinners) return;
@@ -1586,8 +1634,8 @@ const SquaresPoolDetail = () => {
                               </button>
                             )}
 
-                            {/* If has winner, show winner info */}
-                            {hasWinner && (
+                            {/* If has winner and scores haven't changed, show winner info */}
+                            {hasWinner && !scoresChanged && (
                               <div
                                 className="text-xs font-semibold px-2 py-1 rounded-lg text-center"
                                 style={{
