@@ -1578,14 +1578,20 @@ const SquaresPoolDetail = () => {
                                     if (calculatingWinners) return;
                                     setCalculatingWinners(true);
                                     try {
-                                      await axiosService.post(`/api/squares-pools/${poolId}/calculate-winners`, {
+                                      const response = await axiosService.post(`/api/squares-pools/${poolId}/calculate-winners`, {
                                         quarter: quarter,
                                         home_score: homeScore,
                                         visitor_score: visitorScore,
                                       });
                                       await loadWinners();
                                       await loadPool(null, true);
-                                      showToast({ severity: 'success', summary: 'Success', detail: 'Winner recalculated!' });
+
+                                      // Check if winner is unclaimed
+                                      if (response.data?.unclaimed) {
+                                        showToast({ severity: 'warn', summary: 'No Winner', detail: 'Winning square is not claimed by any player' });
+                                      } else {
+                                        showToast({ severity: 'success', summary: 'Success', detail: 'Winner recalculated!' });
+                                      }
                                     } catch (error) {
                                       showToast({ severity: 'error', summary: 'Error', detail: 'Failed to recalculate winner: ' + (error.response?.data?.message || error.message) });
                                     } finally {
@@ -1610,14 +1616,20 @@ const SquaresPoolDetail = () => {
                                   if (calculatingWinners) return;
                                   setCalculatingWinners(true);
                                   try {
-                                    await axiosService.post(`/api/squares-pools/${poolId}/calculate-winners`, {
+                                    const response = await axiosService.post(`/api/squares-pools/${poolId}/calculate-winners`, {
                                       quarter: quarter,
                                       home_score: homeScore,
                                       visitor_score: visitorScore,
                                     });
                                     await loadWinners();
                                     await loadPool(null, true);
-                                    showToast({ severity: 'success', summary: 'Success', detail: 'Winner calculated!' });
+
+                                    // Check if winner is unclaimed
+                                    if (response.data?.unclaimed) {
+                                      showToast({ severity: 'warn', summary: 'No Winner', detail: 'Winning square is not claimed by any player' });
+                                    } else {
+                                      showToast({ severity: 'success', summary: 'Success', detail: 'Winner calculated!' });
+                                    }
                                   } catch (error) {
                                     showToast({ severity: 'error', summary: 'Error', detail: 'Failed to calculate winner: ' + (error.response?.data?.message || error.message) });
                                   } finally {
@@ -1639,12 +1651,18 @@ const SquaresPoolDetail = () => {
                               <div
                                 className="text-xs font-semibold px-2 py-1 rounded-lg text-center"
                                 style={{
-                                  backgroundColor: `${colors.success}20`,
-                                  color: colors.success
+                                  backgroundColor: quarterWinner.player_id ? `${colors.success}20` : `${colors.error}20`,
+                                  color: quarterWinner.player_id ? colors.success : colors.error
                                 }}
                               >
-                                <FiCheck size={12} className="inline mr-1" />
-                                {quarterWinner.player?.name?.split(' ')[0] || 'Winner'}
+                                {quarterWinner.player_id ? (
+                                  <>
+                                    <FiCheck size={12} className="inline mr-1" />
+                                    {quarterWinner.player?.name?.split(' ')[0] || 'Winner'}
+                                  </>
+                                ) : (
+                                  <>No Winner (Unclaimed)</>
+                                )}
                               </div>
                             )}
                           </div>
