@@ -1848,7 +1848,7 @@ const SquaresPoolDetail = () => {
 
                     {/* X-Axis Numbers - Only show for admins */}
                     {canManagePool && (
-                    <div>
+                    <>
                     <div className="mb-4">
                       <div className="flex items-center justify-between mb-2">
                         <label className="text-sm font-semibold" style={{ color: colors.text }}>
@@ -1982,9 +1982,9 @@ const SquaresPoolDetail = () => {
                       </button>
                     </div>
                   </div>
-                    </div>
+                    </>
                     )}
-                  </div>
+                </div>
                 )}
 
                 {/* Credits Management Section - Only for Credit Pools */}
