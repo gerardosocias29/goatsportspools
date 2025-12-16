@@ -1762,8 +1762,8 @@ const SquaresPoolDetail = () => {
                 </div>
                 )}
 
-                {/* Axis Numbers Assignment Section - Only show when numbers not assigned */}
-                {canAssignNumbers && canManagePool && (
+                {/* Axis Numbers Assignment Section - Show to everyone when numbers not assigned */}
+                {canAssignNumbers && (
                   <div
                     style={{
                       backgroundColor: isDark ? 'rgba(59, 130, 246, 0.08)' : 'rgba(59, 130, 246, 0.06)',
@@ -1784,14 +1784,71 @@ const SquaresPoolDetail = () => {
                         <FiGrid size={16} color="#fff" />
                       </div>
                       <div>
-                        <h4 className="text-sm font-bold" style={{ color: colors.text }}>Assign Axis Numbers</h4>
+                        <h4 className="text-sm font-bold" style={{ color: colors.text }}>
+                          {canManagePool ? 'Assign Axis Numbers' : 'Axis Numbers Status'}
+                        </h4>
                         <p className="text-xs" style={{ color: colors.text, opacity: 0.5 }}>
-                          {numbersType === 'AdminTrigger' ? 'Manual assignment required' : 'Numbers not yet assigned'}
+                          {numbersType === 'AdminTrigger'
+                            ? canManagePool ? 'Manual assignment required' : 'Waiting for admin to assign numbers'
+                            : numbersType === 'TimeSet'
+                            ? 'Scheduled for automatic assignment'
+                            : numbersType === 'Ascending'
+                            ? 'Will be assigned in ascending order (0-9)'
+                            : 'Numbers not yet assigned'}
                         </p>
                       </div>
                     </div>
 
-                    {/* X-Axis Numbers */}
+                    {/* Auto-assign message for TimeSet - visible to everyone */}
+                    {numbersType === 'TimeSet' && pool.numbers_assignment_datetime && (
+                      <div
+                        className="mb-4 p-4 rounded-lg"
+                        style={{
+                          backgroundColor: isDark ? 'rgba(59, 130, 246, 0.15)' : 'rgba(59, 130, 246, 0.1)',
+                          border: `1px solid ${isDark ? 'rgba(59, 130, 246, 0.4)' : 'rgba(59, 130, 246, 0.3)'}`,
+                        }}
+                      >
+                        <div className="flex items-center gap-2 mb-2">
+                          <FiCalendar size={16} style={{ color: '#3B82F6' }} />
+                          <p className="text-sm font-semibold" style={{ color: colors.text }}>
+                            Auto-Assignment Scheduled
+                          </p>
+                        </div>
+                        <p className="text-sm" style={{ color: colors.text, opacity: 0.7 }}>
+                          Numbers will be randomly assigned on: <strong>{new Date(pool.numbers_assignment_datetime).toLocaleString()}</strong>
+                        </p>
+                        {canManagePool && (
+                          <p className="text-xs mt-2" style={{ color: colors.text, opacity: 0.6 }}>
+                            You can still manually assign numbers below if you prefer not to wait.
+                          </p>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Manual assignment info for AdminTrigger - visible to everyone */}
+                    {numbersType === 'AdminTrigger' && !canManagePool && (
+                      <div
+                        className="mb-4 p-4 rounded-lg"
+                        style={{
+                          backgroundColor: isDark ? 'rgba(255, 193, 7, 0.1)' : 'rgba(255, 193, 7, 0.08)',
+                          border: `1px solid ${isDark ? 'rgba(255, 193, 7, 0.3)' : 'rgba(255, 193, 7, 0.2)'}`,
+                        }}
+                      >
+                        <div className="flex items-center gap-2 mb-2">
+                          <FiSettings size={16} style={{ color: '#FFC107' }} />
+                          <p className="text-sm font-semibold" style={{ color: colors.text }}>
+                            Waiting for Manual Assignment
+                          </p>
+                        </div>
+                        <p className="text-sm" style={{ color: colors.text, opacity: 0.7 }}>
+                          The pool commissioner will manually assign the axis numbers before the game starts.
+                        </p>
+                      </div>
+                    )}
+
+                    {/* X-Axis Numbers - Only show for admins */}
+                    {canManagePool && (
+                    <div>
                     <div className="mb-4">
                       <div className="flex items-center justify-between mb-2">
                         <label className="text-sm font-semibold" style={{ color: colors.text }}>
@@ -1924,6 +1981,9 @@ const SquaresPoolDetail = () => {
                         <FiShuffle size={16} /> Randomize All
                       </button>
                     </div>
+                  </div>
+                    </div>
+                    )}
                   </div>
                 )}
 
