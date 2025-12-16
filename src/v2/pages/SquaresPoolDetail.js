@@ -1981,7 +1981,6 @@ const SquaresPoolDetail = () => {
                         <FiShuffle size={16} /> Randomize All
                       </button>
                     </div>
-                  </div>
                     </>
                     )}
                 </div>
