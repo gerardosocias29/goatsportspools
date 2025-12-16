@@ -36,7 +36,8 @@ const SquaresAdminDashboard = () => {
     totalPlayers: 0,
   });
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('pools'); // 'pools', 'credit-requests', 'admin-requests'
+  const [activeTab, setActiveTab] = useState('pools'); // 'pools', 'credit-requests', 'admin-requests', 'applications'
+  const [commissionerApplications, setCommissionerApplications] = useState([]);
   const [processingRequest, setProcessingRequest] = useState(null);
 
   // Application form state for non-admins
@@ -167,6 +168,14 @@ const SquaresAdminDashboard = () => {
         if (adminRequestsResponse.success) {
           setAdminCreditRequests(adminRequestsResponse.data);
         }
+        
+        // Load commissioner applications
+        try {
+          const applicationsResponse = await axiosService.get('/api/squares-admin-applications');
+          setCommissionerApplications(applicationsResponse.data?.data || []);
+        } catch (error) {
+          console.error('Error loading applications:', error);
+        }
       }
 
     } catch (error) {
@@ -275,6 +284,67 @@ const SquaresAdminDashboard = () => {
     } finally {
       setProcessingRequest(null);
     }
+  };
+
+  const handleApproveApplication = (applicationId) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Approve Commissioner Application',
+      message: 'This will grant the user commissioner privileges and change their role to Square Admin.',
+      confirmText: 'Approve',
+      variant: 'info',
+      onConfirm: async () => {
+        setConfirmModal(prev => ({ ...prev, isOpen: false }));
+        setProcessingRequest(applicationId);
+        try {
+          const response = await axiosService.patch(`/api/squares-admin-applications/${applicationId}`, {
+            status: 'approved',
+          });
+
+          if (response.data) {
+            showToast({ severity: 'success', summary: 'Approved', detail: 'Application approved successfully!' });
+            await loadDashboard();
+          } else {
+            showToast({ severity: 'error', summary: 'Error', detail: 'Failed to approve application' });
+          }
+        } catch (error) {
+          showToast({ severity: 'error', summary: 'Error', detail: 'Failed to approve application: ' + (error.message || 'Unknown error') });
+        } finally {
+          setProcessingRequest(null);
+        }
+      }
+    });
+  };
+
+  const handleDenyApplication = (applicationId) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Deny Commissioner Application',
+      message: 'Are you sure you want to deny this application? You can optionally provide a reason.',
+      confirmText: 'Deny',
+      variant: 'warning',
+      onConfirm: async () => {
+        setConfirmModal(prev => ({ ...prev, isOpen: false }));
+        setProcessingRequest(applicationId);
+        try {
+          const response = await axiosService.patch(`/api/squares-admin-applications/${applicationId}`, {
+            status: 'denied',
+            admin_note: 'Application denied',
+          });
+
+          if (response.data) {
+            showToast({ severity: 'success', summary: 'Denied', detail: 'Application denied.' });
+            await loadDashboard();
+          } else {
+            showToast({ severity: 'error', summary: 'Error', detail: 'Failed to deny application' });
+          }
+        } catch (error) {
+          showToast({ severity: 'error', summary: 'Error', detail: 'Failed to deny application: ' + (error.message || 'Unknown error') });
+        } finally {
+          setProcessingRequest(null);
+        }
+      }
+    });
   };
 
   const handleCalculateWinners = (poolId) => {
@@ -866,6 +936,46 @@ const SquaresAdminDashboard = () => {
               )}
             </button>
           )}
+
+          {/* Commissioner Applications Tab (Superadmin only) */}
+          {isSuperadmin && (
+            <button
+              onClick={() => setActiveTab('applications')}
+              style={{
+                padding: '0.75rem 2rem',
+                fontSize: '1rem',
+                fontWeight: 600,
+                color: activeTab === 'applications' ? colors.card : colors.text,
+                backgroundColor: activeTab === 'applications' ? colors.brand.primary : 'transparent',
+                border: 'none',
+                borderRadius: '10px',
+                cursor: 'pointer',
+                transition: 'all 150ms ease',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+              }}
+            >
+              <FiFileText size={18} />
+              <span>Applications</span>
+              {commissionerApplications.filter(a => a.status === 'pending').length > 0 && (
+                <span
+                  style={{
+                    marginLeft: '0.25rem',
+                    padding: '0.125rem 0.5rem',
+                    borderRadius: '9999px',
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    backgroundColor: activeTab === 'applications' ? 'rgba(255,255,255,0.2)' : '#EF4444',
+                    color: '#fff',
+                    animation: 'pulse 2s infinite',
+                  }}
+                >
+                  {commissionerApplications.filter(a => a.status === 'pending').length}
+                </span>
+              )}
+            </button>
+          )}
         </div>
 
         {/* Content */}
@@ -1242,6 +1352,156 @@ const SquaresAdminDashboard = () => {
                           className="flex-1 bg-red-600 hover:bg-red-700 disabled:bg-gray-700 text-white px-3 py-2.5 rounded-lg font-semibold transition-all flex items-center justify-center gap-1 text-sm"
                         >
                           <FiXCircle size={16} />
+                          Deny
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Commissioner Applications Section (Superadmin only) */}
+        {activeTab === 'applications' && isSuperadmin && (
+          <div>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold" style={{ color: colors.text }}>
+                Commissioner Applications
+              </h2>
+            </div>
+
+            {commissionerApplications.length === 0 ? (
+              <div
+                className="text-center py-12 rounded-xl"
+                style={{ backgroundColor: colors.card, border: `1px solid ${colors.border}` }}
+              >
+                <FiFileText className="mx-auto mb-4" size={48} style={{ color: isDark ? '#6B7280' : '#9CA3AF' }} />
+                <h3 className="text-lg font-semibold mb-2" style={{ color: colors.text }}>No Applications</h3>
+                <p style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>No commissioner applications at this time.</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {commissionerApplications.map((application) => (
+                  <div
+                    key={application.id}
+                    className="rounded-xl overflow-hidden transition-all"
+                    style={{
+                      backgroundColor: colors.card,
+                      border: `1px solid ${colors.border}`,
+                    }}
+                  >
+                    {/* Application Header */}
+                    <div className="p-4 flex items-center justify-between" style={{
+                      backgroundColor: application.status === 'pending'
+                        ? (isDark ? 'rgba(251, 191, 36, 0.1)' : 'rgba(251, 191, 36, 0.08)')
+                        : application.status === 'approved'
+                        ? (isDark ? 'rgba(34, 197, 94, 0.1)' : 'rgba(34, 197, 94, 0.08)')
+                        : (isDark ? 'rgba(239, 68, 68, 0.1)' : 'rgba(239, 68, 68, 0.08)')
+                    }}>
+                      <div className="flex items-center gap-4">
+                        <div className="flex-shrink-0">
+                          <div
+                            className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg"
+                            style={{
+                              backgroundColor: colors.brand.primary,
+                              color: '#fff'
+                            }}
+                          >
+                            {application.full_name?.charAt(0).toUpperCase() || 'U'}
+                          </div>
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-lg" style={{ color: colors.text }}>
+                            {application.full_name}
+                          </h3>
+                          <p className="text-sm" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>
+                            {application.email}
+                          </p>
+                          <p className="text-xs mt-1" style={{ color: isDark ? '#6B7280' : '#9CA3AF' }}>
+                            User ID: {application.user_id} • Applied {formatDate(application.created_at)}
+                          </p>
+                        </div>
+                      </div>
+                      <div>
+                        <span
+                          className="px-4 py-2 rounded-full text-sm font-semibold inline-block"
+                          style={{
+                            backgroundColor: application.status === 'pending' ? '#F59E0B' :
+                                           application.status === 'approved' ? '#22C55E' : '#EF4444',
+                            color: '#fff'
+                          }}
+                        >
+                          {application.status.charAt(0).toUpperCase() + application.status.slice(1)}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Application Content */}
+                    <div className="p-4 space-y-3">
+                      <div>
+                        <p className="text-xs uppercase tracking-wide mb-1" style={{ color: isDark ? '#6B7280' : '#9CA3AF' }}>
+                          Reason for Application
+                        </p>
+                        <p className="text-sm" style={{ color: isDark ? '#D1D5DB' : '#4B5563' }}>
+                          {application.reason}
+                        </p>
+                      </div>
+
+                      {application.experience && (
+                        <div>
+                          <p className="text-xs uppercase tracking-wide mb-1" style={{ color: isDark ? '#6B7280' : '#9CA3AF' }}>
+                            Experience / Background
+                          </p>
+                          <p className="text-sm" style={{ color: isDark ? '#D1D5DB' : '#4B5563' }}>
+                            {application.experience}
+                          </p>
+                        </div>
+                      )}
+
+                      {application.status !== 'pending' && application.admin_note && (
+                        <div className="pt-3 border-t" style={{ borderColor: colors.border }}>
+                          <p className="text-xs uppercase tracking-wide mb-1" style={{ color: isDark ? '#6B7280' : '#9CA3AF' }}>
+                            Admin Note
+                          </p>
+                          <p className="text-sm" style={{ color: isDark ? '#D1D5DB' : '#4B5563' }}>
+                            {application.admin_note}
+                          </p>
+                          <p className="text-xs mt-2" style={{ color: isDark ? '#6B7280' : '#9CA3AF' }}>
+                            Reviewed {formatDate(application.reviewed_at)} by {application.reviewer?.name || 'Admin'}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Actions */}
+                    {application.status === 'pending' && (
+                      <div className="p-4 pt-0 flex gap-2">
+                        <button
+                          onClick={() => handleApproveApplication(application.id)}
+                          disabled={processingRequest === application.id}
+                          className="flex-1 py-2.5 px-4 rounded-lg font-semibold transition-all flex items-center justify-center gap-2"
+                          style={{
+                            backgroundColor: '#22C55E',
+                            color: '#fff',
+                            opacity: processingRequest === application.id ? 0.6 : 1,
+                          }}
+                        >
+                          <FiCheckCircle size={18} />
+                          Approve
+                        </button>
+                        <button
+                          onClick={() => handleDenyApplication(application.id)}
+                          disabled={processingRequest === application.id}
+                          className="flex-1 py-2.5 px-4 rounded-lg font-semibold transition-all flex items-center justify-center gap-2"
+                          style={{
+                            backgroundColor: '#EF4444',
+                            color: '#fff',
+                            opacity: processingRequest === application.id ? 0.6 : 1,
+                          }}
+                        >
+                          <FiXCircle size={18} />
                           Deny
                         </button>
                       </div>
