@@ -114,6 +114,7 @@ const SquaresPoolDetail = () => {
   const { colors, isDark } = useTheme();
   const { poolId } = useParams();
   const navigate = useNavigate();
+  const { get, post, put, delete: del } = useAxios();
   const axiosService = useAxios();
   const showToast = useToast();
   const { user: currentUser, isSignedIn, isLoaded } = useUserContext(); // Get user from context
@@ -397,7 +398,7 @@ const SquaresPoolDetail = () => {
         }
 
         // Update game scores
-        await axiosService.put(`/api/games/${pool.game.id}/scores`, scoreUpdate);
+        await put(`/api/games/${pool.game.id}/scores`, scoreUpdate);
       }
 
       // Then calculate the winner for this quarter
@@ -1326,101 +1327,43 @@ const SquaresPoolDetail = () => {
           )}
         </div>
 
-        {/* Pool Info Card */}
+        {/* Pool Info Card - Redesigned Header */}
         <div
           className="mb-5"
           style={{ backgroundColor: colors.card, border: `1px solid ${colors.border}`, borderRadius: '18px', padding: '18px' }}
         >
-          <div className='flex flex-col lg:flex-row justify-between gap-4 w-full'>
-            <div className="flex items-center gap-3">
+          <div className='flex flex-col md:flex-row justify-between gap-3 w-full'>
+            {/* Left: Game Info */}
+            <div className="flex items-center gap-3 flex-1">
               <div style={{ width: '48px', height: '48px', borderRadius: '12px', backgroundColor: colors.highlight, color: colors.brand.secondary, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '1.5rem' }}>
-                🏈
+                {pool.game?.league === 'NBA' ? '🏀' : pool.game?.league === 'PBA' ? '🎳' : '🏈'}
               </div>
-              <div>
-                <div className="text-sm font-semibold" style={{ color: colors.brand.primary, opacity: 0.8 }}>
+              <div className="flex-1">
+                <div className="text-sm font-semibold mb-1" style={{ color: colors.brand.primary, opacity: 0.8 }}>
                   {pool.game?.league || 'NFL'}
                 </div>
-                <div className="text-lg font-bold" style={{ color: colors.text }}>
+                <div className="text-lg md:text-xl font-bold" style={{ color: colors.text }}>
                   {getTeamName(pool.game?.home_team_id || pool.game?.homeTeamId)} vs {getTeamName(pool.game?.visitor_team_id || pool.game?.visitorTeamId)}
                 </div>
-                <div className="text-sm flex items-center gap-1" style={{ color: colors.text, opacity: 0.65 }}>
-                  <FiCalendar size={14} /> {formatDate(pool.game?.game_time || pool.game?.game_datetime || pool.game?.gameTime)}
-                </div>
-              </div>
-            </div>
-            <div className='flex flex-wrap items-center gap-2'>
-              <div style={{ backgroundColor: isDark ? colors.cardHover : '#f7f4f2', border: `1px solid ${colors.border}`, borderRadius: '14px', padding: '12px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minWidth: '90px' }}>
-                {renderProgressCircle(getProgressPercentage(pool), 44)}
-                <div className="text-xs mt-1" style={{ color: colors.text, opacity: 0.7 }}>
-                  Filled
-                </div>
-              </div>
-
-              {/* {pool.player_pool_type === 'CREDIT' && getUserCreditBalance() !== null && (
-                <div className='h-full' style={{ backgroundColor: isDark ? colors.cardHover : '#f7f4f2', border: `1px solid ${colors.border}`, borderRadius: '14px', padding: '12px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minWidth: '100px' }}>
-                  <div className="text-xl font-bold" style={{ color: colors.success }}>
-                    {getUserCreditBalance()}
+                {pool.pool_description && (
+                  <div className="text-sm mt-1 line-clamp-2" style={{ color: colors.text, opacity: 0.65 }}>
+                    {pool.pool_description}
                   </div>
-                  <div className="text-xs" style={{ color: colors.text, opacity: 0.7 }}>
-                    Your Credits
-                  </div>
-                </div>
-              )} */}
-
-              <div className='h-full' style={{ backgroundColor: isDark ? colors.cardHover : '#f7f4f2', border: `1px solid ${colors.border}`, borderRadius: '14px', padding: '12px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minWidth: '100px' }}>
-                <div className="text-xl font-bold" style={{ color: colors.success }}>
-                  {getUserCreditBalance() || '0.00'}
-                </div>
-                <div className="text-xs" style={{ color: colors.text, opacity: 0.7 }}>
-                  Your Credits
-                </div>
-              </div>
-
-              <div className='h-full' style={{ backgroundColor: isDark ? colors.cardHover : '#f7f4f2', border: `1px solid ${colors.border}`, borderRadius: '14px', padding: '12px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minWidth: '90px' }}>
-                <div className="text-lg font-bold" style={{ color: colors.text }}>
-                  {pool.player_pool_type || 'N/A'}
-                </div>
-                <div className="text-xs" style={{ color: colors.text, opacity: 0.7 }}>
-                  Type
-                </div>
-              </div>
-
-              <div className='h-full' style={{ backgroundColor: isDark ? colors.cardHover : '#f7f4f2', border: `1px solid ${colors.border}`, borderRadius: '14px', padding: '12px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minWidth: '90px' }}>
-                <div className="text-lg font-bold capitalize" style={{ color: pool.pool_status === 'open' ? colors.success : colors.error }}>
-                  {pool.pool_status || 'N/A'}
-                </div>
-                <div className="text-xs" style={{ color: colors.text, opacity: 0.7 }}>
-                  Status
-                </div>
+                )}
               </div>
             </div>
-          </div>
-        </div>
 
-        {/* Quick Stats Row */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
-          <div style={{ backgroundColor: isDark ? colors.cardHover : '#f7f4f2', border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '12px 14px' }}>
-            <div className="text-xs" style={{ color: colors.text, opacity: 0.6 }}>Entry / square</div>
-            <div className="text-xl font-bold" style={{ color: colors.text }}>
-              {parseFloat(pool.entry_fee || pool.credit_cost || pool.costPerSquare || 0).toFixed(2)}
-            </div>
-          </div>
-          <div style={{ backgroundColor: isDark ? colors.cardHover : '#f7f4f2', border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '12px 14px' }}>
-            <div className="text-xs" style={{ color: colors.text, opacity: 0.6 }}>Payout</div>
-            <div className="text-xl font-bold" style={{ color: colors.brand.primary }}>
-              {parseFloat(pool.custom_payout || pool.total_pot || pool.totalPot || 0).toFixed(2)}
-            </div>
-          </div>
-          <div style={{ backgroundColor: isDark ? colors.cardHover : '#f7f4f2', border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '12px 14px' }}>
-            <div className="text-xs" style={{ color: colors.text, opacity: 0.6 }}>Total Players</div>
-            <div className="text-xl font-bold" style={{ color: colors.text }}>
-              {pool.players?.length || pool.playerCount || 0}
-            </div>
-          </div>
-          <div style={{ backgroundColor: isDark ? colors.cardHover : '#f7f4f2', border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '12px 14px' }}>
-            <div className="text-xs" style={{ color: colors.text, opacity: 0.6 }}>Max per player</div>
-            <div className="text-xl font-bold" style={{ color: colors.text }}>
-              {pool.max_squares_per_player || pool.maxSquaresPerPlayer || '∞'}
+            {/* Right: Dates */}
+            <div className="flex flex-col items-end justify-center gap-2 min-w-[200px]">
+              <div className="flex items-center gap-2 text-sm md:text-base font-semibold" style={{ color: colors.text }}>
+                <FiCalendar size={16} />
+                {formatDate(pool.game?.game_time || pool.game?.game_datetime || pool.game?.gameTime)}
+              </div>
+              {(pool.close_datetime || pool.closeDate) && (
+                <div className="text-sm text-right" style={{ color: colors.text, opacity: 0.7 }}>
+                  Selection closes: {formatDate(pool.close_datetime || pool.closeDate)}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -2006,6 +1949,58 @@ const SquaresPoolDetail = () => {
               />
             );
           })()}
+        </div>
+
+        {/* Quick Stats Card */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+          <div style={{ backgroundColor: colors.card, border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '14px 16px' }}>
+            <div className="text-xs mb-1" style={{ color: colors.text, opacity: 0.6 }}>% Filled</div>
+            <div className="text-2xl font-bold" style={{ color: colors.brand.primary }}>
+              {getProgressPercentage(pool)}%
+            </div>
+          </div>
+          <div style={{ backgroundColor: colors.card, border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '14px 16px' }}>
+            <div className="text-xs mb-1" style={{ color: colors.text, opacity: 0.6 }}>Your Credits</div>
+            <div className="text-2xl font-bold" style={{ color: colors.success }}>
+              {getUserCreditBalance() || '0.00'}
+            </div>
+          </div>
+          <div style={{ backgroundColor: colors.card, border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '14px 16px' }}>
+            <div className="text-xs mb-1" style={{ color: colors.text, opacity: 0.6 }}>Type</div>
+            <div className="text-lg font-bold uppercase" style={{ color: colors.text }}>
+              {pool.player_pool_type || 'N/A'}
+            </div>
+          </div>
+          <div style={{ backgroundColor: colors.card, border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '14px 16px' }}>
+            <div className="text-xs mb-1" style={{ color: colors.text, opacity: 0.6 }}>Status</div>
+            <div className="text-lg font-bold capitalize" style={{ color: pool.pool_status === 'open' ? colors.success : colors.error }}>
+              {pool.pool_status || 'N/A'}
+            </div>
+          </div>
+          <div style={{ backgroundColor: colors.card, border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '14px 16px' }}>
+            <div className="text-xs mb-1" style={{ color: colors.text, opacity: 0.6 }}>Entry / square</div>
+            <div className="text-2xl font-bold" style={{ color: colors.text }}>
+              {parseFloat(pool.entry_fee || pool.credit_cost || pool.costPerSquare || 0).toFixed(2)}
+            </div>
+          </div>
+          <div style={{ backgroundColor: colors.card, border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '14px 16px' }}>
+            <div className="text-xs mb-1" style={{ color: colors.text, opacity: 0.6 }}>Payout</div>
+            <div className="text-2xl font-bold" style={{ color: colors.brand.primary }}>
+              {parseFloat(pool.custom_payout || pool.total_pot || pool.totalPot || 0).toFixed(2)}
+            </div>
+          </div>
+          <div style={{ backgroundColor: colors.card, border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '14px 16px' }}>
+            <div className="text-xs mb-1" style={{ color: colors.text, opacity: 0.6 }}>Total Players</div>
+            <div className="text-2xl font-bold" style={{ color: colors.text }}>
+              {pool.players?.length || pool.playerCount || 0}
+            </div>
+          </div>
+          <div style={{ backgroundColor: colors.card, border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '14px 16px' }}>
+            <div className="text-xs mb-1" style={{ color: colors.text, opacity: 0.6 }}>Max per player</div>
+            <div className="text-2xl font-bold" style={{ color: colors.text }}>
+              {pool.max_squares_per_player || pool.maxSquaresPerPlayer || '∞'}
+            </div>
+          </div>
         </div>
 
         {/* Additional Info */}

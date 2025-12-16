@@ -13,6 +13,7 @@ import ConfirmModal from '../components/ui/ConfirmModal';
  */
 const ManageGames = () => {
   const navigate = useNavigate();
+  const { get, post, put, delete: del } = useAxios();
   const axiosService = useAxios();
   const { colors, isDark } = useTheme();
   const [games, setGames] = useState([]);
@@ -195,7 +196,7 @@ const ManageGames = () => {
 
   const handleSaveScores = async (gameId, scores) => {
     try {
-      const response = await axiosService.put(`/api/games/${gameId}/scores`, scores);
+      const response = await put(`/api/games/${gameId}/scores`, scores);
       setMessage({ type: 'success', text: 'Game scores updated successfully!' });
       loadGames();
       setTimeout(() => setMessage(null), 3000);
