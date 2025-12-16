@@ -1355,41 +1355,44 @@ const SquaresPoolDetail = () => {
           </div>
         </div>
 
-        {/* Admin Controls - Collapsible Panel */}
-        {canManagePool && (
-          <div
-            className="mb-5"
+        {/* Game Status & Winners - Collapsible Panel (visible to everyone) */}
+        <div
+          className="mb-5"
+          style={{
+            backgroundColor: colors.card,
+            border: `1px solid ${colors.border}`,
+            borderRadius: '16px',
+            overflow: 'hidden',
+          }}
+        >
+          {/* Collapsible Header */}
+          <button
+            onClick={() => setShowAdminControls(!showAdminControls)}
+            className="w-full flex items-center justify-between px-5 py-4 transition-all"
             style={{
-              backgroundColor: colors.card,
-              border: `1px solid ${colors.border}`,
-              borderRadius: '16px',
-              overflow: 'hidden',
+              backgroundColor: isDark ? 'rgba(212, 122, 62, 0.1)' : 'rgba(212, 122, 62, 0.08)',
+              borderBottom: showAdminControls ? `1px solid ${colors.border}` : 'none',
             }}
           >
-            {/* Collapsible Header */}
-            <button
-              onClick={() => setShowAdminControls(!showAdminControls)}
-              className="w-full flex items-center justify-between px-5 py-4 transition-all"
-              style={{
-                backgroundColor: isDark ? 'rgba(212, 122, 62, 0.1)' : 'rgba(212, 122, 62, 0.08)',
-                borderBottom: showAdminControls ? `1px solid ${colors.border}` : 'none',
-              }}
-            >
-              <div className="flex items-center gap-3">
-                <div
-                  className="flex items-center justify-center rounded-lg"
-                  style={{
-                    width: '36px',
-                    height: '36px',
-                    backgroundColor: colors.brand.primary,
-                  }}
-                >
-                  <FiSettings size={18} color="#fff" />
-                </div>
-                <div className="text-left">
-                  <h3 className="text-base font-bold" style={{ color: colors.text }}>Admin Controls</h3>
-                  <p className="text-xs" style={{ color: colors.text, opacity: 0.6 }}>Manage pool settings, winners & credits</p>
-                </div>
+            <div className="flex items-center gap-3">
+              <div
+                className="flex items-center justify-center rounded-lg"
+                style={{
+                  width: '36px',
+                  height: '36px',
+                  backgroundColor: colors.brand.primary,
+                }}
+              >
+                <FiSettings size={18} color="#fff" />
+              </div>
+              <div className="text-left">
+                <h3 className="text-base font-bold" style={{ color: colors.text }}>
+                  {canManagePool ? 'Admin Controls' : 'Game Status & Winners'}
+                </h3>
+                <p className="text-xs" style={{ color: colors.text, opacity: 0.6 }}>
+                  {canManagePool ? 'Manage pool settings, winners & credits' : 'View quarter scores and winners'}
+                </p>
+              </div>
               </div>
               <div
                 className="flex items-center justify-center rounded-full transition-transform"
@@ -1545,10 +1548,10 @@ const SquaresPoolDetail = () => {
                             </div>
                           </div>
 
-                          {/* Action Buttons */}
+                          {/* Action Buttons - Admin Only */}
                           <div className="flex flex-col gap-2">
-                            {/* If no scores, show "Set Scores" button */}
-                            {!hasScores && (
+                            {/* If no scores, show "Set Scores" button (admin only) */}
+                            {!hasScores && canManagePool && (
                               <button
                                 onClick={() => !calculatingWinners && handleOpenScoreModal(quarter)}
                                 className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-all hover:scale-105"
@@ -1561,7 +1564,7 @@ const SquaresPoolDetail = () => {
                               </button>
                             )}
 
-                            {/* If scores changed, show warning and recalculate button */}
+                            {/* If scores changed, show warning and recalculate button (admin only) */}
                             {scoresChanged && (
                               <>
                                 <div
@@ -1573,6 +1576,7 @@ const SquaresPoolDetail = () => {
                                 >
                                   ⚠ Scores Changed
                                 </div>
+                                {canManagePool && (
                                 <button
                                   onClick={async () => {
                                     if (calculatingWinners) return;
@@ -1606,11 +1610,12 @@ const SquaresPoolDetail = () => {
                                 >
                                   Recalculate Winner
                                 </button>
+                                )}
                               </>
                             )}
 
-                            {/* If has scores but no winner (and scores didn't change), show "Calculate Winner" button */}
-                            {hasScores && !hasWinner && !scoresChanged && (
+                            {/* If has scores but no winner (and scores didn't change), show "Calculate Winner" button (admin only) */}
+                            {hasScores && !hasWinner && !scoresChanged && canManagePool && (
                               <button
                                 onClick={async () => {
                                   if (calculatingWinners) return;
@@ -1671,7 +1676,8 @@ const SquaresPoolDetail = () => {
                     })}
                   </div>
 
-                  {/* Calculate All Button */}
+                  {/* Calculate All Button - Admin Only */}
+                  {canManagePool && (
                   <div className="mt-4">
                     <button
                       onClick={handleCalculateAllWinners}
@@ -1687,9 +1693,11 @@ const SquaresPoolDetail = () => {
                       <FiAward size={16} /> Recalculate All Winners
                     </button>
                   </div>
+                  )}
                 </div>
 
-                {/* Pool Tools Section */}
+                {/* Pool Tools Section - Admin Only */}
+                {canManagePool && (
                 <div
                   style={{
                     backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
@@ -1752,9 +1760,10 @@ const SquaresPoolDetail = () => {
                     )}
                   </div>
                 </div>
+                )}
 
                 {/* Axis Numbers Assignment Section - Only show when numbers not assigned */}
-                {canAssignNumbers && (
+                {canAssignNumbers && canManagePool && (
                   <div
                     style={{
                       backgroundColor: isDark ? 'rgba(59, 130, 246, 0.08)' : 'rgba(59, 130, 246, 0.06)',
@@ -1959,7 +1968,6 @@ const SquaresPoolDetail = () => {
               </div>
             )}
           </div>
-        )}
 
         {/* Winners Display */}
         {showWinners && winners.length > 0 && (
@@ -2263,16 +2271,7 @@ const SquaresPoolDetail = () => {
         )}
       </div>
 
-      {/* Winners Section */}
-      {winners && winners.length > 0 && (
-        <div className="mt-12">
-          <WinnersDisplay
-            pool={pool}
-            winners={winners}
-            game={pool.game}
-          />
-        </div>
-      )}
+      {/* Winners Section - Removed, using Admin Controls to show winners instead */}
 
       {/* Floating Bottom Bar - Shows when squares are selected */}
       {hasJoined && selectedSquares.length > 0 && (
