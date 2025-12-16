@@ -366,7 +366,7 @@ const SquaresPoolDetail = () => {
     setVisitorScore('');
   };
 
-  // Submit scores and calculate winner
+  // Submit scores (only used when scores don't exist yet in Game Management)
   const handleCalculateWinner = async () => {
     if (homeScore === '' || visitorScore === '') {
       showToast({ severity: 'warn', summary: 'Missing Scores', detail: 'Please enter both scores' });
@@ -375,7 +375,7 @@ const SquaresPoolDetail = () => {
 
     setCalculatingWinners(true);
     try {
-      // First, update the game scores in the database
+      // Update the game scores in the database (for admins who set scores from pool detail)
       if (pool.game?.id) {
         const scoreUpdate = {};
         const homeScoreInt = parseInt(homeScore);
@@ -401,26 +401,13 @@ const SquaresPoolDetail = () => {
         await put(`/api/games/${pool.game.id}/scores`, scoreUpdate);
       }
 
-      // Then calculate the winner for this quarter
-      const winnerResponse = await axiosService.post(`/api/squares-pools/${poolId}/calculate-winners`, {
-        quarter: selectedQuarter,
-        home_score: parseInt(homeScore),
-        visitor_score: parseInt(visitorScore),
-      });
-
-      await loadWinners();
+      // Reload pool to get updated scores
       await loadPool(null, true);
       handleCloseScoreModal();
-      
-      // Check if winner was found or square is unclaimed
-      if (winnerResponse.data.status === false && winnerResponse.data.unclaimed) {
-        showToast({ severity: 'warn', summary: 'No Winner', detail: winnerResponse.data.message });
-      } else {
-        showToast({ severity: 'success', summary: 'Success', detail: 'Scores updated and winner calculated!' });
-      }
+      showToast({ severity: 'success', summary: 'Success', detail: 'Scores saved! Now click "Calculate Winner"' });
     } catch (error) {
       handleCloseScoreModal();
-      showToast({ severity: 'error', summary: 'Error', detail: 'Failed to calculate winner: ' + (error.response?.data?.message || error.message) });
+      showToast({ severity: 'error', summary: 'Error', detail: 'Failed to save scores: ' + (error.response?.data?.message || error.message) });
     } finally {
       setCalculatingWinners(false);
     }
@@ -1450,14 +1437,31 @@ const SquaresPoolDetail = () => {
                   <div className="grid grid-cols-4 gap-3">
                     {[1, 2, 3, 4].map((quarter) => {
                       const quarterWinner = winners.find(w => w.quarter === quarter);
-                      const quarterLabel = quarter === 4 ? 'Final' : `Quarter ${quarter}`;
+                      const quarterLabel = quarter === 4 ? 'Final' : quarter === 2 ? 'Half' : `Q${quarter}`;
                       const hasWinner = !!quarterWinner;
+
+                      // Get cumulative scores from game (set by Game Management)
+                      let homeScore, visitorScore;
+                      if (quarter === 1) {
+                        homeScore = pool.game?.q1_home;
+                        visitorScore = pool.game?.q1_visitor;
+                      } else if (quarter === 2) {
+                        homeScore = pool.game?.half_home;
+                        visitorScore = pool.game?.half_visitor;
+                      } else if (quarter === 3) {
+                        homeScore = pool.game?.q3_home;
+                        visitorScore = pool.game?.q3_visitor;
+                      } else {
+                        homeScore = pool.game?.final_home;
+                        visitorScore = pool.game?.final_visitor;
+                      }
+
+                      const hasScores = homeScore !== null && homeScore !== undefined && visitorScore !== null && visitorScore !== undefined;
 
                       return (
                         <div
                           key={quarter}
-                          onClick={() => !calculatingWinners && handleOpenScoreModal(quarter)}
-                          className="cursor-pointer transition-all hover:scale-[1.02]"
+                          className="transition-all"
                           style={{
                             backgroundColor: hasWinner
                               ? (isDark ? 'rgba(34, 197, 94, 0.1)' : 'rgba(34, 197, 94, 0.08)')
@@ -1477,7 +1481,7 @@ const SquaresPoolDetail = () => {
                           </div>
 
                           {/* Scores Display */}
-                          <div className="flex items-center justify-center gap-3">
+                          <div className="flex items-center justify-center gap-3 mb-3">
                             {/* Home Team */}
                             <div className="flex flex-col items-center">
                               {pool.game?.home_team_id && getTeamLogo(pool.game.home_team_id) ? (
@@ -1498,8 +1502,7 @@ const SquaresPoolDetail = () => {
                                 className="text-2xl font-bold"
                                 style={{ color: colors.text }}
                               >
-                                {quarterWinner?.home_score ?? 
-                                  (pool.game?.[`home_q${quarter}_score`] ?? '-')}
+                                {hasScores ? homeScore : '-'}
                               </div>
                             </div>
 
@@ -1531,34 +1534,69 @@ const SquaresPoolDetail = () => {
                                 className="text-2xl font-bold"
                                 style={{ color: colors.text }}
                               >
-                                {quarterWinner?.visitor_score ?? 
-                                  (pool.game?.[`visitor_q${quarter}_score`] ?? '-')}
+                                {hasScores ? visitorScore : '-'}
                               </div>
                             </div>
                           </div>
 
-                          {/* Winner Info or Calculate Button */}
-                          <div className="mt-3 text-center">
-                            {hasWinner ? (
+                          {/* Action Buttons */}
+                          <div className="flex flex-col gap-2">
+                            {/* If no scores, show "Set Scores" button */}
+                            {!hasScores && (
+                              <button
+                                onClick={() => !calculatingWinners && handleOpenScoreModal(quarter)}
+                                className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-all hover:scale-105"
+                                style={{
+                                  backgroundColor: isDark ? '#374151' : '#E5E7EB',
+                                  color: colors.text
+                                }}
+                              >
+                                Set Scores
+                              </button>
+                            )}
+
+                            {/* If has scores but no winner, show "Calculate Winner" button */}
+                            {hasScores && !hasWinner && (
+                              <button
+                                onClick={async () => {
+                                  if (calculatingWinners) return;
+                                  setCalculatingWinners(true);
+                                  try {
+                                    await axiosService.post(`/api/squares-pools/${poolId}/calculate-winners`, {
+                                      quarter: quarter,
+                                      home_score: homeScore,
+                                      visitor_score: visitorScore,
+                                    });
+                                    await loadWinners();
+                                    await loadPool(null, true);
+                                    showToast({ severity: 'success', summary: 'Success', detail: 'Winner calculated!' });
+                                  } catch (error) {
+                                    showToast({ severity: 'error', summary: 'Error', detail: 'Failed to calculate winner: ' + (error.response?.data?.message || error.message) });
+                                  } finally {
+                                    setCalculatingWinners(false);
+                                  }
+                                }}
+                                className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-all hover:scale-105"
+                                style={{
+                                  backgroundColor: colors.brand.primary,
+                                  color: '#fff'
+                                }}
+                              >
+                                Calculate Winner
+                              </button>
+                            )}
+
+                            {/* If has winner, show winner info */}
+                            {hasWinner && (
                               <div
-                                className="text-xs font-semibold px-2 py-1 rounded-full inline-block"
+                                className="text-xs font-semibold px-2 py-1 rounded-lg text-center"
                                 style={{
                                   backgroundColor: `${colors.success}20`,
                                   color: colors.success
                                 }}
                               >
                                 <FiCheck size={12} className="inline mr-1" />
-                                Winner: {quarterWinner.player?.name?.split(' ')[0] || 'Calculated'}
-                              </div>
-                            ) : (
-                              <div
-                                className="text-xs font-semibold px-3 py-1.5 rounded-full inline-block"
-                                style={{
-                                  backgroundColor: colors.brand.primary,
-                                  color: '#fff'
-                                }}
-                              >
-                                Enter Scores
+                                {quarterWinner.player?.name?.split(' ')[0] || 'Winner'}
                               </div>
                             )}
                           </div>
