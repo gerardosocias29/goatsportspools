@@ -216,18 +216,18 @@ const SquaresGrid = ({
   return (
     <div className="w-full">
       {/* Grid Container */}
-      <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-4 md:p-6 rounded-xl shadow-2xl">
+      <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-2 sm:p-4 md:p-6 rounded-xl shadow-2xl">
 
         {/* Main Grid with Side Labels */}
-        <div className="flex items-center justify-center gap-2 md:gap-3 w-full">
+        <div className="flex items-center justify-center gap-1 sm:gap-2 md:gap-3">
 
           {/* Grid Structure */}
           <div className="flex-1 max-w-4xl">
 
             {/* Top Numbers Row (X Axis) */}
-            <div className="flex mb-2">
+            <div className="flex mb-1 sm:mb-2">
               {/* Spacer for corner - matches Y-axis label and numbers column widths */}
-              <div className="flex items-center mr-2 max-h-10">
+              <div className="hidden md:flex items-center mr-2 max-h-10">
                 <div
                   className="invisible flex items-center justify-center border rounded-lg shadow-md px-2 py-6 bg-gradient-to-b from-red-600 to-red-500"
                   style={{ writingMode: 'vertical-rl', textOrientation: 'mixed', transform: 'rotate(180deg)' }}
@@ -236,19 +236,19 @@ const SquaresGrid = ({
                 </div>
               </div>
               {/* Spacer for Y numbers column */}
-              <div className="w-10 mr-2"></div>
-              <div className="flex-1 grid grid-cols-10 gap-1 md:gap-2">
-                <div className='col-span-10 flex justify-center mb-2'>
+              <div className="w-7 sm:w-9 md:w-12 mr-1 sm:mr-2"></div>
+              <div className="flex-1 grid grid-cols-10 gap-0.5 sm:gap-1 md:gap-2">
+                <div className='col-span-10 flex justify-center mb-1 sm:mb-2'>
                   {/* X Axis Label - Winning Team */}
-                  <div className="flex items-center justify-center gap-2 border rounded-lg shadow-md px-6 py-2 bg-gradient-to-r from-green-600 to-green-500">
-                    <p className="font-bold text-white select-none text-lg">Winning Team</p>
+                  <div className="flex items-center justify-center gap-1 sm:gap-2 border rounded-lg shadow-md px-2 sm:px-4 md:px-6 py-1 sm:py-2 bg-gradient-to-r from-green-600 to-green-500">
+                    <p className="font-bold text-white select-none text-xs sm:text-sm md:text-lg">Winning Team</p>
                   </div>
                 </div>
                 {xNumbers ? (
                   xNumbers.map((num, idx) => (
                     <div
                       key={idx}
-                      className="flex items-center justify-center h-10 bg-blue-500 text-white font-bold text-sm md:text-base rounded shadow"
+                      className="flex items-center justify-center aspect-square min-h-[28px] sm:min-h-[36px] md:min-h-[48px] lg:min-h-[60px] bg-blue-500 text-white font-bold text-xs sm:text-sm md:text-base rounded shadow"
                     >
                       {num}
                     </div>
@@ -258,7 +258,7 @@ const SquaresGrid = ({
                   Array.from({ length: 10 }).map((_, idx) => (
                     <div
                       key={idx}
-                      className="flex items-center justify-center h-10 bg-gray-300 text-gray-500 font-bold text-sm md:text-base rounded shadow opacity-60"
+                      className="flex items-center justify-center aspect-square min-h-[28px] sm:min-h-[36px] md:min-h-[48px] lg:min-h-[60px] bg-gray-300 text-gray-500 font-bold text-xs sm:text-sm md:text-base rounded shadow opacity-60"
                     >
                       ?
                     </div>
@@ -270,7 +270,7 @@ const SquaresGrid = ({
             {/* Grid Rows with Y Numbers */}
             <div className="flex">
               {/* Y Axis Label - Losing Team (positioned to the left) */}
-              <div className="flex items-center mr-2">
+              <div className="hidden md:flex items-center mr-2">
                 <div
                   className="flex items-center justify-center border rounded-lg shadow-md px-2 py-6 bg-gradient-to-b from-red-600 to-red-500"
                   style={{ writingMode: 'vertical-rl', textOrientation: 'mixed', transform: 'rotate(180deg)' }}
@@ -280,12 +280,12 @@ const SquaresGrid = ({
               </div>
 
               {/* Y Numbers Column */}
-              <div className="flex flex-col gap-1 md:gap-2 mr-2">
+              <div className="flex flex-col gap-0.5 sm:gap-1 md:gap-2 mr-1 sm:mr-2">
                 {yNumbers ? (
                     yNumbers.map((num, idx) => (
                       <div
                         key={idx}
-                        className="flex items-center justify-center w-10 h-full min-h-[50px] md:min-h-[60px] lg:min-h-[70px] bg-red-500 text-white font-bold text-sm md:text-base rounded shadow"
+                        className="flex items-center justify-center w-7 sm:w-9 md:w-12 flex-1 bg-red-500 text-white font-bold text-xs sm:text-sm md:text-base rounded shadow"
                       >
                         {num}
                       </div>
@@ -295,7 +295,7 @@ const SquaresGrid = ({
                     Array.from({ length: 10 }).map((_, idx) => (
                       <div
                         key={idx}
-                        className="flex items-center justify-center w-10 h-full min-h-[50px] md:min-h-[60px] lg:min-h-[70px] bg-gray-300 text-gray-500 font-bold text-sm md:text-base rounded shadow opacity-60"
+                        className="flex items-center justify-center w-7 sm:w-9 md:w-12 flex-1 bg-gray-300 text-gray-500 font-bold text-xs sm:text-sm md:text-base rounded shadow opacity-60"
                       >
                         ?
                       </div>
@@ -304,7 +304,7 @@ const SquaresGrid = ({
               </div>
 
               {/* Actual Grid of Squares */}
-              <div className="flex-1 grid grid-cols-10 gap-1 md:gap-2">
+              <div className="flex-1 grid grid-cols-10 gap-0.5 sm:gap-1 md:gap-2">
                 {Array.from({ length: 10 }).map((_, yIdx) =>
                   Array.from({ length: 10 }).map((_, xIdx) => {
                     const square = getSquareAt(xIdx, yIdx);

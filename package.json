@@ -37,6 +37,7 @@
     "build": "react-scripts build",
     "new-build": "BUILD_PATH='./build2' react-scripts build",
     "build-and-rename": "npm run new-build && mv -T ./build2 ./build",
+    "build-and-rename-windows": "npm run new-build && rmdir /s /q build && move build2 build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },

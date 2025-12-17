@@ -2151,7 +2151,9 @@ const SquaresPoolDetail = () => {
           <div style={{ backgroundColor: colors.card, border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '14px 16px' }}>
             <div className="text-xs mb-1" style={{ color: colors.text, opacity: 0.6 }}>Entry / square</div>
             <div className="text-2xl font-bold" style={{ color: colors.text }}>
-              {parseFloat(pool.entry_fee || pool.credit_cost || pool.costPerSquare || 0).toFixed(2)}
+              {pool.player_pool_type === 'FREE' || parseFloat(pool.entry_fee || pool.credit_cost || pool.costPerSquare || 0) === 0
+                ? 'FREE'
+                : parseFloat(pool.entry_fee || pool.credit_cost || pool.costPerSquare || 0).toFixed(2)}
             </div>
           </div>
           <div style={{ backgroundColor: colors.card, border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '14px 16px' }}>

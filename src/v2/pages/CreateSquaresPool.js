@@ -143,6 +143,27 @@ const CreateSquaresPool = () => {
     }
   }, [formData.league]);
 
+  // Auto-fill reward percentages when reward types are loaded
+  useEffect(() => {
+    if (rewardTypes.length > 0 && formData.gameRewardTypeID) {
+      const selectedReward = rewardTypes.find(r => r.id === formData.gameRewardTypeID);
+      if (selectedReward) {
+        const toPercent = (val) => {
+          const num = parseFloat(val) || 0;
+          return num <= 1 ? num * 100 : num;
+        };
+
+        setFormData(prev => ({
+          ...prev,
+          reward1_percent: toPercent(selectedReward.reward1_percent),
+          reward2_percent: toPercent(selectedReward.reward2_percent),
+          reward3_percent: toPercent(selectedReward.reward3_percent),
+          reward4_percent: toPercent(selectedReward.reward4_percent)
+        }));
+      }
+    }
+  }, [rewardTypes]);
+
   const loadGames = async () => {
     try {
       const response = await axiosService.get('/api/games/manage');
@@ -347,8 +368,8 @@ const CreateSquaresPool = () => {
         credit_cost: formData.costPerSquare,
         custom_payout: formData.customPayout,
         max_squares_per_player: formData.maxSquaresPerPlayer,
-        close_datetime: formData.closeDate,
-        number_assign_datetime: formData.numbersAssignDate,
+        close_datetime: formData.closeDate ? new Date(formData.closeDate).toISOString() : null,
+        number_assign_datetime: formData.numbersAssignDate ? new Date(formData.numbersAssignDate).toISOString() : null,
         numbers_type: formData.numbersType,
         game_reward_type_id: formData.gameRewardTypeID,
         home_team_id: formData.homeTeamId,
@@ -822,16 +843,53 @@ const CreateSquaresPool = () => {
             <div className="space-y-6">
               <h2 className="text-2xl font-bold mb-6" style={{ color: colors.text }}>Fees & Rewards</h2>
 
-              <InputField label="Cost Per Square" error={errors.costPerSquare} hint={`Calculated pot (if all squares filled): ${((formData.costPerSquare || 0) * 100).toFixed(2)}`} colors={colors} isDark={isDark}>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={formData.costPerSquare}
-                  onChange={(e) => handleChange('costPerSquare', parseFloat(e.target.value) || 0)}
-                  className="w-full rounded-lg px-4 py-3 focus:outline-none focus:ring-2"
-                  style={inputStyles}
-                />
+              <InputField
+                label="Cost Per Square"
+                error={errors.costPerSquare}
+                hint={formData.poolType === 'OPEN'
+                  ? 'Free pools have no cost per square'
+                  : `Calculated pot (if all squares filled): ${((formData.costPerSquare || 0) * 100).toFixed(2)}`
+                }
+                colors={colors}
+                isDark={isDark}
+              >
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={formData.poolType === 'OPEN' ? 0 : formData.costPerSquare}
+                    onChange={(e) => handleChange('costPerSquare', parseFloat(e.target.value) || 0)}
+                    disabled={formData.poolType === 'OPEN'}
+                    title={formData.poolType === 'OPEN' ? 'This pool is FREE - no cost per square' : 'Enter the cost per square'}
+                    className="w-full rounded-lg px-4 py-3 focus:outline-none focus:ring-2"
+                    style={{
+                      ...inputStyles,
+                      opacity: formData.poolType === 'OPEN' ? 0.5 : 1,
+                      cursor: formData.poolType === 'OPEN' ? 'not-allowed' : 'text',
+                      paddingRight: formData.poolType === 'OPEN' ? '60px' : '16px'
+                    }}
+                  />
+                  {formData.poolType === 'OPEN' && (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        right: '12px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        backgroundColor: colors.success,
+                        color: '#fff',
+                        padding: '4px 12px',
+                        borderRadius: '6px',
+                        fontSize: '12px',
+                        fontWeight: 'bold',
+                        pointerEvents: 'none'
+                      }}
+                    >
+                      FREE
+                    </div>
+                  )}
+                </div>
               </InputField>
               <InputField 
                 label="Custom Payout (Optional)" 
@@ -850,10 +908,33 @@ const CreateSquaresPool = () => {
                   placeholder="Leave empty for auto-calculation"
                 />
               </InputField>
-              <InputField label="Reward Distribution" colors={colors} isDark={isDark}>
+              <InputField
+                label="Reward Distribution"
+                hint="Select a reward template to auto-fill the quarter payout percentages below"
+                colors={colors}
+                isDark={isDark}
+              >
                 <select
                   value={formData.gameRewardTypeID}
-                  onChange={(e) => handleChange('gameRewardTypeID', parseInt(e.target.value))}
+                  onChange={(e) => {
+                    const selectedID = parseInt(e.target.value);
+                    handleChange('gameRewardTypeID', selectedID);
+
+                    // Auto-fill percentages from selected reward type
+                    const selectedReward = rewardTypes.find(r => r.id === selectedID);
+                    if (selectedReward) {
+                      // Convert decimal to percentage (0.1 -> 10, 0.2 -> 20, etc.)
+                      const toPercent = (val) => {
+                        const num = parseFloat(val) || 0;
+                        return num <= 1 ? num * 100 : num;
+                      };
+
+                      handleChange('reward1_percent', toPercent(selectedReward.reward1_percent));
+                      handleChange('reward2_percent', toPercent(selectedReward.reward2_percent));
+                      handleChange('reward3_percent', toPercent(selectedReward.reward3_percent));
+                      handleChange('reward4_percent', toPercent(selectedReward.reward4_percent));
+                    }
+                  }}
                   className="w-full rounded-lg px-4 py-3 focus:outline-none focus:ring-2"
                   style={inputStyles}
                 >
@@ -867,9 +948,12 @@ const CreateSquaresPool = () => {
 
               {/* Quarter Payout Percentages */}
               <div className="border-t pt-4" style={{ borderColor: colors.border }}>
-                <label className="block font-medium mb-4" style={{ color: colors.text }}>
+                <label className="block font-medium mb-2" style={{ color: colors.text }}>
                   Quarter Payout Percentages (must total 100%)
                 </label>
+                <p className="text-sm mb-4" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>
+                  Auto-filled based on Reward Distribution above. You can customize these percentages if needed.
+                </p>
                 <div className="grid grid-cols-2 gap-4">
                   {['reward1_percent', 'reward2_percent', 'reward3_percent', 'reward4_percent'].map((field, idx) => (
                     <div key={field}>
