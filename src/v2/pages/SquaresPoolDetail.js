@@ -155,6 +155,7 @@ const SquaresPoolDetail = () => {
   const [claimProgress, setClaimProgress] = useState({ current: 0, total: 0 });
   const [showMobileSelector, setShowMobileSelector] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [timeRemaining, setTimeRemaining] = useState(null);
 
   // Detect mobile device
   useEffect(() => {
@@ -165,6 +166,23 @@ const SquaresPoolDetail = () => {
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  // Update countdown timer every second
+  useEffect(() => {
+    const assignDatetime = pool?.numbers_assignment_datetime || pool?.number_assign_datetime;
+    if (assignDatetime) {
+      const updateTimer = () => {
+        const assignTime = new Date(assignDatetime);
+        const now = new Date();
+        const diff = assignTime - now;
+        setTimeRemaining(diff > 0 ? diff : 0);
+      };
+      
+      updateTimer();
+      const interval = setInterval(updateTimer, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [pool?.numbers_assignment_datetime, pool?.number_assign_datetime]);
 
   // Confirm modal states
   const [confirmModal, setConfirmModal] = useState({
@@ -1355,7 +1373,7 @@ const SquaresPoolDetail = () => {
           </div>
         </div>
 
-        {/* Game Status & Winners - Collapsible Panel (visible to everyone) */}
+        {/* Game Status & Winners / Admin Controls - Collapsible Panel */}
         <div
           className="mb-5"
           style={{
@@ -1410,6 +1428,106 @@ const SquaresPoolDetail = () => {
             {/* Collapsible Content */}
             {showAdminControls && (
               <div className="p-5 space-y-5">
+                {/* Auto-Assignment Countdown - Only for TimeSet and Admin Controls */}
+                {canManagePool && numbersType === 'TimeSet' && !numbersAssigned && (pool.numbers_assignment_datetime || pool.number_assign_datetime) && (
+                  <div
+                    style={{
+                      backgroundColor: isDark ? 'rgba(59, 130, 246, 0.08)' : 'rgba(59, 130, 246, 0.06)',
+                      borderRadius: '12px',
+                      padding: '16px',
+                      border: `1px solid ${isDark ? 'rgba(59, 130, 246, 0.3)' : 'rgba(59, 130, 246, 0.2)'}`,
+                    }}
+                  >
+                    <div className="flex items-center gap-3 mb-3">
+                      <div
+                        className="flex items-center justify-center rounded-lg"
+                        style={{
+                          width: '32px',
+                          height: '32px',
+                          backgroundColor: '#3B82F6',
+                        }}
+                      >
+                        <FiCalendar size={16} color="#fff" />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-bold" style={{ color: colors.text }}>
+                          ⏰ Auto-Assignment Countdown
+                        </h4>
+                        <p className="text-xs" style={{ color: colors.text, opacity: 0.5 }}>
+                          Numbers will be randomly assigned automatically
+                        </p>
+                      </div>
+                    </div>
+                    <div
+                      className="p-4 rounded-lg"
+                      style={{
+                        backgroundColor: isDark ? 'rgba(59, 130, 246, 0.15)' : 'rgba(59, 130, 246, 0.1)',
+                        border: `1px solid ${isDark ? 'rgba(59, 130, 246, 0.4)' : 'rgba(59, 130, 246, 0.3)'}`,
+                      }}
+                    >
+                      <p className="text-sm mb-3" style={{ color: colors.text, opacity: 0.7 }}>
+                        Scheduled for: <strong>{new Date(pool.numbers_assignment_datetime || pool.number_assign_datetime).toLocaleString('en-US', { 
+                          month: 'short', 
+                          day: 'numeric', 
+                          year: 'numeric', 
+                          hour: 'numeric', 
+                          minute: '2-digit', 
+                          second: '2-digit',
+                          hour12: true 
+                        })}</strong>
+                      </p>
+                      {timeRemaining !== null && timeRemaining <= 0 ? (
+                        <div className="text-center py-2 px-4 rounded-lg" style={{ backgroundColor: isDark ? 'rgba(239, 68, 68, 0.2)' : 'rgba(239, 68, 68, 0.1)', color: colors.error }}>
+                          <p className="text-sm font-semibold">⚠️ Assignment time has passed</p>
+                        </div>
+                      ) : timeRemaining !== null && timeRemaining > 0 ? (
+                        <div className="flex flex-wrap items-center justify-center gap-2 py-3 rounded-lg" style={{ backgroundColor: isDark ? 'rgba(59, 130, 246, 0.2)' : 'rgba(59, 130, 246, 0.15)' }}>
+                          {Math.floor(timeRemaining / (1000 * 60 * 60 * 24)) > 0 && (
+                            <>
+                              <div className="text-center px-2 sm:px-3">
+                                <div className="text-xl sm:text-2xl font-bold" style={{ color: '#3B82F6' }}>{Math.floor(timeRemaining / (1000 * 60 * 60 * 24))}</div>
+                                <div className="text-xs" style={{ color: colors.text, opacity: 0.6 }}>Days</div>
+                              </div>
+                              <div className="text-xl sm:text-2xl font-bold" style={{ color: colors.text, opacity: 0.3 }}>:</div>
+                            </>
+                          )}
+                          <div className="text-center px-2 sm:px-3">
+                            <div className="text-xl sm:text-2xl font-bold" style={{ color: '#3B82F6' }}>{String(Math.floor((timeRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))).padStart(2, '0')}</div>
+                            <div className="text-xs" style={{ color: colors.text, opacity: 0.6 }}>Hours</div>
+                          </div>
+                          <div className="text-xl sm:text-2xl font-bold" style={{ color: colors.text, opacity: 0.3 }}>:</div>
+                          <div className="text-center px-2 sm:px-3">
+                            <div className="text-xl sm:text-2xl font-bold" style={{ color: '#3B82F6' }}>{String(Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60))).padStart(2, '0')}</div>
+                            <div className="text-xs" style={{ color: colors.text, opacity: 0.6 }}>Mins</div>
+                          </div>
+                          <div className="text-xl sm:text-2xl font-bold" style={{ color: colors.text, opacity: 0.3 }}>:</div>
+                          <div className="text-center px-2 sm:px-3">
+                            <div className="text-xl sm:text-2xl font-bold" style={{ color: '#3B82F6' }}>{String(Math.floor((timeRemaining % (1000 * 60)) / 1000)).padStart(2, '0')}</div>
+                            <div className="text-xs" style={{ color: colors.text, opacity: 0.6 }}>Secs</div>
+                          </div>
+                        </div>
+                      ) : null}
+                      <div className="mt-3 pt-3 border-t" style={{ borderColor: isDark ? 'rgba(59, 130, 246, 0.3)' : 'rgba(59, 130, 246, 0.2)' }}>
+                        <button
+                          onClick={handleAssignNumbers}
+                          disabled={assigningNumbers}
+                          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg font-bold transition-all hover:scale-105"
+                          style={{
+                            backgroundColor: '#FF9800',
+                            color: '#fff',
+                            opacity: assigningNumbers ? 0.6 : 1,
+                          }}
+                        >
+                          <FiShuffle size={18} /> {assigningNumbers ? 'ASSIGNING...' : 'ASSIGN NOW (Skip Countdown)'}
+                        </button>
+                        <p className="text-xs mt-2 text-center" style={{ color: colors.text, opacity: 0.6 }}>
+                          Admin only: Click to assign numbers immediately instead of waiting
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Calculate Winners Section - Quarter Cards */}
                 <div
                   style={{
@@ -1437,7 +1555,7 @@ const SquaresPoolDetail = () => {
                   </div>
 
                   {/* Quarter Cards Grid */}
-                  <div className="grid grid-cols-4 gap-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3">
                     {[1, 2, 3, 4].map((quarter) => {
                       const quarterWinner = winners.find(w => w.quarter === quarter);
                       const quarterLabel = quarter === 4 ? 'Final' : quarter === 2 ? 'Half' : `Q${quarter}`;
@@ -1677,23 +1795,23 @@ const SquaresPoolDetail = () => {
                   </div>
 
                   {/* Calculate All Button - Admin Only */}
-                  {canManagePool && (
-                  <div className="mt-4">
-                    <button
-                      onClick={handleCalculateAllWinners}
-                      disabled={calculatingWinners}
-                      className="w-full"
-                      style={{
-                        ...adminButtonStyle,
-                        opacity: calculatingWinners ? 0.6 : 1,
-                        justifyContent: 'center',
-                        backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
-                      }}
-                    >
-                      <FiAward size={16} /> Recalculate All Winners
-                    </button>
-                  </div>
-                  )}
+                  {/* {canManagePool && (
+                    <div className="mt-4">
+                      <button
+                        onClick={handleCalculateAllWinners}
+                        disabled={calculatingWinners}
+                        className="w-full"
+                        style={{
+                          ...adminButtonStyle,
+                          opacity: calculatingWinners ? 0.6 : 1,
+                          justifyContent: 'center',
+                          backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
+                        }}
+                      >
+                        <FiAward size={16} /> Recalculate All Winners
+                      </button>
+                    </div>
+                  )} */}
                 </div>
 
                 {/* Pool Tools Section - Admin Only */}
@@ -1762,8 +1880,8 @@ const SquaresPoolDetail = () => {
                 </div>
                 )}
 
-                {/* Axis Numbers Assignment Section - Show to everyone when numbers not assigned */}
-                {canAssignNumbers && (
+                {/* Axis Numbers Assignment Section - Admin Controls */}
+                {canAssignNumbers && numbersType !== 'TimeSet' && (
                   <div
                     style={{
                       backgroundColor: isDark ? 'rgba(59, 130, 246, 0.08)' : 'rgba(59, 130, 246, 0.06)',
@@ -1790,40 +1908,12 @@ const SquaresPoolDetail = () => {
                         <p className="text-xs" style={{ color: colors.text, opacity: 0.5 }}>
                           {numbersType === 'AdminTrigger'
                             ? canManagePool ? 'Manual assignment required' : 'Waiting for admin to assign numbers'
-                            : numbersType === 'TimeSet'
-                            ? 'Scheduled for automatic assignment'
                             : numbersType === 'Ascending'
                             ? 'Will be assigned in ascending order (0-9)'
                             : 'Numbers not yet assigned'}
                         </p>
                       </div>
                     </div>
-
-                    {/* Auto-assign message for TimeSet - visible to everyone */}
-                    {numbersType === 'TimeSet' && pool.numbers_assignment_datetime && (
-                      <div
-                        className="mb-4 p-4 rounded-lg"
-                        style={{
-                          backgroundColor: isDark ? 'rgba(59, 130, 246, 0.15)' : 'rgba(59, 130, 246, 0.1)',
-                          border: `1px solid ${isDark ? 'rgba(59, 130, 246, 0.4)' : 'rgba(59, 130, 246, 0.3)'}`,
-                        }}
-                      >
-                        <div className="flex items-center gap-2 mb-2">
-                          <FiCalendar size={16} style={{ color: '#3B82F6' }} />
-                          <p className="text-sm font-semibold" style={{ color: colors.text }}>
-                            Auto-Assignment Scheduled
-                          </p>
-                        </div>
-                        <p className="text-sm" style={{ color: colors.text, opacity: 0.7 }}>
-                          Numbers will be randomly assigned on: <strong>{new Date(pool.numbers_assignment_datetime).toLocaleString()}</strong>
-                        </p>
-                        {canManagePool && (
-                          <p className="text-xs mt-2" style={{ color: colors.text, opacity: 0.6 }}>
-                            You can still manually assign numbers below if you prefer not to wait.
-                          </p>
-                        )}
-                      </div>
-                    )}
 
                     {/* Manual assignment info for AdminTrigger - visible to everyone */}
                     {numbersType === 'AdminTrigger' && !canManagePool && (
@@ -1846,13 +1936,13 @@ const SquaresPoolDetail = () => {
                       </div>
                     )}
 
-                    {/* X-Axis Numbers - Only show for admins */}
-                    {canManagePool && (
+                    {/* Manual Assignment (AdminTrigger) - Show inputs and buttons */}
+                    {canManagePool && numbersType === 'AdminTrigger' && (
                     <>
                     <div className="mb-4">
                       <div className="flex items-center justify-between mb-2">
                         <label className="text-sm font-semibold" style={{ color: colors.text }}>
-                          X-Axis (Top Row) - Winning Team
+                          X-Axis (Top Row) - Visitor Team
                         </label>
                         <button
                           onClick={handleRandomizeXAxis}
@@ -1895,7 +1985,7 @@ const SquaresPoolDetail = () => {
                     <div className="mb-4">
                       <div className="flex items-center justify-between mb-2">
                         <label className="text-sm font-semibold" style={{ color: colors.text }}>
-                          Y-Axis (Left Column) - Losing Team
+                          Y-Axis (Left Column) - Home Team
                         </label>
                         <button
                           onClick={handleRandomizeYAxis}
@@ -1941,7 +2031,7 @@ const SquaresPoolDetail = () => {
                       </p>
                     )}
 
-                    {/* Action Buttons */}
+                    {/* Action Buttons for Manual Assignment */}
                     <div className="grid grid-cols-2 gap-3">
                       <button
                         onClick={handleAssignAxisNumbers}
@@ -1971,7 +2061,7 @@ const SquaresPoolDetail = () => {
                       <button
                         onClick={handleAssignNumbers}
                         disabled={assigningNumbers}
-                        className="flex items-center justify-center gap-2 py-2.5 rounded-lg font-semibold transition-all"
+                        className="flex items-center justify-center gap-2 py-2.5 rounded-lg font-semibold transition-all col-span-2"
                         style={{
                           backgroundColor: '#3B82F6',
                           color: '#fff',
@@ -2249,7 +2339,7 @@ const SquaresPoolDetail = () => {
               </div>
               <div className="flex items-start gap-3">
                 <span style={{ color: colors.brand.primary, fontWeight: 800 }}>3.</span>
-                <p>X-axis = Winning team's last digit, Y-axis = Losing team's last digit.</p>
+                <p>X-axis = Visitor team's last digit, Y-axis = Home team's last digit.</p>
               </div>
               <div className="flex items-start gap-3">
                 <span style={{ color: colors.brand.primary, fontWeight: 800 }}>4.</span>
@@ -2364,7 +2454,7 @@ const SquaresPoolDetail = () => {
                     </p>
                   </div>
                 </div>
-                {parseFloat(pool.entry_fee || pool.credit_cost || 0) > 0 && (
+                {pool.player_pool_type !== 'FREE' && parseFloat(pool.entry_fee || pool.credit_cost || 0) > 0 && (
                   <div
                     className="flex-1 sm:flex-none flex items-center gap-3 px-4 py-3 rounded-xl"
                     style={{
@@ -2937,7 +3027,7 @@ const SquaresPoolDetail = () => {
                     const homeLastDigit = homeScoreInt % 10;
                     const visitorLastDigit = visitorScoreInt % 10;
                     
-                    // X-axis = winning team, Y-axis = losing team (matches backend logic)
+                    // X-axis = visitor team, Y-axis = home team (matches backend logic)
                     const xCoord = homeScoreInt >= visitorScoreInt ? homeLastDigit : visitorLastDigit;
                     const yCoord = homeScoreInt >= visitorScoreInt ? visitorLastDigit : homeLastDigit;
                     

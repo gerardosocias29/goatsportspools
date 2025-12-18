@@ -28,7 +28,7 @@ const SquareCell = ({
   }, [isOwned, square]);
 
   const getCellStyles = () => {
-    let baseStyles = 'w-full h-full min-h-[28px] sm:min-h-[36px] md:min-h-[48px] lg:min-h-[60px] flex flex-col items-center justify-center text-[10px] sm:text-xs md:text-sm font-medium transition-all duration-200 cursor-pointer rounded-md border border-2';
+    let baseStyles = 'aspect-square w-full min-h-[28px] sm:min-h-[36px] md:min-h-[48px] lg:min-h-[60px] flex flex-col items-center justify-center text-[10px] sm:text-xs md:text-sm font-medium transition-all duration-200 cursor-pointer rounded-md border border-2';
 
     // Selected for purchase (current action) - highest priority
     if (isSelected) {

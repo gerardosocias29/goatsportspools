@@ -18,6 +18,9 @@ const SquaresGrid = ({
   userCredits = null, // User's available credits (null means no credit check)
   costPerSquare = 0, // Cost per square in credits
 }) => {
+  // Get team names from grid
+  const visitorTeamName = grid.visitorTeamName || grid.xAxisTeam || 'Visitor Team';
+  const homeTeamName = grid.homeTeamName || grid.yAxisTeam || 'Home Team';
   const [selectedSquares, setSelectedSquares] = useState([]);
   const [hoveredSquare, setHoveredSquare] = useState(null);
   const [highlightedPlayerId, setHighlightedPlayerId] = useState(null);
@@ -232,23 +235,23 @@ const SquaresGrid = ({
                   className="invisible flex items-center justify-center border rounded-lg shadow-md px-2 py-6 bg-gradient-to-b from-red-600 to-red-500"
                   style={{ writingMode: 'vertical-rl', textOrientation: 'mixed', transform: 'rotate(180deg)' }}
                 >
-                  <p className="font-bold text-white select-none text-lg whitespace-nowrap">Losing Team</p>
+                  <p className="font-bold text-white select-none text-lg whitespace-nowrap">{homeTeamName}</p>
                 </div>
               </div>
               {/* Spacer for Y numbers column */}
               <div className="w-7 sm:w-9 md:w-12 mr-1 sm:mr-2"></div>
-              <div className="flex-1 grid grid-cols-10 gap-0.5 sm:gap-1 md:gap-2">
+              <div className="flex-1 grid grid-cols-10 gap-0.5 sm:gap-1 md:gap-2" style={{ gridAutoRows: '1fr' }}>
                 <div className='col-span-10 flex justify-center mb-1 sm:mb-2'>
-                  {/* X Axis Label - Winning Team */}
+                  {/* X Axis Label - Visitor Team */}
                   <div className="flex items-center justify-center gap-1 sm:gap-2 border rounded-lg shadow-md px-2 sm:px-4 md:px-6 py-1 sm:py-2 bg-gradient-to-r from-green-600 to-green-500">
-                    <p className="font-bold text-white select-none text-xs sm:text-sm md:text-lg">Winning Team</p>
+                    <p className="font-bold text-white select-none text-xs sm:text-sm md:text-lg">{visitorTeamName}</p>
                   </div>
                 </div>
                 {xNumbers ? (
                   xNumbers.map((num, idx) => (
                     <div
                       key={idx}
-                      className="flex items-center justify-center aspect-square min-h-[28px] sm:min-h-[36px] md:min-h-[48px] lg:min-h-[60px] bg-blue-500 text-white font-bold text-xs sm:text-sm md:text-base rounded shadow"
+                      className="flex items-center justify-center py-2 bg-blue-500 text-white font-bold text-xs sm:text-sm md:text-base rounded shadow"
                     >
                       {num}
                     </div>
@@ -258,7 +261,7 @@ const SquaresGrid = ({
                   Array.from({ length: 10 }).map((_, idx) => (
                     <div
                       key={idx}
-                      className="flex items-center justify-center aspect-square min-h-[28px] sm:min-h-[36px] md:min-h-[48px] lg:min-h-[60px] bg-gray-300 text-gray-500 font-bold text-xs sm:text-sm md:text-base rounded shadow opacity-60"
+                      className="flex items-center justify-center py-2 bg-gray-300 text-gray-500 font-bold text-xs sm:text-sm md:text-base rounded shadow opacity-60"
                     >
                       ?
                     </div>
@@ -269,13 +272,13 @@ const SquaresGrid = ({
 
             {/* Grid Rows with Y Numbers */}
             <div className="flex">
-              {/* Y Axis Label - Losing Team (positioned to the left) */}
+              {/* Y Axis Label - Home Team (positioned to the left) */}
               <div className="hidden md:flex items-center mr-2">
                 <div
                   className="flex items-center justify-center border rounded-lg shadow-md px-2 py-6 bg-gradient-to-b from-red-600 to-red-500"
                   style={{ writingMode: 'vertical-rl', textOrientation: 'mixed', transform: 'rotate(180deg)' }}
                 >
-                  <p className="font-bold text-white select-none text-lg whitespace-nowrap">Losing Team</p>
+                  <p className="font-bold text-white select-none text-lg whitespace-nowrap">{homeTeamName}</p>
                 </div>
               </div>
 
@@ -304,7 +307,7 @@ const SquaresGrid = ({
               </div>
 
               {/* Actual Grid of Squares */}
-              <div className="flex-1 grid grid-cols-10 gap-0.5 sm:gap-1 md:gap-2">
+              <div className="flex-1 grid grid-cols-10 gap-0.5 sm:gap-1 md:gap-2" style={{ gridAutoRows: '1fr' }}>
                 {Array.from({ length: 10 }).map((_, yIdx) =>
                   Array.from({ length: 10 }).map((_, xIdx) => {
                     const square = getSquareAt(xIdx, yIdx);
@@ -380,7 +383,7 @@ const SquaresGrid = ({
         </div>
 
         {/* Selection Info */}
-        {selectionMode && (
+        {selectionMode && selectedSquares.length > 0 && (
           <div className={`mt-4 p-4 rounded-lg border-2 ${!canSelectMore && selectedSquares.length > 0 ? 'bg-orange-50 border-orange-300' : 'bg-blue-50 border-blue-300'}`}>
             {selectedSquares.length > 0 ? (
               <p className={`text-center font-semibold ${!canSelectMore ? 'text-orange-900' : 'text-blue-900'}`}>
