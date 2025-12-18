@@ -303,6 +303,13 @@ const CreateSquaresPool = () => {
           if (closeDate >= gameTime) {
             newErrors.closeDate = 'Pool must close before the game starts';
           }
+          // For Random-Timed Close, closeDate must be before numbersAssignDate
+          if (formData.numbersType === 'TimeSet' && formData.numbersAssignDate) {
+            const assignDate = new Date(formData.numbersAssignDate);
+            if (closeDate >= assignDate) {
+              newErrors.closeDate = 'Squares Selection Close must be before Assignment date';
+            }
+          }
         }
         if (formData.poolType === 'CREDIT' && !formData.poolPassword.trim()) {
           newErrors.poolPassword = 'Password is required for credit pools';
@@ -763,7 +770,7 @@ const CreateSquaresPool = () => {
               </InputField>
 
               <InputField
-                label="Pool Selection Closes"
+                label="Squares Selection Close"
                 required
                 error={errors.closeDate}
                 hint={selectedGame ? `Must be before game start: ${new Date(selectedGame.game_datetime || selectedGame.game_time).toLocaleString()}` : "When should square selection automatically close?"}

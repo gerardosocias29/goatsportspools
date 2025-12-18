@@ -690,7 +690,7 @@ const SquaresAdminDashboard = () => {
                     style={{ accentColor: colors.brand.primary }}
                   />
                   <label htmlFor="agreeToTerms" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>
-                    I agree to follow OKRNG's guidelines and terms for commissioners. I understand that I will be responsible for managing my pools fairly and honestly.
+                    I agree to OKRNG's commissioner guidelines and acknowledge sole responsibility for the fair and transparent administration of my pools.
                   </label>
                 </div>
 
