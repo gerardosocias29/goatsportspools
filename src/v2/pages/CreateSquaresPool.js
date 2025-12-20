@@ -39,6 +39,16 @@ const InputField = ({ label, required, error, children, hint, colors, isDark }) 
   </div>
 );
 
+// Format date for datetime-local input (local timezone)
+const formatDateTime = (date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+};
+
 /**
  * Create Squares Pool Page - 6-Step Wizard
  * Admin interface for creating new squares pools
@@ -202,16 +212,6 @@ const CreateSquaresPool = () => {
 
       // Use whichever is later: now or 4 hours before game
       const defaultCloseDate = fourHoursBeforeGame > now ? fourHoursBeforeGame : now;
-
-      // Format for datetime-local input (YYYY-MM-DDTHH:MM)
-      const formatDateTime = (date) => {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        const hours = String(date.getHours()).padStart(2, '0');
-        const minutes = String(date.getMinutes()).padStart(2, '0');
-        return `${year}-${month}-${day}T${hours}:${minutes}`;
-      };
 
       setFormData(prev => ({
         ...prev,
@@ -808,7 +808,7 @@ const CreateSquaresPool = () => {
                   type="datetime-local"
                   value={formData.closeDate}
                   onChange={(e) => handleChange('closeDate', e.target.value)}
-                  max={selectedGame ? new Date(selectedGame.game_datetime || selectedGame.game_time).toISOString().slice(0, 16) : undefined}
+                  max={selectedGame ? formatDateTime(new Date(selectedGame.game_datetime || selectedGame.game_time)) : undefined}
                   className="w-full rounded-lg px-4 py-3 focus:outline-none focus:ring-2"
                   style={inputStyles}
                 />
