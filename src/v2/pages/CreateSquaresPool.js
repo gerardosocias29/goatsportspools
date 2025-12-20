@@ -329,13 +329,6 @@ const CreateSquaresPool = () => {
             if (closeDate >= gameTime) {
               newErrors.closeDate = 'Pool must close before the game starts';
             }
-            // For Random-Timed Close, closeDate must be before numbersAssignDate
-            if (formData.numbersType === 'TimeSet' && formData.numbersAssignDate) {
-              const assignDate = new Date(formData.numbersAssignDate);
-              if (closeDate >= assignDate) {
-                newErrors.closeDate = 'Squares Selection Close must be before Assignment date';
-              }
-            }
           }
         }
         if (formData.poolType === 'CREDIT' && !formData.poolPassword.trim()) {
@@ -405,7 +398,7 @@ const CreateSquaresPool = () => {
         close_datetime: formData.closeDate ? new Date(formData.closeDate).toISOString() : null,
         number_assign_datetime: formData.numbersAssignDate ? new Date(formData.numbersAssignDate).toISOString() : null,
         numbers_type: formData.numbersType,
-        game_reward_type_id: formData.gameRewardTypeID,
+        game_reward_type_id: formData.gameRewardTypeID === 'custom' ? null : formData.gameRewardTypeID,
         home_team_id: formData.homeTeamId,
         visitor_team_id: formData.visitorTeamId,
         game_nickname: formData.gameNickname,
@@ -944,14 +937,22 @@ const CreateSquaresPool = () => {
               </InputField>
               <InputField
                 label="Reward Distribution"
-                hint="Select a reward template to auto-fill the quarter payout percentages below"
+                hint={formData.gameRewardTypeID === 'custom' ? "Enter your own custom percentages below" : "Select a reward template to auto-fill the quarter payout percentages below"}
                 colors={colors}
                 isDark={isDark}
               >
                 <select
                   value={formData.gameRewardTypeID}
                   onChange={(e) => {
-                    const selectedID = parseInt(e.target.value);
+                    const selectedValue = e.target.value;
+
+                    if (selectedValue === 'custom') {
+                      handleChange('gameRewardTypeID', 'custom');
+                      // Keep current percentages when switching to custom
+                      return;
+                    }
+
+                    const selectedID = parseInt(selectedValue);
                     handleChange('gameRewardTypeID', selectedID);
 
                     // Auto-fill percentages from selected reward type
@@ -977,6 +978,7 @@ const CreateSquaresPool = () => {
                       {reward.name} - {reward.description}
                     </option>
                   ))}
+                  <option value="custom">Custom - Enter your own percentages</option>
                 </select>
               </InputField>
 
@@ -986,7 +988,9 @@ const CreateSquaresPool = () => {
                   Quarter Payout Percentages (must total 100%)
                 </label>
                 <p className="text-sm mb-4" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>
-                  Auto-filled based on Reward Distribution above. You can customize these percentages if needed.
+                  {formData.gameRewardTypeID === 'custom'
+                    ? "Enter your custom payout percentages for each quarter."
+                    : "Auto-filled based on Reward Distribution above. You can customize these percentages if needed."}
                 </p>
                 <div className="grid grid-cols-2 gap-4">
                   {['reward1_percent', 'reward2_percent', 'reward3_percent', 'reward4_percent'].map((field, idx) => (
