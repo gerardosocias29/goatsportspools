@@ -195,6 +195,24 @@ const CreateSquaresPool = () => {
       const homeTeamName = game.home_team?.name || game.home_team || game.homeTeam;
       const visitorTeamName = game.visitor_team?.name || game.visitor_team || game.visitorTeam;
 
+      // Calculate default close date: max(current time, game start - 4 hours)
+      const gameTime = new Date(game.game_datetime || game.game_time || game.gameTime);
+      const fourHoursBeforeGame = new Date(gameTime.getTime() - 4 * 60 * 60 * 1000);
+      const now = new Date();
+
+      // Use whichever is later: now or 4 hours before game
+      const defaultCloseDate = fourHoursBeforeGame > now ? fourHoursBeforeGame : now;
+
+      // Format for datetime-local input (YYYY-MM-DDTHH:MM)
+      const formatDateTime = (date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        return `${year}-${month}-${day}T${hours}:${minutes}`;
+      };
+
       setFormData(prev => ({
         ...prev,
         gameID: gameID,
@@ -204,6 +222,8 @@ const CreateSquaresPool = () => {
         yAxisTeam: visitorTeamName,
         gridName: prev.gridName.trim() ? prev.gridName : `${homeTeamName} vs ${visitorTeamName} Squares`,
         gameNickname: game.game_nickname || game.gameNickname || `${homeTeamName} vs ${visitorTeamName}`,
+        // Auto-set closeDate to max(now, gameTime - 4 hours)
+        closeDate: prev.closeDate || formatDateTime(defaultCloseDate),
       }));
     }
   };
@@ -297,17 +317,24 @@ const CreateSquaresPool = () => {
       case 5: // Player Settings
         if (!formData.closeDate) {
           newErrors.closeDate = 'Pool closes date/time is required';
-        } else if (selectedGame) {
+        } else {
           const closeDate = new Date(formData.closeDate);
-          const gameTime = new Date(selectedGame.game_datetime || selectedGame.game_time || selectedGame.gameTime);
-          if (closeDate >= gameTime) {
-            newErrors.closeDate = 'Pool must close before the game starts';
-          }
-          // For Random-Timed Close, closeDate must be before numbersAssignDate
-          if (formData.numbersType === 'TimeSet' && formData.numbersAssignDate) {
-            const assignDate = new Date(formData.numbersAssignDate);
-            if (closeDate >= assignDate) {
-              newErrors.closeDate = 'Squares Selection Close must be before Assignment date';
+          const now = new Date();
+
+          // Past date validation - closeDate cannot be in the past
+          if (closeDate <= now) {
+            newErrors.closeDate = 'Pool close date/time cannot be in the past';
+          } else if (selectedGame) {
+            const gameTime = new Date(selectedGame.game_datetime || selectedGame.game_time || selectedGame.gameTime);
+            if (closeDate >= gameTime) {
+              newErrors.closeDate = 'Pool must close before the game starts';
+            }
+            // For Random-Timed Close, closeDate must be before numbersAssignDate
+            if (formData.numbersType === 'TimeSet' && formData.numbersAssignDate) {
+              const assignDate = new Date(formData.numbersAssignDate);
+              if (closeDate >= assignDate) {
+                newErrors.closeDate = 'Squares Selection Close must be before Assignment date';
+              }
             }
           }
         }
