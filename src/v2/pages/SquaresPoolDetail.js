@@ -1318,6 +1318,18 @@ const SquaresPoolDetail = () => {
               </div>
               <span className="text-sm font-semibold" style={{ color: colors.success }}>Joined</span>
             </div>
+          ) : pool.pool_status === 'closed' ? (
+            <div
+              className="flex items-center gap-2 px-4 py-2 rounded-full font-semibold"
+              style={{
+                backgroundColor: colors.error,
+                color: '#fff',
+                opacity: 0.8,
+              }}
+            >
+              <FiLock size={16} />
+              Pool Closed
+            </div>
           ) : (
             <button
               onClick={() => setShowJoinModal(true)}
@@ -1350,11 +1362,9 @@ const SquaresPoolDetail = () => {
                 <div className="text-lg md:text-xl font-bold" style={{ color: colors.text }}>
                   {getTeamName(pool.game?.home_team_id || pool.game?.homeTeamId)} vs {getTeamName(pool.game?.visitor_team_id || pool.game?.visitorTeamId)}
                 </div>
-                {pool.pool_description && (
-                  <div className="text-sm mt-1 line-clamp-2" style={{ color: colors.text, opacity: 0.65 }}>
-                    {pool.pool_description}
-                  </div>
-                )}
+                <div className="text-sm mt-1 line-clamp-2" style={{ color: colors.text, opacity: 0.65 }}>
+                  {pool.pool_description || "-----"}
+                </div>
               </div>
             </div>
 
@@ -2163,6 +2173,27 @@ const SquaresPoolDetail = () => {
           </div>
         )}
 
+        {/* Pool Closed Banner */}
+        {pool.pool_status === 'closed' && (
+          <div
+            className="mb-6 p-4 rounded-xl flex items-center gap-3"
+            style={{
+              backgroundColor: isDark ? '#7F1D1D' : '#FEE2E2',
+              border: `2px solid ${colors.error}`,
+            }}
+          >
+            <FiLock size={24} style={{ color: colors.error, flexShrink: 0 }} />
+            <div>
+              <div className="font-bold text-lg" style={{ color: colors.error }}>
+                Pool Closed
+              </div>
+              <div style={{ color: isDark ? '#FCA5A5' : '#991B1B', fontSize: '0.875rem' }}>
+                This pool is no longer accepting new squares or players. You can still view the grid and results.
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Grid */}
         <div className="mb-8">
           {(() => {
@@ -2282,10 +2313,10 @@ const SquaresPoolDetail = () => {
                     ? 'squares based on available credits'
                     : 'Unlimited squares per player'}</p>
               </div>
-              {pool.entry_fee > 0 && (
+              {pool.player_pool_type !== 'FREE' && pool.player_pool_type !== 'OPEN' && parseFloat(pool.entry_fee || pool.credit_cost || 0) > 0 && (
                 <div className="flex items-start gap-3">
                   <span style={{ color: colors.brand.primary, fontWeight: 800 }}>•</span>
-                  <p>Cost: {parseFloat(pool.entry_fee).toFixed(2)} per square</p>
+                  <p>Cost: {parseFloat(pool.entry_fee || pool.credit_cost || 0).toFixed(2)} per square</p>
                 </div>
               )}
               <div className="flex items-start gap-3">
