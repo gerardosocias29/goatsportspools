@@ -220,8 +220,8 @@ const CreateSquaresPool = () => {
         visitorTeamId: game.visitor_team_id || game.visitor_team?.id || game.visitorTeamId,
         xAxisTeam: homeTeamName,
         yAxisTeam: visitorTeamName,
-        gridName: prev.gridName.trim() ? prev.gridName : `${homeTeamName} vs ${visitorTeamName} Squares`,
-        gameNickname: game.game_nickname || game.gameNickname || `${homeTeamName} vs ${visitorTeamName}`,
+        gridName: prev.gridName.trim() ? prev.gridName : `${visitorTeamName} vs ${homeTeamName} Squares`,
+        gameNickname: game.game_nickname || game.gameNickname || `${visitorTeamName} vs ${homeTeamName}`,
         // Auto-set closeDate to max(now, gameTime - 4 hours)
         closeDate: prev.closeDate || formatDateTime(defaultCloseDate),
       }));
@@ -679,7 +679,7 @@ const CreateSquaresPool = () => {
                           <div className="flex justify-between items-center">
                             <div>
                               <div className="font-bold" style={{ color: colors.text }}>
-                                {homeTeam} vs {visitorTeam}
+                                {visitorTeam} vs {homeTeam}
                               </div>
                               <div className="text-sm mt-1 flex items-center gap-2" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>
                                 <FiCalendar className="text-xs" />
@@ -1027,7 +1027,7 @@ const CreateSquaresPool = () => {
                 <div className="rounded-lg p-4 space-y-2" style={{ backgroundColor: isDark ? '#374151' : '#F3F4F6' }}>
                   <p style={{ color: colors.text }}><strong>Pool:</strong> {formData.gridName}</p>
                   <p style={{ color: colors.text }}><strong>League:</strong> {formData.league} {formData.season}</p>
-                  {selectedGame && <p style={{ color: colors.text }}><strong>Game:</strong> {selectedGame.home_team?.name || selectedGame.home_team} vs {selectedGame.visitor_team?.name || selectedGame.visitor_team}</p>}
+                  {selectedGame && <p style={{ color: colors.text }}><strong>Game:</strong> {selectedGame.visitor_team?.name || selectedGame.visitor_team} vs {selectedGame.home_team?.name || selectedGame.home_team}</p>}
                   <p style={{ color: colors.text }}><strong>Numbers:</strong> {formData.numbersType}</p>
                   <p style={{ color: colors.text }}><strong>Pool Type:</strong> {formData.poolType}</p>
                   <p style={{ color: colors.text }}><strong>Cost:</strong> {formData.costPerSquare?.toFixed(2)} per square</p>

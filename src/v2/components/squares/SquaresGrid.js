@@ -232,19 +232,19 @@ const SquaresGrid = ({
               {/* Spacer for corner - matches Y-axis label and numbers column widths */}
               <div className="hidden md:flex items-center mr-2 max-h-10">
                 <div
-                  className="invisible flex items-center justify-center border rounded-lg shadow-md px-2 py-6 bg-gradient-to-b from-red-600 to-red-500"
+                  className="invisible flex items-center justify-center border rounded-lg shadow-md px-2 py-6 bg-gradient-to-b from-green-600 to-green-500"
                   style={{ writingMode: 'vertical-rl', textOrientation: 'mixed', transform: 'rotate(180deg)' }}
                 >
-                  <p className="font-bold text-white select-none text-lg whitespace-nowrap">{homeTeamName}</p>
+                  <p className="font-bold text-white select-none text-lg whitespace-nowrap">{visitorTeamName}</p>
                 </div>
               </div>
               {/* Spacer for Y numbers column */}
               <div className="w-7 sm:w-9 md:w-12 mr-1 sm:mr-2"></div>
               <div className="flex-1 grid grid-cols-10 gap-0.5 sm:gap-1 md:gap-2" style={{ gridAutoRows: '1fr' }}>
                 <div className='col-span-10 flex justify-center mb-1 sm:mb-2'>
-                  {/* X Axis Label - Visitor Team */}
-                  <div className="flex items-center justify-center gap-1 sm:gap-2 border rounded-lg shadow-md px-2 sm:px-4 md:px-6 py-1 sm:py-2 bg-gradient-to-r from-green-600 to-green-500">
-                    <p className="font-bold text-white select-none text-xs sm:text-sm md:text-lg">{visitorTeamName}</p>
+                  {/* X Axis Label - Home Team (top of grid) */}
+                  <div className="flex items-center justify-center gap-1 sm:gap-2 border rounded-lg shadow-md px-2 sm:px-4 md:px-6 py-1 sm:py-2 bg-gradient-to-r from-red-600 to-red-500">
+                    <p className="font-bold text-white select-none text-xs sm:text-sm md:text-lg">{homeTeamName}</p>
                   </div>
                 </div>
                 {xNumbers ? (
@@ -272,13 +272,13 @@ const SquaresGrid = ({
 
             {/* Grid Rows with Y Numbers */}
             <div className="flex">
-              {/* Y Axis Label - Home Team (positioned to the left) */}
+              {/* Y Axis Label - Visitor Team (positioned to the left/side of grid) */}
               <div className="hidden md:flex items-center mr-2">
                 <div
-                  className="flex items-center justify-center border rounded-lg shadow-md px-2 py-6 bg-gradient-to-b from-red-600 to-red-500"
+                  className="flex items-center justify-center border rounded-lg shadow-md px-2 py-6 bg-gradient-to-b from-green-600 to-green-500"
                   style={{ writingMode: 'vertical-rl', textOrientation: 'mixed', transform: 'rotate(180deg)' }}
                 >
-                  <p className="font-bold text-white select-none text-lg whitespace-nowrap">{homeTeamName}</p>
+                  <p className="font-bold text-white select-none text-lg whitespace-nowrap">{visitorTeamName}</p>
                 </div>
               </div>
 

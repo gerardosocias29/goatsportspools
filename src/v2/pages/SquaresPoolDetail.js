@@ -1365,7 +1365,7 @@ const SquaresPoolDetail = () => {
                   {pool.game?.league || 'NFL'}
                 </div>
                 <div className="text-lg md:text-xl font-bold" style={{ color: colors.text }}>
-                  {getTeamName(pool.game?.home_team_id || pool.game?.homeTeamId)} vs {getTeamName(pool.game?.visitor_team_id || pool.game?.visitorTeamId)}
+                  {getTeamName(pool.game?.visitor_team_id || pool.game?.visitorTeamId)} vs {getTeamName(pool.game?.home_team_id || pool.game?.homeTeamId)}
                 </div>
                 <div className="text-sm mt-1 line-clamp-2" style={{ color: colors.text, opacity: 0.65 }}>
                   {pool.pool_description || "-----"}

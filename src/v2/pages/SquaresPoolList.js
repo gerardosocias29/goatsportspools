@@ -511,21 +511,23 @@ const SquaresPoolList = () => {
                         </div>
                       </div>
                       <div className='grid xl:grid-cols-2 gap-2'>
-                        <div className="flex items-center gap-2 border rounded-lg shadow-md px-4 py-2" style={{
-                          backgroundImage: `url(${getTeamBackground(pool.game?.home_team_id || pool.game?.homeTeamId)})`,
-                          backgroundSize: 'cover', // Ensures the image covers the entire div
-                          backgroundPosition: 'center', // Centers the image within the div
-                        }}>
-                          <img src={getTeamLogo(pool.game?.home_team_id || pool.game?.homeTeamId)} alt={getTeamName(pool.game.home_team_id || pool.game.homeTeamId)} className="w-[30px]"/>
-                          <p className="font-bold select-none text-xs" style={{ color: getTeamBackground(pool.game?.home_team_id || pool.game?.homeTeamId) ? 'white' : 'black' }}>{getTeamName(pool.game.home_team_id || pool.game.homeTeamId)}</p>
-                        </div>
+                        {/* Visitor team first (top/left) */}
                         <div className="flex items-center gap-2 border rounded-lg shadow-md px-4 py-2" style={{
                           backgroundImage: `url(${getTeamBackground(pool.game?.visitor_team_id || pool.game?.visitorTeamId)})`,
-                          backgroundSize: 'cover', // Ensures the image covers the entire div
-                          backgroundPosition: 'center', // Centers the image within the div
+                          backgroundSize: 'cover',
+                          backgroundPosition: 'center',
                         }}>
                           <img src={getTeamLogo(pool.game?.visitor_team_id || pool.game?.visitorTeamId)} alt={getTeamName(pool.game.visitor_team_id || pool.game.visitorTeamId)} className="w-[30px]"/>
                           <p className="font-bold select-none text-xs" style={{ color: getTeamBackground(pool.game?.visitor_team_id || pool.game?.visitorTeamId) ? 'white' : 'black' }}>{getTeamName(pool.game.visitor_team_id || pool.game.visitorTeamId)}</p>
+                        </div>
+                        {/* Home team second (bottom/right) */}
+                        <div className="flex items-center gap-2 border rounded-lg shadow-md px-4 py-2" style={{
+                          backgroundImage: `url(${getTeamBackground(pool.game?.home_team_id || pool.game?.homeTeamId)})`,
+                          backgroundSize: 'cover',
+                          backgroundPosition: 'center',
+                        }}>
+                          <img src={getTeamLogo(pool.game?.home_team_id || pool.game?.homeTeamId)} alt={getTeamName(pool.game.home_team_id || pool.game.homeTeamId)} className="w-[30px]"/>
+                          <p className="font-bold select-none text-xs" style={{ color: getTeamBackground(pool.game?.home_team_id || pool.game?.homeTeamId) ? 'white' : 'black' }}>{getTeamName(pool.game.home_team_id || pool.game.homeTeamId)}</p>
                         </div>
                       </div>
 

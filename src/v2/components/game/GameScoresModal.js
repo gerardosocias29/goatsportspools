@@ -112,7 +112,7 @@ const GameScoresModal = ({ game, onClose, onSave }) => {
           <div className="flex items-center justify-between">
             <div>
               <p className="font-semibold text-lg" style={{ color: colors.text }}>
-                {game?.home_team?.name || game?.home_team} vs {game?.visitor_team?.name || game?.visitor_team}
+                {game?.visitor_team?.name || game?.visitor_team} vs {game?.home_team?.name || game?.home_team}
               </p>
               <p className="text-sm mt-1" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>
                 {new Date(game?.game_datetime).toLocaleString('en-US', {

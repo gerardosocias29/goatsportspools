@@ -425,7 +425,7 @@ const JoinPoolModal = ({ isOpen, onClose, onSuccess }) => {
                     </div>
                   </div>
                   <div style={{ fontSize: '0.875rem', color: colors.text, opacity: 0.7 }}>
-                    {poolInfo.home_team?.name || 'TBD'} vs {poolInfo.visitor_team?.name || 'TBD'}
+                    {poolInfo.visitor_team?.name || 'TBD'} vs {poolInfo.home_team?.name || 'TBD'}
                   </div>
                   <div style={{ fontSize: '0.875rem', color: colors.text, opacity: 0.7, marginTop: '0.25rem' }}>
                     {poolInfo.claimed_squares || 0}/100 squares filled • {poolInfo.player_pool_type === 'FREE' || poolInfo.player_pool_type === 'OPEN' || parseFloat(poolInfo.entry_fee || poolInfo.credit_cost || 0) === 0 ? 'FREE' : `$${parseFloat(poolInfo.entry_fee || poolInfo.credit_cost || 0).toFixed(2)}/square`}
