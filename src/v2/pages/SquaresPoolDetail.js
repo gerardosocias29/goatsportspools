@@ -1067,12 +1067,17 @@ const SquaresPoolDetail = () => {
   // Use == for loose comparison to handle both string and number role_id
   const isSuperAdmin = roleId == 1; // Only role_id 1 is superadmin
   const isSquareAdmin = roleId == 2; // role_id 2 is Square Admin
+  const isRegularUser = roleId == 3; // role_id 3 is regular player
   const isPoolOwner = pool && (pool.admin_id == currentUserIdValue || pool.created_by == currentUserIdValue);
 
   // Superadmin can manage ALL pools, Square Admin can only manage their own pools
   const canManagePool = currentUser && pool && (
     isSuperAdmin || (isSquareAdmin && isPoolOwner) || isPoolOwner
   );
+
+  // Check if game has ended (has final scores)
+  const gameHasEnded = pool?.game?.final_home !== null && pool?.game?.final_home !== undefined &&
+                       pool?.game?.final_visitor !== null && pool?.game?.final_visitor !== undefined;
 
   const canGrantCredits = isSuperAdmin; // Only superadmin can grant credits
   const poolNumberDisplay = getPoolNumber();
@@ -1384,6 +1389,8 @@ const SquaresPoolDetail = () => {
         </div>
 
         {/* Game Status & Winners / Admin Controls - Collapsible Panel */}
+        {/* Hide for regular users (role_id 3) until game has ended */}
+        {(!isRegularUser || gameHasEnded || canManagePool) && (
         <div
           className="mb-5"
           style={{
@@ -1890,8 +1897,8 @@ const SquaresPoolDetail = () => {
                 </div>
                 )}
 
-                {/* Axis Numbers Assignment Section - Admin Controls */}
-                {canAssignNumbers && numbersType !== 'TimeSet' && (
+                {/* Axis Numbers Assignment Section - Admin Controls Only (hide for regular users) */}
+                {canAssignNumbers && numbersType !== 'TimeSet' && !isRegularUser && (
                   <div
                     style={{
                       backgroundColor: isDark ? 'rgba(59, 130, 246, 0.08)' : 'rgba(59, 130, 246, 0.06)',
@@ -2086,8 +2093,8 @@ const SquaresPoolDetail = () => {
                 </div>
                 )}
 
-                {/* Credits Management Section - Only for Credit Pools */}
-                {pool.player_pool_type === 'CREDIT' && (
+                {/* Credits Management Section - Only for Credit Pools and Admins */}
+                {pool.player_pool_type === 'CREDIT' && !isRegularUser && (
                   <div
                     style={{
                       backgroundColor: isDark ? 'rgba(212, 122, 62, 0.08)' : 'rgba(212, 122, 62, 0.06)',
@@ -2127,6 +2134,7 @@ const SquaresPoolDetail = () => {
               </div>
             )}
           </div>
+        )}
 
         {/* Winners Display */}
         {showWinners && winners.length > 0 && (
