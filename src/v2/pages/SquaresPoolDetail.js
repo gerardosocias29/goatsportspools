@@ -1379,8 +1379,8 @@ const SquaresPoolDetail = () => {
         </div>
 
         {/* Game Status & Winners / Admin Controls - Collapsible Panel */}
-        {/* Hide for regular users (role_id 3) until game has ended */}
-        {(!isRegularUser || gameHasEnded || canManagePool) && (
+        {/* Show for: pool managers, superadmins, OR anyone after game has ended */}
+        {(canManagePool || isSuperAdmin || gameHasEnded) && (
         <div
           className="mb-5"
           style={{
