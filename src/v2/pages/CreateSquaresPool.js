@@ -5,6 +5,7 @@ import { useAxios } from '../../app/contexts/AxiosContext';
 import { useUserContext } from '../contexts/UserContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useToast } from '../../app/contexts/ToastContext';
+import { toUTCString } from '../utils/timezone';
 
 // Styled button component for selections - defined outside to prevent re-creation on render
 const SelectButton = ({ selected, onClick, children, disabled, colors, isDark }) => (
@@ -391,12 +392,12 @@ const CreateSquaresPool = () => {
         access_type: costType,
         reward_type: formData.rewardsType || 'CreditsRewards',
         password: formData.poolType === 'CREDIT' ? formData.poolPassword : null,
-        entry_fee: formData.costPerSquare,
-        credit_cost: formData.costPerSquare,
+        entry_fee: formData.poolType === 'OPEN' ? 0 : formData.costPerSquare,
+        credit_cost: formData.poolType === 'OPEN' ? 0 : formData.costPerSquare,
         custom_payout: formData.customPayout,
         max_squares_per_player: formData.maxSquaresPerPlayer,
-        close_datetime: formData.closeDate ? new Date(formData.closeDate).toISOString() : null,
-        number_assign_datetime: formData.numbersAssignDate ? new Date(formData.numbersAssignDate).toISOString() : null,
+        close_datetime: toUTCString(formData.closeDate),
+        number_assign_datetime: toUTCString(formData.numbersAssignDate),
         numbers_type: formData.numbersType,
         game_reward_type_id: formData.gameRewardTypeID === 'custom' ? null : formData.gameRewardTypeID,
         home_team_id: formData.homeTeamId,
@@ -1030,8 +1031,8 @@ const CreateSquaresPool = () => {
                   {selectedGame && <p style={{ color: colors.text }}><strong>Game:</strong> {selectedGame.visitor_team?.name || selectedGame.visitor_team} vs {selectedGame.home_team?.name || selectedGame.home_team}</p>}
                   <p style={{ color: colors.text }}><strong>Numbers:</strong> {formData.numbersType}</p>
                   <p style={{ color: colors.text }}><strong>Pool Type:</strong> {formData.poolType}</p>
-                  <p style={{ color: colors.text }}><strong>Cost:</strong> {formData.costPerSquare?.toFixed(2)} per square</p>
-                  <p style={{ color: colors.text }}><strong>Payout:</strong> {formData.customPayout ? `${formData.customPayout.toFixed(2)} (custom)` : `${((formData.costPerSquare || 0) * 100).toFixed(2)} (auto-calculated)`}</p>
+                  <p style={{ color: colors.text }}><strong>Cost:</strong> {formData.poolType === 'OPEN' ? 'FREE' : `${formData.costPerSquare?.toFixed(2)} per square`}</p>
+                  <p style={{ color: colors.text }}><strong>Payout:</strong> {formData.customPayout ? `${formData.customPayout.toFixed(2)} (custom)` : formData.poolType === 'OPEN' ? 'N/A (FREE pool)' : `${((formData.costPerSquare || 0) * 100).toFixed(2)} (auto-calculated)`}</p>
                 </div>
               </div>
             </div>

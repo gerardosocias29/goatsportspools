@@ -11,6 +11,7 @@ import { TeamTemplate } from '../../app/pages/screens/games/NFLTemplates';
 import { useTheme } from '../contexts/ThemeContext';
 import { useToast } from '../../app/contexts/ToastContext';
 import { QRCodeCanvas } from 'qrcode.react';
+import { formatDateTimeUS } from '../utils/timezone';
 
 /**
  * Reusable Loading Modal Component
@@ -992,19 +993,8 @@ const SquaresPoolDetail = () => {
     setShowQRCode(false);
   };
 
-  const formatDate = (dateString) => {
-    if (!dateString) return 'TBD';
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return 'TBD';
-    return date.toLocaleDateString('en-US', {
-      weekday: 'short',
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
-    });
-  };
+  // Use the centralized timezone utility for consistent US Central time display
+  const formatDate = formatDateTimeUS;
 
   const formatCurrency = (value) => {
     const amount = Number(value || 0);
@@ -2972,49 +2962,7 @@ const SquaresPoolDetail = () => {
 
             {/* Score Inputs */}
             <div className="flex items-center justify-center gap-6 mb-6">
-              {/* Home Team */}
-              <div className="flex flex-col items-center flex-1">
-                {pool?.game?.home_team_id && getTeamLogo(pool.game.home_team_id) ? (
-                  <img
-                    src={getTeamLogo(pool.game.home_team_id)}
-                    alt="Home"
-                    className="w-16 h-16 object-contain mb-2"
-                  />
-                ) : (
-                  <div
-                    className="w-16 h-16 rounded-full flex items-center justify-center mb-2 text-lg font-bold"
-                    style={{ backgroundColor: colors.brand.primary, color: '#fff' }}
-                  >
-                    H
-                  </div>
-                )}
-                <p className="text-xs font-semibold mb-2 text-center" style={{ color: colors.text, opacity: 0.7 }}>
-                  {getTeamName(pool?.game?.home_team_id) || 'Home'}
-                </p>
-                <input
-                  type="number"
-                  min="0"
-                  value={homeScore}
-                  onChange={(e) => setHomeScore(e.target.value)}
-                  placeholder="0"
-                  className="w-20 h-16 text-center text-3xl font-bold rounded-xl focus:outline-none focus:ring-2"
-                  style={{
-                    backgroundColor: isDark ? colors.cardHover : '#f7f4f2',
-                    border: `2px solid ${colors.border}`,
-                    color: colors.text,
-                  }}
-                />
-              </div>
-
-              {/* VS Divider */}
-              <div
-                className="text-lg font-bold"
-                style={{ color: colors.text, opacity: 0.3 }}
-              >
-                vs
-              </div>
-
-              {/* Visitor Team */}
+              {/* Visitor Team (displayed first) */}
               <div className="flex flex-col items-center flex-1">
                 {pool?.game?.visitor_team_id && getTeamLogo(pool.game.visitor_team_id) ? (
                   <img
@@ -3038,6 +2986,48 @@ const SquaresPoolDetail = () => {
                   min="0"
                   value={visitorScore}
                   onChange={(e) => setVisitorScore(e.target.value)}
+                  placeholder="0"
+                  className="w-20 h-16 text-center text-3xl font-bold rounded-xl focus:outline-none focus:ring-2"
+                  style={{
+                    backgroundColor: isDark ? colors.cardHover : '#f7f4f2',
+                    border: `2px solid ${colors.border}`,
+                    color: colors.text,
+                  }}
+                />
+              </div>
+
+              {/* VS Divider */}
+              <div
+                className="text-lg font-bold"
+                style={{ color: colors.text, opacity: 0.3 }}
+              >
+                vs
+              </div>
+
+              {/* Home Team (displayed last) */}
+              <div className="flex flex-col items-center flex-1">
+                {pool?.game?.home_team_id && getTeamLogo(pool.game.home_team_id) ? (
+                  <img
+                    src={getTeamLogo(pool.game.home_team_id)}
+                    alt="Home"
+                    className="w-16 h-16 object-contain mb-2"
+                  />
+                ) : (
+                  <div
+                    className="w-16 h-16 rounded-full flex items-center justify-center mb-2 text-lg font-bold"
+                    style={{ backgroundColor: colors.brand.primary, color: '#fff' }}
+                  >
+                    H
+                  </div>
+                )}
+                <p className="text-xs font-semibold mb-2 text-center" style={{ color: colors.text, opacity: 0.7 }}>
+                  {getTeamName(pool?.game?.home_team_id) || 'Home'}
+                </p>
+                <input
+                  type="number"
+                  min="0"
+                  value={homeScore}
+                  onChange={(e) => setHomeScore(e.target.value)}
                   placeholder="0"
                   className="w-20 h-16 text-center text-3xl font-bold rounded-xl focus:outline-none focus:ring-2"
                   style={{

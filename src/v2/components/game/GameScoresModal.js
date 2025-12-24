@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FiX, FiSave, FiTrendingUp } from 'react-icons/fi';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useToast } from '../../../app/contexts/ToastContext';
+import { formatDateTimeUS } from '../../utils/timezone';
 
 /**
  * GameScoresModal Component
@@ -115,13 +116,7 @@ const GameScoresModal = ({ game, onClose, onSave }) => {
                 {game?.visitor_team?.name || game?.visitor_team} vs {game?.home_team?.name || game?.home_team}
               </p>
               <p className="text-sm mt-1" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>
-                {new Date(game?.game_datetime).toLocaleString('en-US', {
-                  weekday: 'long',
-                  month: 'long',
-                  day: 'numeric',
-                  hour: 'numeric',
-                  minute: '2-digit',
-                })}
+                {formatDateTimeUS(game?.game_datetime)}
               </p>
             </div>
             <div className="flex gap-2">

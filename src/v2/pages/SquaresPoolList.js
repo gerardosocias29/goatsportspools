@@ -8,6 +8,7 @@ import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import JoinPoolModal from '../components/squares/JoinPoolModal';
 import { borderRadius } from '../styles/theme';
+import { formatDateTimeUS } from '../utils/timezone';
 
 /**
  * Squares Pool List Page
@@ -67,18 +68,8 @@ const SquaresPoolList = () => {
     }
   };
 
-  const formatDate = (dateString) => {
-    if (!dateString) return 'TBD';
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return 'TBD';
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
-    });
-  };
+  // Use the centralized timezone utility for consistent US Central time display
+  const formatDate = formatDateTimeUS;
 
   const getProgressPercentage = (pool) => {
     const totalSquares = pool.total_squares || pool.totalSquares || 100;

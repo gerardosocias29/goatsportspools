@@ -350,25 +350,8 @@ const ManageGames = () => {
 
                 {/* Teams */}
                 <div className="p-6">
-                  {/* Home Team */}
+                  {/* Visitor Team (displayed first) */}
                   <div className="flex items-center gap-3 mb-4 pb-4" style={{ borderBottom: `1px solid ${colors.border}` }}>
-                    {game.home_team?.image_url && (
-                      <img
-                        src={game.home_team.image_url}
-                        alt={game.home_team.name}
-                        className="w-12 h-12 object-contain"
-                      />
-                    )}
-                    <div className="flex-1">
-                      <p className="font-semibold" style={{ color: colors.text }}>
-                        {game.home_team?.name || game.home_team}
-                      </p>
-                      <p className="text-sm" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>Home</p>
-                    </div>
-                  </div>
-
-                  {/* Visitor Team */}
-                  <div className="flex items-center gap-3">
                     {game.visitor_team?.image_url && (
                       <img
                         src={game.visitor_team.image_url}
@@ -381,6 +364,23 @@ const ManageGames = () => {
                         {game.visitor_team?.name || game.visitor_team}
                       </p>
                       <p className="text-sm" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>Visitor</p>
+                    </div>
+                  </div>
+
+                  {/* Home Team (displayed last) */}
+                  <div className="flex items-center gap-3">
+                    {game.home_team?.image_url && (
+                      <img
+                        src={game.home_team.image_url}
+                        alt={game.home_team.name}
+                        className="w-12 h-12 object-contain"
+                      />
+                    )}
+                    <div className="flex-1">
+                      <p className="font-semibold" style={{ color: colors.text }}>
+                        {game.home_team?.name || game.home_team}
+                      </p>
+                      <p className="text-sm" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>Home</p>
                     </div>
                   </div>
                 </div>
@@ -505,40 +505,7 @@ const ManageGames = () => {
                   />
                 </div>
 
-                {/* Home Team */}
-                <div className="mb-6">
-                  <label className="block font-semibold mb-2" style={{ color: colors.text }}>
-                    Home Team *
-                  </label>
-                  <select
-                    value={formData.home_team?.id || ''}
-                    onChange={(e) => {
-                      const team = teams.find(t => t.id === parseInt(e.target.value));
-                      setFormData({
-                        ...formData,
-                        home_team: team,
-                        favored_team: team
-                      });
-                    }}
-                    className="w-full px-4 py-3 rounded-lg focus:ring-2 focus:border-transparent"
-                    style={{
-                      backgroundColor: isDark ? '#374151' : '#F3F4F6',
-                      border: `1px solid ${colors.border}`,
-                      color: colors.text,
-                      outlineColor: colors.brand.primary
-                    }}
-                    required
-                  >
-                    <option value="">Select Home Team</option>
-                    {getAvailableHomeTeams().map(team => (
-                      <option key={team.id} value={team.id}>
-                        {team.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Visitor Team */}
+                {/* Visitor Team (displayed first) */}
                 <div className="mb-6">
                   <label className="block font-semibold mb-2" style={{ color: colors.text }}>
                     Visitor Team *
@@ -564,6 +531,39 @@ const ManageGames = () => {
                   >
                     <option value="">Select Visitor Team</option>
                     {getAvailableVisitorTeams().map(team => (
+                      <option key={team.id} value={team.id}>
+                        {team.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Home Team (displayed last) */}
+                <div className="mb-6">
+                  <label className="block font-semibold mb-2" style={{ color: colors.text }}>
+                    Home Team *
+                  </label>
+                  <select
+                    value={formData.home_team?.id || ''}
+                    onChange={(e) => {
+                      const team = teams.find(t => t.id === parseInt(e.target.value));
+                      setFormData({
+                        ...formData,
+                        home_team: team,
+                        favored_team: team
+                      });
+                    }}
+                    className="w-full px-4 py-3 rounded-lg focus:ring-2 focus:border-transparent"
+                    style={{
+                      backgroundColor: isDark ? '#374151' : '#F3F4F6',
+                      border: `1px solid ${colors.border}`,
+                      color: colors.text,
+                      outlineColor: colors.brand.primary
+                    }}
+                    required
+                  >
+                    <option value="">Select Home Team</option>
+                    {getAvailableHomeTeams().map(team => (
                       <option key={team.id} value={team.id}>
                         {team.name}
                       </option>
