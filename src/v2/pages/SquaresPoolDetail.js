@@ -1536,6 +1536,14 @@ const SquaresPoolDetail = () => {
                 )}
 
                 {/* Calculate Winners Section - Quarter Cards */}
+                {/* Hide for regular users if no scores exist yet */}
+                {(canManagePool || (
+                  pool.game?.q1_home != null || pool.game?.q1_visitor != null ||
+                  pool.game?.half_home != null || pool.game?.half_visitor != null ||
+                  pool.game?.q3_home != null || pool.game?.q3_visitor != null ||
+                  pool.game?.final_home != null || pool.game?.final_visitor != null ||
+                  winners.length > 0
+                )) && (
                 <div
                   style={{
                     backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
@@ -1556,8 +1564,14 @@ const SquaresPoolDetail = () => {
                       <FiAward size={16} style={{ color: colors.brand.primary }} />
                     </div>
                     <div>
-                      <h4 className="text-sm font-bold" style={{ color: colors.text }}>Calculate Winners</h4>
-                      <p className="text-xs" style={{ color: colors.text, opacity: 0.5 }}>Select quarter to enter scores and calculate winner</p>
+                      <h4 className="text-sm font-bold" style={{ color: colors.text }}>
+                        {canManagePool ? 'Calculate Winners' : 'Quarter Scores & Winners'}
+                      </h4>
+                      <p className="text-xs" style={{ color: colors.text, opacity: 0.5 }}>
+                        {canManagePool
+                          ? 'Select quarter to enter scores and calculate winner'
+                          : 'View scores and winners for each quarter'}
+                      </p>
                     </div>
                   </div>
 
@@ -1820,6 +1834,7 @@ const SquaresPoolDetail = () => {
                     </div>
                   )} */}
                 </div>
+                )}
 
                 {/* Pool Tools Section - Admin Only */}
                 {canManagePool && (
