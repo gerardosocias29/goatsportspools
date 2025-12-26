@@ -55,6 +55,18 @@ export const toUTCString = (localDateString) => {
 };
 
 /**
+ * Convert a UTC datetime string to local datetime for input fields
+ * UTC from backend -> converted to local time format for datetime-local input
+ * @param {string} utcDateString - UTC datetime string from backend
+ * @returns {string} - Local datetime string in format "YYYY-MM-DDTHH:mm"
+ */
+export const toLocalInputString = (utcDateString) => {
+  if (!utcDateString) return '';
+  // Parse as UTC, convert to local, format for datetime-local input
+  return moment.utc(utcDateString).local().format('YYYY-MM-DDTHH:mm');
+};
+
+/**
  * Check if a UTC datetime has passed
  * @param {string} dateString - UTC datetime string
  * @returns {boolean} - True if the datetime has passed
@@ -80,6 +92,7 @@ export default {
   formatTimeUS,
   formatShortDateTimeUS,
   toUTCString,
+  toLocalInputString,
   hasPassedUS,
   fromNowUS,
 };

@@ -1364,7 +1364,7 @@ const SquaresPoolDetail = () => {
                       className={descriptionExpanded ? '' : 'line-clamp-2'}
                       dangerouslySetInnerHTML={{ __html: pool.pool_description.replace(/\n/g, '<br>') }}
                     />
-                    {pool.pool_description.length > 100 && (
+                    {(pool.pool_description.length > 100 || (pool.pool_description.match(/\n/g) || []).length >= 2) && (
                       <button
                         onClick={() => setDescriptionExpanded(!descriptionExpanded)}
                         className="text-xs font-semibold mt-1 hover:underline"
@@ -2379,7 +2379,7 @@ const SquaresPoolDetail = () => {
                       className={descriptionExpanded ? '' : 'line-clamp-3'}
                       dangerouslySetInnerHTML={{ __html: pool.pool_description.replace(/\n/g, '<br>') }}
                     />
-                    {pool.pool_description.length > 150 && (
+                    {(pool.pool_description.length > 150 || (pool.pool_description.match(/\n/g) || []).length >= 3) && (
                       <button
                         onClick={() => setDescriptionExpanded(!descriptionExpanded)}
                         className="text-sm font-semibold mt-1 hover:underline"

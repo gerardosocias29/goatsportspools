@@ -304,12 +304,24 @@ const CreateSquaresPool = () => {
         if (formData.numbersType === 'TimeSet') {
           if (!formData.numbersAssignDate) {
             newErrors.numbersAssignDate = 'Please set a date for number assignment';
-          } else if (selectedGame) {
+          } else {
             const assignDate = new Date(formData.numbersAssignDate);
-            const gameTime = new Date(selectedGame.game_datetime || selectedGame.game_time || selectedGame.gameTime);
-            const maxTime = new Date(gameTime.getTime() + 15 * 60 * 1000); // game start + 15 mins
-            if (assignDate > maxTime) {
-              newErrors.numbersAssignDate = 'Assignment time cannot be more than 15 minutes after game start';
+
+            // Assignment date must be after close date
+            if (formData.closeDate) {
+              const closeDate = new Date(formData.closeDate);
+              if (assignDate <= closeDate) {
+                newErrors.numbersAssignDate = 'Assignment time must be after squares selection closes';
+              }
+            }
+
+            // Assignment date cannot be more than 15 mins after game start
+            if (selectedGame) {
+              const gameTime = new Date(selectedGame.game_datetime || selectedGame.game_time || selectedGame.gameTime);
+              const maxTime = new Date(gameTime.getTime() + 15 * 60 * 1000); // game start + 15 mins
+              if (assignDate > maxTime) {
+                newErrors.numbersAssignDate = 'Assignment time cannot be more than 15 minutes after game start';
+              }
             }
           }
         }
@@ -329,6 +341,14 @@ const CreateSquaresPool = () => {
             const gameTime = new Date(selectedGame.game_datetime || selectedGame.game_time || selectedGame.gameTime);
             if (closeDate >= gameTime) {
               newErrors.closeDate = 'Pool must close before the game starts';
+            }
+          }
+
+          // Close date must be before assignment date (if TimeSet)
+          if (formData.numbersType === 'TimeSet' && formData.numbersAssignDate) {
+            const assignDate = new Date(formData.numbersAssignDate);
+            if (closeDate >= assignDate) {
+              newErrors.closeDate = 'Pool must close before number assignment time';
             }
           }
         }

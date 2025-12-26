@@ -1,4 +1,5 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { FiX, FiUpload, FiCamera, FiKey, FiCheck, FiAlertCircle } from 'react-icons/fi';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useAxios } from '../../../app/contexts/AxiosContext';
@@ -14,6 +15,7 @@ import Button from '../ui/Button';
 const JoinPoolModal = ({ isOpen, onClose, onSuccess }) => {
   const { colors, isDark } = useTheme();
   const axiosService = useAxios();
+  const navigate = useNavigate();
   const fileInputRef = useRef(null);
   const videoRef = useRef(null);
 
@@ -25,6 +27,20 @@ const JoinPoolModal = ({ isOpen, onClose, onSuccess }) => {
   const [success, setSuccess] = useState('');
   const [scanning, setScanning] = useState(false);
   const [poolInfo, setPoolInfo] = useState(null);
+  const [redirecting, setRedirecting] = useState(false);
+
+  // Handle redirect when already joined
+  useEffect(() => {
+    if (poolInfo?.already_joined && poolInfo?.id) {
+      setRedirecting(true);
+      setSuccess('Already joined! Redirecting...');
+      const timer = setTimeout(() => {
+        handleClose();
+        navigate(`/v2/squares/${poolInfo.id}`);
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [poolInfo?.already_joined, poolInfo?.id]);
 
   if (!isOpen) return null;
 
@@ -35,6 +51,7 @@ const JoinPoolModal = ({ isOpen, onClose, onSuccess }) => {
     setSuccess('');
     setPoolInfo(null);
     setMode('manual');
+    setRedirecting(false);
     stopCamera();
     onClose();
   };
@@ -405,8 +422,12 @@ const JoinPoolModal = ({ isOpen, onClose, onSuccess }) => {
                 <div style={{
                   padding: '1rem',
                   borderRadius: '0.5rem',
-                  backgroundColor: poolInfo.pool_status === 'closed' ? (isDark ? '#7F1D1D' : '#FEE2E2') : (isDark ? '#1F2937' : '#F3F4F6'),
-                  border: `1px solid ${poolInfo.pool_status === 'closed' ? colors.error : colors.border}`,
+                  backgroundColor: poolInfo.already_joined
+                    ? (isDark ? '#14532D' : '#DCFCE7')
+                    : poolInfo.pool_status === 'closed'
+                      ? (isDark ? '#7F1D1D' : '#FEE2E2')
+                      : (isDark ? '#1F2937' : '#F3F4F6'),
+                  border: `1px solid ${poolInfo.already_joined ? colors.success : poolInfo.pool_status === 'closed' ? colors.error : colors.border}`,
                 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
                     <div style={{ fontWeight: 700, color: colors.text }}>
@@ -417,11 +438,11 @@ const JoinPoolModal = ({ isOpen, onClose, onSuccess }) => {
                       fontWeight: 700,
                       padding: '0.25rem 0.5rem',
                       borderRadius: '0.25rem',
-                      backgroundColor: poolInfo.pool_status === 'closed' ? colors.error : colors.success,
+                      backgroundColor: poolInfo.already_joined ? colors.success : poolInfo.pool_status === 'closed' ? colors.error : colors.success,
                       color: '#FFFFFF',
                       textTransform: 'uppercase'
                     }}>
-                      {poolInfo.pool_status || 'open'}
+                      {poolInfo.already_joined ? 'JOINED' : poolInfo.pool_status || 'open'}
                     </div>
                   </div>
                   <div style={{ fontSize: '0.875rem', color: colors.text, opacity: 0.7 }}>
@@ -430,13 +451,19 @@ const JoinPoolModal = ({ isOpen, onClose, onSuccess }) => {
                   <div style={{ fontSize: '0.875rem', color: colors.text, opacity: 0.7, marginTop: '0.25rem' }}>
                     {poolInfo.claimed_squares || 0}/100 squares filled • {poolInfo.player_pool_type === 'FREE' || poolInfo.player_pool_type === 'OPEN' || parseFloat(poolInfo.entry_fee || poolInfo.credit_cost || 0) === 0 ? 'FREE' : `$${parseFloat(poolInfo.entry_fee || poolInfo.credit_cost || 0).toFixed(2)}/square`}
                   </div>
-                  {poolInfo.pool_status === 'closed' && (
+                  {poolInfo.already_joined && (
+                    <div style={{ fontSize: '0.875rem', color: colors.success, marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.25rem', fontWeight: 600 }}>
+                      <FiCheck size={14} />
+                      Already joined! Redirecting...
+                    </div>
+                  )}
+                  {poolInfo.pool_status === 'closed' && !poolInfo.already_joined && (
                     <div style={{ fontSize: '0.875rem', color: colors.error, marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.25rem', fontWeight: 600 }}>
                       <FiAlertCircle size={14} />
                       This pool is closed and not accepting new players
                     </div>
                   )}
-                  {(poolInfo.has_password || poolInfo.password) && poolInfo.pool_status !== 'closed' && (
+                  {(poolInfo.has_password || poolInfo.password) && poolInfo.pool_status !== 'closed' && !poolInfo.already_joined && (
                     <div style={{ fontSize: '0.75rem', color: colors.brand.primary, marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                       <FiKey size={12} />
                       Password required
@@ -463,9 +490,9 @@ const JoinPoolModal = ({ isOpen, onClose, onSuccess }) => {
                 size="lg"
                 fullWidth
                 onClick={handleJoin}
-                disabled={loading || !poolNumber.trim() || poolInfo?.pool_status === 'closed'}
+                disabled={loading || !poolNumber.trim() || poolInfo?.pool_status === 'closed' || poolInfo?.already_joined || redirecting}
               >
-                {loading ? 'Joining...' : poolInfo?.pool_status === 'closed' ? 'Pool Closed' : 'Join Pool'}
+                {loading ? 'Joining...' : redirecting ? 'Redirecting...' : poolInfo?.already_joined ? 'Already Joined' : poolInfo?.pool_status === 'closed' ? 'Pool Closed' : 'Join Pool'}
               </Button>
             </div>
           )}

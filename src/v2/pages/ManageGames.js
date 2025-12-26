@@ -5,7 +5,7 @@ import { useAxios } from '../../app/contexts/AxiosContext';
 import { useTheme } from '../contexts/ThemeContext';
 import GameScoresModal from '../components/game/GameScoresModal';
 import ConfirmModal from '../components/ui/ConfirmModal';
-import { toUTCString } from '../utils/timezone';
+import { toUTCString, toLocalInputString } from '../utils/timezone';
 
 /**
  * Manage Games Page - V2 Implementation
@@ -137,7 +137,7 @@ const ManageGames = () => {
     const visitorTeamObj = allTeams.find(t => t.name === game.visitor_team?.name || t.name === game.visitor_team);
 
     setFormData({
-      game_datetime: game.game_datetime?.substring(0, 16) || '',
+      game_datetime: toLocalInputString(game.game_datetime),
       league: game.league || 'NFL',
       home_team: homeTeamObj || null,
       visitor_team: visitorTeamObj || null,
