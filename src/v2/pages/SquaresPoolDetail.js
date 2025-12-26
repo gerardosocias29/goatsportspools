@@ -1357,9 +1357,11 @@ const SquaresPoolDetail = () => {
                 <div className="text-lg md:text-xl font-bold" style={{ color: colors.text }}>
                   {getTeamName(pool.game?.visitor_team_id || pool.game?.visitorTeamId)} vs {getTeamName(pool.game?.home_team_id || pool.game?.homeTeamId)}
                 </div>
-                <div className="text-sm mt-1 line-clamp-2" style={{ color: colors.text, opacity: 0.65 }}>
-                  {pool.pool_description || "-----"}
-                </div>
+                <div
+                  className="text-sm mt-1 line-clamp-2"
+                  style={{ color: colors.text, opacity: 0.65 }}
+                  dangerouslySetInnerHTML={{ __html: pool.pool_description ? pool.pool_description.replace(/\n/g, '<br>') : "-----" }}
+                />
               </div>
             </div>
 
@@ -2357,7 +2359,7 @@ const SquaresPoolDetail = () => {
               {pool.pool_description && (
                 <div className="flex items-start gap-3">
                   <span style={{ color: colors.brand.primary, fontWeight: 800 }}>•</span>
-                  <p>{pool.pool_description}</p>
+                  <p dangerouslySetInnerHTML={{ __html: pool.pool_description.replace(/\n/g, '<br>') }} />
                 </div>
               )}
             </div>
