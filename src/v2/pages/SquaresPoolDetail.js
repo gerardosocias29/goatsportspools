@@ -157,6 +157,7 @@ const SquaresPoolDetail = () => {
   const [showMobileSelector, setShowMobileSelector] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState(null);
+  const [descriptionExpanded, setDescriptionExpanded] = useState(false);
 
   // Detect mobile device
   useEffect(() => {
@@ -1357,11 +1358,25 @@ const SquaresPoolDetail = () => {
                 <div className="text-lg md:text-xl font-bold" style={{ color: colors.text }}>
                   {getTeamName(pool.game?.visitor_team_id || pool.game?.visitorTeamId)} vs {getTeamName(pool.game?.home_team_id || pool.game?.homeTeamId)}
                 </div>
-                <div
-                  className="text-sm mt-1 line-clamp-2"
-                  style={{ color: colors.text, opacity: 0.65 }}
-                  dangerouslySetInnerHTML={{ __html: pool.pool_description ? pool.pool_description.replace(/\n/g, '<br>') : "-----" }}
-                />
+                {pool.pool_description ? (
+                  <div className="text-sm mt-1" style={{ color: colors.text, opacity: 0.65 }}>
+                    <div
+                      className={descriptionExpanded ? '' : 'line-clamp-2'}
+                      dangerouslySetInnerHTML={{ __html: pool.pool_description.replace(/\n/g, '<br>') }}
+                    />
+                    {pool.pool_description.length > 100 && (
+                      <button
+                        onClick={() => setDescriptionExpanded(!descriptionExpanded)}
+                        className="text-xs font-semibold mt-1 hover:underline"
+                        style={{ color: colors.brand.primary }}
+                      >
+                        {descriptionExpanded ? 'See less' : 'See more'}
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-sm mt-1" style={{ color: colors.text, opacity: 0.65 }}>-----</div>
+                )}
               </div>
             </div>
 
@@ -2359,7 +2374,21 @@ const SquaresPoolDetail = () => {
               {pool.pool_description && (
                 <div className="flex items-start gap-3">
                   <span style={{ color: colors.brand.primary, fontWeight: 800 }}>•</span>
-                  <p dangerouslySetInnerHTML={{ __html: pool.pool_description.replace(/\n/g, '<br>') }} />
+                  <div className="flex-1">
+                    <p
+                      className={descriptionExpanded ? '' : 'line-clamp-3'}
+                      dangerouslySetInnerHTML={{ __html: pool.pool_description.replace(/\n/g, '<br>') }}
+                    />
+                    {pool.pool_description.length > 150 && (
+                      <button
+                        onClick={() => setDescriptionExpanded(!descriptionExpanded)}
+                        className="text-sm font-semibold mt-1 hover:underline"
+                        style={{ color: colors.brand.primary }}
+                      >
+                        {descriptionExpanded ? 'See less' : 'See more'}
+                      </button>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
