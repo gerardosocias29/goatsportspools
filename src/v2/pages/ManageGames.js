@@ -5,6 +5,7 @@ import { useAxios } from '../../app/contexts/AxiosContext';
 import { useTheme } from '../contexts/ThemeContext';
 import GameScoresModal from '../components/game/GameScoresModal';
 import ConfirmModal from '../components/ui/ConfirmModal';
+import { toUTCString } from '../utils/timezone';
 
 /**
  * Manage Games Page - V2 Implementation
@@ -93,11 +94,10 @@ const ManageGames = () => {
     setMessage(null);
 
     try {
-      // Detect user's timezone and send with request
-      const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      // Convert game_datetime to UTC before sending to backend
       const requestData = {
         ...formData,
-        timezone: userTimezone // Add user's timezone (e.g., 'America/New_York', 'Asia/Singapore')
+        game_datetime: toUTCString(formData.game_datetime)
       };
 
       const response = editingGame
