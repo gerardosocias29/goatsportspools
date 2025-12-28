@@ -141,6 +141,7 @@ const ManageTeams = () => {
       case 'NFL': return '🏈';
       case 'NBA': return '🏀';
       case 'PBA': return '🎳';
+      case 'NCAAF': return '🏈';
       default: return '🏆';
     }
   };
@@ -179,7 +180,7 @@ const ManageTeams = () => {
                 >
                   All
                 </button>
-                {['NFL', 'NBA', 'PBA'].map(league => (
+                {['NFL', 'NBA', 'PBA', 'NCAAF'].map(league => (
                   <button
                     key={league}
                     onClick={() => setFilterLeague(league)}
@@ -330,7 +331,7 @@ const ManageTeams = () => {
                     League *
                   </label>
                   <div className="flex flex-wrap gap-3">
-                    {['NFL', 'NBA', 'PBA'].map(league => (
+                    {['NFL', 'NBA', 'PBA', 'NCAAF'].map(league => (
                       <button
                         key={league}
                         type="button"

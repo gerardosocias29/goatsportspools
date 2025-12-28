@@ -467,7 +467,7 @@ const ManageGames = () => {
                     League *
                   </label>
                   <div className="flex flex-wrap gap-3">
-                    {['NFL', 'NBA', 'PBA'].map(league => (
+                    {['NFL', 'NBA', 'PBA', 'NCAAF'].map(league => (
                       <button
                         key={league}
                         type="button"
@@ -479,7 +479,7 @@ const ManageGames = () => {
                           border: `2px solid ${formData.league === league ? colors.brand.primary : colors.border}`,
                         }}
                       >
-                        {league === 'NFL' && '🏈 '}{league === 'NBA' && '🏀 '}{league === 'PBA' && '🎳 '}{league}
+                        {league === 'NFL' && '🏈 '}{league === 'NBA' && '🏀 '}{league === 'PBA' && '🎳 '}{league === 'NCAAF' && '🏈 '}{league}
                       </button>
                     ))}
                   </div>

@@ -538,7 +538,7 @@ const CreateSquaresPool = () => {
 
               <InputField label="League" required error={errors.league} colors={colors} isDark={isDark}>
                 <div className="flex flex-wrap gap-3">
-                  {['NFL', 'NBA', 'PBA'].map(league => (
+                  {['NFL', 'NBA', 'PBA', 'NCAAF'].map(league => (
                     <SelectButton
                       key={league}
                       selected={formData.league === league}
@@ -546,7 +546,7 @@ const CreateSquaresPool = () => {
                       colors={colors}
                       isDark={isDark}
                     >
-                      {league === 'NFL' && '🏈'} {league === 'NBA' && '🏀'} {league === 'PBA' && '🎳'} {league}
+                      {league === 'NFL' && '🏈'} {league === 'NBA' && '🏀'} {league === 'PBA' && '🎳'} {league === 'NCAAF' && '🏈'} {league}
                     </SelectButton>
                   ))}
                 </div>
