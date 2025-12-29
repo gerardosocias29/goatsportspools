@@ -13,6 +13,7 @@ const Button = ({
   className = '',
   onClick,
   type = 'button',
+  style = {},
   ...props
 }) => {
   const { colors } = useTheme();
@@ -114,6 +115,7 @@ const Button = ({
     ...sizeStyles[size],
     ...variantStyles[variant],
     ...(isHovered && !disabled && !loading ? hoverStyles[variant] : {}),
+    ...style, // Merge custom styles last to allow overrides
   };
 
   return (

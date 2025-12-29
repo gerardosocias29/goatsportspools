@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FiArrowLeft, FiCalendar, FiGrid, FiLock, FiUnlock, FiTrendingUp, FiAward, FiShare2, FiDownload, FiX, FiCreditCard, FiCheck, FiChevronDown, FiSettings, FiShuffle, FiArrowUp } from 'react-icons/fi';
+import { FiArrowLeft, FiCalendar, FiGrid, FiLock, FiUnlock, FiTrendingUp, FiAward, FiShare2, FiDownload, FiX, FiCreditCard, FiCheck, FiChevronDown, FiSettings, FiShuffle, FiArrowUp, FiLogOut } from 'react-icons/fi';
 import SquaresGrid from '../components/squares/SquaresGrid';
 import WinnersDisplay from '../components/squares/WinnersDisplay';
 import ConfirmModal from '../components/ui/ConfirmModal';
@@ -148,6 +148,8 @@ const SquaresPoolDetail = () => {
   const [requestAmount, setRequestAmount] = useState('');
   const [requestReason, setRequestReason] = useState('');
   const [requestingCredits, setRequestingCredits] = useState(false);
+  const [leavingPool, setLeavingPool] = useState(false);
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const [showAdminControls, setShowAdminControls] = useState(false);
   const [showScoreModal, setShowScoreModal] = useState(false);
   const [selectedQuarter, setSelectedQuarter] = useState(null);
@@ -158,6 +160,8 @@ const SquaresPoolDetail = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState(null);
   const [descriptionExpanded, setDescriptionExpanded] = useState(false);
+  const [rulesExpanded, setRulesExpanded] = useState(false);
+  const [howItWorksExpanded, setHowItWorksExpanded] = useState(false);
 
   // Detect mobile device
   useEffect(() => {
@@ -323,6 +327,20 @@ const SquaresPoolDetail = () => {
       await loadPool(null, true); // Reload pool data silently
     } catch (error) {
       setJoinError(error.response?.data?.message || 'Failed to join pool');
+    }
+  };
+
+  const handleLeavePool = async () => {
+    setLeavingPool(true);
+    try {
+      await axiosService.post(`/api/squares-pools/${poolId}/leave`);
+      showToast({ severity: 'success', summary: 'Success', detail: 'Successfully left the pool' });
+      navigate('/squares');
+    } catch (error) {
+      showToast({ severity: 'error', summary: 'Error', detail: error.response?.data?.message || 'Failed to leave pool' });
+    } finally {
+      setLeavingPool(false);
+      setShowLeaveConfirm(false);
     }
   };
 
@@ -1268,7 +1286,7 @@ const SquaresPoolDetail = () => {
 
   return (
     <div style={{ backgroundColor: colors.background, minHeight: '100vh', paddingBottom: hasJoined ? '100px' : '2rem' }}>
-      <div style={{ maxWidth: '1180px', margin: '0 auto', padding: '1.5rem 1.25rem' }}>
+      <div style={{ maxWidth: '1180px', margin: '0 auto', padding: isMobile ? '1rem 0.75rem' : '1.5rem 1.25rem' }}>
 
         {/* Header with back button and joined status */}
         <div className="flex items-center gap-3 mb-5">
@@ -1295,24 +1313,42 @@ const SquaresPoolDetail = () => {
 
           {/* Compact Joined Status Badge */}
           {hasJoined ? (
-            <div
-              className="flex items-center gap-2 px-3 py-2 rounded-full"
-              style={{
-                backgroundColor: `${colors.success}15`,
-                border: `1px solid ${colors.success}40`,
-              }}
-            >
+            <div className="flex items-center gap-2">
               <div
-                className="flex items-center justify-center rounded-full"
+                className="flex items-center gap-2 px-3 py-2 rounded-full"
                 style={{
-                  width: '22px',
-                  height: '22px',
-                  backgroundColor: colors.success,
+                  backgroundColor: `${colors.success}15`,
+                  border: `1px solid ${colors.success}40`,
                 }}
               >
-                <FiCheck size={14} color="#fff" strokeWidth={3} />
+                <div
+                  className="flex items-center justify-center rounded-full"
+                  style={{
+                    width: '22px',
+                    height: '22px',
+                    backgroundColor: colors.success,
+                  }}
+                >
+                  <FiCheck size={14} color="#fff" strokeWidth={3} />
+                </div>
+                <span className="text-sm font-semibold" style={{ color: colors.success }}>Joined</span>
               </div>
-              <span className="text-sm font-semibold" style={{ color: colors.success }}>Joined</span>
+              {/* Leave Pool Button - only show when pool is open, numbers not assigned, and user is not pool owner */}
+              {pool.pool_status === 'open' && !numbersAssigned && !isPoolOwner && (
+                <button
+                  onClick={() => setShowLeaveConfirm(true)}
+                  disabled={leavingPool}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-semibold transition-all hover:opacity-80"
+                  style={{
+                    backgroundColor: `${colors.error}15`,
+                    border: `1px solid ${colors.error}40`,
+                    color: colors.error,
+                  }}
+                >
+                  <FiLogOut size={14} />
+                  Leave
+                </button>
+              )}
             </div>
           ) : pool.pool_status === 'closed' ? (
             <div
@@ -2274,151 +2310,201 @@ const SquaresPoolDetail = () => {
         </div>
 
         {/* Quick Stats Card */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
-          <div style={{ backgroundColor: colors.card, border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '14px 16px' }}>
-            <div className="text-xs mb-1" style={{ color: colors.text, opacity: 0.6 }}>% Filled</div>
-            <div className="text-2xl font-bold" style={{ color: colors.brand.primary }}>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-4 sm:mb-5">
+          <div style={{ backgroundColor: colors.card, border: `1px solid ${colors.border}`, borderRadius: isMobile ? '10px' : '12px', padding: isMobile ? '10px 12px' : '14px 16px' }}>
+            <div style={{ fontSize: isMobile ? '10px' : '12px', marginBottom: '2px', color: colors.text, opacity: 0.6 }}>% Filled</div>
+            <div style={{ fontSize: isMobile ? '1.25rem' : '1.5rem', fontWeight: 700, color: colors.brand.primary }}>
               {getProgressPercentage(pool)}%
             </div>
           </div>
-          <div style={{ backgroundColor: colors.card, border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '14px 16px' }}>
-            <div className="text-xs mb-1" style={{ color: colors.text, opacity: 0.6 }}>Your Credits</div>
-            <div className="text-2xl font-bold" style={{ color: colors.success }}>
+          <div style={{ backgroundColor: colors.card, border: `1px solid ${colors.border}`, borderRadius: isMobile ? '10px' : '12px', padding: isMobile ? '10px 12px' : '14px 16px' }}>
+            <div style={{ fontSize: isMobile ? '10px' : '12px', marginBottom: '2px', color: colors.text, opacity: 0.6 }}>Your Credits</div>
+            <div style={{ fontSize: isMobile ? '1.25rem' : '1.5rem', fontWeight: 700, color: colors.success }}>
               {getUserCreditBalance() || '0.00'}
             </div>
           </div>
-          <div style={{ backgroundColor: colors.card, border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '14px 16px' }}>
-            <div className="text-xs mb-1" style={{ color: colors.text, opacity: 0.6 }}>Type</div>
-            <div className="text-lg font-bold uppercase" style={{ color: colors.text }}>
+          <div style={{ backgroundColor: colors.card, border: `1px solid ${colors.border}`, borderRadius: isMobile ? '10px' : '12px', padding: isMobile ? '10px 12px' : '14px 16px' }}>
+            <div style={{ fontSize: isMobile ? '10px' : '12px', marginBottom: '2px', color: colors.text, opacity: 0.6 }}>Type</div>
+            <div style={{ fontSize: isMobile ? '0.95rem' : '1.125rem', fontWeight: 700, textTransform: 'uppercase', color: colors.text }}>
               {pool.player_pool_type || 'N/A'}
             </div>
           </div>
-          <div style={{ backgroundColor: colors.card, border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '14px 16px' }}>
-            <div className="text-xs mb-1" style={{ color: colors.text, opacity: 0.6 }}>Status</div>
-            <div className="text-lg font-bold capitalize" style={{ color: pool.pool_status === 'open' ? colors.success : colors.error }}>
+          <div style={{ backgroundColor: colors.card, border: `1px solid ${colors.border}`, borderRadius: isMobile ? '10px' : '12px', padding: isMobile ? '10px 12px' : '14px 16px' }}>
+            <div style={{ fontSize: isMobile ? '10px' : '12px', marginBottom: '2px', color: colors.text, opacity: 0.6 }}>Status</div>
+            <div style={{ fontSize: isMobile ? '0.95rem' : '1.125rem', fontWeight: 700, textTransform: 'capitalize', color: pool.pool_status === 'open' ? colors.success : colors.error }}>
               {pool.pool_status || 'N/A'}
             </div>
           </div>
-          <div style={{ backgroundColor: colors.card, border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '14px 16px' }}>
-            <div className="text-xs mb-1" style={{ color: colors.text, opacity: 0.6 }}>Entry / square</div>
-            <div className="text-2xl font-bold" style={{ color: colors.text }}>
+          <div style={{ backgroundColor: colors.card, border: `1px solid ${colors.border}`, borderRadius: isMobile ? '10px' : '12px', padding: isMobile ? '10px 12px' : '14px 16px' }}>
+            <div style={{ fontSize: isMobile ? '10px' : '12px', marginBottom: '2px', color: colors.text, opacity: 0.6 }}>Entry / square</div>
+            <div style={{ fontSize: isMobile ? '1.25rem' : '1.5rem', fontWeight: 700, color: colors.text }}>
               {pool.player_pool_type === 'FREE' || parseFloat(pool.entry_fee || pool.credit_cost || pool.costPerSquare || 0) === 0
                 ? 'FREE'
                 : parseFloat(pool.entry_fee || pool.credit_cost || pool.costPerSquare || 0).toFixed(2)}
             </div>
           </div>
-          <div style={{ backgroundColor: colors.card, border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '14px 16px' }}>
-            <div className="text-xs mb-1" style={{ color: colors.text, opacity: 0.6 }}>Payout</div>
-            <div className="text-2xl font-bold" style={{ color: colors.brand.primary }}>
+          <div style={{ backgroundColor: colors.card, border: `1px solid ${colors.border}`, borderRadius: isMobile ? '10px' : '12px', padding: isMobile ? '10px 12px' : '14px 16px' }}>
+            <div style={{ fontSize: isMobile ? '10px' : '12px', marginBottom: '2px', color: colors.text, opacity: 0.6 }}>Payout</div>
+            <div style={{ fontSize: isMobile ? '1.25rem' : '1.5rem', fontWeight: 700, color: colors.brand.primary }}>
               {parseFloat(pool.custom_payout || pool.total_pot || pool.totalPot || 0).toFixed(2)}
             </div>
           </div>
-          <div style={{ backgroundColor: colors.card, border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '14px 16px' }}>
-            <div className="text-xs mb-1" style={{ color: colors.text, opacity: 0.6 }}>Total Players</div>
-            <div className="text-2xl font-bold" style={{ color: colors.text }}>
+          <div style={{ backgroundColor: colors.card, border: `1px solid ${colors.border}`, borderRadius: isMobile ? '10px' : '12px', padding: isMobile ? '10px 12px' : '14px 16px' }}>
+            <div style={{ fontSize: isMobile ? '10px' : '12px', marginBottom: '2px', color: colors.text, opacity: 0.6 }}>Total Players</div>
+            <div style={{ fontSize: isMobile ? '1.25rem' : '1.5rem', fontWeight: 700, color: colors.text }}>
               {pool.players?.length || pool.playerCount || 0}
             </div>
           </div>
-          <div style={{ backgroundColor: colors.card, border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '14px 16px' }}>
-            <div className="text-xs mb-1" style={{ color: colors.text, opacity: 0.6 }}>Max per player</div>
-            <div className="text-2xl font-bold" style={{ color: colors.text }}>
+          <div style={{ backgroundColor: colors.card, border: `1px solid ${colors.border}`, borderRadius: isMobile ? '10px' : '12px', padding: isMobile ? '10px 12px' : '14px 16px' }}>
+            <div style={{ fontSize: isMobile ? '10px' : '12px', marginBottom: '2px', color: colors.text, opacity: 0.6 }}>Max per player</div>
+            <div style={{ fontSize: isMobile ? '1.25rem' : '1.5rem', fontWeight: 700, color: colors.text }}>
               {pool.max_squares_per_player || pool.maxSquaresPerPlayer || '∞'}
             </div>
           </div>
         </div>
 
         {/* Additional Info */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {/* Pool Rules */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-5">
+          {/* Pool Rules - Collapsible on mobile */}
           <div
-            style={{ backgroundColor: colors.card, border: `1px solid ${colors.border}`, borderRadius: '14px', padding: '14px' }}
+            style={{ backgroundColor: colors.card, border: `1px solid ${colors.border}`, borderRadius: isMobile ? '12px' : '14px', padding: isMobile ? '12px' : '14px' }}
           >
-            <h3 className="text-lg font-bold mb-3" style={{ color: colors.text }}>Pool Rules</h3>
-            <div className="space-y-2" style={{ color: colors.text, opacity: 0.8 }}>
-              <div className="flex items-start gap-3">
-                <span style={{ color: colors.brand.primary, fontWeight: 800 }}>•</span>
-                <p>Max {pool.max_squares_per_player || pool.maxSquaresPerPlayer
-                  ? `${pool.max_squares_per_player || pool.maxSquaresPerPlayer} squares per player`
-                  : pool.entry_fee > 0
-                    ? 'squares based on available credits'
-                    : 'Unlimited squares per player'}</p>
-              </div>
-              {pool.player_pool_type !== 'FREE' && pool.player_pool_type !== 'OPEN' && parseFloat(pool.entry_fee || pool.credit_cost || 0) > 0 && (
+            <button
+              onClick={() => isMobile && setRulesExpanded(!rulesExpanded)}
+              className="w-full flex items-center justify-between"
+              style={{ cursor: isMobile ? 'pointer' : 'default' }}
+            >
+              <h3 style={{ fontSize: isMobile ? '1rem' : '1.125rem', fontWeight: 700, color: colors.text, margin: 0 }}>Pool Rules</h3>
+              {isMobile && (
+                <FiChevronDown
+                  size={20}
+                  style={{
+                    color: colors.text,
+                    transform: rulesExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                    transition: 'transform 200ms ease',
+                  }}
+                />
+              )}
+            </button>
+            <div
+              style={{
+                overflow: 'hidden',
+                maxHeight: isMobile ? (rulesExpanded ? '500px' : '0') : 'none',
+                transition: 'max-height 300ms ease',
+                marginTop: (!isMobile || rulesExpanded) ? '12px' : '0',
+              }}
+            >
+              <div className="space-y-2" style={{ color: colors.text, opacity: 0.8, fontSize: isMobile ? '0.875rem' : '1rem' }}>
                 <div className="flex items-start gap-3">
                   <span style={{ color: colors.brand.primary, fontWeight: 800 }}>•</span>
-                  <p>Cost: {parseFloat(pool.entry_fee || pool.credit_cost || 0).toFixed(2)} per square</p>
+                  <p>Max {pool.max_squares_per_player || pool.maxSquaresPerPlayer
+                    ? `${pool.max_squares_per_player || pool.maxSquaresPerPlayer} squares per player`
+                    : pool.entry_fee > 0
+                      ? 'squares based on available credits'
+                      : 'Unlimited squares per player'}</p>
                 </div>
-              )}
-              <div className="flex items-start gap-3">
-                <span style={{ color: colors.brand.primary, fontWeight: 800 }}>•</span>
-                <p>Numbers assignment: {numbersTypeLabel}</p>
-              </div>
-              {!numbersAssigned && numbersType === 'AdminTrigger' && (
-                <div className="flex items-start gap-3">
-                  <span style={{ color: colors.warning, fontWeight: 800 }}>!</span>
-                  <p>Numbers will remain hidden until an admin manually assigns them.</p>
-                </div>
-              )}
-              {(pool.number_assign_datetime || pool.numbersAssignDate) && (
-                <div className="flex items-start gap-3">
-                  <span style={{ color: colors.brand.primary, fontWeight: 800 }}>•</span>
-                  <p>Numbers assigned on: {formatDate(pool.number_assign_datetime || pool.numbersAssignDate)}</p>
-                </div>
-              )}
-              {(pool.close_datetime || pool.closeDate) && (
-                <div className="flex items-start gap-3">
-                  <span style={{ color: colors.brand.primary, fontWeight: 800 }}>•</span>
-                  <p>Pool closes: {formatDate(pool.close_datetime || pool.closeDate)}</p>
-                </div>
-              )}
-              {pool.pool_description && (
-                <div className="flex items-start gap-3">
-                  <span style={{ color: colors.brand.primary, fontWeight: 800 }}>•</span>
-                  <div className="flex-1">
-                    <p
-                      className={descriptionExpanded ? '' : 'line-clamp-3'}
-                      dangerouslySetInnerHTML={{ __html: pool.pool_description.replace(/\n/g, '<br>') }}
-                    />
-                    {(pool.pool_description.length > 150 || (pool.pool_description.match(/\n/g) || []).length >= 3) && (
-                      <button
-                        onClick={() => setDescriptionExpanded(!descriptionExpanded)}
-                        className="text-sm font-semibold mt-1 hover:underline"
-                        style={{ color: colors.brand.primary }}
-                      >
-                        {descriptionExpanded ? 'See less' : 'See more'}
-                      </button>
-                    )}
+                {pool.player_pool_type !== 'FREE' && pool.player_pool_type !== 'OPEN' && parseFloat(pool.entry_fee || pool.credit_cost || 0) > 0 && (
+                  <div className="flex items-start gap-3">
+                    <span style={{ color: colors.brand.primary, fontWeight: 800 }}>•</span>
+                    <p>Cost: {parseFloat(pool.entry_fee || pool.credit_cost || 0).toFixed(2)} per square</p>
                   </div>
+                )}
+                <div className="flex items-start gap-3">
+                  <span style={{ color: colors.brand.primary, fontWeight: 800 }}>•</span>
+                  <p>Numbers assignment: {numbersTypeLabel}</p>
                 </div>
-              )}
+                {!numbersAssigned && numbersType === 'AdminTrigger' && (
+                  <div className="flex items-start gap-3">
+                    <span style={{ color: colors.warning, fontWeight: 800 }}>!</span>
+                    <p>Numbers will remain hidden until an admin manually assigns them.</p>
+                  </div>
+                )}
+                {(pool.number_assign_datetime || pool.numbersAssignDate) && (
+                  <div className="flex items-start gap-3">
+                    <span style={{ color: colors.brand.primary, fontWeight: 800 }}>•</span>
+                    <p>Numbers assigned on: {formatDate(pool.number_assign_datetime || pool.numbersAssignDate)}</p>
+                  </div>
+                )}
+                {(pool.close_datetime || pool.closeDate) && (
+                  <div className="flex items-start gap-3">
+                    <span style={{ color: colors.brand.primary, fontWeight: 800 }}>•</span>
+                    <p>Pool closes: {formatDate(pool.close_datetime || pool.closeDate)}</p>
+                  </div>
+                )}
+                {pool.pool_description && (
+                  <div className="flex items-start gap-3">
+                    <span style={{ color: colors.brand.primary, fontWeight: 800 }}>•</span>
+                    <div className="flex-1">
+                      <p
+                        className={descriptionExpanded ? '' : 'line-clamp-3'}
+                        dangerouslySetInnerHTML={{ __html: pool.pool_description.replace(/\n/g, '<br>') }}
+                      />
+                      {(pool.pool_description.length > 150 || (pool.pool_description.match(/\n/g) || []).length >= 3) && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setDescriptionExpanded(!descriptionExpanded); }}
+                          className="text-sm font-semibold mt-1 hover:underline"
+                          style={{ color: colors.brand.primary }}
+                        >
+                          {descriptionExpanded ? 'See less' : 'See more'}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
-          {/* How It Works */}
+          {/* How It Works - Collapsible on mobile */}
           <div
-            style={{ backgroundColor: colors.card, border: `1px solid ${colors.border}`, borderRadius: '14px', padding: '14px' }}
+            style={{ backgroundColor: colors.card, border: `1px solid ${colors.border}`, borderRadius: isMobile ? '12px' : '14px', padding: isMobile ? '12px' : '14px' }}
           >
-            <h3 className="text-lg font-bold mb-3" style={{ color: colors.text }}>How It Works</h3>
-            <div className="space-y-2" style={{ color: colors.text, opacity: 0.8 }}>
-              <div className="flex items-start gap-3">
-                <span style={{ color: colors.brand.primary, fontWeight: 800 }}>1.</span>
-                <p>Select your squares on the 10x10 grid{pool.max_squares_per_player
-                  ? ` (max ${pool.max_squares_per_player} per player)`
-                  : pool.entry_fee > 0
-                    ? ' (limited by your credits)'
-                    : ''}.</p>
-              </div>
-              <div className="flex items-start gap-3">
-                <span style={{ color: colors.brand.primary, fontWeight: 800 }}>2.</span>
-                <p>Numbers (0-9) are assigned to each axis{numbersType === 'Ascending' ? ' in ascending order' : numbersType === 'AdminTrigger' ? ' by admin' : ' randomly'}.</p>
-              </div>
-              <div className="flex items-start gap-3">
-                <span style={{ color: colors.brand.primary, fontWeight: 800 }}>3.</span>
-                <p>X-axis = Visitor team's last digit, Y-axis = Home team's last digit.</p>
-              </div>
-              <div className="flex items-start gap-3">
-                <span style={{ color: colors.brand.primary, fontWeight: 800 }}>4.</span>
-                <p>Prizes distributed{pool.entry_fee > 0 ? ` from ${parseFloat(pool.custom_payout || pool.total_pot || (pool.entry_fee * 100)).toFixed(2)} payout` : ''} based on reward structure.</p>
+            <button
+              onClick={() => isMobile && setHowItWorksExpanded(!howItWorksExpanded)}
+              className="w-full flex items-center justify-between"
+              style={{ cursor: isMobile ? 'pointer' : 'default' }}
+            >
+              <h3 style={{ fontSize: isMobile ? '1rem' : '1.125rem', fontWeight: 700, color: colors.text, margin: 0 }}>How It Works</h3>
+              {isMobile && (
+                <FiChevronDown
+                  size={20}
+                  style={{
+                    color: colors.text,
+                    transform: howItWorksExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                    transition: 'transform 200ms ease',
+                  }}
+                />
+              )}
+            </button>
+            <div
+              style={{
+                overflow: 'hidden',
+                maxHeight: isMobile ? (howItWorksExpanded ? '500px' : '0') : 'none',
+                transition: 'max-height 300ms ease',
+                marginTop: (!isMobile || howItWorksExpanded) ? '12px' : '0',
+              }}
+            >
+              <div className="space-y-2" style={{ color: colors.text, opacity: 0.8, fontSize: isMobile ? '0.875rem' : '1rem' }}>
+                <div className="flex items-start gap-3">
+                  <span style={{ color: colors.brand.primary, fontWeight: 800 }}>1.</span>
+                  <p>Select your squares on the 10x10 grid{pool.max_squares_per_player
+                    ? ` (max ${pool.max_squares_per_player} per player)`
+                    : pool.entry_fee > 0
+                      ? ' (limited by your credits)'
+                      : ''}.</p>
+                </div>
+                <div className="flex items-start gap-3">
+                  <span style={{ color: colors.brand.primary, fontWeight: 800 }}>2.</span>
+                  <p>Numbers (0-9) are assigned to each axis{numbersType === 'Ascending' ? ' in ascending order' : numbersType === 'AdminTrigger' ? ' by admin' : ' randomly'}.</p>
+                </div>
+                <div className="flex items-start gap-3">
+                  <span style={{ color: colors.brand.primary, fontWeight: 800 }}>3.</span>
+                  <p>X-axis = Visitor team's last digit, Y-axis = Home team's last digit.</p>
+                </div>
+                <div className="flex items-start gap-3">
+                  <span style={{ color: colors.brand.primary, fontWeight: 800 }}>4.</span>
+                  <p>Prizes distributed{pool.entry_fee > 0 ? ` from ${parseFloat(pool.custom_payout || pool.total_pot || (pool.entry_fee * 100)).toFixed(2)} payout` : ''} based on reward structure.</p>
+                </div>
               </div>
             </div>
           </div>
@@ -3190,6 +3276,17 @@ const SquaresPoolDetail = () => {
         message={confirmModal.message}
         confirmText={confirmModal.confirmText}
         variant={confirmModal.variant}
+      />
+
+      {/* Leave Pool Confirmation Modal */}
+      <ConfirmModal
+        isOpen={showLeaveConfirm}
+        onClose={() => setShowLeaveConfirm(false)}
+        onConfirm={handleLeavePool}
+        title="Leave Pool"
+        message="Are you sure you want to leave this pool? All your selected squares will be released and become available for other players."
+        confirmText={leavingPool ? 'Leaving...' : 'Leave Pool'}
+        variant="danger"
       />
     </div>
   );

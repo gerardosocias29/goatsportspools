@@ -28,6 +28,14 @@ const JoinPoolModal = ({ isOpen, onClose, onSuccess }) => {
   const [scanning, setScanning] = useState(false);
   const [poolInfo, setPoolInfo] = useState(null);
   const [redirecting, setRedirecting] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 480);
+
+  // Mobile detection for responsive tabs
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 480);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Handle redirect when already joined
   useEffect(() => {
@@ -309,7 +317,7 @@ const JoinPoolModal = ({ isOpen, onClose, onSuccess }) => {
 
   const tabStyles = (active) => ({
     flex: 1,
-    padding: '0.75rem',
+    padding: isMobile ? '0.5rem' : '0.75rem',
     borderRadius: '0.5rem',
     border: 'none',
     backgroundColor: active ? colors.brand.primary : 'transparent',
@@ -317,10 +325,12 @@ const JoinPoolModal = ({ isOpen, onClose, onSuccess }) => {
     fontWeight: 600,
     cursor: 'pointer',
     display: 'flex',
+    flexDirection: isMobile ? 'column' : 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: '0.5rem',
+    gap: isMobile ? '0.125rem' : '0.5rem',
     transition: 'all 150ms ease',
+    fontSize: isMobile ? '0.65rem' : 'inherit',
   });
 
   return (
@@ -349,18 +359,18 @@ const JoinPoolModal = ({ isOpen, onClose, onSuccess }) => {
         {/* Body */}
         <div style={bodyStyles}>
           {/* Mode Tabs */}
-          <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', backgroundColor: isDark ? '#1F2937' : '#E5E7EB', padding: '0.25rem', borderRadius: '0.625rem' }}>
+          <div style={{ display: 'flex', gap: isMobile ? '0.25rem' : '0.5rem', marginBottom: '1.5rem', backgroundColor: isDark ? '#1F2937' : '#E5E7EB', padding: '0.25rem', borderRadius: '0.625rem' }}>
             <button style={tabStyles(mode === 'manual')} onClick={() => { setMode('manual'); stopCamera(); }}>
-              <FiKey size={18} />
-              <span>Enter Code</span>
+              <FiKey size={isMobile ? 16 : 18} />
+              <span>{isMobile ? 'Code' : 'Enter Code'}</span>
             </button>
             <button style={tabStyles(mode === 'upload')} onClick={() => { setMode('upload'); stopCamera(); }}>
-              <FiUpload size={18} />
-              <span>Upload QR</span>
+              <FiUpload size={isMobile ? 16 : 18} />
+              <span>{isMobile ? 'Upload' : 'Upload QR'}</span>
             </button>
             <button style={tabStyles(mode === 'scan')} onClick={startCamera}>
-              <FiCamera size={18} />
-              <span>Scan QR</span>
+              <FiCamera size={isMobile ? 16 : 18} />
+              <span>{isMobile ? 'Scan' : 'Scan QR'}</span>
             </button>
           </div>
 

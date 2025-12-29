@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiCalendar, FiShield, FiUsers } from 'react-icons/fi';
+import { FiCalendar, FiShield, FiUsers, FiFlag } from 'react-icons/fi';
 import { useTheme } from '../contexts/ThemeContext';
 
 /**
@@ -40,6 +40,13 @@ const AdminSettings = () => {
       icon: <FiUsers size={48} />,
       path: '/admin/users',
       available: false,
+    },
+    {
+      title: 'Manage Banners',
+      description: 'Create and manage dynamic banners displayed across the site',
+      icon: <FiFlag size={48} />,
+      path: '/admin/banners',
+      available: true,
     },
   ];
 

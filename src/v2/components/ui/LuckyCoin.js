@@ -8,26 +8,43 @@ const LuckyCoin = ({ onResultsChange }) => {
   const coinRef = useRef(null);
 
   const generateResults = () => {
-    // Generate random number from -1 to 1
-    const randomValue = Math.random() * 2 - 1;
-    const absValue = Math.abs(randomValue);
+    // Two separate random numbers from -1 to 1
+    const randomNum = Math.random() * 2 - 1;
+    const randomNum2 = Math.random() * 2 - 1;
 
-    // Calculate all results
-    const num1000 = Math.floor(absValue * 1000);
-    const num100 = Math.floor(absValue * 100);
-    const num10 = Math.floor(absValue * 10);
+    // Scaled results (absolute values)
+    const num100 = Math.round(Math.abs(randomNum * 100));
+    const num10 = Math.floor(Math.random() * 10) + 1; // Separate random, always 1-10
+    const num1000 = Math.round(Math.abs(randomNum2 * 1000));
 
-    // Card suit based on quartiles of 0-1000
-    const suits = ['♠', '♣', '♥', '♦'];
-    const suitIndex = Math.floor(absValue * 4);
-    const suit = suits[Math.min(suitIndex, 3)];
-    const suitColors = ['#1a1a2e', '#1a1a2e', '#dc3545', '#dc3545'];
-    const suitColor = suitColors[Math.min(suitIndex, 3)];
+    // Color: Negative = Red, Positive = Black
+    const color = randomNum < 0 ? 'Red' : 'Black';
+    const colorHex = randomNum < 0 ? '#ef4444' : '#1a1a2e';
+
+    // Coin: Negative = Tails, Positive = Heads
+    const coin = randomNum < 0 ? 'Tails' : 'Heads';
+
+    // Card suit based on scaled1000 value
+    let suit = '';
+    let suitColor = '';
+    if (num1000 <= 250) {
+      suit = '♠';
+      suitColor = '#1a1a2e';
+    } else if (num1000 <= 500) {
+      suit = '♣';
+      suitColor = '#1a1a2e';
+    } else if (num1000 <= 750) {
+      suit = '♥';
+      suitColor = '#dc3545';
+    } else {
+      suit = '♦';
+      suitColor = '#dc3545';
+    }
 
     return {
-      color: randomValue >= 0 ? 'Blue' : 'Red',
-      colorHex: randomValue >= 0 ? '#3b82f6' : '#ef4444',
-      coin: randomValue >= 0 ? 'Heads' : 'Tails',
+      color,
+      colorHex,
+      coin,
       num10,
       num100,
       num1000,

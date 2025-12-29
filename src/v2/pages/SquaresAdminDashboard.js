@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiGrid, FiUsers, FiTrendingUp, FiPlus, FiEye, FiAlertCircle, FiCreditCard, FiCheckCircle, FiXCircle, FiSend, FiFileText, FiCalendar, FiLock, FiUnlock } from 'react-icons/fi';
+import { FiGrid, FiUsers, FiTrendingUp, FiPlus, FiAlertCircle, FiCreditCard, FiCheckCircle, FiXCircle, FiSend, FiFileText } from 'react-icons/fi';
 import { useUserContext } from '../contexts/UserContext';
 import { useUser } from '@clerk/clerk-react';
 import { useAxios } from '../../app/contexts/AxiosContext';
@@ -9,6 +9,7 @@ import { useToast } from '../../app/contexts/ToastContext';
 import SquaresApiService from '../services/squaresApiService';
 import StatusBadge from '../components/ui/StatusBadge';
 import ConfirmModal from '../components/ui/ConfirmModal';
+import PoolCard from '../components/squares/PoolCard';
 
 /**
  * Commissioner Dashboard
@@ -39,6 +40,7 @@ const SquaresAdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('pools'); // 'pools', 'credit-requests', 'admin-requests', 'applications'
   const [commissionerApplications, setCommissionerApplications] = useState([]);
   const [processingRequest, setProcessingRequest] = useState(null);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   // Application form state for non-admins
   const [applicationForm, setApplicationForm] = useState({
@@ -92,6 +94,13 @@ const SquaresAdminDashboard = () => {
       setLoading(false);
     }
   }, [isSignedIn, isAdmin]);
+
+  // Mobile detection for responsive tabs
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const loadTeams = async () => {
     try {
@@ -383,69 +392,7 @@ const SquaresAdminDashboard = () => {
   };
 
   const formatCurrency = (amount) => {
-    return `${parseFloat(amount || 0).toFixed(2)}`;
-  };
-
-  // Team helper functions
-  const getTeamName = (teamId) => {
-    if (!teamId) return 'TBD';
-    const team = teams.find(t => t.id === teamId);
-    return team?.name || team?.team_name || 'TBD';
-  };
-
-  const getTeamLogo = (teamId) => {
-    if (!teamId) return null;
-    const team = teams.find(t => t.id === teamId);
-    return team?.logo || team?.image_url || null;
-  };
-
-  const getTeamBackground = (teamId) => {
-    if (!teamId) return null;
-    const team = teams.find(t => t.id === teamId);
-    return team?.background_url || team?.backgroundUrl || null;
-  };
-
-  const getProgressPercentage = (pool) => {
-    const totalSquares = pool.total_squares || pool.totalSquares || 100;
-    const selectedSquares = pool.squares_claimed || pool.selectedSquares || pool.claimed_squares || pool.squares_selected || 0;
-    return ((selectedSquares / totalSquares) * 100).toFixed(0);
-  };
-
-  // Using StatusBadge component for credit requests
-  // Pool status badges matching SquaresPoolList style
-  const getPoolStatusBadge = (status) => {
-    const map = {
-      open: { label: 'Open', color: '#22C55E' },
-      SelectOpen: { label: 'Open for Selection', color: '#22C55E' },
-      closed: { label: 'Closed', color: '#EF4444' },
-      SelectClosed: { label: 'Selection Closed', color: '#EF4444' },
-      in_progress: { label: 'Game in Progress', color: '#3B82F6' },
-      GameStarted: { label: 'Game Started', color: '#3B82F6' },
-      completed: { label: 'Completed', color: '#6B7280' },
-    };
-    const badge = map[status] || { label: status || 'Unknown', color: '#6B7280' };
-    return (
-      <span
-        className="px-3 py-1 rounded-full text-xs font-semibold"
-        style={{ backgroundColor: `${badge.color}20`, color: badge.color }}
-      >
-        {badge.label}
-      </span>
-    );
-  };
-
-  const getPoolTypeBadge = (type) => {
-    const isCredit = type === 'CREDIT';
-    const color = isCredit ? '#8B5CF6' : colors.brand.primary;
-    return (
-      <span
-        className="px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1"
-        style={{ backgroundColor: `${color}15`, color }}
-      >
-        {isCredit ? <FiLock size={12} /> : <FiUnlock size={12} />}
-        {isCredit ? 'Credit Pool' : 'Open Pool'}
-      </span>
-    );
+    return `$${parseFloat(amount || 0).toFixed(2)}`;
   };
 
   if (!isLoaded || loading) {
@@ -815,21 +762,23 @@ const SquaresAdminDashboard = () => {
         {/* Tabs - Matching Pools.js Style */}
         <div style={{
           display: 'flex',
+          flexWrap: isMobile ? 'wrap' : 'nowrap',
           justifyContent: 'center',
-          gap: '0.5rem',
+          gap: isMobile ? '0.25rem' : '0.5rem',
           marginBottom: '2rem',
           padding: '0.25rem',
           backgroundColor: colors.highlight,
           borderRadius: '12px',
-          width: 'fit-content',
+          width: isMobile ? '100%' : 'fit-content',
+          maxWidth: isMobile ? '100%' : 'none',
           margin: '0 auto 2rem',
         }}>
           {/* My Pools Tab */}
           <button
             onClick={() => setActiveTab('pools')}
             style={{
-              padding: '0.75rem 2rem',
-              fontSize: '1rem',
+              padding: isMobile ? '0.5rem 0.75rem' : '0.75rem 2rem',
+              fontSize: isMobile ? '0.75rem' : '1rem',
               fontWeight: 600,
               color: activeTab === 'pools' ? colors.card : colors.text,
               backgroundColor: activeTab === 'pools' ? colors.brand.primary : 'transparent',
@@ -839,17 +788,19 @@ const SquaresAdminDashboard = () => {
               transition: 'all 150ms ease',
               display: 'flex',
               alignItems: 'center',
-              gap: '0.5rem',
+              gap: isMobile ? '0.25rem' : '0.5rem',
+              flex: isMobile ? '1 1 auto' : 'none',
+              minWidth: isMobile ? '0' : 'auto',
             }}
           >
-            <FiGrid size={18} />
-            <span>My Pools</span>
+            <FiGrid size={isMobile ? 14 : 18} />
+            <span>{isMobile ? 'Pools' : 'My Pools'}</span>
             <span
               style={{
-                marginLeft: '0.25rem',
-                padding: '0.125rem 0.5rem',
+                marginLeft: isMobile ? '0.125rem' : '0.25rem',
+                padding: isMobile ? '0.0625rem 0.375rem' : '0.125rem 0.5rem',
                 borderRadius: '9999px',
-                fontSize: '0.75rem',
+                fontSize: isMobile ? '0.625rem' : '0.75rem',
                 fontWeight: 600,
                 backgroundColor: activeTab === 'pools' ? 'rgba(255,255,255,0.2)' : (isDark ? '#374151' : '#E5E7EB'),
                 color: activeTab === 'pools' ? '#fff' : colors.text,
@@ -863,8 +814,8 @@ const SquaresAdminDashboard = () => {
           <button
             onClick={() => setActiveTab('credit-requests')}
             style={{
-              padding: '0.75rem 2rem',
-              fontSize: '1rem',
+              padding: isMobile ? '0.5rem 0.75rem' : '0.75rem 2rem',
+              fontSize: isMobile ? '0.75rem' : '1rem',
               fontWeight: 600,
               color: activeTab === 'credit-requests' ? colors.card : colors.text,
               backgroundColor: activeTab === 'credit-requests' ? colors.brand.primary : 'transparent',
@@ -874,18 +825,20 @@ const SquaresAdminDashboard = () => {
               transition: 'all 150ms ease',
               display: 'flex',
               alignItems: 'center',
-              gap: '0.5rem',
+              gap: isMobile ? '0.25rem' : '0.5rem',
+              flex: isMobile ? '1 1 auto' : 'none',
+              minWidth: isMobile ? '0' : 'auto',
             }}
           >
-            <FiCreditCard size={18} />
-            <span>Credit Requests</span>
+            <FiCreditCard size={isMobile ? 14 : 18} />
+            <span>{isMobile ? 'Credits' : 'Credit Requests'}</span>
             {creditRequests.filter(r => r.status === 'pending').length > 0 && (
               <span
                 style={{
-                  marginLeft: '0.25rem',
-                  padding: '0.125rem 0.5rem',
+                  marginLeft: isMobile ? '0.125rem' : '0.25rem',
+                  padding: isMobile ? '0.0625rem 0.375rem' : '0.125rem 0.5rem',
                   borderRadius: '9999px',
-                  fontSize: '0.75rem',
+                  fontSize: isMobile ? '0.625rem' : '0.75rem',
                   fontWeight: 600,
                   backgroundColor: activeTab === 'credit-requests' ? 'rgba(255,255,255,0.2)' : '#EF4444',
                   color: '#fff',
@@ -902,8 +855,8 @@ const SquaresAdminDashboard = () => {
             <button
               onClick={() => setActiveTab('admin-requests')}
               style={{
-                padding: '0.75rem 2rem',
-                fontSize: '1rem',
+                padding: isMobile ? '0.5rem 0.75rem' : '0.75rem 2rem',
+                fontSize: isMobile ? '0.75rem' : '1rem',
                 fontWeight: 600,
                 color: activeTab === 'admin-requests' ? colors.card : colors.text,
                 backgroundColor: activeTab === 'admin-requests' ? colors.brand.primary : 'transparent',
@@ -913,18 +866,20 @@ const SquaresAdminDashboard = () => {
                 transition: 'all 150ms ease',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '0.5rem',
+                gap: isMobile ? '0.25rem' : '0.5rem',
+                flex: isMobile ? '1 1 auto' : 'none',
+                minWidth: isMobile ? '0' : 'auto',
               }}
             >
-              <FiUsers size={18} />
-              <span>Admin Requests</span>
+              <FiUsers size={isMobile ? 14 : 18} />
+              <span>{isMobile ? 'Admin' : 'Admin Requests'}</span>
               {adminCreditRequests.filter(r => r.status === 'pending').length > 0 && (
                 <span
                   style={{
-                    marginLeft: '0.25rem',
-                    padding: '0.125rem 0.5rem',
+                    marginLeft: isMobile ? '0.125rem' : '0.25rem',
+                    padding: isMobile ? '0.0625rem 0.375rem' : '0.125rem 0.5rem',
                     borderRadius: '9999px',
-                    fontSize: '0.75rem',
+                    fontSize: isMobile ? '0.625rem' : '0.75rem',
                     fontWeight: 600,
                     backgroundColor: activeTab === 'admin-requests' ? 'rgba(255,255,255,0.2)' : '#8B5CF6',
                     color: '#fff',
@@ -942,8 +897,8 @@ const SquaresAdminDashboard = () => {
             <button
               onClick={() => setActiveTab('applications')}
               style={{
-                padding: '0.75rem 2rem',
-                fontSize: '1rem',
+                padding: isMobile ? '0.5rem 0.75rem' : '0.75rem 2rem',
+                fontSize: isMobile ? '0.75rem' : '1rem',
                 fontWeight: 600,
                 color: activeTab === 'applications' ? colors.card : colors.text,
                 backgroundColor: activeTab === 'applications' ? colors.brand.primary : 'transparent',
@@ -953,18 +908,20 @@ const SquaresAdminDashboard = () => {
                 transition: 'all 150ms ease',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '0.5rem',
+                gap: isMobile ? '0.25rem' : '0.5rem',
+                flex: isMobile ? '1 1 auto' : 'none',
+                minWidth: isMobile ? '0' : 'auto',
               }}
             >
-              <FiFileText size={18} />
-              <span>Applications</span>
+              <FiFileText size={isMobile ? 14 : 18} />
+              <span>{isMobile ? 'Apps' : 'Applications'}</span>
               {commissionerApplications.filter(a => a.status === 'pending').length > 0 && (
                 <span
                   style={{
-                    marginLeft: '0.25rem',
-                    padding: '0.125rem 0.5rem',
+                    marginLeft: isMobile ? '0.125rem' : '0.25rem',
+                    padding: isMobile ? '0.0625rem 0.375rem' : '0.125rem 0.5rem',
                     borderRadius: '9999px',
-                    fontSize: '0.75rem',
+                    fontSize: isMobile ? '0.625rem' : '0.75rem',
                     fontWeight: 600,
                     backgroundColor: activeTab === 'applications' ? 'rgba(255,255,255,0.2)' : '#EF4444',
                     color: '#fff',
@@ -1005,179 +962,14 @@ const SquaresAdminDashboard = () => {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                {pools.map((pool) => {
-                  const claimedSquares = pool.claimed_squares || pool.claimed_squares_count || pool.squares_claimed || 0;
-                  const totalSquares = 100;
-                  const fillPercentage = getProgressPercentage(pool);
-                  const entryFee = parseFloat(pool.entry_fee || pool.credit_cost || 0);
-                  const estimatedPot = pool.custom_payout || pool.total_pot || (entryFee * claimedSquares);
-
-                  return (
-                    <div
-                      key={pool.id}
-                      className="rounded-xl overflow-hidden flex flex-col cursor-pointer transition-all duration-150 hover:-translate-y-1"
-                      style={{
-                        backgroundColor: colors.card,
-                        border: `1px solid ${colors.border}`,
-                      }}
-                      onClick={() => navigate(`/squares/pool/${pool.id}`)}
-                    >
-                      {/* Pool Header with Status Badges */}
-                      <div
-                        className="p-4 flex items-center justify-between"
-                        style={{ backgroundColor: isDark ? '#1f2735' : '#f7f4f2' }}
-                      >
-                        <div className="flex flex-wrap gap-2">
-                          {getPoolStatusBadge(pool.pool_status)}
-                          {getPoolTypeBadge(pool.player_pool_type)}
-                        </div>
-                        <span className="text-xs font-semibold" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>
-                          #{pool.pool_number}
-                        </span>
-                      </div>
-
-                      {/* Pool Content */}
-                      <div className="p-5 flex-1">
-                        <h3
-                          className="font-extrabold text-xl mb-2 truncate"
-                          style={{ color: colors.text, fontFamily: '"Hubot Sans", sans-serif' }}
-                        >
-                          {pool.pool_name}
-                        </h3>
-
-                        {/* Game Info with Teams */}
-                        {pool.game && (
-                          <div className="mb-4">
-                            <div className="flex justify-between items-center mb-2">
-                              <span className="font-bold" style={{ color: colors.brand.primary }}>
-                                {pool.game.league || 'NFL'}
-                              </span>
-                              <div className="flex items-center gap-1 text-xs" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>
-                                <FiCalendar size={12} />
-                                <span>{formatDate(pool.game.game_datetime)}</span>
-                              </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-2">
-                              <div
-                                className="flex items-center gap-2 border rounded-lg shadow-md px-3 py-2"
-                                style={{
-                                  backgroundImage: `url(${getTeamBackground(pool.game?.home_team_id)})`,
-                                  backgroundSize: 'cover',
-                                  backgroundPosition: 'center',
-                                }}
-                              >
-                                {getTeamLogo(pool.game?.home_team_id) && (
-                                  <img
-                                    src={getTeamLogo(pool.game?.home_team_id)}
-                                    alt={getTeamName(pool.game?.home_team_id)}
-                                    className="w-6 h-6 object-contain"
-                                  />
-                                )}
-                                <span className="font-bold text-xs truncate" style={{ color: getTeamBackground(pool.game?.home_team_id) ? 'white' : 'black' }}>
-                                  {getTeamName(pool.game?.home_team_id)}
-                                </span>
-                              </div>
-                              <div
-                                className="flex items-center gap-2 border rounded-lg shadow-md px-3 py-2"
-                                style={{
-                                  backgroundImage: `url(${getTeamBackground(pool.game?.visitor_team_id)})`,
-                                  backgroundSize: 'cover',
-                                  backgroundPosition: 'center',
-                                }}
-                              >
-                                {getTeamLogo(pool.game?.visitor_team_id) && (
-                                  <img
-                                    src={getTeamLogo(pool.game?.visitor_team_id)}
-                                    alt={getTeamName(pool.game?.visitor_team_id)}
-                                    className="w-6 h-6 object-contain"
-                                  />
-                                )}
-                                <span className="font-bold text-xs truncate" style={{ color: getTeamBackground(pool.game?.visitor_team_id) ? 'white' : 'black' }}>
-                                  {getTeamName(pool.game?.visitor_team_id)}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Progress Bar */}
-                        <div className="mb-4">
-                          <div className="flex justify-between font-bold text-sm mb-1" style={{ color: colors.text }}>
-                            <span style={{ opacity: 0.7 }}>Squares Filled</span>
-                            <span>{claimedSquares}/{totalSquares}</span>
-                          </div>
-                          <div
-                            className="w-full h-2.5 rounded-full overflow-hidden"
-                            style={{ backgroundColor: isDark ? '#111827' : '#e9dfd6' }}
-                          >
-                            <div
-                              className="h-full rounded-full transition-all duration-300"
-                              style={{
-                                width: `${fillPercentage}%`,
-                                background: `linear-gradient(90deg, ${colors.brand.primary}, ${colors.brand.primaryHover})`,
-                              }}
-                            />
-                          </div>
-                        </div>
-
-                        {/* Stats Row */}
-                        <div className="grid grid-cols-2 gap-3">
-                          <div
-                            className="flex flex-col items-center p-3 rounded-lg"
-                            style={{
-                              backgroundColor: isDark ? '#1f2735' : '#f5f1ec',
-                              border: `1px solid ${colors.border}`,
-                            }}
-                          >
-                            <span className="font-extrabold" style={{ color: colors.text }}>
-                              {formatCurrency(entryFee)}
-                            </span>
-                            <span className="text-xs" style={{ color: isDark ? '#6B7280' : '#9CA3AF' }}>
-                              Per Square
-                            </span>
-                          </div>
-                          <div
-                            className="flex flex-col items-center p-3 rounded-lg"
-                            style={{
-                              backgroundColor: isDark ? '#1f2735' : '#f5f1ec',
-                              border: `1px solid ${colors.border}`,
-                            }}
-                          >
-                            <span className="font-extrabold" style={{ color: colors.text }}>
-                              {formatCurrency(estimatedPot)}
-                            </span>
-                            <span className="text-xs" style={{ color: isDark ? '#6B7280' : '#9CA3AF' }}>
-                              Payout
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Access Type */}
-                        <div className="mt-3 flex items-center gap-2 text-sm" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>
-                          {pool.player_pool_type === 'CREDIT' ? <FiLock size={14} /> : <FiUnlock size={14} />}
-                          <span>{pool.player_pool_type === 'CREDIT' ? 'Password required' : 'Open access'}</span>
-                        </div>
-                      </div>
-
-                      {/* Action Button */}
-                      <div className="p-4 pt-0">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/squares/pool/${pool.id}`);
-                          }}
-                          className="w-full text-white py-3 rounded-lg font-semibold transition-all flex items-center justify-center gap-2"
-                          style={{ backgroundColor: colors.brand.primary }}
-                          onMouseOver={(e) => e.currentTarget.style.backgroundColor = colors.brand.primaryHover}
-                          onMouseOut={(e) => e.currentTarget.style.backgroundColor = colors.brand.primary}
-                        >
-                          <FiEye size={16} />
-                          View & Manage Pool
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
+                {pools.map((pool) => (
+                  <PoolCard
+                    key={pool.id}
+                    pool={pool}
+                    teams={teams}
+                    onSelect={(p) => navigate(`/squares/pool/${p.id}`)}
+                  />
+                ))}
               </div>
             )}
           </div>

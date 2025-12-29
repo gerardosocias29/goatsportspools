@@ -25,6 +25,7 @@ const CreateSquaresPool = lazy(() => import('./pages/CreateSquaresPool'));
 const SquaresAdminDashboard = lazy(() => import('./pages/SquaresAdminDashboard'));
 const ManageGames = lazy(() => import('./pages/ManageGames'));
 const ManageTeams = lazy(() => import('./pages/ManageTeams'));
+const ManageBanners = lazy(() => import('./pages/ManageBanners'));
 const AdminSettings = lazy(() => import('./pages/AdminSettings'));
 const CreditRequests = lazy(() => import('./pages/CreditRequests'));
 
@@ -338,6 +339,16 @@ const V2AppContent = () => {
                     element={
                       isSignedIn && user?.role_id === 1 ? (
                         <ComingSoon title="User Management" />
+                      ) : (
+                        <Navigate to="/" replace />
+                      )
+                    }
+                  />
+                  <Route
+                    path="/admin/banners"
+                    element={
+                      isSignedIn && user?.role_id === 1 ? (
+                        <ManageBanners />
                       ) : (
                         <Navigate to="/" replace />
                       )

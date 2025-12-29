@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiCalendar, FiUsers, FiGrid, FiLock, FiUnlock, FiPlusCircle } from 'react-icons/fi';
+import { FiGrid, FiPlusCircle } from 'react-icons/fi';
 import { useAxios } from '../../app/contexts/AxiosContext';
 import { useUserContext } from '../contexts/UserContext';
 import { useTheme } from '../contexts/ThemeContext';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
+import BannerDisplay from '../components/ui/BannerDisplay';
 import JoinPoolModal from '../components/squares/JoinPoolModal';
-import { borderRadius } from '../styles/theme';
-import { formatDateTimeUS } from '../utils/timezone';
+import PoolCard from '../components/squares/PoolCard';
 
 /**
  * Squares Pool List Page
@@ -23,8 +23,8 @@ const SquaresPoolList = () => {
   const [pools, setPools] = useState([]);
   const [teams, setTeams] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [hoveredPool, setHoveredPool] = useState(null);
   const [joinModalOpen, setJoinModalOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [filter, setFilter] = useState({
     status: 'all',
     league: 'all',
@@ -32,6 +32,13 @@ const SquaresPoolList = () => {
 
   // Get user role
   const userRoleId = currentUser?.user?.role_id ?? currentUser?.role_id ?? 99;
+
+  // Mobile detection for responsive layout
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     loadTeams();
@@ -68,33 +75,6 @@ const SquaresPoolList = () => {
     }
   };
 
-  // Use the centralized timezone utility for consistent US Central time display
-  const formatDate = formatDateTimeUS;
-
-  const getProgressPercentage = (pool) => {
-    const totalSquares = pool.total_squares || pool.totalSquares || 100;
-    const selectedSquares = pool.squares_claimed || pool.selectedSquares || pool.claimed_squares || pool.squares_selected || 0;
-    return ((selectedSquares / totalSquares) * 100).toFixed(0);
-  };
-
-  const getTeamName = (teamId) => {
-    if (!teamId) return 'TBD';
-    const team = teams.find(t => t.id === teamId);
-    return team?.name || team?.team_name || 'TBD';
-  };
-
-  const getTeamLogo = (teamId) => {
-    if (!teamId) return null;
-    const team = teams.find(t => t.id === teamId);
-    return team?.logo || team?.image_url || null;
-  };
-
-  const getTeamBackground = (teamId) => {
-    if (!teamId) return null;
-    const team = teams.find(t => t.id === teamId);
-    return team?.background_url || team?.backgroundUrl || null;
-  };
-
   const handlePoolClick = (poolId) => {
     navigate(`/squares/pool/${poolId}`);
   };
@@ -115,7 +95,7 @@ const SquaresPoolList = () => {
   const containerStyles = {
     maxWidth: '1280px',
     margin: '0 auto',
-    padding: '3rem 2rem',
+    padding: isMobile ? '1.5rem 1rem' : '3rem 2rem',
   };
 
   const headerStyles = {
@@ -127,13 +107,14 @@ const SquaresPoolList = () => {
 
   const titleRowStyles = {
     display: 'flex',
-    alignItems: 'center',
+    flexDirection: isMobile ? 'column' : 'row',
+    alignItems: isMobile ? 'flex-start' : 'center',
     justifyContent: 'space-between',
     gap: '1rem',
   };
 
   const titleStyles = {
-    fontSize: '3rem',
+    fontSize: isMobile ? '2rem' : '3rem',
     fontWeight: 800,
     fontFamily: '"Hubot Sans", sans-serif',
     margin: 0,
@@ -141,7 +122,7 @@ const SquaresPoolList = () => {
   };
 
   const subtitleStyles = {
-    fontSize: '1.1rem',
+    fontSize: isMobile ? '0.95rem' : '1.1rem',
     color: colors.text,
     opacity: 0.7,
     margin: 0,
@@ -165,7 +146,7 @@ const SquaresPoolList = () => {
 
   const selectStyles = {
     width: '100%',
-    borderRadius: borderRadius.md,
+    borderRadius: '0.5rem',
     padding: '0.85rem 1rem',
     border: `1px solid ${colors.border}`,
     backgroundColor: isDark ? '#1f2937' : '#f7f4f2',
@@ -176,141 +157,9 @@ const SquaresPoolList = () => {
 
   const gridStyles = {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
-    gap: '1.5rem',
+    gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(340px, 1fr))',
+    gap: isMobile ? '1rem' : '1.5rem',
     marginTop: '1.5rem',
-  };
-
-  const poolCardStyles = {
-    cursor: 'pointer',
-    border: `1px solid ${colors.border}`,
-    overflow: 'hidden',
-    borderRadius: borderRadius.lg,
-    transition: 'transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease',
-  };
-
-  const poolCardHoverStyles = {
-    transform: 'translateY(-4px)',
-    borderColor: colors.brand.primary,
-    boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.12)',
-  };
-
-  const badgeBase = {
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '0.35rem',
-    padding: '0.4rem 0.8rem',
-    borderRadius: '999px',
-    fontSize: '0.75rem',
-    fontWeight: 700,
-    letterSpacing: '0.01em',
-  };
-
-  const getStatusBadge = (status) => {
-    const map = {
-      open: { label: 'Open for Selection', color: colors.success },
-      SelectOpen: { label: 'Open for Selection', color: colors.success },
-      closed: { label: 'Closed', color: colors.error },
-      SelectClosed: { label: 'Selection Closed', color: colors.error },
-      in_progress: { label: 'Game in Progress', color: colors.info },
-      GameStarted: { label: 'Game Started', color: colors.info },
-      completed: { label: 'Completed', color: colors.text },
-    };
-
-    const badge = map[status] || { label: status || 'Status', color: colors.text };
-
-    return (
-      <span style={{ ...badgeBase, backgroundColor: `${badge.color}20`, color: badge.color }}>
-        {badge.label}
-      </span>
-    );
-  };
-
-  const getPoolTypeBadge = (type) => {
-    const isCredit = type === 'CREDIT';
-    const color = isCredit ? colors.brand.secondary : colors.brand.primary;
-    return (
-      <span style={{ ...badgeBase, backgroundColor: `${color}15`, color }}>
-        {isCredit ? <FiLock /> : <FiUnlock />}
-        {isCredit ? 'Credit Pool' : 'Open Pool'}
-      </span>
-    );
-  };
-
-  const infoRowStyles = {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-    gap: '0.75rem',
-    marginTop: '1rem',
-  };
-
-  const statTileStyles = {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: '0.85rem 1rem',
-    borderRadius: borderRadius.md,
-    backgroundColor: isDark ? '#1f2735' : '#f5f1ec',
-    border: `1px solid ${colors.border}`,
-  };
-
-  const renderProgressCircle = (percentString) => {
-    const pct = Math.min(Math.max(parseInt(percentString, 10) || 0, 0), 100);
-    const radius = 18;
-    const circumference = 2 * Math.PI * radius;
-    const dashOffset = circumference - (pct / 100) * circumference;
-
-    return (
-      <div
-        style={{
-          width: '40px',
-          height: '40px',
-          position: 'relative',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <svg width="40" height="40" style={{ transform: 'rotate(-90deg)' }}>
-          <circle
-            cx="20"
-            cy="20"
-            r={radius}
-            fill="none"
-            stroke={colors.border}
-            strokeWidth="3"
-            opacity={0.4}
-          />
-          <circle
-            cx="20"
-            cy="20"
-            r={radius}
-            fill="none"
-            stroke={`url(#progressGradient)`}
-            strokeWidth="3"
-            strokeLinecap="round"
-            strokeDasharray={circumference}
-            strokeDashoffset={dashOffset}
-          />
-          <defs>
-            <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor={colors.brand.primary} />
-              <stop offset="100%" stopColor={colors.brand.primaryHover} />
-            </linearGradient>
-          </defs>
-        </svg>
-        <div
-          style={{
-            position: 'absolute',
-            fontWeight: 600,
-            color: colors.text,
-            fontSize: '0.6rem',
-          }}
-        >
-          {pct}%
-        </div>
-      </div>
-    );
   };
 
   return (
@@ -322,22 +171,22 @@ const SquaresPoolList = () => {
               <h1 style={titleStyles}>Squares Pools</h1>
               <p style={subtitleStyles}>Join a pool and pick your winning squares.</p>
             </div>
-            <div style={{ display: 'flex', gap: '0.75rem' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', width: isMobile ? '100%' : 'auto' }}>
               {isSignedIn && (
-                <Button variant="secondary" size="lg" icon={<FiPlusCircle />} onClick={() => setJoinModalOpen(true)}>
+                <Button variant="secondary" size={isMobile ? 'md' : 'lg'} icon={<FiPlusCircle />} onClick={() => setJoinModalOpen(true)} style={{ flex: isMobile ? '1 1 auto' : 'none' }}>
                   Join Pool
                 </Button>
               )}
               {isSignedIn && userRoleId <= 2 && (
-                <Button variant="primary" size="lg" icon={<FiGrid />} onClick={handleCreatePool}>
+                <Button variant="primary" size={isMobile ? 'md' : 'lg'} icon={<FiGrid />} onClick={handleCreatePool} style={{ flex: isMobile ? '1 1 auto' : 'none' }}>
                   Create Pool
                 </Button>
               )}
             </div>
           </div>
 
-          {/* Special Launch Promotion - legacy style */}
-          <div class="bg-gradient-to-r from-yellow-400 to-orange-500 p-6 rounded-xl shadow-xl"><div class="flex items-center gap-4"><div class="text-5xl">🎉</div><div class="flex-1"><h3 class="text-2xl font-bold text-gray-900 mb-1">Special Launch Promotion!</h3><p class="text-gray-800 text-lg">First 10 grids FREE! Next 50 grids minimal fee. Create your pool now!</p></div></div></div>
+          {/* Dynamic Banners */}
+          <BannerDisplay page="squares" />
 
           <Card hover={false} padding="md">
             <div style={filtersCardStyles}>
@@ -453,144 +302,12 @@ const SquaresPoolList = () => {
         ) : (
           <div style={gridStyles}>
             {pools.map((pool) => (
-              <Card
+              <PoolCard
                 key={pool.id}
-                padding="none"
-                hover={false}
-                style={{
-                  ...poolCardStyles,
-                  ...(hoveredPool === pool.id ? poolCardHoverStyles : {}),
-                }}
-                onMouseEnter={() => setHoveredPool(pool.id)}
-                onMouseLeave={() => setHoveredPool(null)}
-                onClick={() => handlePoolClick(pool.id)}
-              >
-                <div style={{
-                  padding: '1rem 1.25rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  backgroundColor: isDark ? '#1f2735' : '#f7f4f2',
-                }}>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                    {getStatusBadge(pool.pool_status)}
-                    {getPoolTypeBadge(pool.player_pool_type)}
-                  </div>
-                  {renderProgressCircle(getProgressPercentage(pool))}
-                </div>
-
-                <div style={{ padding: '1.5rem' }}>
-                  <h3 style={{
-                    fontSize: '1.4rem',
-                    fontWeight: 800,
-                    fontFamily: '"Hubot Sans", sans-serif',
-                    margin: '0 0 0.5rem',
-                    color: colors.text,
-                  }}>
-                    {pool.pool_name || pool.gridName}
-                  </h3>
-
-                  {pool.game && (
-                    <div className='py-2'>
-                      <div className='flex justify-between items-center mb-2'>
-                        <div style={{ color: colors.brand.primary, fontWeight: 700 }}>
-                          {pool.game.league || 'NFL'}
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: colors.text, opacity: 0.65 }}>
-                          <FiCalendar size={14} />
-                          <span>{formatDate(pool.game.game_time || pool.game.game_datetime || pool.game.gameTime)}</span>
-                        </div>
-                      </div>
-                      <div className='grid xl:grid-cols-2 gap-2'>
-                        {/* Visitor team first (top/left) */}
-                        <div className="flex items-center gap-2 border rounded-lg shadow-md px-4 py-2" style={{
-                          backgroundImage: `url(${getTeamBackground(pool.game?.visitor_team_id || pool.game?.visitorTeamId)})`,
-                          backgroundSize: 'cover',
-                          backgroundPosition: 'center',
-                        }}>
-                          <img src={getTeamLogo(pool.game?.visitor_team_id || pool.game?.visitorTeamId)} alt={getTeamName(pool.game.visitor_team_id || pool.game.visitorTeamId)} className="w-[30px]"/>
-                          <p className="font-bold select-none text-xs" style={{ color: getTeamBackground(pool.game?.visitor_team_id || pool.game?.visitorTeamId) ? 'white' : 'black' }}>{getTeamName(pool.game.visitor_team_id || pool.game.visitorTeamId)}</p>
-                        </div>
-                        {/* Home team second (bottom/right) */}
-                        <div className="flex items-center gap-2 border rounded-lg shadow-md px-4 py-2" style={{
-                          backgroundImage: `url(${getTeamBackground(pool.game?.home_team_id || pool.game?.homeTeamId)})`,
-                          backgroundSize: 'cover',
-                          backgroundPosition: 'center',
-                        }}>
-                          <img src={getTeamLogo(pool.game?.home_team_id || pool.game?.homeTeamId)} alt={getTeamName(pool.game.home_team_id || pool.game.homeTeamId)} className="w-[30px]"/>
-                          <p className="font-bold select-none text-xs" style={{ color: getTeamBackground(pool.game?.home_team_id || pool.game?.homeTeamId) ? 'white' : 'black' }}>{getTeamName(pool.game.home_team_id || pool.game.homeTeamId)}</p>
-                        </div>
-                      </div>
-
-                      
-                    </div>
-                  )}
-
-                  <div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, color: colors.text, marginBottom: '0.35rem' }}>
-                      <span style={{ opacity: 0.7 }}>Squares Filled</span>
-                      <span>{pool.squares_claimed || pool.selectedSquares || pool.claimed_squares || pool.squares_selected || 0}/{pool.total_squares || pool.totalSquares || 100}</span>
-                    </div>
-                    <div style={{
-                      width: '100%',
-                      height: '10px',
-                      borderRadius: '999px',
-                      overflow: 'hidden',
-                      backgroundColor: isDark ? '#111827' : '#e9dfd6',
-                    }}>
-                      <div
-                        style={{
-                          width: `${getProgressPercentage(pool)}%`,
-                          height: '100%',
-                          background: `linear-gradient(90deg, ${colors.brand.primary}, ${colors.brand.primaryHover})`,
-                          transition: 'width 250ms ease',
-                        }}
-                      ></div>
-                    </div>
-                  </div>
-
-                  <div style={infoRowStyles}>
-                    <div className='flex flex-col items-center p-3 bg-gray-100 rounded-md' style={statTileStyles}>
-                      <span style={{ color: colors.text, fontWeight: 800 }}>
-                        {pool.player_pool_type === 'FREE' || pool.player_pool_type === 'OPEN' || parseFloat(pool.entry_fee || pool.credit_cost || pool.costPerSquare || 0) === 0
-                          ? 'FREE'
-                          : parseFloat(pool.entry_fee || pool.credit_cost || pool.costPerSquare || 0).toFixed(2)}
-                      </span>
-                      <span style={{ fontSize: '0.75rem', color: colors.text, opacity: 0.7 }}>
-                        Per Square
-                      </span>
-                    </div>
-
-                    <div className='flex flex-col items-center p-3 bg-gray-100 rounded-md' style={statTileStyles}>
-                      <span style={{ color: colors.text, fontWeight: 800 }}>
-                        {parseFloat(pool.custom_payout || pool.total_pot || pool.totalPot || 0).toFixed(2)}
-                      </span>
-                      <span style={{ fontSize: '0.75rem', color: colors.text, opacity: 0.7 }}>
-                        Payout
-                      </span>
-                    </div>
-                  </div>
-
-                  <div style={{ marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: colors.text, opacity: 0.75 }}>
-                    {(pool.player_pool_type === 'CREDIT' || pool.costType === 'PasswordOpen') ? <FiLock /> : <FiUnlock />}
-                    <span>{pool.player_pool_type === 'CREDIT' || pool.costType === 'PasswordOpen' ? 'Password required' : 'Open access'}</span>
-                  </div>
-
-                  <div style={{ marginTop: '1.25rem' }}>
-                    <Button
-                      variant="primary"
-                      size="lg"
-                      fullWidth
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handlePoolClick(pool.id);
-                      }}
-                    >
-                      {pool.user_joined ? 'View & Select Squares' : ((pool.pool_status === 'open' || pool.pool_status === 'SelectOpen') ? 'Join & Select Squares' : 'View Pool')}
-                    </Button>
-                  </div>
-                </div>
-              </Card>
+                pool={pool}
+                teams={teams}
+                onSelect={(p) => handlePoolClick(p.id)}
+              />
             ))}
           </div>
         )}
