@@ -41,6 +41,10 @@ const SquaresAdminDashboard = () => {
   const [commissionerApplications, setCommissionerApplications] = useState([]);
   const [processingRequest, setProcessingRequest] = useState(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [poolFilter, setPoolFilter] = useState({
+    status: 'all',
+    league: 'all',
+  });
 
   // Application form state for non-admins
   const [applicationForm, setApplicationForm] = useState({
@@ -66,6 +70,27 @@ const SquaresAdminDashboard = () => {
   const userRoleId = currentUser?.user?.role_id ?? currentUser?.role_id;
   const isSuperadmin = userRoleId == 1; // Use == for loose comparison (string/number)
   const isAdmin = userRoleId == 1 || userRoleId == 2; // Superadmin or Square Admin
+
+  // Filter pools based on selected filters
+  const filteredPools = useMemo(() => {
+    return pools.filter(pool => {
+      // Status filter
+      if (poolFilter.status !== 'all') {
+        const isOpen = pool.pool_status === 'open' || pool.pool_status === 'SelectOpen';
+        const isClosed = pool.pool_status === 'SelectClosed' || pool.pool_status === 'GameStarted' || pool.pool_status === 'completed' || pool.pool_status === 'closed';
+
+        if (poolFilter.status === 'open' && !isOpen) return false;
+        if (poolFilter.status === 'closed' && !isClosed) return false;
+      }
+
+      // League filter
+      if (poolFilter.league !== 'all') {
+        if (pool.league !== poolFilter.league) return false;
+      }
+
+      return true;
+    });
+  }, [pools, poolFilter]);
 
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
@@ -806,7 +831,7 @@ const SquaresAdminDashboard = () => {
                 color: activeTab === 'pools' ? '#fff' : colors.text,
               }}
             >
-              {pools.length}
+              {filteredPools.length !== pools.length ? `${filteredPools.length}/${pools.length}` : pools.length}
             </span>
           </button>
 
@@ -938,31 +963,121 @@ const SquaresAdminDashboard = () => {
         {/* Content */}
         {activeTab === 'pools' && (
           <div className="space-y-6">
-            {/* Section Header */}
-            <div className="flex items-center justify-between">
-              <h2 style={{ fontSize: '1.5rem', fontWeight: 700, fontFamily: '"Hubot Sans", sans-serif', color: colors.text }}>Pool Reports</h2>
+            {/* Pool Filters */}
+            <div
+              className="rounded-xl p-4"
+              style={{ backgroundColor: colors.card, border: `1px solid ${colors.border}` }}
+            >
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
+                gap: '1rem',
+              }}>
+                <div>
+                  <label style={{
+                    display: 'block',
+                    fontSize: '0.85rem',
+                    fontWeight: 600,
+                    color: colors.text,
+                    opacity: 0.7,
+                    marginBottom: '0.35rem',
+                  }}>Status</label>
+                  <select
+                    value={poolFilter.status}
+                    onChange={(e) => setPoolFilter({ ...poolFilter, status: e.target.value })}
+                    style={{
+                      width: '100%',
+                      borderRadius: '0.5rem',
+                      padding: '0.85rem 1rem',
+                      border: `1px solid ${colors.border}`,
+                      backgroundColor: isDark ? '#1f2937' : '#f7f4f2',
+                      color: colors.text,
+                      outlineColor: colors.brand.primary,
+                      fontWeight: 600,
+                    }}
+                  >
+                    <option value="all">All Pools</option>
+                    <option value="open">Open Pools</option>
+                    <option value="closed">Closed Pools</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{
+                    display: 'block',
+                    fontSize: '0.85rem',
+                    fontWeight: 600,
+                    color: colors.text,
+                    opacity: 0.7,
+                    marginBottom: '0.35rem',
+                  }}>League</label>
+                  <select
+                    value={poolFilter.league}
+                    onChange={(e) => setPoolFilter({ ...poolFilter, league: e.target.value })}
+                    style={{
+                      width: '100%',
+                      borderRadius: '0.5rem',
+                      padding: '0.85rem 1rem',
+                      border: `1px solid ${colors.border}`,
+                      backgroundColor: isDark ? '#1f2937' : '#f7f4f2',
+                      color: colors.text,
+                      outlineColor: colors.brand.primary,
+                      fontWeight: 600,
+                    }}
+                  >
+                    <option value="all">All Leagues</option>
+                    <option value="NFL">NFL</option>
+                    <option value="NBA">NBA</option>
+                    <option value="NCAAF">NCAA Football</option>
+                    <option value="NCAAB">NCAA Basketball</option>
+                  </select>
+                </div>
+              </div>
             </div>
 
-            {pools.length === 0 ? (
+            {/* Section Header */}
+            <div className="flex items-center justify-between">
+              <h2 style={{ fontSize: '1.5rem', fontWeight: 700, fontFamily: '"Hubot Sans", sans-serif', color: colors.text }}>
+                Pool Reports {filteredPools.length !== pools.length && `(${filteredPools.length} of ${pools.length})`}
+              </h2>
+            </div>
+
+            {filteredPools.length === 0 ? (
               <div className="rounded-xl p-12 text-center" style={{ backgroundColor: colors.card, border: `1px solid ${colors.border}` }}>
                 <FiGrid className="text-6xl mx-auto mb-4" style={{ color: isDark ? '#4B5563' : '#9CA3AF' }} />
-                <p className="text-xl mb-2" style={{ color: colors.text }}>No pools created yet</p>
-                <p className="mb-6" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>
-                  Create your first pool to start managing squares games
+                <p className="text-xl mb-2" style={{ color: colors.text }}>
+                  {pools.length === 0 ? 'No pools created yet' : 'No pools match the selected filters'}
                 </p>
-                <button
-                  onClick={() => navigate('/squares/create')}
-                  className="text-white px-6 py-3 rounded-lg font-semibold transition-all"
-                  style={{ backgroundColor: colors.brand.primary }}
-                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = colors.brand.primaryHover}
-                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = colors.brand.primary}
-                >
-                  Create Your First Pool
-                </button>
+                <p className="mb-6" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>
+                  {pools.length === 0
+                    ? 'Create your first pool to start managing squares games'
+                    : 'Try adjusting your filters to see more pools'}
+                </p>
+                {pools.length === 0 && (
+                  <button
+                    onClick={() => navigate('/squares/create')}
+                    className="text-white px-6 py-3 rounded-lg font-semibold transition-all"
+                    style={{ backgroundColor: colors.brand.primary }}
+                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = colors.brand.primaryHover}
+                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = colors.brand.primary}
+                  >
+                    Create Your First Pool
+                  </button>
+                )}
+                {pools.length > 0 && (
+                  <button
+                    onClick={() => setPoolFilter({ status: 'all', league: 'all' })}
+                    className="text-white px-6 py-3 rounded-lg font-semibold transition-all"
+                    style={{ backgroundColor: colors.brand.primary }}
+                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = colors.brand.primaryHover}
+                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = colors.brand.primary}
+                  >
+                    Clear Filters
+                  </button>
+                )}
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                {pools.map((pool) => (
+                {filteredPools.map((pool) => (
                   <PoolCard
                     key={pool.id}
                     pool={pool}

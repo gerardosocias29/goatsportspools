@@ -28,6 +28,8 @@ const ManageTeams = lazy(() => import('./pages/ManageTeams'));
 const ManageBanners = lazy(() => import('./pages/ManageBanners'));
 const AdminSettings = lazy(() => import('./pages/AdminSettings'));
 const CreditRequests = lazy(() => import('./pages/CreditRequests'));
+const About = lazy(() => import('./pages/About'));
+const Legal = lazy(() => import('./pages/Legal'));
 
 
 
@@ -227,6 +229,8 @@ const V2AppContent = () => {
                 <Routes>
                   {/* Public Routes */}
                   <Route path="/" element={<Home />} />
+                  <Route path="/about" element={<About />} />
+                  <Route path="/legal" element={<Legal />} />
 
                   {/* Protected Routes */}
                   <Route
@@ -356,7 +360,7 @@ const V2AppContent = () => {
                   />
 
                   {/* Placeholder routes for future pages */}
-                  <Route path="/betting" element={<ComingSoon title="Betting" />} />
+                  <Route path="/betting" element={<ComingSoon title="March Madness Auction" />} />
                   <Route path="/settings" element={<ComingSoon title="Settings" />} />
                   <Route path="/activity" element={<ComingSoon title="Activity" />} />
 
