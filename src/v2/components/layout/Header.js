@@ -163,25 +163,25 @@ const Header = ({ user, onSignOut }) => {
           {/* Desktop Navigation - Only show on desktop */}
           {!isMobile && (
             <nav style={{ ...navStylesDesktop, display: 'flex' }}>
-              <a style={navLinkStyles} onClick={() => navigate('/')}>
+              <a style={navLinkStyles} href="/" onClick={(e) => { e.preventDefault(); navigate('/'); }}>
                 Home
               </a>
-              <a style={navLinkStyles} onClick={() => navigate('/pools')}>
+              <a style={navLinkStyles} href="/pools" onClick={(e) => { e.preventDefault(); navigate('/pools'); }}>
                 Pools
               </a>
-              <a style={navLinkStyles} onClick={() => navigate('/leagues')}>
+              <a style={navLinkStyles} href="/leagues" onClick={(e) => { e.preventDefault(); navigate('/leagues'); }}>
                 Freeroll League
               </a>
-              <a style={navLinkStyles} onClick={() => navigate('/betting')}>
+              <a style={navLinkStyles} href="/betting" onClick={(e) => { e.preventDefault(); navigate('/betting'); }}>
                 Auction Madness
               </a>
               {isSignedIn && (
-                <a style={navLinkStyles} onClick={() => navigate('/squares/admin')}>
+                <a style={navLinkStyles} href="/squares/admin" onClick={(e) => { e.preventDefault(); navigate('/squares/admin'); }}>
                   Commissioner
                 </a>
               )}
               {isSignedIn && user?.role_id == 1 && (
-                <a style={navLinkStyles} onClick={() => navigate('/admin/settings')}>
+                <a style={navLinkStyles} href="/admin/settings" onClick={(e) => { e.preventDefault(); navigate('/admin/settings'); }}>
                   Admin
                 </a>
               )}
@@ -319,7 +319,9 @@ const Header = ({ user, onSignOut }) => {
           >
             <a
               style={navLinkStyles}
-              onClick={() => {
+              href="/"
+              onClick={(e) => {
+                e.preventDefault();
                 navigate('/');
                 setShowMobileMenu(false);
               }}
@@ -328,7 +330,9 @@ const Header = ({ user, onSignOut }) => {
             </a>
             <a
               style={navLinkStyles}
-              onClick={() => {
+              href="/pools"
+              onClick={(e) => {
+                e.preventDefault();
                 navigate('/pools');
                 setShowMobileMenu(false);
               }}
@@ -337,7 +341,9 @@ const Header = ({ user, onSignOut }) => {
             </a>
             <a
               style={navLinkStyles}
-              onClick={() => {
+              href="/leagues"
+              onClick={(e) => {
+                e.preventDefault();
                 navigate('/leagues');
                 setShowMobileMenu(false);
               }}
@@ -346,7 +352,9 @@ const Header = ({ user, onSignOut }) => {
             </a>
             <a
               style={navLinkStyles}
-              onClick={() => {
+              href="/betting"
+              onClick={(e) => {
+                e.preventDefault();
                 navigate('/betting');
                 setShowMobileMenu(false);
               }}
@@ -356,7 +364,9 @@ const Header = ({ user, onSignOut }) => {
             {isSignedIn && (user?.role_id == 1 || user?.role_id == 2) && (
               <a
                 style={navLinkStyles}
-                onClick={() => {
+                href="/squares/admin"
+                onClick={(e) => {
+                  e.preventDefault();
                   navigate('/squares/admin');
                   setShowMobileMenu(false);
                 }}

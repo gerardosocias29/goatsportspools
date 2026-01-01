@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useUser } from '@clerk/clerk-react';
 import { useTheme } from '../contexts/ThemeContext';
 import Hero from '../components/sections/Hero';
 import Card, { CardHeader, CardTitle, CardDescription } from '../components/ui/Card';
@@ -9,6 +10,7 @@ import Badge from '../components/ui/Badge';
 const Home = () => {
   const { colors, isDark } = useTheme();
   const navigate = useNavigate();
+  const { isSignedIn } = useUser();
 
   const containerStyles = {
     maxWidth: '1536px',
@@ -289,16 +291,31 @@ const Home = () => {
                 Trusted by sports fans for a smarter betting experience with OKRNG.
               </p>
               <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-                <Button variant="primary" size="xl" onClick={() => navigate('/sign-up')}>
-                  Create Free Account
-                </Button>
-                <Button variant="outline" size="xl" onClick={() => navigate('/demo')}>
-                  Schedule Demo
-                </Button>
+                {isSignedIn ? (
+                  <>
+                    <Button variant="primary" size="xl" onClick={() => navigate('/pools')}>
+                      Browse Pools
+                    </Button>
+                    <Button variant="outline" size="xl" onClick={() => navigate('/squares/admin')}>
+                      Create Pool
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button variant="primary" size="xl" onClick={() => navigate('/sign-up')}>
+                      Create Free Account
+                    </Button>
+                    <Button variant="outline" size="xl" onClick={() => navigate('/demo')}>
+                      Schedule Demo
+                    </Button>
+                  </>
+                )}
               </div>
-              <p style={{ fontSize: '0.875rem', marginTop: '1.5rem', opacity: 0.7 }}>
-                No credit card required • Free to start • Cancel anytime
-              </p>
+              {!isSignedIn && (
+                <p style={{ fontSize: '0.875rem', marginTop: '1.5rem', opacity: 0.7 }}>
+                  No credit card required • Free to start • Cancel anytime
+                </p>
+              )}
             </div>
           </Card>
         </div>

@@ -25,6 +25,9 @@ const ManageGames = () => {
   const [message, setMessage] = useState(null);
   const [showScoresModal, setShowScoresModal] = useState(false);
   const [selectedGameForScores, setSelectedGameForScores] = useState(null);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importFile, setImportFile] = useState(null);
+  const [importing, setImporting] = useState(false);
 
   // Confirm modal states
   const [confirmModal, setConfirmModal] = useState({
@@ -189,6 +192,59 @@ const ManageGames = () => {
     setEditingGame(null);
   };
 
+  // Download CSV template for importing games
+  const downloadTemplate = () => {
+    const headers = ['league', 'game_datetime', 'home_team', 'visitor_team'];
+    const exampleRows = [
+      ['NFL', '2025-01-01 19:00', 'Kansas City Chiefs', 'Buffalo Bills'],
+      ['NBA', '2025-01-02 20:30', 'Los Angeles Lakers', 'Boston Celtics'],
+      ['NCAAF', '2025-01-01 15:00', 'Ohio State Buckeyes', 'Oregon Ducks'],
+    ];
+
+    const csvContent = [
+      headers.join(','),
+      ...exampleRows.map(row => row.join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'games_import_template.csv';
+    link.click();
+    URL.revokeObjectURL(link.href);
+  };
+
+  // Handle file import
+  const handleImportGames = async () => {
+    if (!importFile) {
+      setMessage({ type: 'error', text: 'Please select a file to import' });
+      return;
+    }
+
+    setImporting(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', importFile);
+
+      const response = await axiosService.post('/api/games/import', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+
+      if (response.data?.status) {
+        setMessage({ type: 'success', text: `Successfully imported ${response.data.imported || 0} games` });
+        setShowImportModal(false);
+        setImportFile(null);
+        loadGames();
+      } else {
+        setMessage({ type: 'error', text: response.data?.message || 'Import failed' });
+      }
+    } catch (error) {
+      setMessage({ type: 'error', text: error.response?.data?.message || 'Failed to import games' });
+    } finally {
+      setImporting(false);
+    }
+  };
+
   const handleOpenScores = (game) => {
     setSelectedGameForScores(game);
     setShowScoresModal(true);
@@ -263,20 +319,26 @@ const ManageGames = () => {
             {/* Import/Export Buttons (Disabled) */}
             <div className="flex gap-3">
               <button
-                disabled
-                className="flex items-center gap-2 px-4 py-2 bg-gray-700/50 text-gray-400 rounded-lg cursor-not-allowed opacity-50"
-                title="Import functionality coming soon"
+                onClick={() => setShowImportModal(true)}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all"
+                style={{
+                  backgroundColor: isDark ? '#374151' : '#E5E7EB',
+                  color: colors.text,
+                }}
               >
                 <FiUpload size={18} />
                 Import Games
               </button>
               <button
-                disabled
-                className="flex items-center gap-2 px-4 py-2 bg-gray-700/50 text-gray-400 rounded-lg cursor-not-allowed opacity-50"
-                title="Export functionality coming soon"
+                onClick={downloadTemplate}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all"
+                style={{
+                  backgroundColor: isDark ? '#374151' : '#E5E7EB',
+                  color: colors.text,
+                }}
               >
                 <FiDownload size={18} />
-                Export CSV
+                Download Template
               </button>
             </div>
 
@@ -620,6 +682,82 @@ const ManageGames = () => {
           confirmText={confirmModal.confirmText}
           variant={confirmModal.variant}
         />
+
+        {/* Import Modal */}
+        {showImportModal && (
+          <div
+            className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4"
+            onClick={() => {
+              setShowImportModal(false);
+              setImportFile(null);
+            }}
+          >
+            <div
+              className="rounded-xl p-8 max-w-lg w-full"
+              style={{ backgroundColor: colors.card, border: `2px solid ${colors.brand.primary}` }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h2 className="text-2xl font-bold mb-6" style={{ color: colors.text }}>
+                Import Games
+              </h2>
+
+              <div className="mb-6">
+                <p className="mb-4" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>
+                  Upload a CSV file with the following columns: <code style={{ color: colors.brand.primary }}>league, game_datetime, home_team, visitor_team</code>
+                </p>
+                <p className="text-sm mb-4" style={{ color: isDark ? '#6B7280' : '#9CA3AF' }}>
+                  Note: game_datetime should be in your local time (e.g., 2025-01-01 19:00). Teams not found will be auto-created.
+                </p>
+                <p className="text-sm mb-4" style={{ color: isDark ? '#6B7280' : '#9CA3AF' }}>
+                  Use the "Download Template" button to get a sample CSV file with the correct format.
+                </p>
+
+                <input
+                  type="file"
+                  accept=".csv"
+                  onChange={(e) => setImportFile(e.target.files[0])}
+                  className="w-full px-4 py-3 rounded-lg"
+                  style={{
+                    backgroundColor: isDark ? '#374151' : '#F3F4F6',
+                    border: `1px solid ${colors.border}`,
+                    color: colors.text,
+                  }}
+                />
+                {importFile && (
+                  <p className="mt-2 text-sm" style={{ color: colors.brand.primary }}>
+                    Selected: {importFile.name}
+                  </p>
+                )}
+              </div>
+
+              <div className="flex gap-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowImportModal(false);
+                    setImportFile(null);
+                  }}
+                  className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-semibold transition-colors duration-200"
+                >
+                  <FiX size={20} />
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleImportGames}
+                  disabled={!importFile || importing}
+                  className="flex-1 flex items-center justify-center gap-2 px-6 py-3 text-white rounded-lg font-semibold shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ backgroundColor: colors.brand.primary }}
+                  onMouseOver={(e) => !importing && importFile && (e.currentTarget.style.backgroundColor = colors.brand.primaryHover)}
+                  onMouseOut={(e) => !importing && importFile && (e.currentTarget.style.backgroundColor = colors.brand.primary)}
+                >
+                  <FiUpload size={20} />
+                  {importing ? 'Importing...' : 'Import'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

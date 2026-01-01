@@ -31,15 +31,15 @@ const Hero = () => {
   const badgeStyles = {
     display: 'inline-flex',
     alignItems: 'center',
-    gap: '0.5rem',
-    padding: '0.5rem 1rem',
-    borderRadius: '9999px',
-    backgroundColor: isDark ? 'rgba(212, 122, 62, 0.1)' : 'rgba(212, 122, 62, 0.1)',
-    border: `1px solid ${colors.brand.primary}30`,
+    gap: '1rem',
+    padding: '1rem 2rem',
+    borderRadius: '16px',
+    backgroundColor: isDark ? 'rgba(212, 122, 62, 0.2)' : 'rgba(212, 122, 62, 0.15)',
+    border: `2px solid ${colors.brand.primary}`,
     color: colors.brand.primary,
-    fontSize: '0.875rem',
-    fontWeight: 600,
-    marginBottom: '2rem',
+    fontSize: '1rem',
+    fontWeight: 700,
+    marginBottom: '2.5rem',
   };
 
   const headingStyles = {
@@ -138,10 +138,10 @@ const Hero = () => {
         <div style={contentStyles} className="v2-fade-in">
           {/* Badge */}
           <div style={badgeStyles}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
               <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
             </svg>
-            <span>Trusted by thousands of sports fans</span>
+            <span>We will facilitate your Super Bowl Squares here for FREE. Complete with report</span>
           </div>
 
           {/* Main Heading */}
