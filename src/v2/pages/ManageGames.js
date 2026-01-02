@@ -706,7 +706,7 @@ const ManageGames = () => {
                   Upload a CSV file with the following columns: <code style={{ color: colors.brand.primary }}>league, game_datetime, home_team, visitor_team</code>
                 </p>
                 <p className="text-sm mb-4" style={{ color: isDark ? '#6B7280' : '#9CA3AF' }}>
-                  Note: game_datetime should be in your local time (e.g., 2025-01-01 19:00). Teams not found will be auto-created.
+                  Note: game_datetime should be in UTC (e.g., 2025-02-10 00:30 for 7:30 PM EST). Teams not found will be auto-created.
                 </p>
                 <p className="text-sm mb-4" style={{ color: isDark ? '#6B7280' : '#9CA3AF' }}>
                   Use the "Download Template" button to get a sample CSV file with the correct format.

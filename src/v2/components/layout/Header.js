@@ -112,18 +112,42 @@ const Header = ({ user, onSignOut }) => {
     backgroundColor: 'transparent',
     border: 'none',
     cursor: 'pointer',
-    flexDirection: 'column',
-    gap: '0.25rem',
+    position: 'relative',
+    display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
   };
 
-  const hamburgerLineStyles = {
-    width: '24px',
-    height: '2px',
-    backgroundColor: colors.text,
-    borderRadius: '2px',
-    transition: 'all 150ms cubic-bezier(0.4, 0, 0.2, 1)',
+  // Modern hamburger line styles with animation support
+  const getHamburgerLineStyles = (lineIndex) => {
+    const baseStyles = {
+      position: 'absolute',
+      width: '22px',
+      height: '2px',
+      backgroundColor: colors.text,
+      borderRadius: '2px',
+      transition: 'all 300ms cubic-bezier(0.4, 0, 0.2, 1)',
+    };
+
+    if (showMobileMenu) {
+      // X animation
+      if (lineIndex === 0) {
+        return { ...baseStyles, transform: 'rotate(45deg)', top: '50%', marginTop: '-1px' };
+      } else if (lineIndex === 1) {
+        return { ...baseStyles, opacity: 0, transform: 'scaleX(0)' };
+      } else {
+        return { ...baseStyles, transform: 'rotate(-45deg)', top: '50%', marginTop: '-1px' };
+      }
+    } else {
+      // Hamburger
+      if (lineIndex === 0) {
+        return { ...baseStyles, top: '12px' };
+      } else if (lineIndex === 1) {
+        return { ...baseStyles, top: '50%', marginTop: '-1px' };
+      } else {
+        return { ...baseStyles, bottom: '12px' };
+      }
+    }
   };
 
   // Modern minimalist styles for the sticky results bar
@@ -132,9 +156,10 @@ const Header = ({ user, onSignOut }) => {
     top: '64px',
     left: 0,
     right: 0,
+    // Solid background with gradient overlay - prevents content showing through
     background: isDark
-      ? 'linear-gradient(135deg, rgba(22, 163, 74, 0.08) 0%, rgba(34, 197, 94, 0.05) 100%)'
-      : 'linear-gradient(135deg, rgba(22, 163, 74, 0.06) 0%, rgba(34, 197, 94, 0.03) 100%)',
+      ? `#161C29 linear-gradient(135deg, rgba(22, 163, 74, 0.08) 0%, rgba(34, 197, 94, 0.05) 100%)`
+      : `#FAF6F2 linear-gradient(135deg, rgba(22, 163, 74, 0.06) 0%, rgba(34, 197, 94, 0.03) 100%)`,
     borderBottom: `1px solid ${isDark ? 'rgba(34, 197, 94, 0.2)' : 'rgba(22, 163, 74, 0.15)'}`,
     padding: '10px 16px',
     zIndex: 1199,
@@ -155,7 +180,7 @@ const Header = ({ user, onSignOut }) => {
                 alt="OKRNG"
                 style={{ height: '32px', width: 'auto' }}
               />
-              <span>OKRNG</span>
+              {!isMobile && <span>OKRNG</span>}
             </div>
             <LuckyCoin onResultsChange={handleResultsChange} />
           </div>
@@ -193,13 +218,13 @@ const Header = ({ user, onSignOut }) => {
             {/* Mobile Menu Button - Shows on mobile, hides on desktop */}
             {isMobile && (
               <button
-                style={{ ...mobileMenuButtonStyles, display: 'flex' }}
+                style={mobileMenuButtonStyles}
                 onClick={() => setShowMobileMenu(!showMobileMenu)}
                 aria-label="Toggle menu"
               >
-                <span style={hamburgerLineStyles} />
-                <span style={hamburgerLineStyles} />
-                <span style={hamburgerLineStyles} />
+                <span style={getHamburgerLineStyles(0)} />
+                <span style={getHamburgerLineStyles(1)} />
+                <span style={getHamburgerLineStyles(2)} />
               </button>
             )}
 
@@ -228,11 +253,11 @@ const Header = ({ user, onSignOut }) => {
             )}
           </button> */}
 
-            {/* User Menu with Clerk UserButton */}
-            {isSignedIn && (
+            {/* User Menu with Clerk UserButton - Desktop only */}
+            {!isMobile && isSignedIn && (
               <div className="flex items-center gap-4">
                 {isLoaded && clerkUser && (
-                  <p className="select-none hidden lg:block" style={{
+                  <p className="select-none" style={{
                     fontSize: '0.875rem',
                     fontWeight: 500,
                     color: colors.text
@@ -289,7 +314,8 @@ const Header = ({ user, onSignOut }) => {
               </div>
             )}
 
-            {!isSignedIn && (
+            {/* Sign In button - Desktop only when not signed in */}
+            {!isMobile && !isSignedIn && (
               <div style={{ display: 'flex', gap: '0.75rem' }}>
                 <Button variant="primary" size="md" onClick={() => navigate('/sign-in')}>
                   Sign In
@@ -374,6 +400,88 @@ const Header = ({ user, onSignOut }) => {
                 Commissioner
               </a>
             )}
+
+            {/* Divider */}
+            <div style={{
+              height: '1px',
+              backgroundColor: colors.border,
+              margin: '0.5rem 0',
+            }} />
+
+            {/* User section in mobile menu */}
+            {isSignedIn ? (
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.75rem',
+                padding: '0.25rem 0',
+              }}>
+                <UserButton
+                  afterSignOutUrl='/sign-in'
+                  appearance={{
+                    elements: {
+                      userButtonPopoverActionButton__manageAccount: {
+                        display: 'none',
+                      },
+                    },
+                  }}
+                >
+                  <UserButton.MenuItems>
+                    <UserButton.Action
+                      label="Notifications"
+                      labelIcon={
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                          <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                        </svg>
+                      }
+                      onClick={() => { navigate('/notifications'); setShowMobileMenu(false); }}
+                    />
+                    <UserButton.Action
+                      label="Promotions"
+                      labelIcon={
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <rect x="3" y="8" width="18" height="14" rx="2" ry="2" />
+                          <path d="M12 8V3" />
+                          <path d="M8 8V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v3" />
+                          <path d="M12 12v4" />
+                        </svg>
+                      }
+                      onClick={() => { navigate('/promotions'); setShowMobileMenu(false); }}
+                    />
+                    <UserButton.Action
+                      label="Account Center"
+                      labelIcon={
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <circle cx="12" cy="7" r="4" />
+                          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                        </svg>
+                      }
+                      open="user-profile"
+                    />
+                    <UserButton.Action label="signOut" />
+                  </UserButton.MenuItems>
+                </UserButton>
+                {isLoaded && clerkUser && (
+                  <span style={{
+                    fontSize: '0.875rem',
+                    fontWeight: 500,
+                    color: colors.text,
+                  }}>
+                    {clerkUser.fullName}
+                  </span>
+                )}
+              </div>
+            ) : (
+              <Button
+                variant="primary"
+                size="md"
+                onClick={() => { navigate('/sign-in'); setShowMobileMenu(false); }}
+                style={{ width: '100%' }}
+              >
+                Sign In
+              </Button>
+            )}
           </div>
         )}
       </header>
@@ -382,105 +490,76 @@ const Header = ({ user, onSignOut }) => {
       {luckyResults && (
         <div style={{
           ...resultsBarStyles,
-          overflowX: 'auto',
-          WebkitOverflowScrolling: 'touch',
-          padding: isMobile ? '8px 12px' : '10px 16px',
+          padding: isMobile ? '6px 8px' : '10px 16px',
         }}>
           <div style={{
             display: 'flex',
             alignItems: 'center',
-            justifyContent: isMobile ? 'flex-start' : 'space-between',
+            justifyContent: 'space-between',
             width: '100%',
-            maxWidth: '1180px',
-            padding: '0 8px',
-            gap: isMobile ? '8px' : '0',
-            minWidth: isMobile ? 'max-content' : 'auto',
+            maxWidth: isMobile ? '100%' : '1180px',
+            gap: isMobile ? '4px' : '0',
           }}>
-            {/* 1-10 */}
-            <div style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              padding: isMobile ? '3px 8px' : '4px 12px',
-              borderRadius: '8px',
-              backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
-              minWidth: isMobile ? '38px' : '44px',
-            }}>
-              {/* <span style={{ fontSize: isMobile ? '9px' : '10px', color: isDark ? '#9CA3AF' : '#6B7280', fontWeight: 500, marginBottom: '1px' }}>1-10</span> */}
-              <span style={{ fontSize: isMobile ? '14px' : '16px', fontWeight: 700, color: colors.text }}>{luckyResults.num10}</span>
-            </div>
+            {/* Result item style for equal distribution */}
+            {(() => {
+              const itemStyle = {
+                flex: isMobile ? 1 : 'none',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: isMobile ? '4px 2px' : '4px 12px',
+                borderRadius: '6px',
+                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
+                minWidth: isMobile ? '0' : '44px',
+              };
+              const textStyle = {
+                fontSize: isMobile ? '13px' : '16px',
+                fontWeight: 700,
+                color: colors.text,
+                whiteSpace: 'nowrap',
+              };
+              return (
+                <>
+                  {/* 1-10 */}
+                  <div style={itemStyle}>
+                    <span style={textStyle}>{luckyResults.num10}</span>
+                  </div>
 
-            {/* Color */}
-            <div style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              padding: isMobile ? '3px 8px' : '4px 12px',
-              borderRadius: '8px',
-              backgroundColor: `${luckyResults.colorHex}15`,
-              border: `1px solid ${luckyResults.colorHex}30`,
-              minWidth: isMobile ? '42px' : '52px',
-            }}>
-              {/* <span style={{ fontSize: isMobile ? '9px' : '10px', color: isDark ? '#9CA3AF' : '#6B7280', fontWeight: 500, marginBottom: '1px' }}>Color</span> */}
-              <span style={{ fontSize: isMobile ? '12px' : '14px', fontWeight: 700, color: luckyResults.colorHex }}>{luckyResults.color}</span>
-            </div>
+                  {/* Color */}
+                  <div style={{
+                    ...itemStyle,
+                    backgroundColor: `${luckyResults.colorHex}15`,
+                    border: `1px solid ${luckyResults.colorHex}30`,
+                  }}>
+                    <span style={{ ...textStyle, fontSize: isMobile ? '11px' : '14px', color: luckyResults.colorHex }}>{luckyResults.color}</span>
+                  </div>
 
-            {/* 0-99 */}
-            <div style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              padding: isMobile ? '3px 8px' : '4px 12px',
-              borderRadius: '8px',
-              backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
-              minWidth: isMobile ? '38px' : '44px',
-            }}>
-              {/* <span style={{ fontSize: isMobile ? '9px' : '10px', color: isDark ? '#9CA3AF' : '#6B7280', fontWeight: 500, marginBottom: '1px' }}>0-99</span> */}
-              <span style={{ fontSize: isMobile ? '14px' : '16px', fontWeight: 700, color: colors.text }}>{luckyResults.num100}</span>
-            </div>
+                  {/* 0-99 */}
+                  <div style={itemStyle}>
+                    <span style={textStyle}>{luckyResults.num100}</span>
+                  </div>
 
-            {/* Coin */}
-            <div style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              padding: isMobile ? '3px 8px' : '4px 12px',
-              borderRadius: '8px',
-              backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
-              minWidth: isMobile ? '42px' : '52px',
-            }}>
-              {/* <span style={{ fontSize: isMobile ? '9px' : '10px', color: isDark ? '#9CA3AF' : '#6B7280', fontWeight: 500, marginBottom: '1px' }}>Coin</span> */}
-              <span style={{ fontSize: isMobile ? '12px' : '14px', fontWeight: 700, color: colors.text }}>{luckyResults.coin}</span>
-            </div>
+                  {/* Coin */}
+                  <div style={itemStyle}>
+                    <span style={{ ...textStyle, fontSize: isMobile ? '11px' : '14px' }}>{luckyResults.coin}</span>
+                  </div>
 
-            {/* 0-999 */}
-            <div style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              padding: isMobile ? '3px 8px' : '4px 12px',
-              borderRadius: '8px',
-              backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
-              minWidth: isMobile ? '42px' : '52px',
-            }}>
-              {/* <span style={{ fontSize: isMobile ? '9px' : '10px', color: isDark ? '#9CA3AF' : '#6B7280', fontWeight: 500, marginBottom: '1px' }}>0-999</span> */}
-              <span style={{ fontSize: isMobile ? '14px' : '16px', fontWeight: 700, color: colors.text }}>{luckyResults.num1000}</span>
-            </div>
+                  {/* 0-999 */}
+                  <div style={itemStyle}>
+                    <span style={textStyle}>{luckyResults.num1000}</span>
+                  </div>
 
-            {/* Suit */}
-            <div style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              padding: isMobile ? '3px 8px' : '4px 12px',
-              borderRadius: '8px',
-              backgroundColor: `${luckyResults.suitColor}10`,
-              border: `1px solid ${luckyResults.suitColor}25`,
-              minWidth: isMobile ? '38px' : '44px',
-            }}>
-              {/* <span style={{ fontSize: isMobile ? '9px' : '10px', color: isDark ? '#9CA3AF' : '#6B7280', fontWeight: 500, marginBottom: '1px' }}>Suit</span> */}
-              <span style={{ fontSize: isMobile ? '16px' : '18px', fontWeight: 700, color: luckyResults.suitColor }}>{luckyResults.suit}</span>
-            </div>
+                  {/* Suit */}
+                  <div style={{
+                    ...itemStyle,
+                    backgroundColor: `${luckyResults.suitColor}10`,
+                    border: `1px solid ${luckyResults.suitColor}25`,
+                  }}>
+                    <span style={{ ...textStyle, fontSize: isMobile ? '14px' : '18px', color: luckyResults.suitColor }}>{luckyResults.suit}</span>
+                  </div>
+                </>
+              );
+            })()}
           </div>
         </div>
       )}

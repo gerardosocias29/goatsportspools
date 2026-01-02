@@ -30,6 +30,7 @@ const AdminSettings = lazy(() => import('./pages/AdminSettings'));
 const CreditRequests = lazy(() => import('./pages/CreditRequests'));
 const About = lazy(() => import('./pages/About'));
 const Legal = lazy(() => import('./pages/Legal'));
+const Help = lazy(() => import('./pages/Help'));
 
 
 
@@ -231,6 +232,7 @@ const V2AppContent = () => {
                   <Route path="/" element={<Home />} />
                   <Route path="/about" element={<About />} />
                   <Route path="/legal" element={<Legal />} />
+                  <Route path="/help" element={<Help />} />
 
                   {/* Protected Routes */}
                   <Route
