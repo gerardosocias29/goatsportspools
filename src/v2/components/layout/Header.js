@@ -161,7 +161,7 @@ const Header = ({ user, onSignOut }) => {
       ? `#161C29 linear-gradient(135deg, rgba(22, 163, 74, 0.08) 0%, rgba(34, 197, 94, 0.05) 100%)`
       : `#FAF6F2 linear-gradient(135deg, rgba(22, 163, 74, 0.06) 0%, rgba(34, 197, 94, 0.03) 100%)`,
     borderBottom: `1px solid ${isDark ? 'rgba(34, 197, 94, 0.2)' : 'rgba(22, 163, 74, 0.15)'}`,
-    padding: '10px 16px',
+    padding: '5px 8px',
     zIndex: 1199,
     display: 'flex',
     justifyContent: 'center',
@@ -490,7 +490,6 @@ const Header = ({ user, onSignOut }) => {
       {luckyResults && (
         <div style={{
           ...resultsBarStyles,
-          padding: isMobile ? '6px 8px' : '10px 16px',
         }}>
           <div style={{
             display: 'flex',
@@ -513,7 +512,7 @@ const Header = ({ user, onSignOut }) => {
                 minWidth: isMobile ? '0' : '44px',
               };
               const textStyle = {
-                fontSize: isMobile ? '13px' : '16px',
+                fontSize: isMobile ? '10px' : '12px',
                 fontWeight: 700,
                 color: colors.text,
                 whiteSpace: 'nowrap',
@@ -526,12 +525,8 @@ const Header = ({ user, onSignOut }) => {
                   </div>
 
                   {/* Color */}
-                  <div style={{
-                    ...itemStyle,
-                    backgroundColor: `${luckyResults.colorHex}15`,
-                    border: `1px solid ${luckyResults.colorHex}30`,
-                  }}>
-                    <span style={{ ...textStyle, fontSize: isMobile ? '11px' : '14px', color: luckyResults.colorHex }}>{luckyResults.color}</span>
+                  <div style={itemStyle}>
+                    <span style={{ ...textStyle, color: luckyResults.colorHex }}>{luckyResults.color}</span>
                   </div>
 
                   {/* 0-99 */}
@@ -541,7 +536,7 @@ const Header = ({ user, onSignOut }) => {
 
                   {/* Coin */}
                   <div style={itemStyle}>
-                    <span style={{ ...textStyle, fontSize: isMobile ? '11px' : '14px' }}>{luckyResults.coin}</span>
+                    <span style={textStyle}>{luckyResults.coin}</span>
                   </div>
 
                   {/* 0-999 */}
@@ -550,12 +545,8 @@ const Header = ({ user, onSignOut }) => {
                   </div>
 
                   {/* Suit */}
-                  <div style={{
-                    ...itemStyle,
-                    backgroundColor: `${luckyResults.suitColor}10`,
-                    border: `1px solid ${luckyResults.suitColor}25`,
-                  }}>
-                    <span style={{ ...textStyle, fontSize: isMobile ? '14px' : '18px', color: luckyResults.suitColor }}>{luckyResults.suit}</span>
+                  <div style={itemStyle}>
+                    <span style={{ ...textStyle, fontSize: isMobile ? '14px' : '16px', color: luckyResults.suitColor }}>{luckyResults.suit}</span>
                   </div>
                 </>
               );
