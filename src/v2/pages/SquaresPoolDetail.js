@@ -1084,6 +1084,12 @@ const SquaresPoolDetail = () => {
     isSuperAdmin || (isSquareAdmin && isPoolOwner) || isPoolOwner
   );
 
+  // Permission: Only superadmin can set/update game scores
+  const canSetScores = isSuperAdmin;
+
+  // Permission: Superadmin OR pool owner (square admin who created the pool) can calculate winners
+  const canCalculateWinners = currentUser && pool && (isSuperAdmin || isPoolOwner);
+
   // Check if game has ended (has final scores)
   const gameHasEnded = pool?.game?.final_home !== null && pool?.game?.final_home !== undefined &&
                        pool?.game?.final_visitor !== null && pool?.game?.final_visitor !== undefined;
@@ -1432,8 +1438,10 @@ const SquaresPoolDetail = () => {
         </div>
 
         {/* Game Status & Winners / Admin Controls - Collapsible Panel */}
-        {/* Show for: pool managers, superadmins, OR anyone after game has ended */}
-        {(canManagePool || isSuperAdmin || gameHasEnded) && (
+        {/* Show for: pool managers, superadmins, OR anyone when scores/winners exist */}
+        {(canManagePool || isSuperAdmin || gameHasEnded || winners.length > 0 ||
+          pool?.game?.q1_home != null || pool?.game?.half_home != null ||
+          pool?.game?.q3_home != null || pool?.game?.final_home != null) && (
         <div
           className="mb-5"
           style={{
@@ -1742,8 +1750,8 @@ const SquaresPoolDetail = () => {
 
                           {/* Action Buttons - Admin Only */}
                           <div className="flex flex-col gap-2">
-                            {/* If no scores, show "Set Scores" button (admin only) */}
-                            {!hasScores && canManagePool && (
+                            {/* If no scores, show "Set Scores" button (superadmin only) */}
+                            {!hasScores && canSetScores && (
                               <button
                                 onClick={() => !calculatingWinners && handleOpenScoreModal(quarter)}
                                 className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-all hover:scale-105"
@@ -1756,7 +1764,20 @@ const SquaresPoolDetail = () => {
                               </button>
                             )}
 
-                            {/* If scores changed, show warning and recalculate button (admin only) */}
+                            {/* If no scores and user is pool owner but not superadmin, show message */}
+                            {!hasScores && canCalculateWinners && !canSetScores && (
+                              <div
+                                className="text-xs px-2 py-1.5 rounded-lg text-center"
+                                style={{
+                                  backgroundColor: isDark ? 'rgba(251, 191, 36, 0.1)' : 'rgba(251, 191, 36, 0.2)',
+                                  color: isDark ? '#FBBF24' : '#B45309'
+                                }}
+                              >
+                                Waiting for scores
+                              </div>
+                            )}
+
+                            {/* If scores changed, show warning and recalculate button (superadmin only - requires score update) */}
                             {scoresChanged && (
                               <>
                                 <div
@@ -1768,7 +1789,7 @@ const SquaresPoolDetail = () => {
                                 >
                                   ⚠ Scores Changed
                                 </div>
-                                {canManagePool && (
+                                {canSetScores && (
                                 <button
                                   onClick={async () => {
                                     if (calculatingWinners) return;
@@ -1800,23 +1821,22 @@ const SquaresPoolDetail = () => {
                                     color: '#fff'
                                   }}
                                 >
-                                  Recalculate Winner
+                                  Update & Recalculate
                                 </button>
                                 )}
                               </>
                             )}
 
-                            {/* If has scores but no winner (and scores didn't change), show "Calculate Winner" button (admin only) */}
-                            {hasScores && !hasWinner && !scoresChanged && canManagePool && (
+                            {/* If has scores but no winner (and scores didn't change), show "Calculate Winner" button (pool owner or superadmin) */}
+                            {hasScores && !hasWinner && !scoresChanged && canCalculateWinners && (
                               <button
                                 onClick={async () => {
                                   if (calculatingWinners) return;
                                   setCalculatingWinners(true);
                                   try {
+                                    // Don't pass scores - just calculate winner from existing scores in DB
                                     const response = await axiosService.post(`/api/squares-pools/${poolId}/calculate-winners`, {
                                       quarter: quarter,
-                                      home_score: homeScore,
-                                      visitor_score: visitorScore,
                                     });
                                     await loadWinners();
                                     await loadPool(null, true);
@@ -3221,7 +3241,7 @@ const SquaresPoolDetail = () => {
                 }}
               >
                 <FiAward size={18} />
-                {calculatingWinners ? 'Calculating...' : 'Calculate Winner'}
+                {calculatingWinners ? 'Saving...' : 'Save Scores'}
               </button>
             </div>
           </div>
