@@ -1963,7 +1963,7 @@ const SquaresPoolDetail = () => {
                         <FiUnlock size={16} /> Reopen Pool
                       </button>
                     )}
-                    {pool.player_pool_type === 'CREDIT' && (
+                    {(pool.player_pool_type === 'CREDIT' || pool.player_pool_type === 'CREDIT_OPEN') && (
                       <button
                         onClick={handleMakePoolFree}
                         style={{ ...adminButtonStyle, justifyContent: 'center', width: '100%' }}
@@ -2172,7 +2172,7 @@ const SquaresPoolDetail = () => {
                 )}
 
                 {/* Credits Management Section - Only for Credit Pools and Admins */}
-                {pool.player_pool_type === 'CREDIT' && !isRegularUser && (
+                {(pool.player_pool_type === 'CREDIT' || pool.player_pool_type === 'CREDIT_OPEN') && !isRegularUser && (
                   <div
                     style={{
                       backgroundColor: isDark ? 'rgba(212, 122, 62, 0.08)' : 'rgba(212, 122, 62, 0.06)',
@@ -2322,7 +2322,7 @@ const SquaresPoolDetail = () => {
                     detail: `You have ${credits} credits but need ${totalCost} credits to select this square (${costPerSquare} per square).`,
                   });
                 }}
-                userCredits={pool.player_pool_type === 'CREDIT' ? parseFloat(getUserCreditBalance() || 0) : null}
+                userCredits={(pool.player_pool_type === 'CREDIT' || pool.player_pool_type === 'CREDIT_OPEN') ? parseFloat(getUserCreditBalance() || 0) : null}
                 costPerSquare={parseFloat(pool.credit_cost || pool.entry_fee || pool.costPerSquare || 0)}
               />
             );
@@ -3281,7 +3281,7 @@ const SquaresPoolDetail = () => {
           handleConfirmSelection();
         }}
         costPerSquare={parseFloat(pool?.credit_cost || pool?.entry_fee || 0)}
-        userCredits={pool?.player_pool_type === 'CREDIT' ? parseFloat(getUserCreditBalance() || 0) : null}
+        userCredits={(pool?.player_pool_type === 'CREDIT' || pool?.player_pool_type === 'CREDIT_OPEN') ? parseFloat(getUserCreditBalance() || 0) : null}
         maxSquaresPerPlayer={pool?.max_squares_per_player}
         currentUserOwnedCount={pool?.squares?.filter(s => parseInt(s.player_id) === getCurrentUserId()).length || 0}
         poolType={pool?.player_pool_type}

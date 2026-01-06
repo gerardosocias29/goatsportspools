@@ -355,6 +355,7 @@ const CreateSquaresPool = () => {
         if (formData.poolType === 'CREDIT' && !formData.poolPassword.trim()) {
           newErrors.poolPassword = 'Password is required for credit pools';
         }
+        // PRIVATE type does NOT require password
         break;
 
       case 6: // Fees & Rewards
@@ -394,6 +395,8 @@ const CreateSquaresPool = () => {
       const mapPlayerPoolType = () => {
         if (formData.poolType === 'OPEN') {
           return { costType: 'Free', playerPoolType: 'FREE' };
+        } else if (formData.poolType === 'CREDIT_OPEN') {
+          return { costType: 'CreditOpen', playerPoolType: 'CREDIT_OPEN' };
         } else {
           return { costType: 'PasswordOpen', playerPoolType: 'CREDIT' };
         }
@@ -414,6 +417,7 @@ const CreateSquaresPool = () => {
         password: formData.poolType === 'CREDIT' ? formData.poolPassword : null,
         entry_fee: formData.poolType === 'OPEN' ? 0 : formData.costPerSquare,
         credit_cost: formData.poolType === 'OPEN' ? 0 : formData.costPerSquare,
+        initial_credits: (formData.poolType === 'CREDIT' || formData.poolType === 'CREDIT_OPEN') ? (formData.initialCredits || 0) : 0,
         custom_payout: formData.customPayout,
         max_squares_per_player: formData.maxSquaresPerPlayer,
         close_datetime: toUTCString(formData.closeDate),
@@ -424,7 +428,6 @@ const CreateSquaresPool = () => {
         visitor_team_id: formData.visitorTeamId,
         game_nickname: formData.gameNickname,
         external_pool_id: formData.externalPoolId,
-        initial_credits: formData.initialCredits || 0,
         reward1_percent: formData.reward1_percent,
         reward2_percent: formData.reward2_percent,
         reward3_percent: formData.reward3_percent,
@@ -829,7 +832,7 @@ const CreateSquaresPool = () => {
               </InputField>
 
               <InputField label="Pool Type" required error={errors.poolType} colors={colors} isDark={isDark}>
-                <div className="space-x-3 space-y-3 md:space-y-0 flex flex-col md:flex-row">
+                <div className="space-x-3 space-y-3 md:space-y-0 flex flex-col md:flex-row flex-wrap">
                   <SelectButton
                     selected={formData.poolType === 'OPEN'}
                     onClick={() => handleChange('poolType', 'OPEN')}
@@ -839,6 +842,18 @@ const CreateSquaresPool = () => {
                     <div className="text-left">
                       <div className="font-bold">OPEN</div>
                       <div className="text-sm opacity-75">Anyone can join freely, no restrictions</div>
+                    </div>
+                  </SelectButton>
+
+                  <SelectButton
+                    selected={formData.poolType === 'CREDIT_OPEN'}
+                    onClick={() => handleChange('poolType', 'CREDIT_OPEN')}
+                    colors={colors}
+                    isDark={isDark}
+                  >
+                    <div className="text-left">
+                      <div className="font-bold">CREDIT OPEN</div>
+                      <div className="text-sm opacity-75">Players use credits to select squares, no password required</div>
                     </div>
                   </SelectButton>
 
@@ -856,32 +871,34 @@ const CreateSquaresPool = () => {
                 </div>
               </InputField>
 
+              {/* Password field - only for CREDIT type */}
               {formData.poolType === 'CREDIT' && (
-                <>
-                  <InputField label="Pool Password" required error={errors.poolPassword} colors={colors} isDark={isDark}>
-                    <input
-                      type="text"
-                      value={formData.poolPassword}
-                      onChange={(e) => handleChange('poolPassword', e.target.value)}
-                      className="w-full rounded-lg px-4 py-3 focus:outline-none focus:ring-2"
-                      style={inputStyles}
-                      placeholder="Enter pool password"
-                    />
-                  </InputField>
+                <InputField label="Pool Password" required error={errors.poolPassword} colors={colors} isDark={isDark}>
+                  <input
+                    type="text"
+                    value={formData.poolPassword}
+                    onChange={(e) => handleChange('poolPassword', e.target.value)}
+                    className="w-full rounded-lg px-4 py-3 focus:outline-none focus:ring-2"
+                    style={inputStyles}
+                    placeholder="Enter pool password"
+                  />
+                </InputField>
+              )}
 
-                  <InputField label="Initial Credits on Join" hint="Credits automatically given to users when they join (0-100)" colors={colors} isDark={isDark}>
-                    <input
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={formData.initialCredits}
-                      onChange={(e) => handleChange('initialCredits', parseInt(e.target.value) || 0)}
-                      className="w-full rounded-lg px-4 py-3 focus:outline-none focus:ring-2"
-                      style={inputStyles}
-                      placeholder="0"
-                    />
-                  </InputField>
-                </>
+              {/* Initial Credits field - for both CREDIT and CREDIT_OPEN types */}
+              {(formData.poolType === 'CREDIT' || formData.poolType === 'CREDIT_OPEN') && (
+                <InputField label="Initial Credits on Join" hint="Credits automatically given to users when they join (0-100)" colors={colors} isDark={isDark}>
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={formData.initialCredits}
+                    onChange={(e) => handleChange('initialCredits', parseInt(e.target.value) || 0)}
+                    className="w-full rounded-lg px-4 py-3 focus:outline-none focus:ring-2"
+                    style={inputStyles}
+                    placeholder="0"
+                  />
+                </InputField>
               )}
             </div>
           )}

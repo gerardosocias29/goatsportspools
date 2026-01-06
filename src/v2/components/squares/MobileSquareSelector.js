@@ -142,8 +142,8 @@ const MobileSquareSelector = ({
               </div>
             </div>
 
-            {/* Cost Summary (for CREDIT pools) */}
-            {poolType === 'CREDIT' && costPerSquare > 0 && (
+            {/* Cost Summary (for CREDIT and CREDIT_OPEN pools) */}
+            {(poolType === 'CREDIT' || poolType === 'CREDIT_OPEN') && costPerSquare > 0 && (
               <div
                 className="p-4 rounded-xl mb-4"
                 style={{
