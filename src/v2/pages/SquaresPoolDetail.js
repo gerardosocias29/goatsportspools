@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FiArrowLeft, FiCalendar, FiGrid, FiLock, FiUnlock, FiTrendingUp, FiAward, FiShare2, FiDownload, FiX, FiCreditCard, FiCheck, FiChevronDown, FiSettings, FiShuffle, FiArrowUp, FiLogOut } from 'react-icons/fi';
+import { FiArrowLeft, FiCalendar, FiGrid, FiLock, FiUnlock, FiTrendingUp, FiAward, FiShare2, FiDownload, FiX, FiCreditCard, FiCheck, FiChevronDown, FiSettings, FiShuffle, FiArrowUp, FiLogOut, FiKey } from 'react-icons/fi';
 import SquaresGrid from '../components/squares/SquaresGrid';
 import WinnersDisplay from '../components/squares/WinnersDisplay';
 import ConfirmModal from '../components/ui/ConfirmModal';
@@ -162,6 +162,9 @@ const SquaresPoolDetail = () => {
   const [descriptionExpanded, setDescriptionExpanded] = useState(false);
   const [rulesExpanded, setRulesExpanded] = useState(false);
   const [howItWorksExpanded, setHowItWorksExpanded] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [savingPassword, setSavingPassword] = useState(false);
 
   // Detect mobile device
   useEffect(() => {
@@ -541,6 +544,36 @@ const SquaresPoolDetail = () => {
         }
       },
     });
+  };
+
+  const handleChangePassword = () => {
+    setNewPassword(pool?.password || '');
+    setShowPasswordModal(true);
+  };
+
+  const handleSavePassword = async () => {
+    setSavingPassword(true);
+    try {
+      await axiosService.put(`/api/squares-pools/${poolId}/password`, {
+        password: newPassword || null
+      });
+      await loadPool(null, true);
+      setShowPasswordModal(false);
+      setNewPassword('');
+      showToast({
+        severity: 'success',
+        summary: 'Success',
+        detail: newPassword ? 'Password updated successfully' : 'Password removed'
+      });
+    } catch (error) {
+      showToast({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Failed to update password: ' + (error.response?.data?.message || error.message)
+      });
+    } finally {
+      setSavingPassword(false);
+    }
   };
 
   const extractPlayerId = (player) => {
@@ -1971,6 +2004,15 @@ const SquaresPoolDetail = () => {
                         <FiCreditCard size={16} /> Make Free
                       </button>
                     )}
+                    {/* Change Password - only for pool owner or superadmin */}
+                    {(isSuperAdmin || isPoolOwner) && (
+                      <button
+                        onClick={handleChangePassword}
+                        style={{ ...adminButtonStyle, justifyContent: 'center', width: '100%' }}
+                      >
+                        <FiKey size={16} /> {pool.password ? 'Change' : 'Set'} Password
+                      </button>
+                    )}
                   </div>
                 </div>
                 )}
@@ -3308,6 +3350,88 @@ const SquaresPoolDetail = () => {
         confirmText={leavingPool ? 'Leaving...' : 'Leave Pool'}
         variant="danger"
       />
+
+      {/* Change Password Modal */}
+      {showPasswordModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}
+          onClick={() => setShowPasswordModal(false)}
+        >
+          <div
+            className="rounded-2xl p-6 w-full max-w-md"
+            style={{ backgroundColor: colors.card, border: `1px solid ${colors.border}` }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold" style={{ color: colors.text }}>
+                {pool?.password ? 'Change Password' : 'Set Password'}
+              </h3>
+              <button
+                onClick={() => setShowPasswordModal(false)}
+                className="p-2 rounded-lg transition-colors"
+                style={{ color: colors.text, opacity: 0.6 }}
+              >
+                <FiX size={20} />
+              </button>
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-2" style={{ color: colors.text }}>
+                New Password
+              </label>
+              <input
+                type="text"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Enter new password (leave empty to remove)"
+                className="w-full rounded-lg px-4 py-3 focus:outline-none focus:ring-2"
+                style={{
+                  backgroundColor: isDark ? '#374151' : '#F3F4F6',
+                  color: colors.text,
+                  border: `1px solid ${colors.border}`,
+                }}
+              />
+              <p className="text-xs mt-2" style={{ color: colors.text, opacity: 0.6 }}>
+                Leave empty to remove password and make pool open to join.
+              </p>
+            </div>
+
+            {pool?.password && (
+              <div className="mb-4 p-3 rounded-lg" style={{ backgroundColor: isDark ? 'rgba(251, 191, 36, 0.1)' : 'rgba(251, 191, 36, 0.15)' }}>
+                <p className="text-sm" style={{ color: isDark ? '#FBBF24' : '#B45309' }}>
+                  Current password: <strong>{pool.password}</strong>
+                </p>
+              </div>
+            )}
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowPasswordModal(false)}
+                className="flex-1 px-4 py-3 rounded-xl font-semibold transition-all"
+                style={{
+                  backgroundColor: isDark ? '#374151' : '#E5E7EB',
+                  color: colors.text
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSavePassword}
+                disabled={savingPassword}
+                className="flex-1 px-4 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 disabled:opacity-60"
+                style={{
+                  backgroundColor: colors.brand.primary,
+                  color: '#fff',
+                }}
+              >
+                <FiKey size={18} />
+                {savingPassword ? 'Saving...' : 'Save Password'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
