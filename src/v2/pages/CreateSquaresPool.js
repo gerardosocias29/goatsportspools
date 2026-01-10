@@ -418,7 +418,7 @@ const CreateSquaresPool = () => {
         entry_fee: formData.poolType === 'OPEN' ? 0 : formData.costPerSquare,
         credit_cost: formData.poolType === 'OPEN' ? 0 : formData.costPerSquare,
         initial_credits: (formData.poolType === 'CREDIT' || formData.poolType === 'CREDIT_OPEN') ? (formData.initialCredits || 0) : 0,
-        custom_payout: formData.customPayout,
+        custom_payout: formData.customPayout || null,
         max_squares_per_player: formData.maxSquaresPerPlayer,
         close_datetime: toUTCString(formData.closeDate),
         number_assign_datetime: toUTCString(formData.numbersAssignDate),
