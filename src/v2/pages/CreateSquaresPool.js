@@ -832,7 +832,7 @@ const CreateSquaresPool = () => {
               </InputField>
 
               <InputField label="Pool Type" required error={errors.poolType} colors={colors} isDark={isDark}>
-                <div className="space-x-3 space-y-3 md:space-y-0 flex flex-col md:flex-row flex-wrap">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   <SelectButton
                     selected={formData.poolType === 'OPEN'}
                     onClick={() => handleChange('poolType', 'OPEN')}
@@ -841,7 +841,7 @@ const CreateSquaresPool = () => {
                   >
                     <div className="text-left">
                       <div className="font-bold">OPEN</div>
-                      <div className="text-sm opacity-75">Anyone can join freely, no restrictions</div>
+                      <div className="text-sm opacity-75">Free to join, no credits</div>
                     </div>
                   </SelectButton>
 
@@ -853,7 +853,7 @@ const CreateSquaresPool = () => {
                   >
                     <div className="text-left">
                       <div className="font-bold">CREDIT OPEN</div>
-                      <div className="text-sm opacity-75">Players use credits to select squares, no password required</div>
+                      <div className="text-sm opacity-75">Uses credits, no password</div>
                     </div>
                   </SelectButton>
 
@@ -865,7 +865,7 @@ const CreateSquaresPool = () => {
                   >
                     <div className="text-left">
                       <div className="font-bold">CREDIT</div>
-                      <div className="text-sm opacity-75">Requires password to join + players use credits to select squares</div>
+                      <div className="text-sm opacity-75">Uses credits + password</div>
                     </div>
                   </SelectButton>
                 </div>
