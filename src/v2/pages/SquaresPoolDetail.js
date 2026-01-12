@@ -547,7 +547,7 @@ const SquaresPoolDetail = () => {
   };
 
   const handleChangePassword = () => {
-    setNewPassword(pool?.password || '');
+    setNewPassword('');
     setShowPasswordModal(true);
   };
 
@@ -2010,7 +2010,7 @@ const SquaresPoolDetail = () => {
                         onClick={handleChangePassword}
                         style={{ ...adminButtonStyle, justifyContent: 'center', width: '100%' }}
                       >
-                        <FiKey size={16} /> {pool.password ? 'Change' : 'Set'} Password
+                        <FiKey size={16} /> {pool.has_password ? 'Change' : 'Set'} Password
                       </button>
                     )}
                   </div>
@@ -2743,12 +2743,12 @@ const SquaresPoolDetail = () => {
           >
             <h2 className="text-2xl font-bold mb-2" style={{ color: colors.text }}>Join Pool</h2>
             <p className="mb-6" style={{ color: colors.text, opacity: 0.7 }}>
-              {pool.password || pool.has_password
+              {pool.has_password
                 ? 'Enter the pool password to join'
                 : 'Click join to enter this pool'}
             </p>
 
-            {(pool.password || pool.has_password) && (
+            {pool.has_password && (
               <div className="mb-6">
                 <label className="block font-medium mb-2" style={{ color: colors.text }}>
                   Pool Password
@@ -3365,7 +3365,7 @@ const SquaresPoolDetail = () => {
           >
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-bold" style={{ color: colors.text }}>
-                {pool?.password ? 'Change Password' : 'Set Password'}
+                {pool?.has_password ? 'Change Password' : 'Set Password'}
               </h3>
               <button
                 onClick={() => setShowPasswordModal(false)}
@@ -3397,10 +3397,10 @@ const SquaresPoolDetail = () => {
               </p>
             </div>
 
-            {pool?.password && (
+            {pool?.has_password && (
               <div className="mb-4 p-3 rounded-lg" style={{ backgroundColor: isDark ? 'rgba(251, 191, 36, 0.1)' : 'rgba(251, 191, 36, 0.15)' }}>
                 <p className="text-sm" style={{ color: isDark ? '#FBBF24' : '#B45309' }}>
-                  Current password: <strong>{pool.password}</strong>
+                  This pool currently has a password set.
                 </p>
               </div>
             )}

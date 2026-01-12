@@ -473,7 +473,7 @@ const JoinPoolModal = ({ isOpen, onClose, onSuccess }) => {
                       This pool is closed and not accepting new players
                     </div>
                   )}
-                  {(poolInfo.has_password || poolInfo.password) && poolInfo.pool_status !== 'closed' && !poolInfo.already_joined && (
+                  {poolInfo.has_password && poolInfo.pool_status !== 'closed' && !poolInfo.already_joined && (
                     <div style={{ fontSize: '0.75rem', color: colors.brand.primary, marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                       <FiKey size={12} />
                       Password required
@@ -484,7 +484,7 @@ const JoinPoolModal = ({ isOpen, onClose, onSuccess }) => {
 
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: colors.text }}>
-                  Password {(poolInfo?.has_password || poolInfo?.password) ? '*' : '(if required)'}
+                  Password {poolInfo?.has_password ? '*' : '(if required)'}
                 </label>
                 <input
                   type="password"
