@@ -31,6 +31,8 @@ const CreditRequests = lazy(() => import('./pages/CreditRequests'));
 const About = lazy(() => import('./pages/About'));
 const Legal = lazy(() => import('./pages/Legal'));
 const Help = lazy(() => import('./pages/Help'));
+const ManageAuction = lazy(() => import('./pages/admin/ManageAuction'));
+const AdminBidding = lazy(() => import('./pages/admin/AdminBidding'));
 
 
 
@@ -324,7 +326,17 @@ const V2AppContent = () => {
                     path="/admin/auction"
                     element={
                       isSignedIn && user?.role_id === 1 ? (
-                        <ComingSoon title="Manage Auction" />
+                        <ManageAuction />
+                      ) : (
+                        <Navigate to="/" replace />
+                      )
+                    }
+                  />
+                  <Route
+                    path="/admin/auction/live"
+                    element={
+                      isSignedIn && user?.role_id === 1 ? (
+                        <AdminBidding channel={channel} />
                       ) : (
                         <Navigate to="/" replace />
                       )

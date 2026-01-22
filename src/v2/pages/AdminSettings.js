@@ -25,7 +25,7 @@ const AdminSettings = () => {
       description: 'Configure auction settings, manage bids, and control live auctions',
       icon: <FiShield size={48} />,
       path: '/admin/auction',
-      available: false,
+      available: true,
     },
     {
       title: 'Manage Teams',

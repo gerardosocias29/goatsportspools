@@ -1,9 +1,11 @@
 import React from "react";
 import { BrowserRouter as Router, Route, Routes, Navigate } from "react-router-dom";
 import V2App from "../../v2/V2App";
+import V3App from "../../v3/V3App";
 
 // ============================================
-// V1 ROUTES ARCHIVED - Now using V2 as root
+// V1 ROUTES ARCHIVED - Now using V2 as default
+// V3 is available at /v3/* path
 // ============================================
 // The following v1 imports and routes have been archived:
 // - SignUp, LogIn (../pages/auth/Signup, Login)
@@ -21,11 +23,11 @@ const AppRouter = () => {
   return (
     <Router>
       <Routes>
-        {/* V2 is now the root - all routes handled by V2App */}
-        <Route path="/*" element={<V2App />} />
+        {/* V3 - New template with landing page style (accessible at /v3/*) */}
+        <Route path="/v3/*" element={<V3App />} />
 
-        {/* Redirect old v2 paths to root (for backwards compatibility) */}
-        <Route path="/v2/*" element={<Navigate to="/" replace />} />
+        {/* V2 is the default root - all other routes handled by V2App */}
+        <Route path="/*" element={<V2App />} />
       </Routes>
     </Router>
   );
