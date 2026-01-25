@@ -11,7 +11,7 @@ const SignInPage = () => {
 
   // Get return URL from URL params (preferred) or location state (fallback)
   const redirectUrl = searchParams.get('redirect_url');
-  const returnTo = redirectUrl ? decodeURIComponent(redirectUrl) : (location.state?.returnTo || '/v2/dashboard');
+  const returnTo = redirectUrl ? decodeURIComponent(redirectUrl) : (location.state?.returnTo || '/dashboard');
 
   const containerStyles = {
     minHeight: '100vh',
@@ -63,22 +63,22 @@ const SignInPage = () => {
     <div style={containerStyles}>
       <div style={contentStyles} className="v2-fade-in">
         {/* Logo and Brand */}
-        <div style={logoContainerStyles} onClick={() => navigate('/v2')}>
+        <div style={logoContainerStyles} onClick={() => navigate('/')}>
           <div style={logoStyles}>
             <img
-              src="/assets/images/favicon.png"
-              alt="GoatSportsPools"
+              src="/img/v2_logo.png"
+              alt="OKRNG"
               style={{ height: '48px', width: 'auto' }}
             />
-            <span style={logoTextStyles}>GoatSportsPools</span>
+            <span style={logoTextStyles}>OKRNG</span>
           </div>
         </div>
 
         {/* Clerk SignIn Component */}
         <SignIn
-          path="/v2/sign-in"
+          path="/sign-in"
           routing="path"
-          signUpUrl="/v2/sign-up"
+          signUpUrl="/sign-up"
           afterSignInUrl={returnTo}
           appearance={{
             elements: {

@@ -85,9 +85,9 @@ const SquaresPool = () => {
   const handlePurchase = () => {
     if (selectedSquares.length === 0) return;
     
-    const cost = selectedSquares.length * 5; // $5 per square
+    const cost = selectedSquares.length * 5; // 5 per square
     const confirmPurchase = window.confirm(
-      `Purchase ${selectedSquares.length} square(s) for $${cost}?`
+      `Purchase ${selectedSquares.length} square(s) for ${cost}?`
     );
     
     if (confirmPurchase) {
@@ -190,7 +190,7 @@ const SquaresPool = () => {
         <div className="bg-gradient-to-r from-yellow-50 to-yellow-100 border-2 border-yellow-300 rounded-xl p-6 mb-6">
           <div className="flex items-center gap-3 mb-4">
             <span className="text-3xl">🏆</span>
-            <h2 className="text-xl font-bold text-gray-900">Prize Pool: ${prizePool}</h2>
+            <h2 className="text-xl font-bold text-gray-900">Prize Pool: {prizePool}</h2>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {Object.entries(quarterPrizes).map(([quarter, prize]) => (
@@ -199,7 +199,7 @@ const SquaresPool = () => {
                 className="bg-white rounded-lg p-4 text-center border border-yellow-200 shadow-sm"
               >
                 <div className="text-sm font-semibold text-gray-600 mb-1">{quarter}</div>
-                <div className="text-2xl font-bold text-yellow-600">${prize}</div>
+                <div className="text-2xl font-bold text-yellow-600">{prize}</div>
               </div>
             ))}
           </div>
@@ -364,7 +364,7 @@ const SquaresPool = () => {
               <span className="text-xl">🛒</span>
               <span className="text-xs">Purchase</span>
               <span className="text-sm font-bold">{selectedSquares.length} sq</span>
-              <span className="text-xs">${selectedSquares.length * 5}</span>
+              <span className="text-xs">{selectedSquares.length * 5}</span>
             </button>
           </div>
         </div>
@@ -424,7 +424,7 @@ const SquaresPool = () => {
             </h3>
             <div className="space-y-3 text-gray-700">
               <p><strong>1.</strong> Select up to {maxSelectable} squares on the grid by clicking on available (white) squares.</p>
-              <p><strong>2.</strong> Each square costs $5. Purchase your selected squares.</p>
+              <p><strong>2.</strong> Each square costs 5. Purchase your selected squares.</p>
               <p><strong>3.</strong> Numbers (0-9) are randomly assigned to each team after all squares are filled.</p>
               <p><strong>4.</strong> Winners are determined by the last digit of each team's score at the end of each quarter.</p>
               <p><strong>5.</strong> Find where the two numbers intersect on the grid - that square wins the quarter prize!</p>

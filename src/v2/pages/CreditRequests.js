@@ -4,6 +4,7 @@ import { FiArrowLeft, FiCreditCard, FiAlertCircle } from 'react-icons/fi';
 import { useUserContext } from '../contexts/UserContext';
 import { useAxios } from '../../app/contexts/AxiosContext';
 import { useTheme } from '../contexts/ThemeContext';
+import { useToast } from '../../app/contexts/ToastContext';
 import SquaresApiService from '../services/squaresApiService';
 import StatusBadge from '../components/ui/StatusBadge';
 
@@ -17,6 +18,7 @@ const CreditRequests = () => {
   const axiosService = useAxios();
   const squaresApiService = useMemo(() => new SquaresApiService(axiosService), [axiosService]);
   const { colors, isDark } = useTheme();
+  const { showToast } = useToast();
 
   const [loading, setLoading] = useState(true);
   const [poolRequests, setPoolRequests] = useState([]);
@@ -31,7 +33,7 @@ const CreditRequests = () => {
 
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
-      navigate('/v2/sign-in', { state: { returnTo: '/v2/credit-requests' } });
+      navigate('/sign-in', { state: { returnTo: '/credit-requests' } });
     }
   }, [isSignedIn, isLoaded, navigate]);
 
@@ -59,12 +61,12 @@ const CreditRequests = () => {
   const handleRequestCredits = async () => {
     const amount = parseFloat(requestAmount);
     if (isNaN(amount) || amount <= 0) {
-      alert('Please enter a valid amount greater than zero.');
+      showToast({ severity: 'warn', summary: 'Invalid Amount', detail: 'Please enter a valid amount greater than zero.' });
       return;
     }
 
     if (!requestReason.trim()) {
-      alert('Please provide a reason for the request.');
+      showToast({ severity: 'warn', summary: 'Reason Required', detail: 'Please provide a reason for the request.' });
       return;
     }
 
@@ -72,16 +74,16 @@ const CreditRequests = () => {
     try {
       const response = await squaresApiService.requestCreditsFromSuperadmin(amount, requestReason);
       if (response.success) {
-        alert('Credit request submitted successfully!');
+        showToast({ severity: 'success', summary: 'Success', detail: 'Credit request submitted successfully!' });
         setShowRequestModal(false);
         setRequestAmount('');
         setRequestReason('');
         await loadCreditRequests();
       } else {
-        alert(response.error || 'Failed to submit request');
+        showToast({ severity: 'error', summary: 'Error', detail: response.error || 'Failed to submit request' });
       }
     } catch (error) {
-      alert('Failed to submit request: ' + (error.message || 'Unknown error'));
+      showToast({ severity: 'error', summary: 'Error', detail: 'Failed to submit request: ' + (error.message || 'Unknown error') });
     } finally {
       setSubmitting(false);
     }
@@ -99,7 +101,7 @@ const CreditRequests = () => {
   };
 
   const formatCurrency = (amount) => {
-    return `$${parseFloat(amount || 0).toFixed(2)}`;
+    return `${parseFloat(amount || 0).toFixed(2)}`;
   };
 
   if (!isLoaded || loading) {

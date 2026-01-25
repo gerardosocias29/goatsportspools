@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiPlus, FiEdit2, FiTrash2, FiCheck, FiX, FiCalendar, FiDownload, FiUpload, FiTrendingUp } from 'react-icons/fi';
+import { FiPlus, FiEdit2, FiTrash2, FiCheck, FiX, FiCalendar, FiDownload, FiUpload, FiTrendingUp, FiArrowLeft } from 'react-icons/fi';
 import { useAxios } from '../../app/contexts/AxiosContext';
 import { useTheme } from '../contexts/ThemeContext';
 import GameScoresModal from '../components/game/GameScoresModal';
+import ConfirmModal from '../components/ui/ConfirmModal';
+import { toUTCString, toLocalInputString } from '../utils/timezone';
 
 /**
  * Manage Games Page - V2 Implementation
@@ -12,25 +14,46 @@ import GameScoresModal from '../components/game/GameScoresModal';
  */
 const ManageGames = () => {
   const navigate = useNavigate();
+  const { get, post, put, delete: del } = useAxios();
   const axiosService = useAxios();
   const { colors, isDark } = useTheme();
   const [games, setGames] = useState([]);
-  const [teams, setTeams] = useState([]);
+  const [allTeams, setAllTeams] = useState([]); // All teams from API
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editingGame, setEditingGame] = useState(null);
   const [message, setMessage] = useState(null);
   const [showScoresModal, setShowScoresModal] = useState(false);
   const [selectedGameForScores, setSelectedGameForScores] = useState(null);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importFile, setImportFile] = useState(null);
+  const [importing, setImporting] = useState(false);
+
+  // Confirm modal states
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    confirmText: 'Confirm',
+    variant: 'warning',
+    onConfirm: () => {},
+  });
 
   // Form state - matches V1 structure
   const [formData, setFormData] = useState({
     game_datetime: '',
+    league: 'NFL',
     home_team: null,
     visitor_team: null,
     favored_team: null,
     underdog_team: null,
   });
+
+  // Filter teams by selected league for the form dropdowns
+  const teams = useMemo(() => {
+    if (!formData.league) return allTeams;
+    return allTeams.filter(t => !t.league || t.league === formData.league);
+  }, [allTeams, formData.league]);
 
   useEffect(() => {
     loadGames();
@@ -61,7 +84,7 @@ const ManageGames = () => {
   const loadTeams = async () => {
     try {
       const response = await axiosService.get('/api/teams');
-      setTeams(response.data);
+      setAllTeams(response.data);
     } catch (error) {
       console.error('Error loading teams:', error);
       setMessage({ type: 'error', text: 'Failed to load teams. Please try again.' });
@@ -74,9 +97,15 @@ const ManageGames = () => {
     setMessage(null);
 
     try {
+      // Convert game_datetime to UTC before sending to backend
+      const requestData = {
+        ...formData,
+        game_datetime: toUTCString(formData.game_datetime)
+      };
+
       const response = editingGame
-        ? await axiosService.post(`/api/games/update/${editingGame.id}`, formData)
-        : await axiosService.post('/api/games/create', formData);
+        ? await axiosService.post(`/api/games/update/${editingGame.id}`, requestData)
+        : await axiosService.post('/api/games/create', requestData);
 
       if (response.data.status) {
         setMessage({ type: 'success', text: response.data.message || 'Game saved successfully!' });
@@ -106,12 +135,13 @@ const ManageGames = () => {
 
     setEditingGame(game);
 
-    // Find team objects from teams array
-    const homeTeamObj = teams.find(t => t.name === game.home_team?.name || t.name === game.home_team);
-    const visitorTeamObj = teams.find(t => t.name === game.visitor_team?.name || t.name === game.visitor_team);
+    // Find team objects from allTeams array (not filtered teams)
+    const homeTeamObj = allTeams.find(t => t.name === game.home_team?.name || t.name === game.home_team);
+    const visitorTeamObj = allTeams.find(t => t.name === game.visitor_team?.name || t.name === game.visitor_team);
 
     setFormData({
-      game_datetime: game.game_datetime?.substring(0, 16) || '',
+      game_datetime: toLocalInputString(game.game_datetime),
+      league: game.league || 'NFL',
       home_team: homeTeamObj || null,
       visitor_team: visitorTeamObj || null,
       favored_team: homeTeamObj || null,
@@ -120,7 +150,7 @@ const ManageGames = () => {
     setShowModal(true);
   };
 
-  const handleDelete = async (gameId) => {
+  const handleDelete = (gameId) => {
     // Find the game to check its status
     const game = games.find(g => g.id === gameId);
     if (game && game.game_status === 'Final') {
@@ -129,28 +159,90 @@ const ManageGames = () => {
       return;
     }
 
-    if (!window.confirm('Are you sure you want to delete this game?')) return;
-
-    try {
-      const response = await axiosService.delete(`/api/games/${gameId}`);
-      setMessage({ type: 'success', text: 'Game deleted successfully!' });
-      loadGames();
-      setTimeout(() => setMessage(null), 3000);
-    } catch (error) {
-      console.error('Error deleting game:', error);
-      setMessage({ type: 'error', text: error.response?.data?.message || 'An error occurred while deleting the game' });
-    }
+    setConfirmModal({
+      isOpen: true,
+      title: 'Delete Game',
+      message: 'Are you sure you want to delete this game? This action cannot be undone.',
+      confirmText: 'Delete',
+      variant: 'danger',
+      onConfirm: async () => {
+        setConfirmModal(prev => ({ ...prev, isOpen: false }));
+        try {
+          await axiosService.delete(`/api/games/${gameId}`);
+          setMessage({ type: 'success', text: 'Game deleted successfully!' });
+          loadGames();
+          setTimeout(() => setMessage(null), 3000);
+        } catch (error) {
+          console.error('Error deleting game:', error);
+          setMessage({ type: 'error', text: error.response?.data?.message || 'An error occurred while deleting the game' });
+        }
+      },
+    });
   };
 
   const resetForm = () => {
     setFormData({
       game_datetime: '',
+      league: 'NFL',
       home_team: null,
       visitor_team: null,
       favored_team: null,
       underdog_team: null,
     });
     setEditingGame(null);
+  };
+
+  // Download CSV template for importing games
+  const downloadTemplate = () => {
+    const headers = ['league', 'game_datetime', 'home_team', 'visitor_team'];
+    const exampleRows = [
+      ['NFL', '2025-01-01 19:00', 'Kansas City Chiefs', 'Buffalo Bills'],
+      ['NBA', '2025-01-02 20:30', 'Los Angeles Lakers', 'Boston Celtics'],
+      ['NCAAF', '2025-01-01 15:00', 'Ohio State Buckeyes', 'Oregon Ducks'],
+    ];
+
+    const csvContent = [
+      headers.join(','),
+      ...exampleRows.map(row => row.join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'games_import_template.csv';
+    link.click();
+    URL.revokeObjectURL(link.href);
+  };
+
+  // Handle file import
+  const handleImportGames = async () => {
+    if (!importFile) {
+      setMessage({ type: 'error', text: 'Please select a file to import' });
+      return;
+    }
+
+    setImporting(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', importFile);
+
+      const response = await axiosService.post('/api/games/import', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+
+      if (response.data?.status) {
+        setMessage({ type: 'success', text: `Successfully imported ${response.data.imported || 0} games` });
+        setShowImportModal(false);
+        setImportFile(null);
+        loadGames();
+      } else {
+        setMessage({ type: 'error', text: response.data?.message || 'Import failed' });
+      }
+    } catch (error) {
+      setMessage({ type: 'error', text: error.response?.data?.message || 'Failed to import games' });
+    } finally {
+      setImporting(false);
+    }
   };
 
   const handleOpenScores = (game) => {
@@ -160,7 +252,7 @@ const ManageGames = () => {
 
   const handleSaveScores = async (gameId, scores) => {
     try {
-      const response = await axiosService.put(`/api/games/${gameId}/scores`, scores);
+      const response = await put(`/api/games/${gameId}/scores`, scores);
       setMessage({ type: 'success', text: 'Game scores updated successfully!' });
       loadGames();
       setTimeout(() => setMessage(null), 3000);
@@ -205,26 +297,48 @@ const ManageGames = () => {
 
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-6" style={{ color: colors.text }}>Game Management</h1>
+          <div className="flex items-center gap-4 mb-6">
+            <button
+              onClick={() => navigate(-1)}
+              className="flex items-center justify-center transition-all hover:scale-105"
+              style={{
+                backgroundColor: colors.card,
+                border: `1px solid ${colors.border}`,
+                color: colors.text,
+                width: '42px',
+                height: '42px',
+                borderRadius: '12px',
+              }}
+            >
+              <FiArrowLeft size={18} />
+            </button>
+            <h1 className="text-4xl font-bold" style={{ color: colors.text }}>Game Management</h1>
+          </div>
 
           <div className="flex flex-wrap gap-4 items-center justify-between">
             {/* Import/Export Buttons (Disabled) */}
             <div className="flex gap-3">
               <button
-                disabled
-                className="flex items-center gap-2 px-4 py-2 bg-gray-700/50 text-gray-400 rounded-lg cursor-not-allowed opacity-50"
-                title="Import functionality coming soon"
+                onClick={() => setShowImportModal(true)}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all"
+                style={{
+                  backgroundColor: isDark ? '#374151' : '#E5E7EB',
+                  color: colors.text,
+                }}
               >
                 <FiUpload size={18} />
                 Import Games
               </button>
               <button
-                disabled
-                className="flex items-center gap-2 px-4 py-2 bg-gray-700/50 text-gray-400 rounded-lg cursor-not-allowed opacity-50"
-                title="Export functionality coming soon"
+                onClick={downloadTemplate}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all"
+                style={{
+                  backgroundColor: isDark ? '#374151' : '#E5E7EB',
+                  color: colors.text,
+                }}
               >
                 <FiDownload size={18} />
-                Export CSV
+                Download Template
               </button>
             </div>
 
@@ -279,37 +393,27 @@ const ManageGames = () => {
                         })}
                       </span>
                     </div>
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                      game.game_status === 'Final'
-                        ? 'bg-green-500/20 text-green-300'
-                        : 'bg-yellow-500/20 text-yellow-300'
-                    }`}>
-                      {game.game_status || 'Scheduled'}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      {game.league && (
+                        <span className="px-2 py-1 rounded-full text-xs font-semibold bg-white/20 text-white">
+                          {game.league === 'NFL' && '🏈 '}{game.league === 'NBA' && '🏀 '}{game.league === 'PBA' && '🎳 '}{game.league}
+                        </span>
+                      )}
+                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                        game.game_status === 'Final'
+                          ? 'bg-green-500/20 text-green-300'
+                          : 'bg-yellow-500/20 text-yellow-300'
+                      }`}>
+                        {game.game_status || 'Scheduled'}
+                      </span>
+                    </div>
                   </div>
                 </div>
 
                 {/* Teams */}
                 <div className="p-6">
-                  {/* Home Team */}
+                  {/* Visitor Team (displayed first) */}
                   <div className="flex items-center gap-3 mb-4 pb-4" style={{ borderBottom: `1px solid ${colors.border}` }}>
-                    {game.home_team?.image_url && (
-                      <img
-                        src={game.home_team.image_url}
-                        alt={game.home_team.name}
-                        className="w-12 h-12 object-contain"
-                      />
-                    )}
-                    <div className="flex-1">
-                      <p className="font-semibold" style={{ color: colors.text }}>
-                        {game.home_team?.name || game.home_team}
-                      </p>
-                      <p className="text-sm" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>Home</p>
-                    </div>
-                  </div>
-
-                  {/* Visitor Team */}
-                  <div className="flex items-center gap-3">
                     {game.visitor_team?.image_url && (
                       <img
                         src={game.visitor_team.image_url}
@@ -322,6 +426,23 @@ const ManageGames = () => {
                         {game.visitor_team?.name || game.visitor_team}
                       </p>
                       <p className="text-sm" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>Visitor</p>
+                    </div>
+                  </div>
+
+                  {/* Home Team (displayed last) */}
+                  <div className="flex items-center gap-3">
+                    {game.home_team?.image_url && (
+                      <img
+                        src={game.home_team.image_url}
+                        alt={game.home_team.name}
+                        className="w-12 h-12 object-contain"
+                      />
+                    )}
+                    <div className="flex-1">
+                      <p className="font-semibold" style={{ color: colors.text }}>
+                        {game.home_team?.name || game.home_team}
+                      </p>
+                      <p className="text-sm" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>Home</p>
                     </div>
                   </div>
                 </div>
@@ -402,6 +523,30 @@ const ManageGames = () => {
               </h2>
 
               <form onSubmit={handleSubmit}>
+                {/* League Selection */}
+                <div className="mb-6">
+                  <label className="block font-semibold mb-2" style={{ color: colors.text }}>
+                    League *
+                  </label>
+                  <div className="flex flex-wrap gap-3">
+                    {['NFL', 'NBA', 'PBA', 'NCAAF'].map(league => (
+                      <button
+                        key={league}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, league })}
+                        className="px-4 py-3 rounded-lg font-semibold transition-all"
+                        style={{
+                          backgroundColor: formData.league === league ? colors.brand.primary : (isDark ? '#374151' : '#E5E7EB'),
+                          color: formData.league === league ? '#FFFFFF' : colors.text,
+                          border: `2px solid ${formData.league === league ? colors.brand.primary : colors.border}`,
+                        }}
+                      >
+                        {league === 'NFL' && '🏈 '}{league === 'NBA' && '🏀 '}{league === 'PBA' && '🎳 '}{league === 'NCAAF' && '🏈 '}{league}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 {/* Game Date & Time */}
                 <div className="mb-6">
                   <label className="block font-semibold mb-2" style={{ color: colors.text }}>
@@ -422,40 +567,7 @@ const ManageGames = () => {
                   />
                 </div>
 
-                {/* Home Team */}
-                <div className="mb-6">
-                  <label className="block font-semibold mb-2" style={{ color: colors.text }}>
-                    Home Team *
-                  </label>
-                  <select
-                    value={formData.home_team?.id || ''}
-                    onChange={(e) => {
-                      const team = teams.find(t => t.id === parseInt(e.target.value));
-                      setFormData({
-                        ...formData,
-                        home_team: team,
-                        favored_team: team
-                      });
-                    }}
-                    className="w-full px-4 py-3 rounded-lg focus:ring-2 focus:border-transparent"
-                    style={{
-                      backgroundColor: isDark ? '#374151' : '#F3F4F6',
-                      border: `1px solid ${colors.border}`,
-                      color: colors.text,
-                      outlineColor: colors.brand.primary
-                    }}
-                    required
-                  >
-                    <option value="">Select Home Team</option>
-                    {getAvailableHomeTeams().map(team => (
-                      <option key={team.id} value={team.id}>
-                        {team.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Visitor Team */}
+                {/* Visitor Team (displayed first) */}
                 <div className="mb-6">
                   <label className="block font-semibold mb-2" style={{ color: colors.text }}>
                     Visitor Team *
@@ -481,6 +593,39 @@ const ManageGames = () => {
                   >
                     <option value="">Select Visitor Team</option>
                     {getAvailableVisitorTeams().map(team => (
+                      <option key={team.id} value={team.id}>
+                        {team.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Home Team (displayed last) */}
+                <div className="mb-6">
+                  <label className="block font-semibold mb-2" style={{ color: colors.text }}>
+                    Home Team *
+                  </label>
+                  <select
+                    value={formData.home_team?.id || ''}
+                    onChange={(e) => {
+                      const team = teams.find(t => t.id === parseInt(e.target.value));
+                      setFormData({
+                        ...formData,
+                        home_team: team,
+                        favored_team: team
+                      });
+                    }}
+                    className="w-full px-4 py-3 rounded-lg focus:ring-2 focus:border-transparent"
+                    style={{
+                      backgroundColor: isDark ? '#374151' : '#F3F4F6',
+                      border: `1px solid ${colors.border}`,
+                      color: colors.text,
+                      outlineColor: colors.brand.primary
+                    }}
+                    required
+                  >
+                    <option value="">Select Home Team</option>
+                    {getAvailableHomeTeams().map(team => (
                       <option key={team.id} value={team.id}>
                         {team.name}
                       </option>
@@ -525,6 +670,93 @@ const ManageGames = () => {
             }}
             onSave={handleSaveScores}
           />
+        )}
+
+        {/* Confirm Modal */}
+        <ConfirmModal
+          isOpen={confirmModal.isOpen}
+          onClose={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+          onConfirm={confirmModal.onConfirm}
+          title={confirmModal.title}
+          message={confirmModal.message}
+          confirmText={confirmModal.confirmText}
+          variant={confirmModal.variant}
+        />
+
+        {/* Import Modal */}
+        {showImportModal && (
+          <div
+            className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4"
+            onClick={() => {
+              setShowImportModal(false);
+              setImportFile(null);
+            }}
+          >
+            <div
+              className="rounded-xl p-8 max-w-lg w-full"
+              style={{ backgroundColor: colors.card, border: `2px solid ${colors.brand.primary}` }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h2 className="text-2xl font-bold mb-6" style={{ color: colors.text }}>
+                Import Games
+              </h2>
+
+              <div className="mb-6">
+                <p className="mb-4" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>
+                  Upload a CSV file with the following columns: <code style={{ color: colors.brand.primary }}>league, game_datetime, home_team, visitor_team</code>
+                </p>
+                <p className="text-sm mb-4" style={{ color: isDark ? '#6B7280' : '#9CA3AF' }}>
+                  Note: game_datetime should be in UTC (e.g., 2025-02-10 00:30 for 7:30 PM EST). Teams not found will be auto-created.
+                </p>
+                <p className="text-sm mb-4" style={{ color: isDark ? '#6B7280' : '#9CA3AF' }}>
+                  Use the "Download Template" button to get a sample CSV file with the correct format.
+                </p>
+
+                <input
+                  type="file"
+                  accept=".csv"
+                  onChange={(e) => setImportFile(e.target.files[0])}
+                  className="w-full px-4 py-3 rounded-lg"
+                  style={{
+                    backgroundColor: isDark ? '#374151' : '#F3F4F6',
+                    border: `1px solid ${colors.border}`,
+                    color: colors.text,
+                  }}
+                />
+                {importFile && (
+                  <p className="mt-2 text-sm" style={{ color: colors.brand.primary }}>
+                    Selected: {importFile.name}
+                  </p>
+                )}
+              </div>
+
+              <div className="flex gap-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowImportModal(false);
+                    setImportFile(null);
+                  }}
+                  className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-semibold transition-colors duration-200"
+                >
+                  <FiX size={20} />
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleImportGames}
+                  disabled={!importFile || importing}
+                  className="flex-1 flex items-center justify-center gap-2 px-6 py-3 text-white rounded-lg font-semibold shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ backgroundColor: colors.brand.primary }}
+                  onMouseOver={(e) => !importing && importFile && (e.currentTarget.style.backgroundColor = colors.brand.primaryHover)}
+                  onMouseOut={(e) => !importing && importFile && (e.currentTarget.style.backgroundColor = colors.brand.primary)}
+                >
+                  <FiUpload size={20} />
+                  {importing ? 'Importing...' : 'Import'}
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </div>

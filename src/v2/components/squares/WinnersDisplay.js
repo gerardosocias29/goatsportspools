@@ -1,5 +1,5 @@
 import React from 'react';
-import { FiAward, FiDollarSign, FiTrendingUp } from 'react-icons/fi';
+import { FiAward, FiTrendingUp } from 'react-icons/fi';
 import { useTheme } from '../../contexts/ThemeContext';
 import StatusBadge from '../ui/StatusBadge';
 
@@ -59,14 +59,20 @@ const WinnersDisplay = ({ pool, winners, game }) => {
 
   // Group winners by quarter
   const winnersByQuarter = winners.reduce((acc, winner) => {
-    const quarter = winner.quarter || winner.Quarter;
+    let quarter = winner.quarter || winner.Quarter;
+
+    // Convert numeric quarter to string format
+    if (typeof quarter === 'number') {
+      quarter = quarter === 2 ? 'Half' : quarter === 4 ? 'Final' : `Q${quarter}`;
+    }
+
     if (!acc[quarter]) acc[quarter] = [];
     acc[quarter].push(winner);
     return acc;
   }, {});
 
   // Define quarter order
-  const quarterOrder = ['Q1', 'Q2', 'Half', 'Q3', 'Q4', 'Final'];
+  const quarterOrder = ['Q1', 'Half', 'Q3', 'Final'];
   const sortedQuarters = quarterOrder.filter(q => winnersByQuarter[q]);
 
   return (
@@ -136,25 +142,30 @@ const WinnersDisplay = ({ pool, winners, game }) => {
                           <FiAward className="text-white" size={24} />
                         </div>
                         <div>
-                          <p className="font-semibold text-lg" style={{ color: colors.text }}>
-                            {winner.player_name || winner.PlayerName || 'Unknown Player'}
+                          <p className="font-semibold text-lg" style={{ color: winner.player_id ? colors.text : colors.error }}>
+                            {winner.player_id
+                              ? (winner.player_name || winner.player?.name || winner.PlayerName || 'Unknown Player')
+                              : 'No Winner (Unclaimed)'}
                           </p>
                           <p className="text-sm" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>
-                            Square: ({winner.x_number ?? winner.XNumber}, {winner.y_number ?? winner.YNumber})
+                            Square: ({winner.square?.x_coordinate ?? winner.x_coordinate ?? winner.x_number ?? winner.XNumber ?? '?'}, {winner.square?.y_coordinate ?? winner.y_coordinate ?? winner.y_number ?? winner.YNumber ?? '?'})
                           </p>
                         </div>
                       </div>
                       <div className="text-right">
                         <div className="flex items-center gap-2">
-                          <FiDollarSign style={{ color: colors.brand.primary }} size={20} />
-                          <span className="text-2xl font-bold" style={{ color: colors.brand.primary }}>
-                            ${parseFloat(winner.win_amount || winner.WinAmount || 0).toFixed(2)}
+                          <span className="text-2xl font-bold" style={{ color: winner.player_id ? colors.brand.primary : colors.error }}>
+                            {parseFloat(winner.prize_amount || winner.win_amount || winner.WinAmount || 0).toFixed(2)}
                           </span>
                         </div>
-                        {winner.is_paid || winner.IsPaid ? (
-                          <StatusBadge status="paid" label="Paid" />
-                        ) : (
-                          <StatusBadge status="pending" label="Pending" />
+                        {winner.player_id && (
+                          <>
+                            {winner.is_paid || winner.IsPaid ? (
+                              <StatusBadge status="paid" label="Paid" />
+                            ) : (
+                              <StatusBadge status="pending" label="Pending" />
+                            )}
+                          </>
                         )}
                       </div>
                     </div>
@@ -209,14 +220,14 @@ const WinnersDisplay = ({ pool, winners, game }) => {
                 className="w-12 h-12 rounded-full flex items-center justify-center"
                 style={{ backgroundColor: colors.brand.primary }}
               >
-                <FiDollarSign className="text-white" size={24} />
+                <FiAward className="text-white" size={24} />
               </div>
               <div>
                 <p className="text-sm" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>
                   Total Prizes Awarded
                 </p>
                 <p className="text-3xl font-bold" style={{ color: colors.text }}>
-                  ${winners.reduce((sum, w) => sum + parseFloat(w.win_amount || w.WinAmount || 0), 0).toFixed(2)}
+                  {winners.reduce((sum, w) => sum + parseFloat(w.win_amount || w.WinAmount || 0), 0).toFixed(2)}
                 </p>
               </div>
             </div>

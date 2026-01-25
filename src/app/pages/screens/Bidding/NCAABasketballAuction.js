@@ -124,7 +124,7 @@ const NCAABasketballAuction = ({ pusher, channel }) => {
           userAuctionedItems.map((item) => (
             <div key={item.id} className="p-4 border-b text-xs">
               <p>
-                <span className="p-2 rounded-lg border bg-gray-100">{item.name}</span> - Sold for <span className="text-green-600 font-bold">${Number(item.sold_amount).toFixed(2)}</span>
+                <span className="p-2 rounded-lg border bg-gray-100">{item.name}</span> - Sold for <span className="text-green-600 font-bold">{Number(item.sold_amount).toFixed(2)}</span>
               </p>
             </div>
           ))

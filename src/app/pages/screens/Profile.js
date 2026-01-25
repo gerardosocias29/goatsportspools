@@ -235,7 +235,7 @@ const Profile = ({currentUser, setCurrentUser}) => {
               <h1 className="mb-8 flex justify-center text-[32px] font-[600]">Set your Password</h1>
               <ul className="mb-8 select-none">
                 <li className="flex flex-row items-center gap-2"><i className={`pi pi-check-circle ${passwordValidation.newPasswordLengthValid ? 'text-[#75C4D0]' : 'text-[#E7E7E7]'} `}></i> <span>8 characters minimum </span> </li>
-                <li className="flex flex-row items-center gap-2"><i className={`pi pi-check-circle ${passwordValidation.newPasswordSpecialCharValid ? 'text-[#75C4D0]' : 'text-[#E7E7E7]'} `}></i> <span>At least one special character (!,@,#,$,&,%,+,-) </span> </li>
+                <li className="flex flex-row items-center gap-2"><i className={`pi pi-check-circle ${passwordValidation.newPasswordSpecialCharValid ? 'text-[#75C4D0]' : 'text-[#E7E7E7]'} `}></i> <span>At least one special character (!,@,#,&,%,+,-) </span> </li>
                 <li className="flex flex-row items-center gap-2"><i className={`pi pi-check-circle ${passwordValidation.newPasswordUpperCaseValid ? 'text-[#75C4D0]' : 'text-[#E7E7E7]'} `}></i> <span>At least one uppercase letter </span> </li>
                 <li className="flex flex-row items-center gap-2"><i className={`pi pi-check-circle ${passwordValidation.newPasswordNumberValid ? 'text-[#75C4D0]' : 'text-[#E7E7E7]'} `}></i> <span>At least one number </span> </li>
                 <li className="flex flex-row items-center gap-2"><i className={`pi pi-check-circle ${passwordValidation.newPasswordConfirmed ? 'text-[#75C4D0]' : 'text-[#E7E7E7]'} `}></i> <span>Confirm password matched </span> </li>

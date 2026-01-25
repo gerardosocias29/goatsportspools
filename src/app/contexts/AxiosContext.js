@@ -70,6 +70,7 @@ export const AxiosProvider = ({ children }) => {
 
   const get = (url, config) => axiosInstance.get(url, config);
   const post = (url, data, config) => axiosInstance.post(url, data, config);
+  const put = (url, data, config) => axiosInstance.put(url, data, config);
   const patch = (url, data, config) => axiosInstance.patch(url, data, config);
   const del = (url, config) => axiosInstance.delete(url, config);
 
@@ -77,6 +78,7 @@ export const AxiosProvider = ({ children }) => {
     axios: axiosInstance,
     get,
     post,
+    put,
     patch,
     delete: del,
   };

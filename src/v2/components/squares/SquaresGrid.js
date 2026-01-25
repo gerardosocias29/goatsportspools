@@ -13,7 +13,14 @@ const SquaresGrid = ({
   selectionMode = false,
   disabled = false,
   onLimitReached,
+  onInsufficientCredits,
+  // Credit-based selection limiting (for CREDIT pool type)
+  userCredits = null, // User's available credits (null means no credit check)
+  costPerSquare = 0, // Cost per square in credits
 }) => {
+  // Get team names from grid
+  const visitorTeamName = grid.visitorTeamName || grid.xAxisTeam || 'Visitor Team';
+  const homeTeamName = grid.homeTeamName || grid.yAxisTeam || 'Home Team';
   const [selectedSquares, setSelectedSquares] = useState([]);
   const [hoveredSquare, setHoveredSquare] = useState(null);
   const [highlightedPlayerId, setHighlightedPlayerId] = useState(null);
@@ -32,9 +39,16 @@ const SquaresGrid = ({
     return !isNaN(squarePlayerId) && !isNaN(currentPlayerId) && squarePlayerId === currentPlayerId;
   }).length;
 
-  // Calculate remaining slots available for selection
+  // Calculate remaining slots available for selection (based on max per player limit)
   const remainingSlots = maxSquaresPerPlayer ? maxSquaresPerPlayer - currentUserOwnedCount : Infinity;
-  const canSelectMore = remainingSlots > selectedSquares.length;
+
+  // Calculate max affordable squares based on credits
+  const maxAffordableSquares = userCredits !== null && costPerSquare > 0
+    ? Math.floor(userCredits / costPerSquare)
+    : Infinity;
+
+  // Can select more if both limits allow
+  const canSelectMore = remainingSlots > selectedSquares.length && maxAffordableSquares > selectedSquares.length;
 
   const isSquareSelected = (square) => {
     // Only compare using normalized snake_case fields
@@ -102,8 +116,8 @@ const SquaresGrid = ({
     // Clicking empty square clears highlight
     setHighlightedPlayerId(null);
 
-    // Rest of selection logic only works in selection mode
-    if (disabled || !selectionMode) return;
+    // Can't select if disabled
+    if (disabled) return;
 
     // Toggle selection
     if (isSquareSelected(square)) {
@@ -112,21 +126,30 @@ const SquaresGrid = ({
         prev.filter(s => !(s.x_coordinate === square.x_coordinate && s.y_coordinate === square.y_coordinate))
       );
     } else {
-      // Check if user can select more squares (hasn't reached limit)
-      if (!canSelectMore) {
-        // Already at limit - notify and don't allow more selections
+      // Check if user can select more squares (hasn't reached max per player limit)
+      if (maxSquaresPerPlayer && remainingSlots <= selectedSquares.length) {
         if (onLimitReached) {
           onLimitReached(maxSquaresPerPlayer, currentUserOwnedCount, selectedSquares.length);
         }
         return;
       }
+
+      // Check if user can afford more squares (credit-based pools)
+      if (maxAffordableSquares <= selectedSquares.length) {
+        if (onInsufficientCredits) {
+          const totalCost = (selectedSquares.length + 1) * costPerSquare;
+          onInsufficientCredits(userCredits, costPerSquare, totalCost);
+        }
+        return;
+      }
+
       // Select: add this square to selection
       setSelectedSquares(prev => [...prev, square]);
     }
   };
 
   const handleMouseEnter = (square) => {
-    if (!disabled && selectionMode) {
+    if (!disabled && !isSquareOwned(square)) {
       setHoveredSquare(square);
     }
   };
@@ -196,35 +219,39 @@ const SquaresGrid = ({
   return (
     <div className="w-full">
       {/* Grid Container */}
-      <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-4 md:p-6 rounded-xl shadow-2xl">
+      <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-2 sm:p-4 md:p-6 rounded-xl shadow-2xl">
 
         {/* Main Grid with Side Labels */}
-        <div className="flex items-center justify-center gap-2 md:gap-3 w-full">
+        <div className="flex items-center justify-center gap-1 sm:gap-2 md:gap-3">
 
           {/* Grid Structure */}
           <div className="flex-1 max-w-4xl">
 
             {/* Top Numbers Row (X Axis) */}
-            <div className="flex mb-2">
-              {/* Spacer for corner - always show to align with Y-axis column */}
-              <div className="w-12"></div>
-              <div className="flex-1 grid grid-cols-10 gap-1 md:gap-2">
-                <div className='col-span-10 flex justify-center mb-2'>
-                  {/* X Axis Label */}
-                  <div className="flex items-center gap-2 border rounded-lg shadow-md px-4 min-w-[250px]" style={{
-                    backgroundImage: `url(${grid.homeTeamBackground})`,
-                    backgroundSize: 'cover', // Ensures the image covers the entire div
-                    backgroundPosition: 'center', // Centers the image within the div
-                  }}>
-                    <img src={grid.homeTeamLogo} className="w-[50px]"/>
-                    <p className="font-bold text-white select-none">{grid.homeTeamName}</p>
+            <div className="flex mb-1 sm:mb-2">
+              {/* Spacer for corner - matches Y-axis label and numbers column widths */}
+              <div className="hidden md:flex items-center mr-2 max-h-10">
+                <div
+                  className="invisible flex items-center justify-center border rounded-lg shadow-md px-2 py-6 bg-gradient-to-b from-green-600 to-green-500"
+                  style={{ writingMode: 'vertical-rl', textOrientation: 'mixed', transform: 'rotate(180deg)' }}
+                >
+                  <p className="font-bold text-white select-none text-lg whitespace-nowrap">{visitorTeamName}</p>
+                </div>
+              </div>
+              {/* Spacer for Y numbers column */}
+              <div className="w-7 sm:w-9 md:w-12 mr-1 sm:mr-2"></div>
+              <div className="flex-1 grid grid-cols-10 gap-0.5 sm:gap-1 md:gap-2" style={{ gridAutoRows: '1fr' }}>
+                <div className='col-span-10 flex justify-center mb-1 sm:mb-2'>
+                  {/* X Axis Label - Home Team (top of grid) */}
+                  <div className="flex items-center justify-center gap-1 sm:gap-2 border rounded-lg shadow-md px-2 sm:px-4 md:px-6 py-1 sm:py-2 bg-gradient-to-r from-red-600 to-red-500">
+                    <p className="font-bold text-white select-none text-xs sm:text-sm md:text-lg">{homeTeamName}</p>
                   </div>
                 </div>
                 {xNumbers ? (
                   xNumbers.map((num, idx) => (
                     <div
                       key={idx}
-                      className="flex items-center justify-center h-10 bg-blue-500 text-white font-bold text-sm md:text-base rounded shadow"
+                      className="flex items-center justify-center py-2 bg-blue-500 text-white font-bold text-xs sm:text-sm md:text-base rounded shadow"
                     >
                       {num}
                     </div>
@@ -234,7 +261,7 @@ const SquaresGrid = ({
                   Array.from({ length: 10 }).map((_, idx) => (
                     <div
                       key={idx}
-                      className="flex items-center justify-center h-10 bg-gray-300 text-gray-500 font-bold text-sm md:text-base rounded shadow opacity-60"
+                      className="flex items-center justify-center py-2 bg-gray-300 text-gray-500 font-bold text-xs sm:text-sm md:text-base rounded shadow opacity-60"
                     >
                       ?
                     </div>
@@ -245,35 +272,23 @@ const SquaresGrid = ({
 
             {/* Grid Rows with Y Numbers */}
             <div className="flex">
-              {/* Y Numbers Column with Vertical Team Label */}
-              <div className="relative h-auto flex flex-col gap-1 md:gap-2 mr-2">
-                {/* Vertically Centered, Rotated Label */}
+              {/* Y Axis Label - Visitor Team (positioned to the left/side of grid) */}
+              <div className="hidden md:flex items-center mr-2">
                 <div
-                  className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-[130%] flex justify-left -rotate-90"
-                  style={{ width: '60px', zIndex: 2 }}
+                  className="flex items-center justify-center border rounded-lg shadow-md px-2 py-6 bg-gradient-to-b from-green-600 to-green-500"
+                  style={{ writingMode: 'vertical-rl', textOrientation: 'mixed', transform: 'rotate(180deg)' }}
                 >
-                  <div
-                    className="flex flex-col items-center gap-2 border rounded-lg shadow-md px-2 py-2 min-w-[50px]"
-                    style={{
-                      backgroundImage: `url(${grid.visitorTeamBackground})`,
-                      backgroundSize: 'cover',
-                      backgroundPosition: 'center',
-                      transform: 'rotate(-90deg)',
-                      minHeight: '260px',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      display: 'flex',
-                    }}
-                  >
-                    <img src={grid.visitorTeamLogo} className="w-[50px] mb-2" style={{ transform: 'none' }} />
-                    <p className="font-bold text-white select-none whitespace-nowrap" style={{ transform: 'none', writingMode: 'vertical-rl', textAlign: 'center' }}>{grid.visitorTeamName}</p>
-                  </div>
+                  <p className="font-bold text-white select-none text-lg whitespace-nowrap">{visitorTeamName}</p>
                 </div>
-                  {yNumbers ? (
+              </div>
+
+              {/* Y Numbers Column */}
+              <div className="flex flex-col gap-0.5 sm:gap-1 md:gap-2 mr-1 sm:mr-2">
+                {yNumbers ? (
                     yNumbers.map((num, idx) => (
                       <div
                         key={idx}
-                        className="flex items-center justify-center w-10 h-full min-h-[50px] md:min-h-[60px] lg:min-h-[70px] bg-red-500 text-white font-bold text-sm md:text-base rounded shadow"
+                        className="flex items-center justify-center w-7 sm:w-9 md:w-12 flex-1 bg-red-500 text-white font-bold text-xs sm:text-sm md:text-base rounded shadow"
                       >
                         {num}
                       </div>
@@ -283,7 +298,7 @@ const SquaresGrid = ({
                     Array.from({ length: 10 }).map((_, idx) => (
                       <div
                         key={idx}
-                        className="flex items-center justify-center w-10 h-full min-h-[50px] md:min-h-[60px] lg:min-h-[70px] bg-gray-300 text-gray-500 font-bold text-sm md:text-base rounded shadow opacity-60"
+                        className="flex items-center justify-center w-7 sm:w-9 md:w-12 flex-1 bg-gray-300 text-gray-500 font-bold text-xs sm:text-sm md:text-base rounded shadow opacity-60"
                       >
                         ?
                       </div>
@@ -292,7 +307,7 @@ const SquaresGrid = ({
               </div>
 
               {/* Actual Grid of Squares */}
-              <div className="flex-1 grid grid-cols-10 gap-1 md:gap-2">
+              <div className="flex-1 grid grid-cols-10 gap-0.5 sm:gap-1 md:gap-2" style={{ gridAutoRows: '1fr' }}>
                 {Array.from({ length: 10 }).map((_, yIdx) =>
                   Array.from({ length: 10 }).map((_, xIdx) => {
                     const square = getSquareAt(xIdx, yIdx);
@@ -368,7 +383,7 @@ const SquaresGrid = ({
         </div>
 
         {/* Selection Info */}
-        {selectionMode && (
+        {selectionMode && selectedSquares.length > 0 && (
           <div className={`mt-4 p-4 rounded-lg border-2 ${!canSelectMore && selectedSquares.length > 0 ? 'bg-orange-50 border-orange-300' : 'bg-blue-50 border-blue-300'}`}>
             {selectedSquares.length > 0 ? (
               <p className={`text-center font-semibold ${!canSelectMore ? 'text-orange-900' : 'text-blue-900'}`}>

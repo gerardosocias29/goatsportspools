@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAxios } from '../../app/contexts/AxiosContext';
+import { useToast } from '../../app/contexts/ToastContext';
 import ReactPlayer from 'react-player';
 import Card, { CardHeader, CardTitle, CardDescription } from '../components/ui/Card';
 import Button from '../components/ui/Button';
@@ -12,6 +13,7 @@ const LiveAuction = ({ channel }) => {
   const { colors } = useTheme();
   const navigate = useNavigate();
   const axiosService = useAxios();
+  const { showToast } = useToast();
   const [searchParams] = useSearchParams();
   const auctionId = searchParams.get('auction_id');
 
@@ -29,7 +31,7 @@ const LiveAuction = ({ channel }) => {
   // Initial data fetch
   useEffect(() => {
     if (!auctionId) {
-      navigate('/v2/pools/ncaa-basketball-auction');
+      navigate('/pools/ncaa-basketball-auction');
       return;
     }
 
@@ -162,8 +164,8 @@ const LiveAuction = ({ channel }) => {
 
       channel.bind('active-auction-event-all', (data) => {
         if (data.status !== 'live') {
-          alert('The auction has ended!');
-          navigate('/v2/pools/ncaa-basketball-auction');
+          showToast({ severity: 'info', summary: 'Auction Ended', detail: 'The auction has ended!' });
+          navigate('/pools/ncaa-basketball-auction');
         }
       });
     }
@@ -198,10 +200,10 @@ const LiveAuction = ({ channel }) => {
           setIsUserWinning(true);
         }
       } else {
-        alert(response.data.message);
+        showToast({ severity: 'warn', summary: 'Bid Failed', detail: response.data.message });
       }
     } catch (error) {
-      alert(error.response?.data?.message || 'Unable to place bid');
+      showToast({ severity: 'error', summary: 'Error', detail: error.response?.data?.message || 'Unable to place bid' });
     } finally {
       setIsBidding(false);
     }
@@ -211,10 +213,10 @@ const LiveAuction = ({ channel }) => {
   const handleBack = async () => {
     try {
       await axiosService.post(`/api/auctions/${auctionId}/${currentUser?.id}/leave`);
-      navigate('/v2/pools/ncaa-basketball-auction');
+      navigate('/pools/ncaa-basketball-auction');
     } catch (error) {
       console.error('Error leaving auction:', error);
-      navigate('/v2/pools/ncaa-basketball-auction');
+      navigate('/pools/ncaa-basketball-auction');
     }
   };
 
@@ -395,7 +397,7 @@ const LiveAuction = ({ channel }) => {
             />
           </svg>
           <img
-            src="/assets/images/favicon.png"
+            src="/img/v2_logo.png"
             alt="Loading"
             style={{
               width: '64px',
@@ -569,16 +571,16 @@ const LiveAuction = ({ channel }) => {
                 }}>
                   <div style={statBoxStyles(colors.card, colors.border)}>
                     <div style={statLabelStyles}>Starting Bid</div>
-                    <div style={statValueStyles(colors.text)}>${activeItem.starting_bid}</div>
+                    <div style={statValueStyles(colors.text)}>{activeItem.starting_bid}</div>
                   </div>
                   <div style={statBoxStyles(colors.card, colors.border)}>
                     <div style={statLabelStyles}>Min Increment</div>
-                    <div style={statValueStyles(colors.text)}>${activeItem.minimum_bid}</div>
+                    <div style={statValueStyles(colors.text)}>{activeItem.minimum_bid}</div>
                   </div>
                   <div style={statBoxStyles('#10B98120', '#10B981')}>
                     <div style={{ ...statLabelStyles, color: '#10B981', opacity: 1 }}>Current Bid</div>
                     <div style={statValueStyles('#10B981')}>
-                      ${activeItem.bids?.length > 0 ? activeItem.bids[0].bid_amount : '-'}
+                      {activeItem.bids?.length > 0 ? activeItem.bids[0].bid_amount : '-'}
                     </div>
                   </div>
                 </div>
@@ -600,7 +602,7 @@ const LiveAuction = ({ channel }) => {
                     onClick={() => handlePlaceBid()}
                     disabled={isBidding}
                   >
-                    {isBidding ? 'Placing Bid...' : `Bid $${currentBidAmount}`}
+                    {isBidding ? 'Placing Bid...' : `Bid ${currentBidAmount}`}
                   </Button>
                 </div>
 
@@ -667,7 +669,7 @@ const LiveAuction = ({ channel }) => {
                             return (
                               <tr key={index}>
                                 <td style={tableCellStyles(isCurrentUser)}>
-                                  <strong>${Number(bid.bid_amount).toFixed(2)}</strong>
+                                  <strong>{Number(bid.bid_amount).toFixed(2)}</strong>
                                 </td>
                                 <td style={tableCellStyles(isCurrentUser)}>
                                   {bidder?.user?.name || '-'}

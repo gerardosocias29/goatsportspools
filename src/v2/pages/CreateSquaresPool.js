@@ -1,12 +1,57 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiArrowLeft, FiCheck, FiInfo, FiSearch, FiChevronDown, FiCalendar, FiX } from 'react-icons/fi';
+import { FiArrowLeft, FiCheck, FiInfo, FiCalendar } from 'react-icons/fi';
 import { useAxios } from '../../app/contexts/AxiosContext';
 import { useUserContext } from '../contexts/UserContext';
 import { useTheme } from '../contexts/ThemeContext';
+import { useToast } from '../../app/contexts/ToastContext';
+import { toUTCString } from '../utils/timezone';
+
+// Styled button component for selections - defined outside to prevent re-creation on render
+const SelectButton = ({ selected, onClick, children, disabled, colors, isDark }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    disabled={disabled}
+    className={`px-4 py-3 rounded-lg font-semibold transition-all ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+    style={{
+      backgroundColor: selected ? colors.brand.primary : (isDark ? '#374151' : '#E5E7EB'),
+      color: selected ? '#FFFFFF' : colors.text,
+      border: `2px solid ${selected ? colors.brand.primary : colors.border}`,
+    }}
+  >
+    {children}
+  </button>
+);
+
+// Input field wrapper component - defined outside to prevent re-creation on render
+const InputField = ({ label, required, error, children, hint, colors, isDark }) => (
+  <div>
+    <label className="block font-medium mb-2" style={{ color: colors.text }}>
+      {label} {required && '*'}
+    </label>
+    {children}
+    {hint && (
+      <p className="mt-1 text-sm" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>
+        {hint}
+      </p>
+    )}
+    {error && <p className="mt-1 text-red-400 text-sm">{error}</p>}
+  </div>
+);
+
+// Format date for datetime-local input (local timezone)
+const formatDateTime = (date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+};
 
 /**
- * Create Squares Pool Page
+ * Create Squares Pool Page - 6-Step Wizard
  * Admin interface for creating new squares pools
  * Only accessible to role_id <= 2 (Superadmin and Square Admin)
  */
@@ -15,79 +60,82 @@ const CreateSquaresPool = () => {
   const axiosService = useAxios();
   const { user: currentUser, isSignedIn, isLoaded } = useUserContext();
   const { colors, isDark } = useTheme();
+  const showToast = useToast();
 
   const [games, setGames] = useState([]);
   const [rewardTypes, setRewardTypes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
 
-  // Game selector state
-  const [gameDropdownOpen, setGameDropdownOpen] = useState(false);
-  const [gameSearchQuery, setGameSearchQuery] = useState('');
-  const [gameFilterMonth, setGameFilterMonth] = useState('');
-  const [gameFilterWeek, setGameFilterWeek] = useState('');
-  const gameDropdownRef = useRef(null);
-
   // Form state
   const [formData, setFormData] = useState({
+    // Step 1: Season & League
+    season: '2025',
+    league: 'NFL',
+
+    // Step 2: Game Date
+    gameDate: new Date().toISOString().split('T')[0],
+
+    // Step 3: Select Game
     gridName: '',
     poolDescription: '',
     gameID: '',
     gameNickname: '',
-
-    // Number Assignment
-    numbersType: 'TimeSet',
-    numbersAssignDate: '',
-
-    // Access & Cost
-    costType: 'PasswordOpen',
-    poolPassword: '',
-    costPerSquare: 10.00,
-
-    // Rewards
-    rewardsType: 'CreditsRewards',
-    gameRewardTypeID: 1,
-    reward1_percent: 25, // Q1
-    reward2_percent: 25, // Q2
-    reward3_percent: 25, // Q3
-    reward4_percent: 25, // Q4 (Final)
-
-    // Player Limits
-    maxSquaresPerPlayer: 10,
-
-    // Teams
     homeTeamId: '',
     visitorTeamId: '',
     xAxisTeam: '',
     yAxisTeam: '',
-    axisType: 'HomeAway',
 
-    // Closing
-    closeDate: '',
+    // Step 4: Number Assignment
+    numbersType: 'AdminTrigger', // AdminTrigger, TimeSet, Ascending
+    numbersAssignDate: '',
 
-    // External
-    externalPoolId: '',
-
-    // Initial credits on join
+    // Step 5: Player Settings
+    maxSquaresPerPlayer: null, // null = No Max
+    poolType: 'OPEN', // OPEN or CREDIT
+    poolPassword: '',
     initialCredits: 0,
+
+    // Step 6: Fees & Rewards
+    costPerSquare: 10.00,
+    customPayout: null, // null = auto-calculate, otherwise use custom amount
+    rewardsType: 'CreditsRewards',
+    gameRewardTypeID: 1,
+    reward1_percent: 25,
+    reward2_percent: 25,
+    reward3_percent: 25,
+    reward4_percent: 25,
+
+    // Other
+    axisType: 'HomeAway',
+    closeDate: '',
+    externalPoolId: '',
   });
 
   const [errors, setErrors] = useState({});
 
+  // Step labels for progress bar
+  const stepLabels = [
+    'Season & League',
+    'Game Date',
+    'Select Game',
+    'Number Assignment',
+    'Player Settings',
+    'Fees & Rewards',
+  ];
+
   // Authentication and role-based access control
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
-      // Not signed in - redirect to sign-in
-      navigate('/v2/sign-in', { state: { returnTo: '/v2/squares/create' } });
+      navigate('/sign-in', { state: { returnTo: '/squares/create' } });
       return;
     }
 
     if (isLoaded && isSignedIn && currentUser) {
       const userRoleId = currentUser?.user?.role_id ?? currentUser?.role_id;
-      // Only role_id 1 (Superadmin) and role_id 2 (Square Admin) can create pools
       if (userRoleId > 2) {
-        alert('You do not have permission to create pools. Only admins can create pools.');
-        navigate('/v2/squares');
+        showToast({ severity: 'error', summary: 'Access Denied', detail: 'You do not have permission to create pools. Only admins can create pools.' });
+        navigate('/squares');
       }
     }
   }, [isSignedIn, isLoaded, currentUser, navigate]);
@@ -96,6 +144,36 @@ const CreateSquaresPool = () => {
     loadGames();
     loadRewardTypes();
   }, []);
+
+  // Update default numbersType based on league
+  useEffect(() => {
+    if (formData.league === 'NBA') {
+      setFormData(prev => ({ ...prev, numbersType: 'Ascending' }));
+    } else {
+      setFormData(prev => ({ ...prev, numbersType: 'AdminTrigger' }));
+    }
+  }, [formData.league]);
+
+  // Auto-fill reward percentages when reward types are loaded
+  useEffect(() => {
+    if (rewardTypes.length > 0 && formData.gameRewardTypeID) {
+      const selectedReward = rewardTypes.find(r => r.id === formData.gameRewardTypeID);
+      if (selectedReward) {
+        const toPercent = (val) => {
+          const num = parseFloat(val) || 0;
+          return num <= 1 ? num * 100 : num;
+        };
+
+        setFormData(prev => ({
+          ...prev,
+          reward1_percent: toPercent(selectedReward.reward1_percent),
+          reward2_percent: toPercent(selectedReward.reward2_percent),
+          reward3_percent: toPercent(selectedReward.reward3_percent),
+          reward4_percent: toPercent(selectedReward.reward4_percent)
+        }));
+      }
+    }
+  }, [rewardTypes]);
 
   const loadGames = async () => {
     try {
@@ -117,7 +195,6 @@ const CreateSquaresPool = () => {
 
   const handleChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    // Clear error for this field
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: null }));
     }
@@ -126,9 +203,16 @@ const CreateSquaresPool = () => {
   const handleGameSelect = (gameID) => {
     const game = games.find(g => g.id === parseInt(gameID) || g.gameID === parseInt(gameID));
     if (game) {
-      // Extract team names (handle both object and string formats)
       const homeTeamName = game.home_team?.name || game.home_team || game.homeTeam;
       const visitorTeamName = game.visitor_team?.name || game.visitor_team || game.visitorTeam;
+
+      // Calculate default close date: max(current time, game start - 4 hours)
+      const gameTime = new Date(game.game_datetime || game.game_time || game.gameTime);
+      const fourHoursBeforeGame = new Date(gameTime.getTime() - 4 * 60 * 60 * 1000);
+      const now = new Date();
+
+      // Use whichever is later: now or 4 hours before game
+      const defaultCloseDate = fourHoursBeforeGame > now ? fourHoursBeforeGame : now;
 
       setFormData(prev => ({
         ...prev,
@@ -137,58 +221,153 @@ const CreateSquaresPool = () => {
         visitorTeamId: game.visitor_team_id || game.visitor_team?.id || game.visitorTeamId,
         xAxisTeam: homeTeamName,
         yAxisTeam: visitorTeamName,
-        // Only set gridName if it's empty (don't overwrite user's custom name)
-        gridName: prev.gridName.trim() ? prev.gridName : `${homeTeamName} vs ${visitorTeamName} Squares`,
-        gameNickname: game.game_nickname || game.gameNickname || `${homeTeamName} vs ${visitorTeamName}`,
+        gridName: prev.gridName.trim() ? prev.gridName : `${visitorTeamName} vs ${homeTeamName} Squares`,
+        gameNickname: game.game_nickname || game.gameNickname || `${visitorTeamName} vs ${homeTeamName}`,
+        // Auto-set closeDate to max(now, gameTime - 4 hours)
+        closeDate: prev.closeDate || formatDateTime(defaultCloseDate),
       }));
     }
   };
 
-  const validateStep1 = () => {
+  // Filter games by selected date and league
+  const filteredGames = useMemo(() => {
+    return games.filter(game => {
+      const gameTime = game.game_datetime || game.game_time || game.gameTime;
+      if (!gameTime) return false;
+
+      const gameDate = new Date(gameTime);
+      // Create selected date in local timezone at midnight
+      const selectedDate = new Date(formData.gameDate + 'T00:00:00');
+
+      // Check if game is on the selected date (compare local dates)
+      const gameDateLocal = new Date(gameDate.getFullYear(), gameDate.getMonth(), gameDate.getDate());
+      const selectedDateLocal = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate());
+      const sameDate = gameDateLocal.getTime() === selectedDateLocal.getTime();
+
+      // Check if game is in the future
+      const isFuture = gameDate > new Date();
+
+      // Check league match
+      const leagueMatch = !formData.league || !game.league || game.league.toUpperCase() === formData.league.toUpperCase();
+
+      return sameDate && isFuture && leagueMatch;
+    });
+  }, [games, formData.gameDate, formData.league]);
+
+  // Get dates that have games for the selected league (for calendar dots)
+  const datesWithGames = useMemo(() => {
+    const dates = new Set();
+    const now = new Date();
+    games.forEach(game => {
+      const gameTime = game.game_datetime || game.game_time || game.gameTime;
+      if (!gameTime) return;
+
+      const gameDate = new Date(gameTime);
+      // Only include future games that match the league
+      const isFuture = gameDate > now;
+      const leagueMatch = !formData.league || !game.league || game.league.toUpperCase() === formData.league.toUpperCase();
+
+      if (isFuture && leagueMatch) {
+        // Store as YYYY-MM-DD format in local timezone
+        const year = gameDate.getFullYear();
+        const month = String(gameDate.getMonth() + 1).padStart(2, '0');
+        const day = String(gameDate.getDate()).padStart(2, '0');
+        dates.add(`${year}-${month}-${day}`);
+      }
+    });
+    return dates;
+  }, [games, formData.league]);
+
+  const selectedGame = games.find(g => g.id === parseInt(formData.gameID) || g.gameID === parseInt(formData.gameID));
+
+  // Validation functions for each step
+  const validateStep = (stepNum) => {
     const newErrors = {};
 
-    if (!formData.gridName.trim()) {
-      newErrors.gridName = 'Pool name is required';
-    }
-    if (!formData.gameID) {
-      newErrors.gameID = 'Please select a game';
-    }
+    switch (stepNum) {
+      case 1: // Season & League
+        if (!formData.season) newErrors.season = 'Season is required';
+        if (!formData.league) newErrors.league = 'League is required';
+        break;
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+      case 2: // Game Date
+        if (!formData.gameDate) newErrors.gameDate = 'Game date is required';
+        else if (filteredGames.length === 0) newErrors.gameDate = 'No games available for this date. Please select a different date.';
+        break;
 
-  const validateStep2 = () => {
-    const newErrors = {};
+      case 3: // Select Game
+        if (!formData.gameID) newErrors.gameID = 'Please select a game';
+        if (!formData.gridName.trim()) newErrors.gridName = 'Pool name is required';
+        break;
 
-    if (formData.numbersType === 'TimeSet' && !formData.numbersAssignDate) {
-      newErrors.numbersAssignDate = 'Please set a date for number assignment';
-    }
-    if (formData.costType === 'PasswordOpen' && !formData.poolPassword.trim()) {
-      newErrors.poolPassword = 'Password is required for password-protected pools';
-    }
-    if (formData.costPerSquare < 0) {
-      newErrors.costPerSquare = 'Cost cannot be negative';
-    }
+      case 4: // Number Assignment
+        if (formData.numbersType === 'TimeSet') {
+          if (!formData.numbersAssignDate) {
+            newErrors.numbersAssignDate = 'Please set a date for number assignment';
+          } else {
+            const assignDate = new Date(formData.numbersAssignDate);
 
-    // Validate reward percentages add up to 100%
-    const totalReward = formData.reward1_percent + formData.reward2_percent + formData.reward3_percent + formData.reward4_percent;
-    if (totalReward !== 100) {
-      newErrors.rewardPercentages = `Quarter payouts must total 100% (currently ${totalReward}%)`;
-    }
+            // Assignment date must be after close date
+            if (formData.closeDate) {
+              const closeDate = new Date(formData.closeDate);
+              if (assignDate <= closeDate) {
+                newErrors.numbersAssignDate = 'Assignment time must be after squares selection closes';
+              }
+            }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+            // Assignment date cannot be more than 15 mins after game start
+            if (selectedGame) {
+              const gameTime = new Date(selectedGame.game_datetime || selectedGame.game_time || selectedGame.gameTime);
+              const maxTime = new Date(gameTime.getTime() + 15 * 60 * 1000); // game start + 15 mins
+              if (assignDate > maxTime) {
+                newErrors.numbersAssignDate = 'Assignment time cannot be more than 15 minutes after game start';
+              }
+            }
+          }
+        }
+        break;
 
-  const validateStep3 = () => {
-    const newErrors = {};
+      case 5: // Player Settings
+        if (!formData.closeDate) {
+          newErrors.closeDate = 'Pool closes date/time is required';
+        } else {
+          const closeDate = new Date(formData.closeDate);
+          const now = new Date();
 
-    if (!formData.xAxisTeam.trim()) {
-      newErrors.xAxisTeam = 'X-axis team is required';
-    }
-    if (!formData.yAxisTeam.trim()) {
-      newErrors.yAxisTeam = 'Y-axis team is required';
+          // Past date validation - closeDate cannot be in the past
+          if (closeDate <= now) {
+            newErrors.closeDate = 'Pool close date/time cannot be in the past';
+          } else if (selectedGame) {
+            const gameTime = new Date(selectedGame.game_datetime || selectedGame.game_time || selectedGame.gameTime);
+            if (closeDate >= gameTime) {
+              newErrors.closeDate = 'Pool must close before the game starts';
+            }
+          }
+
+          // Close date must be before assignment date (if TimeSet)
+          if (formData.numbersType === 'TimeSet' && formData.numbersAssignDate) {
+            const assignDate = new Date(formData.numbersAssignDate);
+            if (closeDate >= assignDate) {
+              newErrors.closeDate = 'Pool must close before number assignment time';
+            }
+          }
+        }
+        if (formData.poolType === 'CREDIT' && !formData.poolPassword.trim()) {
+          newErrors.poolPassword = 'Password is required for credit pools';
+        }
+        // PRIVATE type does NOT require password
+        break;
+
+      case 6: // Fees & Rewards
+        if (formData.costPerSquare < 0) {
+          newErrors.costPerSquare = 'Cost cannot be negative';
+        }
+        // Quarter payouts validation - must total 100%
+        const totalReward = formData.reward1_percent + formData.reward2_percent + formData.reward3_percent + formData.reward4_percent;
+        if (totalReward !== 100) {
+          newErrors.rewardPercentages = `Quarter payouts must total 100% (currently ${totalReward}%)`;
+        }
+        break;
     }
 
     setErrors(newErrors);
@@ -196,23 +375,7 @@ const CreateSquaresPool = () => {
   };
 
   const handleNext = () => {
-    let isValid = false;
-
-    switch (step) {
-      case 1:
-        isValid = validateStep1();
-        break;
-      case 2:
-        isValid = validateStep2();
-        break;
-      case 3:
-        isValid = validateStep3();
-        break;
-      default:
-        isValid = true;
-    }
-
-    if (isValid && step < 4) {
+    if (validateStep(step) && step < 6) {
       setStep(step + 1);
     }
   };
@@ -224,45 +387,47 @@ const CreateSquaresPool = () => {
   };
 
   const handleSubmit = async () => {
-    if (!validateStep3()) return;
+    if (!validateStep(6)) return;
 
     setLoading(true);
     try {
-      // Map costType to player_pool_type
-      // Frontend: 'Free', 'LinkOpen', 'PasswordOpen', 'CreditsRequired'
-      // Backend: 'FREE', 'OPEN', 'CREDIT'
-      const mapPlayerPoolType = (costType) => {
-        switch (costType) {
-          case 'Free': return 'FREE';
-          case 'LinkOpen': return 'OPEN';
-          case 'PasswordOpen': return 'OPEN';  // Password protected but open access type
-          case 'CreditsRequired': return 'CREDIT';
-          default: return 'OPEN';
+      // Map poolType to costType and player_pool_type
+      const mapPlayerPoolType = () => {
+        if (formData.poolType === 'OPEN') {
+          return { costType: 'Free', playerPoolType: 'FREE' };
+        } else if (formData.poolType === 'CREDIT_OPEN') {
+          return { costType: 'CreditOpen', playerPoolType: 'CREDIT_OPEN' };
+        } else {
+          return { costType: 'PasswordOpen', playerPoolType: 'CREDIT' };
         }
       };
 
-      // Map UI field names to backend field names (matching squaresApiService structure)
+      const { costType, playerPoolType } = mapPlayerPoolType();
+
       const requestData = {
         pool_name: formData.gridName,
         pool_description: formData.poolDescription,
         game_id: formData.gameID,
+        season: formData.season,
+        league: formData.league,
         pool_type: formData.numbersType === 'Ascending' ? 'A' : 'B',
-        player_pool_type: mapPlayerPoolType(formData.costType),
-        access_type: formData.costType, // Send original costType for password validation
+        player_pool_type: playerPoolType,
+        access_type: costType,
         reward_type: formData.rewardsType || 'CreditsRewards',
-        password: formData.costType === 'PasswordOpen' ? formData.poolPassword : null,
-        entry_fee: formData.costPerSquare,
-        credit_cost: formData.costPerSquare,
+        password: formData.poolType === 'CREDIT' ? formData.poolPassword : null,
+        entry_fee: formData.poolType === 'OPEN' ? 0 : formData.costPerSquare,
+        credit_cost: formData.poolType === 'OPEN' ? 0 : formData.costPerSquare,
+        initial_credits: (formData.poolType === 'CREDIT' || formData.poolType === 'CREDIT_OPEN') ? (formData.initialCredits || 0) : 0,
+        custom_payout: formData.customPayout || null,
         max_squares_per_player: formData.maxSquaresPerPlayer,
-        close_datetime: formData.closeDate,
-        number_assign_datetime: formData.numbersAssignDate,
-        game_reward_type_id: formData.gameRewardTypeID,
+        close_datetime: toUTCString(formData.closeDate),
+        number_assign_datetime: toUTCString(formData.numbersAssignDate),
+        numbers_type: formData.numbersType,
+        game_reward_type_id: formData.gameRewardTypeID === 'custom' ? null : formData.gameRewardTypeID,
         home_team_id: formData.homeTeamId,
         visitor_team_id: formData.visitorTeamId,
         game_nickname: formData.gameNickname,
         external_pool_id: formData.externalPoolId,
-        initial_credits: formData.initialCredits || 0,
-        // Quarter reward percentages (must add up to 100%)
         reward1_percent: formData.reward1_percent,
         reward2_percent: formData.reward2_percent,
         reward3_percent: formData.reward3_percent,
@@ -270,94 +435,40 @@ const CreateSquaresPool = () => {
       };
 
       const response = await axiosService.post('/api/squares-pools', requestData);
-      if (response.data) {
-        alert('Pool created successfully!');
-        navigate(`/v2/squares/pool/${response.data.id || response.data.data?.id}`);
+      if (response.data?.status) {
+        showToast({ severity: 'success', summary: 'Success', detail: 'Pool created successfully!' });
+        // API returns: { status: true, data: { id: ... }, pool_number: ... }
+        const poolId = response.data.data?.id || response.data.id;
+        if (poolId) {
+          navigate(`/squares/pool/${poolId}`);
+        } else {
+          // Fallback to squares list if no ID
+          navigate('/squares');
+        }
       }
     } catch (error) {
       const errorMsg = error.response?.data?.message || error.response?.data?.errors || error.message;
       const errorText = typeof errorMsg === 'object' ? JSON.stringify(errorMsg) : errorMsg;
-      alert('Failed to create pool: ' + errorText);
+      showToast({ severity: 'error', summary: 'Error', detail: 'Failed to create pool: ' + errorText });
     } finally {
       setLoading(false);
     }
   };
 
-  const selectedGame = games.find(g => g.id === parseInt(formData.gameID) || g.gameID === parseInt(formData.gameID));
-  const selectedRewardType = rewardTypes.find(r => r.id === formData.gameRewardTypeID);
-
-  // Filter games based on search and date filters
-  const filteredGames = useMemo(() => {
-    return games.filter(game => {
-      const homeTeam = game.home_team?.name || game.home_team || game.homeTeam || '';
-      const visitorTeam = game.visitor_team?.name || game.visitor_team || game.visitorTeam || '';
-      const gameTime = game.game_datetime || game.game_time || game.gameTime;
-      const gameDate = gameTime ? new Date(gameTime) : null;
-
-      // Search filter
-      if (gameSearchQuery) {
-        const query = gameSearchQuery.toLowerCase();
-        const matchesSearch =
-          homeTeam.toLowerCase().includes(query) ||
-          visitorTeam.toLowerCase().includes(query) ||
-          (game.league && game.league.toLowerCase().includes(query));
-        if (!matchesSearch) return false;
-      }
-
-      // Month filter
-      if (gameFilterMonth && gameDate) {
-        const [year, month] = gameFilterMonth.split('-');
-        if (gameDate.getFullYear() !== parseInt(year) || gameDate.getMonth() + 1 !== parseInt(month)) {
-          return false;
-        }
-      }
-
-      // Week filter (week number of the year)
-      if (gameFilterWeek && gameDate) {
-        const startOfYear = new Date(gameDate.getFullYear(), 0, 1);
-        const weekNumber = Math.ceil(((gameDate - startOfYear) / 86400000 + startOfYear.getDay() + 1) / 7);
-        if (weekNumber !== parseInt(gameFilterWeek)) {
-          return false;
-        }
-      }
-
-      return true;
-    });
-  }, [games, gameSearchQuery, gameFilterMonth, gameFilterWeek]);
-
-  // Get unique months from games for filter dropdown
-  const availableMonths = useMemo(() => {
-    const months = new Set();
-    games.forEach(game => {
-      const gameTime = game.game_datetime || game.game_time || game.gameTime;
-      if (gameTime) {
-        const date = new Date(gameTime);
-        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-        months.add(monthKey);
-      }
-    });
-    return Array.from(months).sort().reverse();
-  }, [games]);
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (gameDropdownRef.current && !gameDropdownRef.current.contains(event.target)) {
-        setGameDropdownOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  const inputStyles = {
+    backgroundColor: isDark ? '#374151' : '#F3F4F6',
+    color: colors.text,
+    border: `1px solid ${colors.border}`,
+  };
 
   return (
     <div className="min-h-screen p-4 md:p-8" style={{ backgroundColor: colors.background }}>
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-7xl mx-auto">
 
         {/* Header */}
         <div className="mb-8 flex items-center gap-4">
           <button
-            onClick={() => navigate('/v2/squares')}
+            onClick={() => navigate(-1)}
             className="flex items-center justify-center transition-all"
             style={{
               backgroundColor: colors.card,
@@ -374,21 +485,21 @@ const CreateSquaresPool = () => {
             <h1 className="text-3xl md:text-4xl font-bold" style={{ color: colors.text }}>
               Create Squares Pool
             </h1>
-            <p className="mt-1" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>Step {step} of 4</p>
+            <p className="mt-1" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>Step {step} of 6 - {stepLabels[step - 1]}</p>
           </div>
         </div>
 
         {/* Progress Bar */}
         <div className="mb-8 rounded-lg p-4" style={{ backgroundColor: colors.card, border: `1px solid ${colors.border}` }}>
-          <div className="flex justify-between mb-2">
-            {['Game Selection', 'Settings', 'Teams & Rules', 'Review'].map((label, idx) => (
+          <div className="flex justify-between mb-2 overflow-x-auto gap-2">
+            {stepLabels.map((label, idx) => (
               <div
                 key={idx}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 flex-shrink-0"
                 style={{ color: idx + 1 <= step ? colors.brand.primary : (isDark ? '#6B7280' : '#9CA3AF') }}
               >
                 <div
-                  className="w-8 h-8 rounded-full flex items-center justify-center font-bold"
+                  className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm"
                   style={{
                     backgroundColor: idx + 1 <= step ? colors.brand.primary : (isDark ? '#374151' : '#E5E7EB'),
                     color: idx + 1 <= step ? '#FFFFFF' : (isDark ? '#9CA3AF' : '#6B7280')
@@ -396,14 +507,14 @@ const CreateSquaresPool = () => {
                 >
                   {idx + 1 < step ? <FiCheck /> : idx + 1}
                 </div>
-                <span className="hidden md:inline text-sm font-medium">{label}</span>
+                <span className="hidden lg:inline text-xs font-medium">{label}</span>
               </div>
             ))}
           </div>
           <div className="w-full rounded-full h-2 overflow-hidden" style={{ backgroundColor: isDark ? '#374151' : '#E5E7EB' }}>
             <div
               className="h-full transition-all duration-300"
-              style={{ width: `${(step / 4) * 100}%`, backgroundColor: colors.brand.primary }}
+              style={{ width: `${(step / 6) * 100}%`, backgroundColor: colors.brand.primary }}
             ></div>
           </div>
         </div>
@@ -411,561 +522,531 @@ const CreateSquaresPool = () => {
         {/* Form Steps */}
         <div className="rounded-xl shadow-2xl p-6 md:p-8" style={{ backgroundColor: colors.card, border: `2px solid ${colors.border}` }}>
 
-          {/* Step 1: Game Selection */}
+          {/* Step 1: Season & League */}
           {step === 1 && (
+            <div className="space-y-6">
+              <h2 className="text-2xl font-bold mb-6" style={{ color: colors.text }}>Season & League</h2>
+
+              <InputField label="Season" required error={errors.season} colors={colors} isDark={isDark}>
+                <select
+                  value={formData.season}
+                  onChange={(e) => handleChange('season', e.target.value)}
+                  className="w-full rounded-lg px-4 py-3 focus:outline-none focus:ring-2"
+                  style={inputStyles}
+                >
+                   <option value="2025">2025</option>
+                  <option value="2026">2026</option>
+                </select>
+              </InputField>
+
+              <InputField label="League" required error={errors.league} colors={colors} isDark={isDark}>
+                <div className="flex flex-wrap gap-3">
+                  {['NFL', 'NBA', 'PBA', 'NCAAF'].map(league => (
+                    <SelectButton
+                      key={league}
+                      selected={formData.league === league}
+                      onClick={() => handleChange('league', league)}
+                      colors={colors}
+                      isDark={isDark}
+                    >
+                      {league === 'NFL' && '🏈'} {league === 'NBA' && '🏀'} {league === 'PBA' && '🎳'} {league === 'NCAAF' && '🏈'} {league}
+                    </SelectButton>
+                  ))}
+                </div>
+              </InputField>
+            </div>
+          )}
+
+          {/* Step 2: Game Date */}
+          {step === 2 && (
+            <div className="space-y-6">
+              <h2 className="text-2xl font-bold mb-6" style={{ color: colors.text }}>Select Game Date</h2>
+
+              <InputField label="Game Date" required error={errors.gameDate} hint="Select a date - dots indicate available games" colors={colors} isDark={isDark}>
+                <input
+                  type="date"
+                  value={formData.gameDate}
+                  onChange={(e) => handleChange('gameDate', e.target.value)}
+                  className="w-full rounded-lg px-4 py-3 focus:outline-none focus:ring-2"
+                  style={inputStyles}
+                />
+              </InputField>
+
+              {/* Quick date buttons for dates with games */}
+              {datesWithGames.size > 0 && (
+                <div>
+                  <label className="block text-sm font-medium mb-2" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>
+                    Dates with {formData.league} games (click to select):
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {Array.from(datesWithGames)
+                      .sort()
+                      .slice(0, 14) // Show max 14 upcoming dates
+                      .map(dateStr => {
+                        const date = new Date(dateStr + 'T00:00:00');
+                        const isSelected = formData.gameDate === dateStr;
+                        const gamesOnDate = games.filter(g => {
+                          const gt = g.game_datetime || g.game_time || g.gameTime;
+                          if (!gt) return false;
+                          const gd = new Date(gt);
+                          // Compare using local date
+                          const year = gd.getFullYear();
+                          const month = String(gd.getMonth() + 1).padStart(2, '0');
+                          const day = String(gd.getDate()).padStart(2, '0');
+                          const gdDateStr = `${year}-${month}-${day}`;
+                          return gdDateStr === dateStr &&
+                                 (!formData.league || !g.league || g.league.toUpperCase() === formData.league.toUpperCase());
+                        }).length;
+
+                        return (
+                          <button
+                            key={dateStr}
+                            type="button"
+                            onClick={() => handleChange('gameDate', dateStr)}
+                            className="relative px-3 py-2 rounded-lg text-sm font-medium transition-all"
+                            style={{
+                              backgroundColor: isSelected ? colors.brand.primary : (isDark ? '#374151' : '#F3F4F6'),
+                              color: isSelected ? '#fff' : colors.text,
+                              border: `2px solid ${isSelected ? colors.brand.primary : 'transparent'}`,
+                            }}
+                          >
+                            <span>{date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</span>
+                            {/* Game count dot */}
+                            <span
+                              className="absolute -top-1 -right-1 flex items-center justify-center text-xs font-bold rounded-full"
+                              style={{
+                                width: '18px',
+                                height: '18px',
+                                backgroundColor: '#10B981',
+                                color: '#fff',
+                              }}
+                            >
+                              {gamesOnDate}
+                            </span>
+                          </button>
+                        );
+                      })}
+                  </div>
+                </div>
+              )}
+
+              <div className="p-4 rounded-lg" style={{ backgroundColor: isDark ? '#1F2937' : '#F9FAFB' }}>
+                <p className={`text-sm font-medium ${filteredGames.length > 0 ? 'text-green-400' : 'text-yellow-400'}`}>
+                  <FiInfo className="inline mr-2" />
+                  {filteredGames.length} game(s) found for {formData.league} on {formData.gameDate ? new Date(formData.gameDate + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }) : 'selected date'}
+                  {filteredGames.length === 0 && formData.gameDate && (
+                    <span className="block mt-1 text-red-400">Please select a date with available games to continue.</span>
+                  )}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Step 3: Select Game */}
+          {step === 3 && (
             <div className="space-y-6">
               <h2 className="text-2xl font-bold mb-6" style={{ color: colors.text }}>Select Game</h2>
 
-              {/* Pool Name */}
-              <div>
-                <label className="block font-medium mb-2" style={{ color: colors.text }}>
-                  Pool Name *
-                </label>
+              <InputField label="Pool Name" required error={errors.gridName} colors={colors} isDark={isDark}>
                 <input
                   type="text"
                   value={formData.gridName}
                   onChange={(e) => handleChange('gridName', e.target.value)}
                   className="w-full rounded-lg px-4 py-3 focus:outline-none focus:ring-2"
-                  style={{
-                    backgroundColor: isDark ? '#374151' : '#F3F4F6',
-                    color: colors.text,
-                    border: `1px solid ${colors.border}`,
-                    outlineColor: colors.brand.primary
-                  }}
+                  style={inputStyles}
                   placeholder="Enter pool name"
                 />
-                {errors.gridName && (
-                  <p className="mt-1 text-red-400 text-sm">{errors.gridName}</p>
-                )}
-              </div>
+              </InputField>
 
-              {/* Pool Description */}
-              <div>
-                <label className="block font-medium mb-2" style={{ color: colors.text }}>
-                  Pool Description (Optional)
-                </label>
+              <InputField label="Pool Description" hint="Optional - describe your pool rules" colors={colors} isDark={isDark}>
                 <textarea
                   value={formData.poolDescription}
                   onChange={(e) => handleChange('poolDescription', e.target.value)}
                   className="w-full rounded-lg px-4 py-3 focus:outline-none focus:ring-2"
-                  style={{
-                    backgroundColor: isDark ? '#374151' : '#F3F4F6',
-                    color: colors.text,
-                    border: `1px solid ${colors.border}`,
-                    outlineColor: colors.brand.primary
-                  }}
+                  style={inputStyles}
                   placeholder="Describe your pool rules, prize structure, or any special instructions"
                   rows="3"
                 />
-                <p className="mt-1 text-sm" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>
-                  Detailed description of pool rules and details
-                </p>
-              </div>
+              </InputField>
 
-              {/* Game Selection */}
-              <div ref={gameDropdownRef}>
-                <label className="block font-medium mb-2" style={{ color: colors.text }}>
-                  Select Game *
-                </label>
+              <InputField label="Select Game" required error={errors.gameID} colors={colors} isDark={isDark}>
+                {filteredGames.length === 0 ? (
+                  <div className="p-6 text-center rounded-lg" style={{ backgroundColor: isDark ? '#374151' : '#F3F4F6' }}>
+                    <p style={{ color: colors.text }}>No games found for the selected date and league.</p>
+                    <button
+                      onClick={() => setStep(2)}
+                      className="mt-4 px-4 py-2 rounded-lg font-semibold"
+                      style={{ backgroundColor: colors.brand.primary, color: '#FFFFFF' }}
+                    >
+                      Change Date
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-3 max-h-96 overflow-y-auto">
+                    {filteredGames.map((game) => {
+                      const gameId = game.id || game.gameID;
+                      const homeTeam = game.home_team?.name || game.home_team || game.homeTeam;
+                      const visitorTeam = game.visitor_team?.name || game.visitor_team || game.visitorTeam;
+                      const gameTime = game.game_datetime || game.game_time || game.gameTime;
+                      const isSelected = formData.gameID == gameId;
 
-                {/* Selected Game Display / Dropdown Trigger */}
-                <div
-                  onClick={() => setGameDropdownOpen(!gameDropdownOpen)}
-                  className="w-full rounded-lg px-4 py-3 cursor-pointer flex items-center justify-between transition-all"
-                  style={{
-                    backgroundColor: isDark ? '#374151' : '#F3F4F6',
-                    color: colors.text,
-                    border: `2px solid ${gameDropdownOpen ? colors.brand.primary : colors.border}`,
-                  }}
-                >
-                  {selectedGame ? (
-                    <div className="flex-1">
-                      <div className="font-bold">
-                        {selectedGame.home_team?.name || selectedGame.home_team || selectedGame.homeTeam} vs {selectedGame.visitor_team?.name || selectedGame.visitor_team || selectedGame.visitorTeam}
-                      </div>
-                      <div className="text-sm opacity-75 flex items-center gap-2 mt-1">
-                        <FiCalendar className="text-xs" />
-                        {new Date(selectedGame.game_datetime || selectedGame.game_time || selectedGame.gameTime).toLocaleDateString('en-US', {
-                          weekday: 'short',
-                          month: 'short',
-                          day: 'numeric',
-                          year: 'numeric',
-                          hour: 'numeric',
-                          minute: '2-digit',
-                        })}
-                        {selectedGame.league && <span>• {selectedGame.league}</span>}
-                      </div>
-                    </div>
-                  ) : (
-                    <span style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>Click to select a game...</span>
-                  )}
-                  <FiChevronDown
-                    className={`text-xl transition-transform ${gameDropdownOpen ? 'rotate-180' : ''}`}
-                    style={{ color: colors.brand.primary }}
-                  />
-                </div>
-
-                {/* Dropdown Panel */}
-                {gameDropdownOpen && (
-                  <div
-                    className="mt-2 rounded-lg shadow-xl border-2 overflow-hidden"
-                    style={{
-                      backgroundColor: colors.card,
-                      borderColor: colors.border,
-                    }}
-                  >
-                    {/* Search & Filters */}
-                    <div className="p-3 border-b" style={{ borderColor: colors.border, backgroundColor: isDark ? '#1F2937' : '#F9FAFB' }}>
-                      {/* Search Input */}
-                      <div className="relative mb-3">
-                        <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                        <input
-                          type="text"
-                          value={gameSearchQuery}
-                          onChange={(e) => setGameSearchQuery(e.target.value)}
-                          placeholder="Search teams or league..."
-                          className="w-full pl-10 pr-4 py-2 rounded-lg focus:outline-none focus:ring-2"
+                      return (
+                        <div
+                          key={gameId}
+                          onClick={() => handleGameSelect(gameId)}
+                          className="p-4 rounded-lg cursor-pointer transition-all"
                           style={{
-                            backgroundColor: isDark ? '#374151' : '#FFFFFF',
-                            color: colors.text,
-                            border: `1px solid ${colors.border}`,
-                          }}
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                        {gameSearchQuery && (
-                          <button
-                            onClick={(e) => { e.stopPropagation(); setGameSearchQuery(''); }}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                          >
-                            <FiX />
-                          </button>
-                        )}
-                      </div>
-
-                      {/* Filters Row */}
-                      <div className="flex gap-2 flex-wrap">
-                        {/* Month Filter */}
-                        <select
-                          value={gameFilterMonth}
-                          onChange={(e) => { setGameFilterMonth(e.target.value); setGameFilterWeek(''); }}
-                          onClick={(e) => e.stopPropagation()}
-                          className="flex-1 min-w-[140px] px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2"
-                          style={{
-                            backgroundColor: isDark ? '#374151' : '#FFFFFF',
-                            color: colors.text,
-                            border: `1px solid ${colors.border}`,
+                            backgroundColor: isSelected ? (isDark ? 'rgba(59, 130, 246, 0.2)' : 'rgba(59, 130, 246, 0.1)') : (isDark ? '#374151' : '#F3F4F6'),
+                            border: `2px solid ${isSelected ? colors.brand.primary : colors.border}`,
                           }}
                         >
-                          <option value="">All Months</option>
-                          {availableMonths.map(month => {
-                            const [year, m] = month.split('-');
-                            const monthName = new Date(year, parseInt(m) - 1, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-                            return <option key={month} value={month}>{monthName}</option>;
-                          })}
-                        </select>
-
-                        {/* Week Filter */}
-                        <select
-                          value={gameFilterWeek}
-                          onChange={(e) => setGameFilterWeek(e.target.value)}
-                          onClick={(e) => e.stopPropagation()}
-                          className="flex-1 min-w-[120px] px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2"
-                          style={{
-                            backgroundColor: isDark ? '#374151' : '#FFFFFF',
-                            color: colors.text,
-                            border: `1px solid ${colors.border}`,
-                          }}
-                        >
-                          <option value="">All Weeks</option>
-                          {Array.from({ length: 18 }, (_, i) => i + 1).map(week => (
-                            <option key={week} value={week}>Week {week}</option>
-                          ))}
-                        </select>
-
-                        {/* Clear Filters */}
-                        {(gameSearchQuery || gameFilterMonth || gameFilterWeek) && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setGameSearchQuery('');
-                              setGameFilterMonth('');
-                              setGameFilterWeek('');
-                            }}
-                            className="px-3 py-2 rounded-lg text-sm font-medium transition-colors"
-                            style={{
-                              backgroundColor: isDark ? '#4B5563' : '#E5E7EB',
-                              color: colors.text,
-                            }}
-                          >
-                            Clear
-                          </button>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Games List */}
-                    <div className="max-h-72 overflow-y-auto">
-                      {filteredGames.length === 0 ? (
-                        <div className="p-6 text-center" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>
-                          No games found matching your filters
-                        </div>
-                      ) : (
-                        filteredGames.map((game) => {
-                          const gameId = game.id || game.gameID;
-                          const homeTeam = game.home_team?.name || game.home_team || game.homeTeam;
-                          const visitorTeam = game.visitor_team?.name || game.visitor_team || game.visitorTeam;
-                          const league = game.league;
-                          const gameTime = game.game_datetime || game.game_time || game.gameTime;
-                          const isSelected = formData.gameID == gameId;
-
-                          return (
-                            <div
-                              key={gameId}
-                              onClick={() => {
-                                handleGameSelect(gameId);
-                                setGameDropdownOpen(false);
-                              }}
-                              className="p-4 cursor-pointer transition-all border-b last:border-b-0"
-                              style={{
-                                backgroundColor: isSelected
-                                  ? (isDark ? 'rgba(59, 130, 246, 0.2)' : 'rgba(59, 130, 246, 0.1)')
-                                  : 'transparent',
-                                borderColor: colors.border,
-                              }}
-                              onMouseEnter={(e) => {
-                                if (!isSelected) e.currentTarget.style.backgroundColor = isDark ? '#374151' : '#F3F4F6';
-                              }}
-                              onMouseLeave={(e) => {
-                                if (!isSelected) e.currentTarget.style.backgroundColor = 'transparent';
-                              }}
-                            >
-                              <div className="flex justify-between items-start">
-                                <div className="flex-1">
-                                  <div className="font-bold" style={{ color: colors.text }}>
-                                    {homeTeam} vs {visitorTeam}
-                                  </div>
-                                  <div className="flex items-center gap-2 mt-1 text-sm" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>
-                                    <FiCalendar className="text-xs" />
-                                    <span>
-                                      {new Date(gameTime).toLocaleDateString('en-US', {
-                                        weekday: 'short',
-                                        month: 'short',
-                                        day: 'numeric',
-                                        year: 'numeric',
-                                      })}
-                                    </span>
-                                    <span>•</span>
-                                    <span>
-                                      {new Date(gameTime).toLocaleTimeString('en-US', {
-                                        hour: 'numeric',
-                                        minute: '2-digit',
-                                      })}
-                                    </span>
-                                    {league && (
-                                      <>
-                                        <span>•</span>
-                                        <span className="px-2 py-0.5 rounded text-xs font-medium" style={{
-                                          backgroundColor: isDark ? '#374151' : '#E5E7EB',
-                                        }}>
-                                          {league}
-                                        </span>
-                                      </>
-                                    )}
-                                  </div>
-                                </div>
-                                {isSelected && (
-                                  <div
-                                    className="w-6 h-6 rounded-full flex items-center justify-center"
-                                    style={{ backgroundColor: colors.brand.primary }}
-                                  >
-                                    <FiCheck className="text-white text-sm" />
-                                  </div>
-                                )}
+                          <div className="flex justify-between items-center">
+                            <div>
+                              <div className="font-bold" style={{ color: colors.text }}>
+                                {visitorTeam} vs {homeTeam}
+                              </div>
+                              <div className="text-sm mt-1 flex items-center gap-2" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>
+                                <FiCalendar className="text-xs" />
+                                {new Date(gameTime).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+                                {game.league && <span className="px-2 py-0.5 rounded text-xs" style={{ backgroundColor: isDark ? '#4B5563' : '#E5E7EB' }}>{game.league}</span>}
                               </div>
                             </div>
-                          );
-                        })
-                      )}
-                    </div>
-
-                    {/* Footer with count */}
-                    <div
-                      className="px-4 py-2 text-xs border-t"
-                      style={{
-                        backgroundColor: isDark ? '#1F2937' : '#F9FAFB',
-                        borderColor: colors.border,
-                        color: isDark ? '#9CA3AF' : '#6B7280',
-                      }}
-                    >
-                      Showing {filteredGames.length} of {games.length} games
-                    </div>
+                            {isSelected && (
+                              <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ backgroundColor: colors.brand.primary }}>
+                                <FiCheck className="text-white text-sm" />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
-
-                {errors.gameID && (
-                  <p className="mt-2 text-red-400 text-sm">{errors.gameID}</p>
-                )}
-              </div>
+              </InputField>
             </div>
           )}
 
-          {/* Step 2: Settings */}
-          {step === 2 && (
+          {/* Step 4: Number Assignment */}
+          {step === 4 && (
             <div className="space-y-6">
-              {/* Numbers Assignment Type */}
-              <div>
-                <label className="block font-medium mb-2" style={{ color: colors.text }}>
-                  Number Assignment Method
-                </label>
-                <select
-                  value={formData.numbersType}
-                  onChange={(e) => handleChange('numbersType', e.target.value)}
-                  className="w-full rounded-lg px-4 py-3 focus:outline-none focus:ring-2"
-                  style={{
-                    backgroundColor: isDark ? '#374151' : '#F3F4F6',
-                    color: colors.text,
-                    border: `1px solid ${colors.border}`,
-                    outlineColor: colors.brand.primary
-                  }}
-                >
-                  <option value="Ascending">Ascending (0-9 in order)</option>
-                  <option value="TimeSet">Random at specific time</option>
-                  <option value="AdminTrigger">Manual trigger by admin</option>
-                </select>
-                <p className="mt-1 text-sm" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>
-                  How numbers 0-9 are assigned to grid axes
-                </p>
-              </div>
+              <h2 className="text-2xl font-bold mb-6" style={{ color: colors.text }}>Number Assignment Method</h2>
 
-              {/* Numbers Assign Date (if TimeSet) */}
+              <InputField label="How should numbers be assigned?" required colors={colors} isDark={isDark}>
+                <div className="space-x-3 space-y-3 md:space-y-0 flex flex-col md:flex-row">
+                  <SelectButton
+                    selected={formData.numbersType === 'AdminTrigger'}
+                    onClick={() => handleChange('numbersType', 'AdminTrigger')}
+                    colors={colors}
+                    isDark={isDark}
+                  >
+                    <div className="text-left">
+                      <div className="font-bold">Random - Manual</div>
+                      <div className="text-sm opacity-75">Admin manually triggers number assignment</div>
+                    </div>
+                  </SelectButton>
+
+                  <SelectButton
+                    selected={formData.numbersType === 'TimeSet'}
+                    onClick={() => handleChange('numbersType', 'TimeSet')}
+                    colors={colors}
+                    isDark={isDark}
+                  >
+                    <div className="text-left">
+                      <div className="font-bold">Random - Timed</div>
+                      <div className="text-sm opacity-75">Numbers assigned at a specific time</div>
+                    </div>
+                  </SelectButton>
+
+                  <SelectButton
+                    selected={formData.numbersType === 'Ascending'}
+                    onClick={() => handleChange('numbersType', 'Ascending')}
+                    colors={colors}
+                    isDark={isDark}
+                  >
+                    <div className="text-left">
+                      <div className="font-bold">Set in Order</div>
+                      <div className="text-sm opacity-75">Numbers 0-9 assigned in ascending order</div>
+                    </div>
+                  </SelectButton>
+                </div>
+              </InputField>
+
               {formData.numbersType === 'TimeSet' && (
-                <div>
-                  <label className="block font-medium mb-2" style={{ color: colors.text }}>
-                    Numbers Assignment Date & Time *
-                  </label>
+                <InputField
+                  label="Assignment Date & Time"
+                  required
+                  error={errors.numbersAssignDate}
+                  hint={selectedGame ? `Max: ${new Date(new Date(selectedGame.game_datetime || selectedGame.game_time).getTime() + 15 * 60 * 1000).toLocaleString()}` : null}
+                  colors={colors}
+                  isDark={isDark}
+                >
                   <input
                     type="datetime-local"
                     value={formData.numbersAssignDate}
                     onChange={(e) => handleChange('numbersAssignDate', e.target.value)}
                     className="w-full rounded-lg px-4 py-3 focus:outline-none focus:ring-2"
-                    style={{
-                      backgroundColor: isDark ? '#374151' : '#F3F4F6',
-                      color: colors.text,
-                      border: `1px solid ${colors.border}`,
-                      outlineColor: colors.brand.primary
-                    }}
+                    style={inputStyles}
                   />
-                  {errors.numbersAssignDate && (
-                    <p className="mt-1 text-red-400 text-sm">{errors.numbersAssignDate}</p>
-                  )}
-                </div>
+                </InputField>
               )}
+            </div>
+          )}
 
-              {/* Cost Type */}
-              <div>
-                <label className="block font-medium mb-2" style={{ color: colors.text }}>
-                  Access Type
-                </label>
-                <select
-                  value={formData.costType}
-                  onChange={(e) => handleChange('costType', e.target.value)}
+          {/* Step 5: Player Settings */}
+          {step === 5 && (
+            <div className="space-y-6">
+              <h2 className="text-2xl font-bold mb-6" style={{ color: colors.text }}>Player Settings</h2>
+
+              <InputField label="Max Squares Per Player" colors={colors} isDark={isDark}>
+                <div className="flex flex-wrap gap-2">
+                  {[null, 1, 2, 3, 4, 5, 10].map(num => (
+                    <SelectButton
+                      key={num === null ? 'none' : num}
+                      selected={formData.maxSquaresPerPlayer === num}
+                      onClick={() => handleChange('maxSquaresPerPlayer', num)}
+                      colors={colors}
+                      isDark={isDark}
+                    >
+                      {num === null ? 'No Max' : num}
+                    </SelectButton>
+                  ))}
+                </div>
+              </InputField>
+
+              <InputField
+                label="Squares Selection Close"
+                required
+                error={errors.closeDate}
+                hint={selectedGame ? `Must be before game start: ${new Date(selectedGame.game_datetime || selectedGame.game_time).toLocaleString()}` : "When should square selection automatically close?"}
+                colors={colors}
+                isDark={isDark}
+              >
+                <input
+                  type="datetime-local"
+                  value={formData.closeDate}
+                  onChange={(e) => handleChange('closeDate', e.target.value)}
+                  max={selectedGame ? formatDateTime(new Date(selectedGame.game_datetime || selectedGame.game_time)) : undefined}
                   className="w-full rounded-lg px-4 py-3 focus:outline-none focus:ring-2"
-                  style={{
-                    backgroundColor: isDark ? '#374151' : '#F3F4F6',
-                    color: colors.text,
-                    border: `1px solid ${colors.border}`,
-                    outlineColor: colors.brand.primary
-                  }}
-                >
-                  <option value="Free">Free (No cost)</option>
-                  <option value="LinkOpen">Open (Anyone with link)</option>
-                  <option value="PasswordOpen">Password Protected</option>
-                  <option value="CreditsRequired">Credits Required</option>
-                </select>
-              </div>
+                  style={inputStyles}
+                />
+              </InputField>
 
-              {/* Pool Password (if PasswordOpen) */}
-              {formData.costType === 'PasswordOpen' && (
-                <div>
-                  <label className="block font-medium mb-2" style={{ color: colors.text }}>
-                    Pool Password *
-                  </label>
+              <InputField label="Pool Type" required error={errors.poolType} colors={colors} isDark={isDark}>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <SelectButton
+                    selected={formData.poolType === 'OPEN'}
+                    onClick={() => handleChange('poolType', 'OPEN')}
+                    colors={colors}
+                    isDark={isDark}
+                  >
+                    <div className="text-left">
+                      <div className="font-bold">OPEN</div>
+                      <div className="text-sm opacity-75">Free to join, no credits</div>
+                    </div>
+                  </SelectButton>
+
+                  <SelectButton
+                    selected={formData.poolType === 'CREDIT_OPEN'}
+                    onClick={() => handleChange('poolType', 'CREDIT_OPEN')}
+                    colors={colors}
+                    isDark={isDark}
+                  >
+                    <div className="text-left">
+                      <div className="font-bold">CREDIT OPEN</div>
+                      <div className="text-sm opacity-75">Uses credits, no password</div>
+                    </div>
+                  </SelectButton>
+
+                  <SelectButton
+                    selected={formData.poolType === 'CREDIT'}
+                    onClick={() => handleChange('poolType', 'CREDIT')}
+                    colors={colors}
+                    isDark={isDark}
+                  >
+                    <div className="text-left">
+                      <div className="font-bold">CREDIT</div>
+                      <div className="text-sm opacity-75">Uses credits + password</div>
+                    </div>
+                  </SelectButton>
+                </div>
+              </InputField>
+
+              {/* Password field - only for CREDIT type */}
+              {formData.poolType === 'CREDIT' && (
+                <InputField label="Pool Password" required error={errors.poolPassword} colors={colors} isDark={isDark}>
                   <input
                     type="text"
                     value={formData.poolPassword}
                     onChange={(e) => handleChange('poolPassword', e.target.value)}
                     className="w-full rounded-lg px-4 py-3 focus:outline-none focus:ring-2"
-                    style={{
-                      backgroundColor: isDark ? '#374151' : '#F3F4F6',
-                      color: colors.text,
-                      border: `1px solid ${colors.border}`,
-                      outlineColor: colors.brand.primary
-                    }}
+                    style={inputStyles}
                     placeholder="Enter pool password"
                   />
-                  {errors.poolPassword && (
-                    <p className="mt-1 text-red-400 text-sm">{errors.poolPassword}</p>
-                  )}
-                </div>
+                </InputField>
               )}
 
-              {/* Cost Per Square */}
-              <div>
-                <label className="block font-medium mb-2" style={{ color: colors.text }}>
-                  Cost Per Square ($)
-                </label>
+              {/* Initial Credits field - for both CREDIT and CREDIT_OPEN types */}
+              {(formData.poolType === 'CREDIT' || formData.poolType === 'CREDIT_OPEN') && (
+                <InputField label="Initial Credits on Join" hint="Credits automatically given to users when they join (0-100)" colors={colors} isDark={isDark}>
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={formData.initialCredits}
+                    onChange={(e) => handleChange('initialCredits', parseInt(e.target.value) || 0)}
+                    className="w-full rounded-lg px-4 py-3 focus:outline-none focus:ring-2"
+                    style={inputStyles}
+                    placeholder="0"
+                  />
+                </InputField>
+              )}
+            </div>
+          )}
+
+          {/* Step 6: Fees & Rewards */}
+          {step === 6 && (
+            <div className="space-y-6">
+              <h2 className="text-2xl font-bold mb-6" style={{ color: colors.text }}>Fees & Rewards</h2>
+
+              <InputField
+                label="Cost Per Square"
+                error={errors.costPerSquare}
+                hint={formData.poolType === 'OPEN'
+                  ? 'Free pools have no cost per square'
+                  : `Calculated pot (if all squares filled): ${((formData.costPerSquare || 0) * 100).toFixed(2)}`
+                }
+                colors={colors}
+                isDark={isDark}
+              >
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={formData.poolType === 'OPEN' ? 0 : formData.costPerSquare}
+                    onChange={(e) => handleChange('costPerSquare', parseFloat(e.target.value) || 0)}
+                    disabled={formData.poolType === 'OPEN'}
+                    title={formData.poolType === 'OPEN' ? 'This pool is FREE - no cost per square' : 'Enter the cost per square'}
+                    className="w-full rounded-lg px-4 py-3 focus:outline-none focus:ring-2"
+                    style={{
+                      ...inputStyles,
+                      opacity: formData.poolType === 'OPEN' ? 0.5 : 1,
+                      cursor: formData.poolType === 'OPEN' ? 'not-allowed' : 'text',
+                      paddingRight: formData.poolType === 'OPEN' ? '60px' : '16px'
+                    }}
+                  />
+                  {formData.poolType === 'OPEN' && (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        right: '12px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        backgroundColor: colors.success,
+                        color: '#fff',
+                        padding: '4px 12px',
+                        borderRadius: '6px',
+                        fontSize: '12px',
+                        fontWeight: 'bold',
+                        pointerEvents: 'none'
+                      }}
+                    >
+                      FREE
+                    </div>
+                  )}
+                </div>
+              </InputField>
+              <InputField 
+                label="Custom Payout (Optional)" 
+                hint={formData.customPayout ? `Custom payout will be used instead of calculated amount` : `Leave empty to auto-calculate payout from entry fees`}
+                colors={colors} 
+                isDark={isDark}
+              >
                 <input
                   type="number"
                   step="0.01"
                   min="0"
-                  value={formData.costPerSquare}
-                  onChange={(e) => handleChange('costPerSquare', parseFloat(e.target.value))}
+                  value={formData.customPayout || ''}
+                  onChange={(e) => handleChange('customPayout', e.target.value ? parseFloat(e.target.value) : null)}
                   className="w-full rounded-lg px-4 py-3 focus:outline-none focus:ring-2"
-                  style={{
-                    backgroundColor: isDark ? '#374151' : '#F3F4F6',
-                    color: colors.text,
-                    border: `1px solid ${colors.border}`,
-                    outlineColor: colors.brand.primary
-                  }}
+                  style={inputStyles}
+                  placeholder="Leave empty for auto-calculation"
                 />
-                {errors.costPerSquare && (
-                  <p className="mt-1 text-red-400 text-sm">{errors.costPerSquare}</p>
-                )}
-                <p className="mt-1 text-sm" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>
-                  Total pot: ${((formData.costPerSquare || 0) * 100).toFixed(2)}
-                </p>
-              </div>
-
-              {/* Initial Credits on Join */}
-              <div>
-                <label className="block font-medium mb-2" style={{ color: colors.text }}>
-                  Initial Credits on Join
-                </label>
-                <input
-                  type="number"
-                  step="1"
-                  min="0"
-                  value={formData.initialCredits || 0}
-                  onChange={(e) => handleChange('initialCredits', parseInt(e.target.value) || 0)}
-                  className="w-full rounded-lg px-4 py-3 focus:outline-none focus:ring-2"
-                  style={{
-                    backgroundColor: isDark ? '#374151' : '#F3F4F6',
-                    color: colors.text,
-                    border: `1px solid ${colors.border}`,
-                    outlineColor: colors.brand.primary
-                  }}
-                  placeholder="0"
-                />
-                <p className="mt-1 text-sm" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>
-                  Credits automatically given to users when they join the pool
-                </p>
-              </div>
-
-              {/* Reward Type */}
-              <div>
-                <label className="block font-medium mb-2" style={{ color: colors.text }}>
-                  Reward Distribution
-                </label>
+              </InputField>
+              <InputField
+                label="Reward Distribution"
+                hint={formData.gameRewardTypeID === 'custom' ? "Enter your own custom percentages below" : "Select a reward template to auto-fill the quarter payout percentages below"}
+                colors={colors}
+                isDark={isDark}
+              >
                 <select
                   value={formData.gameRewardTypeID}
-                  onChange={(e) => handleChange('gameRewardTypeID', parseInt(e.target.value))}
-                  className="w-full rounded-lg px-4 py-3 focus:outline-none focus:ring-2"
-                  style={{
-                    backgroundColor: isDark ? '#374151' : '#F3F4F6',
-                    color: colors.text,
-                    border: `1px solid ${colors.border}`,
-                    outlineColor: colors.brand.primary
+                  onChange={(e) => {
+                    const selectedValue = e.target.value;
+
+                    if (selectedValue === 'custom') {
+                      handleChange('gameRewardTypeID', 'custom');
+                      // Keep current percentages when switching to custom
+                      return;
+                    }
+
+                    const selectedID = parseInt(selectedValue);
+                    handleChange('gameRewardTypeID', selectedID);
+
+                    // Auto-fill percentages from selected reward type
+                    const selectedReward = rewardTypes.find(r => r.id === selectedID);
+                    if (selectedReward) {
+                      // Convert decimal to percentage (0.1 -> 10, 0.2 -> 20, etc.)
+                      const toPercent = (val) => {
+                        const num = parseFloat(val) || 0;
+                        return num <= 1 ? num * 100 : num;
+                      };
+
+                      handleChange('reward1_percent', toPercent(selectedReward.reward1_percent));
+                      handleChange('reward2_percent', toPercent(selectedReward.reward2_percent));
+                      handleChange('reward3_percent', toPercent(selectedReward.reward3_percent));
+                      handleChange('reward4_percent', toPercent(selectedReward.reward4_percent));
+                    }
                   }}
+                  className="w-full rounded-lg px-4 py-3 focus:outline-none focus:ring-2"
+                  style={inputStyles}
                 >
                   {rewardTypes.map((reward) => (
                     <option key={reward.id} value={reward.id}>
                       {reward.name} - {reward.description}
                     </option>
                   ))}
+                  <option value="custom">Custom - Enter your own percentages</option>
                 </select>
-                <p className="mt-1 text-sm" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>
-                  How the total pot will be distributed to winners
-                </p>
-              </div>
+              </InputField>
 
               {/* Quarter Payout Percentages */}
               <div className="border-t pt-4" style={{ borderColor: colors.border }}>
-                <label className="block font-medium mb-4" style={{ color: colors.text }}>
+                <label className="block font-medium mb-2" style={{ color: colors.text }}>
                   Quarter Payout Percentages (must total 100%)
                 </label>
+                <p className="text-sm mb-4" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>
+                  {formData.gameRewardTypeID === 'custom'
+                    ? "Enter your custom payout percentages for each quarter."
+                    : "Auto-filled based on Reward Distribution above. You can customize these percentages if needed."}
+                </p>
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm mb-1" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>Q1 Payout %</label>
-                    <input
-                      type="number"
-                      min="0"
-                      max="100"
-                      step="1"
-                      value={formData.reward1_percent}
-                      onChange={(e) => handleChange('reward1_percent', parseFloat(e.target.value) || 0)}
-                      className="w-full rounded-lg px-4 py-2 focus:outline-none focus:ring-2"
-                      style={{
-                        backgroundColor: isDark ? '#374151' : '#F3F4F6',
-                        color: colors.text,
-                        border: `1px solid ${colors.border}`,
-                        outlineColor: colors.brand.primary
-                      }}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm mb-1" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>Q2 Payout %</label>
-                    <input
-                      type="number"
-                      min="0"
-                      max="100"
-                      step="1"
-                      value={formData.reward2_percent}
-                      onChange={(e) => handleChange('reward2_percent', parseFloat(e.target.value) || 0)}
-                      className="w-full rounded-lg px-4 py-2 focus:outline-none focus:ring-2"
-                      style={{
-                        backgroundColor: isDark ? '#374151' : '#F3F4F6',
-                        color: colors.text,
-                        border: `1px solid ${colors.border}`,
-                        outlineColor: colors.brand.primary
-                      }}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm mb-1" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>Q3 Payout %</label>
-                    <input
-                      type="number"
-                      min="0"
-                      max="100"
-                      step="1"
-                      value={formData.reward3_percent}
-                      onChange={(e) => handleChange('reward3_percent', parseFloat(e.target.value) || 0)}
-                      className="w-full rounded-lg px-4 py-2 focus:outline-none focus:ring-2"
-                      style={{
-                        backgroundColor: isDark ? '#374151' : '#F3F4F6',
-                        color: colors.text,
-                        border: `1px solid ${colors.border}`,
-                        outlineColor: colors.brand.primary
-                      }}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm mb-1" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>Q4 (Final) Payout %</label>
-                    <input
-                      type="number"
-                      min="0"
-                      max="100"
-                      step="1"
-                      value={formData.reward4_percent}
-                      onChange={(e) => handleChange('reward4_percent', parseFloat(e.target.value) || 0)}
-                      className="w-full rounded-lg px-4 py-2 focus:outline-none focus:ring-2"
-                      style={{
-                        backgroundColor: isDark ? '#374151' : '#F3F4F6',
-                        color: colors.text,
-                        border: `1px solid ${colors.border}`,
-                        outlineColor: colors.brand.primary
-                      }}
-                    />
-                  </div>
+                  {['reward1_percent', 'reward2_percent', 'reward3_percent', 'reward4_percent'].map((field, idx) => (
+                    <div key={field}>
+                      <label className="block text-sm mb-1" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>
+                        {idx === 0 ? 'Q1 Payout %' : idx === 1 ? 'Half (Q2) Payout %' : idx === 2 ? 'Q3 Payout %' : 'Final (Q4) Payout %'}
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        value={formData[field]}
+                        onChange={(e) => handleChange(field, parseFloat(e.target.value) || 0)}
+                        className="w-full rounded-lg px-4 py-2 focus:outline-none focus:ring-2"
+                        style={inputStyles}
+                      />
+                    </div>
+                  ))}
                 </div>
                 <p className={`mt-2 text-sm font-medium ${
                   (formData.reward1_percent + formData.reward2_percent + formData.reward3_percent + formData.reward4_percent) === 100
@@ -973,191 +1054,23 @@ const CreateSquaresPool = () => {
                     : 'text-red-400'
                 }`}>
                   Total: {formData.reward1_percent + formData.reward2_percent + formData.reward3_percent + formData.reward4_percent}%
-                  {(formData.reward1_percent + formData.reward2_percent + formData.reward3_percent + formData.reward4_percent) === 100
-                    ? ' ✓'
-                    : ' (must equal 100%)'}
+                  {(formData.reward1_percent + formData.reward2_percent + formData.reward3_percent + formData.reward4_percent) === 100 ? ' ✓' : ' (must equal 100%)'}
                 </p>
-                {errors.rewardPercentages && (
-                  <p className="mt-1 text-red-400 text-sm">{errors.rewardPercentages}</p>
-                )}
+                {errors.rewardPercentages && <p className="mt-1 text-red-400 text-sm">{errors.rewardPercentages}</p>}
               </div>
 
-              {/* Close Date */}
-              <div>
-                <label className="block font-medium mb-2" style={{ color: colors.text }}>
-                  Pool Close Date (Optional)
-                </label>
-                <input
-                  type="datetime-local"
-                  value={formData.closeDate}
-                  onChange={(e) => handleChange('closeDate', e.target.value)}
-                  className="w-full rounded-lg px-4 py-3 focus:outline-none focus:ring-2"
-                  style={{
-                    backgroundColor: isDark ? '#374151' : '#F3F4F6',
-                    color: colors.text,
-                    border: `1px solid ${colors.border}`,
-                    outlineColor: colors.brand.primary
-                  }}
-                />
-                <p className="mt-1 text-sm" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>
-                  When to stop accepting square selections
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Step 3: Teams & Rules */}
-          {step === 3 && (
-            <div className="space-y-6">
-              <h2 className="text-2xl font-bold mb-6" style={{ color: colors.text }}>Teams & Rules</h2>
-
-              {/* Axis Type */}
-              <div>
-                <label className="block font-medium mb-2" style={{ color: colors.text }}>
-                  Axis Configuration
-                </label>
-                <select
-                  value={formData.axisType}
-                  onChange={(e) => handleChange('axisType', e.target.value)}
-                  className="w-full rounded-lg px-4 py-3 focus:outline-none focus:ring-2"
-                  style={{
-                    backgroundColor: isDark ? '#374151' : '#F3F4F6',
-                    color: colors.text,
-                    border: `1px solid ${colors.border}`,
-                    outlineColor: colors.brand.primary
-                  }}
-                >
-                  <option value="HomeAway">Home (X) vs Away (Y)</option>
-                  <option value="WinnerLoser">Winner (X) vs Loser (Y)</option>
-                </select>
-              </div>
-
-              {/* X Axis Team */}
-              <div>
-                <label className="block font-medium mb-2" style={{ color: colors.text }}>
-                  X-Axis Team (Horizontal) *
-                </label>
-                <input
-                  type="text"
-                  value={formData.xAxisTeam}
-                  onChange={(e) => handleChange('xAxisTeam', e.target.value)}
-                  className="w-full rounded-lg px-4 py-3 focus:outline-none focus:ring-2"
-                  style={{
-                    backgroundColor: isDark ? '#374151' : '#F3F4F6',
-                    color: colors.text,
-                    border: `1px solid ${colors.border}`,
-                    outlineColor: colors.brand.primary
-                  }}
-                  placeholder="Enter team name"
-                />
-                {errors.xAxisTeam && (
-                  <p className="mt-1 text-red-400 text-sm">{errors.xAxisTeam}</p>
-                )}
-              </div>
-
-              {/* Y Axis Team */}
-              <div>
-                <label className="block font-medium mb-2" style={{ color: colors.text }}>
-                  Y-Axis Team (Vertical) *
-                </label>
-                <input
-                  type="text"
-                  value={formData.yAxisTeam}
-                  onChange={(e) => handleChange('yAxisTeam', e.target.value)}
-                  className="w-full rounded-lg px-4 py-3 focus:outline-none focus:ring-2"
-                  style={{
-                    backgroundColor: isDark ? '#374151' : '#F3F4F6',
-                    color: colors.text,
-                    border: `1px solid ${colors.border}`,
-                    outlineColor: colors.brand.primary
-                  }}
-                  placeholder="Enter team name"
-                />
-                {errors.yAxisTeam && (
-                  <p className="mt-1 text-red-400 text-sm">{errors.yAxisTeam}</p>
-                )}
-              </div>
-
-              {/* Max Squares Per Player */}
-              <div>
-                <label className="block font-medium mb-2" style={{ color: colors.text }}>
-                  Max Squares Per Player
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  max="100"
-                  value={formData.maxSquaresPerPlayer || ''}
-                  onChange={(e) => handleChange('maxSquaresPerPlayer', parseInt(e.target.value) || null)}
-                  className="w-full rounded-lg px-4 py-3 focus:outline-none focus:ring-2"
-                  style={{
-                    backgroundColor: isDark ? '#374151' : '#F3F4F6',
-                    color: colors.text,
-                    border: `1px solid ${colors.border}`,
-                    outlineColor: colors.brand.primary
-                  }}
-                  placeholder="Leave empty for no limit"
-                />
-                <p className="mt-1 text-sm" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>
-                  Maximum squares each player can select (empty = unlimited)
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Step 4: Review */}
-          {step === 4 && (
-            <div className="space-y-6">
-              <h2 className="text-2xl font-bold mb-6" style={{ color: colors.text }}>Review & Create</h2>
-
-              <div className="rounded-lg p-6 space-y-4" style={{ backgroundColor: isDark ? '#374151' : '#F3F4F6' }}>
-                <div>
-                  <h3 className="text-lg font-semibold mb-2" style={{ color: colors.text }}>Pool Details</h3>
-                  <div className="space-y-2" style={{ color: isDark ? '#D1D5DB' : '#4B5563' }}>
-                    <p><span className="font-medium">Name:</span> {formData.gridName}</p>
-                    {formData.poolDescription && (
-                      <p><span className="font-medium">Description:</span> {formData.poolDescription}</p>
-                    )}
-                    {selectedGame && (
-                      <p><span className="font-medium">Game:</span> {selectedGame.home_team?.name || selectedGame.home_team || selectedGame.homeTeam} vs {selectedGame.visitor_team?.name || selectedGame.visitor_team || selectedGame.visitorTeam}</p>
-                    )}
-                  </div>
+              {/* Review Summary */}
+              <div className="border-t pt-6 mt-6" style={{ borderColor: colors.border }}>
+                <h3 className="text-lg font-semibold mb-4" style={{ color: colors.text }}>Review Summary</h3>
+                <div className="rounded-lg p-4 space-y-2" style={{ backgroundColor: isDark ? '#374151' : '#F3F4F6' }}>
+                  <p style={{ color: colors.text }}><strong>Pool:</strong> {formData.gridName}</p>
+                  <p style={{ color: colors.text }}><strong>League:</strong> {formData.league} {formData.season}</p>
+                  {selectedGame && <p style={{ color: colors.text }}><strong>Game:</strong> {selectedGame.visitor_team?.name || selectedGame.visitor_team} vs {selectedGame.home_team?.name || selectedGame.home_team}</p>}
+                  <p style={{ color: colors.text }}><strong>Numbers:</strong> {formData.numbersType}</p>
+                  <p style={{ color: colors.text }}><strong>Pool Type:</strong> {formData.poolType}</p>
+                  <p style={{ color: colors.text }}><strong>Cost:</strong> {formData.poolType === 'OPEN' ? 'FREE' : `${formData.costPerSquare?.toFixed(2)} per square`}</p>
+                  <p style={{ color: colors.text }}><strong>Payout:</strong> {formData.customPayout ? `${formData.customPayout.toFixed(2)} (custom)` : formData.poolType === 'OPEN' ? 'N/A (FREE pool)' : `${((formData.costPerSquare || 0) * 100).toFixed(2)} (auto-calculated)`}</p>
                 </div>
-
-                <div className="border-t pt-4" style={{ borderColor: colors.border }}>
-                  <h3 className="text-lg font-semibold mb-2" style={{ color: colors.text }}>Settings</h3>
-                  <div className="space-y-2" style={{ color: isDark ? '#D1D5DB' : '#4B5563' }}>
-                    <p><span className="font-medium">Numbers:</span> {formData.numbersType}</p>
-                    <p><span className="font-medium">Access:</span> {formData.costType}</p>
-                    <p><span className="font-medium">Cost per square:</span> ${(formData.costPerSquare || 0).toFixed(2)}</p>
-                    <p><span className="font-medium">Total pot:</span> ${((formData.costPerSquare || 0) * 100).toFixed(2)}</p>
-                    {formData.initialCredits > 0 && (
-                      <p><span className="font-medium">Initial credits on join:</span> {formData.initialCredits}</p>
-                    )}
-                    {selectedRewardType && (
-                      <p><span className="font-medium">Rewards:</span> {selectedRewardType.name}</p>
-                    )}
-                  </div>
-                </div>
-
-                <div className="border-t pt-4" style={{ borderColor: colors.border }}>
-                  <h3 className="text-lg font-semibold mb-2" style={{ color: colors.text }}>Teams</h3>
-                  <div className="space-y-2" style={{ color: isDark ? '#D1D5DB' : '#4B5563' }}>
-                    <p><span className="font-medium">X-Axis:</span> {formData.xAxisTeam}</p>
-                    <p><span className="font-medium">Y-Axis:</span> {formData.yAxisTeam}</p>
-                    <p><span className="font-medium">Max squares/player:</span> {formData.maxSquaresPerPlayer || 'Unlimited'}</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="rounded-lg p-4 flex gap-3" style={{
-                backgroundColor: isDark ? 'rgba(30, 64, 175, 0.3)' : 'rgba(219, 234, 254, 1)',
-                border: `1px solid ${isDark ? '#1D4ED8' : '#93C5FD'}`
-              }}>
-                <FiInfo className="text-xl flex-shrink-0 mt-1" style={{ color: isDark ? '#60A5FA' : '#2563EB' }} />
-                <p className="text-sm" style={{ color: isDark ? '#BFDBFE' : '#1E40AF' }}>
-                  Once created, your pool will be visible to players. You can manage it from the admin dashboard.
-                </p>
               </div>
             </div>
           )}
@@ -1172,19 +1085,15 @@ const CreateSquaresPool = () => {
                   backgroundColor: isDark ? '#374151' : '#E5E7EB',
                   color: colors.text
                 }}
-                onMouseOver={(e) => e.currentTarget.style.backgroundColor = isDark ? '#4B5563' : '#D1D5DB'}
-                onMouseOut={(e) => e.currentTarget.style.backgroundColor = isDark ? '#374151' : '#E5E7EB'}
               >
                 Back
               </button>
             )}
-            {step < 4 ? (
+            {step < 6 ? (
               <button
                 onClick={handleNext}
                 className="flex-1 text-white py-3 rounded-lg font-bold transition-all"
                 style={{ backgroundColor: colors.brand.primary }}
-                onMouseOver={(e) => e.currentTarget.style.backgroundColor = colors.brand.primaryHover}
-                onMouseOut={(e) => e.currentTarget.style.backgroundColor = colors.brand.primary}
               >
                 Next
               </button>
@@ -1194,8 +1103,6 @@ const CreateSquaresPool = () => {
                 disabled={loading}
                 className="flex-1 disabled:bg-gray-600 disabled:cursor-not-allowed text-white py-3 rounded-lg font-bold transition-all flex items-center justify-center gap-2"
                 style={{ backgroundColor: loading ? undefined : colors.brand.primary }}
-                onMouseOver={(e) => !loading && (e.currentTarget.style.backgroundColor = colors.brand.primaryHover)}
-                onMouseOut={(e) => !loading && (e.currentTarget.style.backgroundColor = colors.brand.primary)}
               >
                 {loading ? (
                   <>

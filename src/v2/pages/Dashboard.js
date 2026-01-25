@@ -1,14 +1,95 @@
-import React from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
+import { useAxios } from '../../app/contexts/AxiosContext';
 import Card, { CardHeader, CardTitle, CardDescription, CardFooter } from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
-import Avatar, { AvatarGroup } from '../components/ui/Avatar';
+import Avatar from '../components/ui/Avatar';
+import SquaresApiService from '../services/squaresApiService';
 
 const Dashboard = ({ user }) => {
   const { colors } = useTheme();
   const navigate = useNavigate();
+  const axiosService = useAxios();
+  const squaresApiService = useMemo(() => new SquaresApiService(axiosService), [axiosService]);
+
+  // Dynamic state for stats
+  const [stats, setStats] = useState({
+    poolsJoined: 0,
+    leaguesJoined: 0, // Placeholder - feature coming soon
+    auctionsJoined: 0, // Placeholder - feature coming soon
+    mySquares: 0,
+  });
+  const [myPools, setMyPools] = useState([]);
+  const [recentActivity, setRecentActivity] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch user's pools and calculate stats
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+        const result = await squaresApiService.getMyPools();
+
+        if (result.success && result.data) {
+          const pools = Array.isArray(result.data) ? result.data : [];
+          setMyPools(pools);
+
+          // Count total squares owned by user across all pools
+          // Backend returns: my_squares_count from SquaresPoolPlayer.squares_count
+          const totalSquares = pools.reduce((sum, pool) => {
+            const userSquares = pool.my_squares_count || 0;
+            return sum + userSquares;
+          }, 0);
+
+          setStats({
+            poolsJoined: pools.length,
+            leaguesJoined: 0, // Placeholder
+            auctionsJoined: 0, // Placeholder
+            mySquares: totalSquares,
+          });
+
+          // Build recent activity from pools where user has squares
+          const activities = pools
+            .filter(pool => (pool.my_squares_count || 0) > 0)
+            .map(pool => ({
+              id: pool.id,
+              type: 'squares_claimed',
+              title: 'Squares claimed',
+              description: `You claimed ${pool.my_squares_count || 0} square(s) in ${pool.pool_name || `Pool #${pool.pool_number}`}`,
+              poolName: pool.pool_name || `Pool #${pool.pool_number}`,
+              timestamp: pool.created_at, // Pool creation date
+            }))
+            .slice(0, 5);
+          setRecentActivity(activities);
+        }
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, [user]);
+
+  // Helper to format relative time
+  const getTimeAgo = (timestamp) => {
+    if (!timestamp) return 'Recently';
+    const now = new Date();
+    const date = new Date(timestamp);
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return date.toLocaleDateString();
+  };
 
   const containerStyles = {
     maxWidth: '1536px',
@@ -126,28 +207,12 @@ const Dashboard = ({ user }) => {
 
       {/* Stats Grid */}
       <div style={gridStyles}>
-        {/* Total Balance */}
+        {/* Pools Joined */}
         <Card padding="lg">
           <div style={statCardContentStyles}>
             <div style={statInfoStyles}>
-              <div style={statLabelStyles}>Total Balance</div>
-              <div style={statValueStyles}>$2,450</div>
-            </div>
-            <div style={statIconStyles}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <line x1="12" y1="1" x2="12" y2="23" />
-                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-              </svg>
-            </div>
-          </div>
-        </Card>
-
-        {/* Active Pools */}
-        <Card padding="lg">
-          <div style={statCardContentStyles}>
-            <div style={statInfoStyles}>
-              <div style={statLabelStyles}>Active Pools</div>
-              <div style={statValueStyles}>8</div>
+              <div style={statLabelStyles}>Pools Joined</div>
+              <div style={statValueStyles}>{loading ? '...' : stats.poolsJoined}</div>
             </div>
             <div style={statIconStyles}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -159,12 +224,12 @@ const Dashboard = ({ user }) => {
           </div>
         </Card>
 
-        {/* Leagues */}
+        {/* Leagues Joined */}
         <Card padding="lg">
           <div style={statCardContentStyles}>
             <div style={statInfoStyles}>
-              <div style={statLabelStyles}>My Leagues</div>
-              <div style={statValueStyles}>3</div>
+              <div style={statLabelStyles}>Leagues Joined</div>
+              <div style={statValueStyles}>{loading ? '...' : stats.leaguesJoined}</div>
             </div>
             <div style={statIconStyles}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -177,16 +242,37 @@ const Dashboard = ({ user }) => {
           </div>
         </Card>
 
-        {/* Win Rate */}
+        {/* Auctions Joined */}
         <Card padding="lg">
           <div style={statCardContentStyles}>
             <div style={statInfoStyles}>
-              <div style={statLabelStyles}>Win Rate</div>
-              <div style={statValueStyles}>67%</div>
+              <div style={statLabelStyles}>Auctions Joined</div>
+              <div style={statValueStyles}>{loading ? '...' : stats.auctionsJoined}</div>
             </div>
             <div style={statIconStyles}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+                <polyline points="14 2 14 8 20 8" />
+                <line x1="12" y1="18" x2="12" y2="12" />
+                <line x1="9" y1="15" x2="15" y2="15" />
+              </svg>
+            </div>
+          </div>
+        </Card>
+
+        {/* My Squares */}
+        <Card padding="lg">
+          <div style={statCardContentStyles}>
+            <div style={statInfoStyles}>
+              <div style={statLabelStyles}>My Squares</div>
+              <div style={statValueStyles}>{loading ? '...' : stats.mySquares}</div>
+            </div>
+            <div style={statIconStyles}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="3" y="3" width="7" height="7" />
+                <rect x="14" y="3" width="7" height="7" />
+                <rect x="14" y="14" width="7" height="7" />
+                <rect x="3" y="14" width="7" height="7" />
               </svg>
             </div>
           </div>
@@ -198,119 +284,72 @@ const Dashboard = ({ user }) => {
         {/* Active Pools */}
         <Card padding="lg">
           <CardHeader>
-            <CardTitle>Active Pools</CardTitle>
-            <CardDescription>Your currently running competitions</CardDescription>
+            <CardTitle>My Pools</CardTitle>
+            <CardDescription>Pools you've joined</CardDescription>
           </CardHeader>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {/* Pool Item 1 */}
-            <div
-              style={{
-                padding: '1rem',
-                borderRadius: '0.75rem',
-                backgroundColor: colors.highlight,
-                cursor: 'pointer',
-                transition: 'all 150ms cubic-bezier(0.4, 0, 0.2, 1)',
-              }}
-              onClick={() => navigate('/v2/pools/1')}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '0.75rem' }}>
-                <div>
-                  <div style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.25rem' }}>
-                    NFL Week 12 Squares
-                  </div>
-                  <div style={{ fontSize: '0.875rem', opacity: 0.7 }}>
-                    45/100 squares filled
-                  </div>
-                </div>
-                <Badge variant="success" size="sm">Live</Badge>
+            {loading ? (
+              <div style={{ padding: '2rem', textAlign: 'center', opacity: 0.6 }}>
+                Loading pools...
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <AvatarGroup max={4} size="sm">
-                  <Avatar alt="User 1" />
-                  <Avatar alt="User 2" />
-                  <Avatar alt="User 3" />
-                  <Avatar alt="User 4" />
-                  <Avatar alt="User 5" />
-                </AvatarGroup>
-                <div style={{ fontSize: '0.875rem', fontWeight: 600, color: colors.brand.primary }}>
-                  $500 Prize
-                </div>
+            ) : myPools.length === 0 ? (
+              <div style={{ padding: '2rem', textAlign: 'center', opacity: 0.6 }}>
+                You haven't joined any pools yet.
               </div>
-            </div>
+            ) : (
+              myPools.slice(0, 3).map((pool) => {
+                const claimedSquares = pool.claimed_squares || pool.claimed_squares_count || 0;
+                const totalSquares = 100;
+                const poolStatus = pool.status || 'open';
+                const statusVariant = poolStatus === 'active' || poolStatus === 'open' ? 'success'
+                  : poolStatus === 'pending' ? 'warning'
+                  : poolStatus === 'completed' ? 'default'
+                  : 'info';
 
-            {/* Pool Item 2 */}
-            <div
-              style={{
-                padding: '1rem',
-                borderRadius: '0.75rem',
-                backgroundColor: colors.highlight,
-                cursor: 'pointer',
-                transition: 'all 150ms cubic-bezier(0.4, 0, 0.2, 1)',
-              }}
-              onClick={() => navigate('/v2/pools/2')}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '0.75rem' }}>
-                <div>
-                  <div style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.25rem' }}>
-                    NBA Playoff Bracket
+                return (
+                  <div
+                    key={pool.id}
+                    style={{
+                      padding: '1rem',
+                      borderRadius: '0.75rem',
+                      backgroundColor: colors.highlight,
+                      cursor: 'pointer',
+                      transition: 'all 150ms cubic-bezier(0.4, 0, 0.2, 1)',
+                    }}
+                    onClick={() => navigate(`/v2/squares/${pool.id}`)}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '0.75rem' }}>
+                      <div>
+                        <div style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.25rem' }}>
+                          {pool.pool_name || pool.name || `Pool #${pool.pool_number}`}
+                        </div>
+                        <div style={{ fontSize: '0.875rem', opacity: 0.7 }}>
+                          {claimedSquares}/{totalSquares} squares filled
+                        </div>
+                      </div>
+                      <Badge variant={statusVariant} size="sm">
+                        {poolStatus.charAt(0).toUpperCase() + poolStatus.slice(1)}
+                      </Badge>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div style={{ fontSize: '0.75rem', opacity: 0.6 }}>
+                        {pool.my_squares_count || 0} squares owned
+                      </div>
+                      {pool.entry_fee > 0 && (
+                        <div style={{ fontSize: '0.875rem', fontWeight: 600, color: colors.brand.primary }}>
+                          ₱{parseFloat(pool.entry_fee).toLocaleString()} per square
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div style={{ fontSize: '0.875rem', opacity: 0.7 }}>
-                    32 participants
-                  </div>
-                </div>
-                <Badge variant="warning" size="sm">Pending</Badge>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <AvatarGroup max={4} size="sm">
-                  <Avatar alt="User 1" />
-                  <Avatar alt="User 2" />
-                  <Avatar alt="User 3" />
-                </AvatarGroup>
-                <div style={{ fontSize: '0.875rem', fontWeight: 600, color: colors.brand.primary }}>
-                  $1,000 Prize
-                </div>
-              </div>
-            </div>
-
-            {/* Pool Item 3 */}
-            <div
-              style={{
-                padding: '1rem',
-                borderRadius: '0.75rem',
-                backgroundColor: colors.highlight,
-                cursor: 'pointer',
-                transition: 'all 150ms cubic-bezier(0.4, 0, 0.2, 1)',
-              }}
-              onClick={() => navigate('/v2/pools/3')}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '0.75rem' }}>
-                <div>
-                  <div style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.25rem' }}>
-                    March Madness 2025
-                  </div>
-                  <div style={{ fontSize: '0.875rem', opacity: 0.7 }}>
-                    128 participants
-                  </div>
-                </div>
-                <Badge variant="info" size="sm">Upcoming</Badge>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <AvatarGroup max={4} size="sm">
-                  <Avatar alt="User 1" />
-                  <Avatar alt="User 2" />
-                  <Avatar alt="User 3" />
-                  <Avatar alt="User 4" />
-                </AvatarGroup>
-                <div style={{ fontSize: '0.875rem', fontWeight: 600, color: colors.brand.primary }}>
-                  $5,000 Prize
-                </div>
-              </div>
-            </div>
+                );
+              })
+            )}
           </div>
 
           <CardFooter>
-            <Button variant="outline" fullWidth onClick={() => navigate('/v2/pools')}>
+            <Button variant="outline" fullWidth onClick={() => navigate('/v2/squares')}>
               View All Pools
             </Button>
           </CardFooter>
@@ -320,74 +359,43 @@ const Dashboard = ({ user }) => {
         <Card padding="lg">
           <CardHeader>
             <CardTitle>Recent Activity</CardTitle>
-            <CardDescription>Latest updates from your pools and leagues</CardDescription>
+            <CardDescription>Your latest pool activities</CardDescription>
           </CardHeader>
 
           <div>
-            {/* Activity Item 1 */}
-            <div style={activityItemStyles}>
-              <Avatar size="sm" alt="John Doe" status="online" />
-              <div style={activityContentStyles}>
-                <div style={activityTitleStyles}>New bet placed</div>
-                <div style={activityDescStyles}>
-                  You placed a $50 bet on Chiefs -3.5
-                </div>
+            {loading ? (
+              <div style={{ padding: '2rem', textAlign: 'center', opacity: 0.6 }}>
+                Loading activity...
               </div>
-              <div style={activityTimeStyles}>2h ago</div>
-            </div>
-
-            {/* Activity Item 2 */}
-            <div style={activityItemStyles}>
-              <Avatar size="sm" alt="Sarah Smith" />
-              <div style={activityContentStyles}>
-                <div style={activityTitleStyles}>Pool winner announced</div>
-                <div style={activityDescStyles}>
-                  You won $125 in NFL Week 11 Squares!
-                </div>
+            ) : recentActivity.length === 0 ? (
+              <div style={{ padding: '2rem', textAlign: 'center', opacity: 0.6 }}>
+                No recent activity. Join a pool to get started!
               </div>
-              <div style={activityTimeStyles}>5h ago</div>
-            </div>
-
-            {/* Activity Item 3 */}
-            <div style={activityItemStyles}>
-              <Avatar size="sm" alt="Mike Johnson" />
-              <div style={activityContentStyles}>
-                <div style={activityTitleStyles}>League invitation</div>
-                <div style={activityDescStyles}>
-                  Mike invited you to "Office Champions League"
+            ) : (
+              recentActivity.map((activity, index) => (
+                <div
+                  key={activity.id}
+                  style={{
+                    ...activityItemStyles,
+                    borderBottom: index === recentActivity.length - 1 ? 'none' : activityItemStyles.borderBottom,
+                  }}
+                >
+                  <Avatar size="sm" alt={user?.name || 'You'} />
+                  <div style={activityContentStyles}>
+                    <div style={activityTitleStyles}>{activity.title}</div>
+                    <div style={activityDescStyles}>
+                      {activity.description}
+                    </div>
+                  </div>
+                  <div style={activityTimeStyles}>{getTimeAgo(activity.timestamp)}</div>
                 </div>
-              </div>
-              <div style={activityTimeStyles}>1d ago</div>
-            </div>
-
-            {/* Activity Item 4 */}
-            <div style={activityItemStyles}>
-              <Avatar size="sm" alt="System" />
-              <div style={activityContentStyles}>
-                <div style={activityTitleStyles}>Balance updated</div>
-                <div style={activityDescStyles}>
-                  $200 added to your account
-                </div>
-              </div>
-              <div style={activityTimeStyles}>2d ago</div>
-            </div>
-
-            {/* Activity Item 5 */}
-            <div style={{ ...activityItemStyles, borderBottom: 'none' }}>
-              <Avatar size="sm" alt="Emma Wilson" />
-              <div style={activityContentStyles}>
-                <div style={activityTitleStyles}>New pool created</div>
-                <div style={activityDescStyles}>
-                  Emma created "Super Bowl Squares 2025"
-                </div>
-              </div>
-              <div style={activityTimeStyles}>3d ago</div>
-            </div>
+              ))
+            )}
           </div>
 
           <CardFooter>
-            <Button variant="ghost" fullWidth onClick={() => navigate('/v2/activity')}>
-              View All Activity
+            <Button variant="ghost" fullWidth onClick={() => navigate('/v2/squares')}>
+              View All Pools
             </Button>
           </CardFooter>
         </Card>
@@ -397,7 +405,7 @@ const Dashboard = ({ user }) => {
       <div style={{ marginTop: '3rem' }}>
         <h2 style={sectionTitleStyles}>Quick Actions</h2>
         <div style={gridStyles}>
-          <Card padding="lg" hover onClick={() => navigate('/v2/pools/create')}>
+          <Card padding="lg" hover onClick={() => navigate('/v2/squares')}>
             <div style={{ textAlign: 'center' }}>
               <div
                 style={{
@@ -413,28 +421,36 @@ const Dashboard = ({ user }) => {
                 }}
               >
                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <line x1="12" y1="5" x2="12" y2="19" />
-                  <line x1="5" y1="12" x2="19" y2="12" />
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                  <line x1="3" y1="9" x2="21" y2="9" />
+                  <line x1="9" y1="21" x2="9" y2="9" />
                 </svg>
               </div>
               <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '0.5rem' }}>
-                Create Pool
+                Browse Pools
               </h3>
               <p style={{ fontSize: '0.875rem', opacity: 0.7 }}>
-                Start a new pool and invite friends
+                Find and join squares pools
               </p>
             </div>
           </Card>
 
-          <Card padding="lg" hover onClick={() => navigate('/v2/leagues/join')}>
-            <div style={{ textAlign: 'center' }}>
+          <Card padding="lg" hover onClick={() => navigate('/v2/leagues')}>
+            <div style={{ textAlign: 'center', position: 'relative' }}>
+              <Badge
+                variant="warning"
+                size="sm"
+                style={{ position: 'absolute', top: '-8px', right: '-8px' }}
+              >
+                Coming Soon
+              </Badge>
               <div
                 style={{
                   width: '64px',
                   height: '64px',
                   margin: '0 auto 1rem',
                   borderRadius: '1rem',
-                  backgroundColor: colors.brand.secondary,
+                  backgroundColor: colors.brand.secondary || '#6366F1',
                   color: '#FFFFFF',
                   display: 'flex',
                   alignItems: 'center',
@@ -452,20 +468,27 @@ const Dashboard = ({ user }) => {
                 Join League
               </h3>
               <p style={{ fontSize: '0.875rem', opacity: 0.7 }}>
-                Find and join existing leagues
+                Fantasy leagues coming soon
               </p>
             </div>
           </Card>
 
-          <Card padding="lg" hover onClick={() => navigate('/v2/betting')}>
-            <div style={{ textAlign: 'center' }}>
+          <Card padding="lg" hover onClick={() => navigate('/v2/auctions')}>
+            <div style={{ textAlign: 'center', position: 'relative' }}>
+              <Badge
+                variant="warning"
+                size="sm"
+                style={{ position: 'absolute', top: '-8px', right: '-8px' }}
+              >
+                Coming Soon
+              </Badge>
               <div
                 style={{
                   width: '64px',
                   height: '64px',
                   margin: '0 auto 1rem',
                   borderRadius: '1rem',
-                  backgroundColor: colors.success,
+                  backgroundColor: colors.success || '#22C55E',
                   color: '#FFFFFF',
                   display: 'flex',
                   alignItems: 'center',
@@ -473,14 +496,17 @@ const Dashboard = ({ user }) => {
                 }}
               >
                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                  <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+                  <polyline points="14 2 14 8 20 8" />
+                  <line x1="12" y1="18" x2="12" y2="12" />
+                  <line x1="9" y1="15" x2="15" y2="15" />
                 </svg>
               </div>
               <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '0.5rem' }}>
-                Place Bet
+                Join Auction
               </h3>
               <p style={{ fontSize: '0.875rem', opacity: 0.7 }}>
-                Browse games and place bets
+                Player auctions coming soon
               </p>
             </div>
           </Card>

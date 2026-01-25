@@ -1,38 +1,33 @@
 import React from "react";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import SignUp from "../pages/auth/Signup";
-import LogIn from "../pages/auth/Login";
-import MainPage from "../pages/MainPage";
-import NotFound from "../pages/NotFound";
-import ClerkLogin from "../pages/auth/ClerkLogin";
-import Logout from "../pages/auth/Logout";
-import ClerkSignup from "../pages/auth/ClerkSignUp";
-import HowItWorks from "../pages/screens/HowItWorks";
-import FAQ from "../pages/FAQ";
-import ContactUs from "../pages/screens/ContactUs";
-import SquaresPoolPage from "../pages/screens/SquaresPoolPage";
+import { BrowserRouter as Router, Route, Routes, Navigate } from "react-router-dom";
 import V2App from "../../v2/V2App";
+import V3App from "../../v3/V3App";
+
+// ============================================
+// V1 ROUTES ARCHIVED - Now using V2 as default
+// V3 is available at /v3/* path
+// ============================================
+// The following v1 imports and routes have been archived:
+// - SignUp, LogIn (../pages/auth/Signup, Login)
+// - MainPage, NotFound (../pages/MainPage, NotFound)
+// - ClerkLogin, ClerkSignup (../pages/auth/ClerkLogin, ClerkSignUp)
+// - HowItWorks, FAQ, ContactUs (../pages/screens/*)
+// - SquaresPoolPage (../pages/screens/SquaresPoolPage)
+// - Logout (../pages/auth/Logout)
+//
+// If you need to restore v1 routes, uncomment the imports above
+// and the archived routes section below.
+// ============================================
 
 const AppRouter = () => {
   return (
     <Router>
       <Routes>
-        <Route path="/login-2" element={<LogIn />} />
-        <Route path="/signup-2" element={<SignUp />} />
-        <Route path="/" element={<ClerkLogin />} />
-        <Route path="/login" element={<ClerkLogin />} />
-        <Route path="/signup" element={<ClerkSignup />} />
-        <Route path="/how-it-works" element={<HowItWorks />} />
-        <Route path="/faq" element={<FAQ />} />
-        <Route path="/contactus" element={<ContactUs />} />
-        <Route path="/squares" element={<SquaresPoolPage />} />
-        <Route path="/logout" element={<Logout />} />
-        <Route path="/main" element={<MainPage />} />
+        {/* V3 - New template with landing page style (accessible at /v3/*) */}
+        <Route path="/v3/*" element={<V3App />} />
 
-        {/* V2 Routes */}
-        <Route path="/v2/*" element={<V2App />} />
-
-        <Route path="*" element={<NotFound />} />
+        {/* V2 is the default root - all other routes handled by V2App */}
+        <Route path="/*" element={<V2App />} />
       </Routes>
     </Router>
   );

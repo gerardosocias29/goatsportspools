@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { FiX, FiSave, FiTrendingUp } from 'react-icons/fi';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useToast } from '../../../app/contexts/ToastContext';
+import { formatDateTimeUS } from '../../utils/timezone';
 
 /**
  * GameScoresModal Component
@@ -9,6 +11,7 @@ import { useTheme } from '../../contexts/ThemeContext';
  */
 const GameScoresModal = ({ game, onClose, onSave }) => {
   const { colors, isDark } = useTheme();
+  const { showToast } = useToast();
   const [scores, setScores] = useState({
     q1_home: '',
     q1_visitor: '',
@@ -52,7 +55,7 @@ const GameScoresModal = ({ game, onClose, onSave }) => {
       onClose();
     } catch (error) {
       console.error('Error saving scores:', error);
-      alert('Failed to save scores. Please try again.');
+      showToast({ severity: 'error', summary: 'Error', detail: 'Failed to save scores. Please try again.' });
     } finally {
       setSaving(false);
     }
@@ -110,16 +113,10 @@ const GameScoresModal = ({ game, onClose, onSave }) => {
           <div className="flex items-center justify-between">
             <div>
               <p className="font-semibold text-lg" style={{ color: colors.text }}>
-                {game?.home_team?.name || game?.home_team} vs {game?.visitor_team?.name || game?.visitor_team}
+                {game?.visitor_team?.name || game?.visitor_team} vs {game?.home_team?.name || game?.home_team}
               </p>
               <p className="text-sm mt-1" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>
-                {new Date(game?.game_datetime).toLocaleString('en-US', {
-                  weekday: 'long',
-                  month: 'long',
-                  day: 'numeric',
-                  hour: 'numeric',
-                  minute: '2-digit',
-                })}
+                {formatDateTimeUS(game?.game_datetime)}
               </p>
             </div>
             <div className="flex gap-2">

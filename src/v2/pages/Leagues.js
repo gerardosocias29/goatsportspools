@@ -330,7 +330,7 @@ const Leagues = () => {
             />
           </svg>
           <img
-            src="/assets/images/favicon.png"
+            src="/img/v2_logo.png"
             alt="Loading"
             style={{
               width: '64px',
@@ -375,8 +375,8 @@ const Leagues = () => {
 
   return (
     <div style={containerStyles} className="v2-fade-in">
-      {/* Stats Cards - Role Based */}
-      {roleId && roleId !== 3 && (
+      {/* Stats Cards - Role Based - HIDDEN */}
+      {/* {roleId && roleId !== 3 && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '2rem', marginBottom: '2rem' }}>
           <Card>
             <div style={{ padding: '1.5rem' }}>
@@ -401,10 +401,10 @@ const Leagues = () => {
             </Card>
           )}
         </div>
-      )}
+      )} */}
 
-      <div style={buttonRowStyles}>
-        {/* Create League Button - Only for Super Admin and League Admin */}
+      {/* Create League and Join League Buttons - HIDDEN */}
+      {/* <div style={buttonRowStyles}>
         {roleId && roleId !== 3 && (
           <Button
             variant="outline"
@@ -417,7 +417,6 @@ const Leagues = () => {
             Create League
           </Button>
         )}
-        {/* Join League Button */}
         <Button
           variant="primary"
           size="lg"
@@ -428,7 +427,7 @@ const Leagues = () => {
         >
           Join A League
         </Button>
-      </div>
+      </div> */}
 
       <div style={centeredHeaderStyles}>
         <h1 style={titleStyles}>Leagues</h1>
@@ -494,7 +493,7 @@ const Leagues = () => {
                   {joined && (
                     <div style={statRowStyles}>
                       <span style={statLabelStyles}>Your Balance:</span>
-                      <span style={balanceStyles}>${balance.toFixed(2)}</span>
+                      <span style={balanceStyles}>{balance.toFixed(2)}</span>
                     </div>
                   )}
 

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiCalendar, FiDollarSign, FiShield, FiUsers } from 'react-icons/fi';
+import { FiCalendar, FiShield, FiUsers, FiFlag } from 'react-icons/fi';
 import { useTheme } from '../contexts/ThemeContext';
 
 /**
@@ -17,29 +17,36 @@ const AdminSettings = () => {
       title: 'Manage Games',
       description: 'Create, edit, and manage games for squares pools and betting',
       icon: <FiCalendar size={48} />,
-      path: '/v2/games/manage',
+      path: '/games/manage',
       available: true,
     },
     {
       title: 'Manage Auction',
       description: 'Configure auction settings, manage bids, and control live auctions',
-      icon: <FiDollarSign size={48} />,
-      path: '/v2/admin/auction',
-      available: false,
+      icon: <FiShield size={48} />,
+      path: '/admin/auction',
+      available: true,
     },
     {
       title: 'Manage Teams',
-      description: 'Add, edit, and organize NFL teams and their information',
+      description: 'Add, edit, and organize teams by league (NFL, NBA, PBA)',
       icon: <FiShield size={48} />,
-      path: '/v2/admin/teams',
-      available: false,
+      path: '/admin/teams',
+      available: true,
     },
     {
       title: 'User Management',
       description: 'Manage user accounts, roles, and permissions',
       icon: <FiUsers size={48} />,
-      path: '/v2/admin/users',
+      path: '/admin/users',
       available: false,
+    },
+    {
+      title: 'Manage Banners',
+      description: 'Create and manage dynamic banners displayed across the site',
+      icon: <FiFlag size={48} />,
+      path: '/admin/banners',
+      available: true,
     },
   ];
 

@@ -232,11 +232,11 @@ class SquaresApiService {
 
   /**
    * Get player's joined pools
-   * GET /api/squares-pools/my-pools
+   * GET /api/squares-pools/my-joined
    */
   async getMyPools() {
     try {
-      const response = await this.axios.get('/api/squares-pools/my-pools');
+      const response = await this.axios.get('/api/squares-pools/my-joined');
       return { success: true, data: response.data.data || response.data };
     } catch (error) {
       console.error('Error fetching my pools:', error);
@@ -508,6 +508,106 @@ class SquaresApiService {
     } catch (error) {
       console.error('Error fetching my credit requests:', error);
       return { success: false, error: error.response?.data?.message || 'Failed to fetch credit requests' };
+    }
+  }
+
+  // ==================== BANNER METHODS ====================
+
+  /**
+   * Get active banners for display (public)
+   * GET /api/banners?page={page}
+   */
+  async getBanners(page = 'all') {
+    try {
+      const response = await this.axios.get(`/api/banners?page=${page}`);
+      return { success: true, data: response.data.data || response.data };
+    } catch (error) {
+      console.error('Error fetching banners:', error);
+      return { success: false, error: error.response?.data?.message || 'Failed to fetch banners' };
+    }
+  }
+
+  /**
+   * Get all banners for admin management
+   * GET /api/banners/manage
+   */
+  async getBannersForAdmin() {
+    try {
+      const response = await this.axios.get('/api/banners/manage');
+      return { success: true, data: response.data.data || response.data };
+    } catch (error) {
+      console.error('Error fetching banners for admin:', error);
+      return { success: false, error: error.response?.data?.message || 'Failed to fetch banners' };
+    }
+  }
+
+  /**
+   * Create a new banner
+   * POST /api/banners
+   */
+  async createBanner(bannerData) {
+    try {
+      const response = await this.axios.post('/api/banners', bannerData);
+      return { success: true, data: response.data.data || response.data };
+    } catch (error) {
+      console.error('Error creating banner:', error);
+      return { success: false, error: error.response?.data?.message || 'Failed to create banner' };
+    }
+  }
+
+  /**
+   * Get a single banner
+   * GET /api/banners/{id}
+   */
+  async getBanner(bannerId) {
+    try {
+      const response = await this.axios.get(`/api/banners/${bannerId}`);
+      return { success: true, data: response.data.data || response.data };
+    } catch (error) {
+      console.error('Error fetching banner:', error);
+      return { success: false, error: error.response?.data?.message || 'Failed to fetch banner' };
+    }
+  }
+
+  /**
+   * Update a banner
+   * PUT /api/banners/{id}
+   */
+  async updateBanner(bannerId, bannerData) {
+    try {
+      const response = await this.axios.put(`/api/banners/${bannerId}`, bannerData);
+      return { success: true, data: response.data.data || response.data };
+    } catch (error) {
+      console.error('Error updating banner:', error);
+      return { success: false, error: error.response?.data?.message || 'Failed to update banner' };
+    }
+  }
+
+  /**
+   * Delete a banner
+   * DELETE /api/banners/{id}
+   */
+  async deleteBanner(bannerId) {
+    try {
+      const response = await this.axios.delete(`/api/banners/${bannerId}`);
+      return { success: true, data: response.data };
+    } catch (error) {
+      console.error('Error deleting banner:', error);
+      return { success: false, error: error.response?.data?.message || 'Failed to delete banner' };
+    }
+  }
+
+  /**
+   * Toggle banner status (active/hidden)
+   * PATCH /api/banners/{id}/toggle-status
+   */
+  async toggleBannerStatus(bannerId) {
+    try {
+      const response = await this.axios.patch(`/api/banners/${bannerId}/toggle-status`);
+      return { success: true, data: response.data.data || response.data };
+    } catch (error) {
+      console.error('Error toggling banner status:', error);
+      return { success: false, error: error.response?.data?.message || 'Failed to toggle banner status' };
     }
   }
 }

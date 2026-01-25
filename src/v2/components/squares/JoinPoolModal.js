@@ -1,4 +1,5 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { FiX, FiUpload, FiCamera, FiKey, FiCheck, FiAlertCircle } from 'react-icons/fi';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useAxios } from '../../../app/contexts/AxiosContext';
@@ -14,6 +15,7 @@ import Button from '../ui/Button';
 const JoinPoolModal = ({ isOpen, onClose, onSuccess }) => {
   const { colors, isDark } = useTheme();
   const axiosService = useAxios();
+  const navigate = useNavigate();
   const fileInputRef = useRef(null);
   const videoRef = useRef(null);
 
@@ -25,6 +27,28 @@ const JoinPoolModal = ({ isOpen, onClose, onSuccess }) => {
   const [success, setSuccess] = useState('');
   const [scanning, setScanning] = useState(false);
   const [poolInfo, setPoolInfo] = useState(null);
+  const [redirecting, setRedirecting] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 480);
+
+  // Mobile detection for responsive tabs
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 480);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Handle redirect when already joined
+  useEffect(() => {
+    if (poolInfo?.already_joined && poolInfo?.id) {
+      setRedirecting(true);
+      setSuccess('Already joined! Redirecting...');
+      const timer = setTimeout(() => {
+        handleClose();
+        navigate(`/v2/squares/${poolInfo.id}`);
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [poolInfo?.already_joined, poolInfo?.id]);
 
   if (!isOpen) return null;
 
@@ -35,6 +59,7 @@ const JoinPoolModal = ({ isOpen, onClose, onSuccess }) => {
     setSuccess('');
     setPoolInfo(null);
     setMode('manual');
+    setRedirecting(false);
     stopCamera();
     onClose();
   };
@@ -162,7 +187,7 @@ const JoinPoolModal = ({ isOpen, onClose, onSuccess }) => {
     try {
       const url = new URL(data);
 
-      // First check query parameters (e.g., /v2/squares/join?pool=ABC123)
+      // First check query parameters (e.g., /squares/join?pool=ABC123)
       const poolParam = url.searchParams.get('pool');
       if (poolParam) {
         setPoolNumber(poolParam.toUpperCase());
@@ -171,7 +196,7 @@ const JoinPoolModal = ({ isOpen, onClose, onSuccess }) => {
         return;
       }
 
-      // Then check path segments (e.g., /v2/squares/pool/ABC123)
+      // Then check path segments (e.g., /squares/pool/ABC123)
       const pathParts = url.pathname.split('/');
       const poolIdx = pathParts.findIndex(p => p === 'pool' || p === 'join');
       if (poolIdx >= 0 && pathParts[poolIdx + 1]) {
@@ -292,7 +317,7 @@ const JoinPoolModal = ({ isOpen, onClose, onSuccess }) => {
 
   const tabStyles = (active) => ({
     flex: 1,
-    padding: '0.75rem',
+    padding: isMobile ? '0.5rem' : '0.75rem',
     borderRadius: '0.5rem',
     border: 'none',
     backgroundColor: active ? colors.brand.primary : 'transparent',
@@ -300,10 +325,12 @@ const JoinPoolModal = ({ isOpen, onClose, onSuccess }) => {
     fontWeight: 600,
     cursor: 'pointer',
     display: 'flex',
+    flexDirection: isMobile ? 'column' : 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: '0.5rem',
+    gap: isMobile ? '0.125rem' : '0.5rem',
     transition: 'all 150ms ease',
+    fontSize: isMobile ? '0.65rem' : 'inherit',
   });
 
   return (
@@ -332,18 +359,18 @@ const JoinPoolModal = ({ isOpen, onClose, onSuccess }) => {
         {/* Body */}
         <div style={bodyStyles}>
           {/* Mode Tabs */}
-          <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', backgroundColor: isDark ? '#1F2937' : '#E5E7EB', padding: '0.25rem', borderRadius: '0.625rem' }}>
+          <div style={{ display: 'flex', gap: isMobile ? '0.25rem' : '0.5rem', marginBottom: '1.5rem', backgroundColor: isDark ? '#1F2937' : '#E5E7EB', padding: '0.25rem', borderRadius: '0.625rem' }}>
             <button style={tabStyles(mode === 'manual')} onClick={() => { setMode('manual'); stopCamera(); }}>
-              <FiKey size={18} />
-              <span>Enter Code</span>
+              <FiKey size={isMobile ? 16 : 18} />
+              <span>{isMobile ? 'Code' : 'Enter Code'}</span>
             </button>
             <button style={tabStyles(mode === 'upload')} onClick={() => { setMode('upload'); stopCamera(); }}>
-              <FiUpload size={18} />
-              <span>Upload QR</span>
+              <FiUpload size={isMobile ? 16 : 18} />
+              <span>{isMobile ? 'Upload' : 'Upload QR'}</span>
             </button>
             <button style={tabStyles(mode === 'scan')} onClick={startCamera}>
-              <FiCamera size={18} />
-              <span>Scan QR</span>
+              <FiCamera size={isMobile ? 16 : 18} />
+              <span>{isMobile ? 'Scan' : 'Scan QR'}</span>
             </button>
           </div>
 
@@ -405,19 +432,48 @@ const JoinPoolModal = ({ isOpen, onClose, onSuccess }) => {
                 <div style={{
                   padding: '1rem',
                   borderRadius: '0.5rem',
-                  backgroundColor: isDark ? '#1F2937' : '#F3F4F6',
-                  border: `1px solid ${colors.border}`,
+                  backgroundColor: poolInfo.already_joined
+                    ? (isDark ? '#14532D' : '#DCFCE7')
+                    : poolInfo.pool_status === 'closed'
+                      ? (isDark ? '#7F1D1D' : '#FEE2E2')
+                      : (isDark ? '#1F2937' : '#F3F4F6'),
+                  border: `1px solid ${poolInfo.already_joined ? colors.success : poolInfo.pool_status === 'closed' ? colors.error : colors.border}`,
                 }}>
-                  <div style={{ fontWeight: 700, color: colors.text, marginBottom: '0.5rem' }}>
-                    {poolInfo.pool_name}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                    <div style={{ fontWeight: 700, color: colors.text }}>
+                      {poolInfo.pool_name}
+                    </div>
+                    <div style={{
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
+                      padding: '0.25rem 0.5rem',
+                      borderRadius: '0.25rem',
+                      backgroundColor: poolInfo.already_joined ? colors.success : poolInfo.pool_status === 'closed' ? colors.error : colors.success,
+                      color: '#FFFFFF',
+                      textTransform: 'uppercase'
+                    }}>
+                      {poolInfo.already_joined ? 'JOINED' : poolInfo.pool_status || 'open'}
+                    </div>
                   </div>
                   <div style={{ fontSize: '0.875rem', color: colors.text, opacity: 0.7 }}>
-                    {poolInfo.home_team?.name || 'TBD'} vs {poolInfo.visitor_team?.name || 'TBD'}
+                    {poolInfo.visitor_team?.name || 'TBD'} vs {poolInfo.home_team?.name || 'TBD'}
                   </div>
                   <div style={{ fontSize: '0.875rem', color: colors.text, opacity: 0.7, marginTop: '0.25rem' }}>
-                    {poolInfo.claimed_squares || 0}/100 squares filled • ${poolInfo.entry_fee || 0}/square
+                    {poolInfo.claimed_squares || 0}/100 squares filled • {poolInfo.player_pool_type === 'FREE' || poolInfo.player_pool_type === 'OPEN' || parseFloat(poolInfo.entry_fee || poolInfo.credit_cost || 0) === 0 ? 'FREE' : `$${parseFloat(poolInfo.entry_fee || poolInfo.credit_cost || 0).toFixed(2)}/square`}
                   </div>
-                  {poolInfo.password && (
+                  {poolInfo.already_joined && (
+                    <div style={{ fontSize: '0.875rem', color: colors.success, marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.25rem', fontWeight: 600 }}>
+                      <FiCheck size={14} />
+                      Already joined! Redirecting...
+                    </div>
+                  )}
+                  {poolInfo.pool_status === 'closed' && !poolInfo.already_joined && (
+                    <div style={{ fontSize: '0.875rem', color: colors.error, marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.25rem', fontWeight: 600 }}>
+                      <FiAlertCircle size={14} />
+                      This pool is closed and not accepting new players
+                    </div>
+                  )}
+                  {poolInfo.has_password && poolInfo.pool_status !== 'closed' && !poolInfo.already_joined && (
                     <div style={{ fontSize: '0.75rem', color: colors.brand.primary, marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                       <FiKey size={12} />
                       Password required
@@ -428,7 +484,7 @@ const JoinPoolModal = ({ isOpen, onClose, onSuccess }) => {
 
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: colors.text }}>
-                  Password {poolInfo?.password ? '*' : '(if required)'}
+                  Password {poolInfo?.has_password ? '*' : '(if required)'}
                 </label>
                 <input
                   type="password"
@@ -444,9 +500,9 @@ const JoinPoolModal = ({ isOpen, onClose, onSuccess }) => {
                 size="lg"
                 fullWidth
                 onClick={handleJoin}
-                disabled={loading || !poolNumber.trim()}
+                disabled={loading || !poolNumber.trim() || poolInfo?.pool_status === 'closed' || poolInfo?.already_joined || redirecting}
               >
-                {loading ? 'Joining...' : 'Join Pool'}
+                {loading ? 'Joining...' : redirecting ? 'Redirecting...' : poolInfo?.already_joined ? 'Already Joined' : poolInfo?.pool_status === 'closed' ? 'Pool Closed' : 'Join Pool'}
               </Button>
             </div>
           )}

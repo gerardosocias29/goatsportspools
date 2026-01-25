@@ -31,15 +31,15 @@ const Hero = () => {
   const badgeStyles = {
     display: 'inline-flex',
     alignItems: 'center',
-    gap: '0.5rem',
-    padding: '0.5rem 1rem',
-    borderRadius: '9999px',
-    backgroundColor: isDark ? 'rgba(212, 122, 62, 0.1)' : 'rgba(212, 122, 62, 0.1)',
-    border: `1px solid ${colors.brand.primary}30`,
+    gap: '1rem',
+    padding: '1rem 2rem',
+    borderRadius: '16px',
+    backgroundColor: isDark ? 'rgba(212, 122, 62, 0.2)' : 'rgba(212, 122, 62, 0.15)',
+    border: `2px solid ${colors.brand.primary}`,
     color: colors.brand.primary,
-    fontSize: '0.875rem',
-    fontWeight: 600,
-    marginBottom: '2rem',
+    fontSize: '1rem',
+    fontWeight: 700,
+    marginBottom: '2.5rem',
   };
 
   const headingStyles = {
@@ -129,19 +129,19 @@ const Hero = () => {
   };
 
   return (
-    <section style={heroStyles}>
+    <section style={heroStyles} className='h-[100vh]'>
       {/* Background Decorations */}
       <div style={decoration1Styles} />
       <div style={decoration2Styles} />
 
-      <div style={containerStyles}>
+      <div style={containerStyles} className='h-full flex items-center justify-center'>
         <div style={contentStyles} className="v2-fade-in">
           {/* Badge */}
           <div style={badgeStyles}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
               <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
             </svg>
-            <span>Trusted by thousands of sports fans</span>
+            <span>We will facilitate your Super Bowl Squares here for FREE. Complete with report</span>
           </div>
 
           {/* Main Heading */}
@@ -160,14 +160,14 @@ const Hero = () => {
             <Button
               variant="primary"
               size="xl"
-              onClick={() => navigate('/v2/sign-up')}
+              onClick={() => navigate('/sign-up')}
             >
               Get Started Free
             </Button>
             <Button
               variant="outline"
               size="xl"
-              onClick={() => navigate('/v2/demo')}
+              onClick={() => navigate('/demo')}
               icon={
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <polygon points="5 3 19 12 5 21 5 3" />
@@ -179,14 +179,14 @@ const Hero = () => {
           </div>
 
           {/* Stats */}
-          <div style={statsContainerStyles} className="v2-glass">
+          {/* <div style={statsContainerStyles} className="v2-glass">
             <div style={statStyles}>
               <div style={statValueStyles}>10K+</div>
               <div style={statLabelStyles}>Active Users</div>
             </div>
 
             <div style={statStyles}>
-              <div style={statValueStyles}>$2M+</div>
+              <div style={statValueStyles}>2M+</div>
               <div style={statLabelStyles}>Pool Prizes</div>
             </div>
 
@@ -199,7 +199,7 @@ const Hero = () => {
               <div style={statValueStyles}>99.9%</div>
               <div style={statLabelStyles}>Uptime</div>
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
     </section>

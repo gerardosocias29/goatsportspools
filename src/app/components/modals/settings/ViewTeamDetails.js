@@ -52,7 +52,7 @@ const ViewTeamDetails = ({
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Final Bid Price</p>
-                  <p className="font-bold text-lg text-green-600">${Number(data?.sold_amount).toFixed(2)}</p>
+                  <p className="font-bold text-lg text-green-600">{Number(data?.sold_amount).toFixed(2)}</p>
                 </div>
               </div>
             </div>
@@ -80,7 +80,7 @@ const ViewTeamDetails = ({
                     </div>
                     <div className="text-right">
                       <p className={`font-bold ${index === 0 ? 'text-green-600' : 'text-gray-700'}`}>
-                        ${Number(bid?.bid_amount).toFixed(2)}
+                        {Number(bid?.bid_amount).toFixed(2)}
                       </p>
                     </div>
                   </div>

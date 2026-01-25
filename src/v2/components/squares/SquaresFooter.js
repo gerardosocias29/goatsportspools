@@ -41,7 +41,7 @@ const SquaresFooter = () => {
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           {/* Copyright */}
           <div className="text-gray-400 text-sm">
-            &copy; {currentYear} GOAT Sports Pools. All rights reserved.
+            &copy; {currentYear} OKRNG. All rights reserved.
           </div>
 
           {/* Social Media Links */}

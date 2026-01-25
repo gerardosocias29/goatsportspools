@@ -505,7 +505,7 @@ const NFLBetting = () => {
             />
           </svg>
           <img
-            src="/assets/images/favicon.png"
+            src="/img/v2_logo.png"
             alt="Loading"
             style={{
               width: '64px',
@@ -540,7 +540,7 @@ const NFLBetting = () => {
           <p style={{ ...subtitleStyles, marginBottom: '2rem', fontSize: '1.125rem' }}>
             You need to join a league before you can place bets on NFL games. Join a league to get started!
           </p>
-          <Button variant="primary" size="lg" onClick={() => navigate('/v2/leagues')}>
+          <Button variant="primary" size="lg" onClick={() => navigate('/leagues')}>
             Browse Leagues
           </Button>
         </Card>
@@ -571,7 +571,7 @@ const NFLBetting = () => {
             ))}
           </select>
           <div style={balanceStyles}>
-            Balance: <span style={balanceValueStyles}>${selectedLeague?.balance?.toFixed(2) || '0.00'}</span>
+            Balance: <span style={balanceValueStyles}>{selectedLeague?.balance?.toFixed(2) || '0.00'}</span>
           </div>
         </div>
       </div>

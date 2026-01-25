@@ -272,7 +272,7 @@ const BetSlip = ({
         <div style={headerStyles}>
           <h3 style={titleStyles}>Bet Slip ({bets.length})</h3>
           <div style={balanceStyles}>
-            Balance: <span style={balanceValueStyles}>${balance.toFixed(2)}</span>
+            Balance: <span style={balanceValueStyles}>{balance.toFixed(2)}</span>
           </div>
         </div>
 
@@ -342,11 +342,11 @@ const BetSlip = ({
         <div style={summaryStyles}>
           <div style={summaryRowStyles}>
             <span style={summaryLabelStyles}>Total Wager:</span>
-            <span style={summaryValueStyles}>${totalWager}</span>
+            <span style={summaryValueStyles}>{totalWager}</span>
           </div>
           <div style={summaryRowStyles}>
             <span style={summaryLabelStyles}>Potential Win:</span>
-            <span style={potentialWinStyles}>${totalPotentialWin}</span>
+            <span style={potentialWinStyles}>{totalPotentialWin}</span>
           </div>
         </div>
 
@@ -367,7 +367,7 @@ const BetSlip = ({
             disabled={!canPlaceBets || loading}
             loading={loading}
           >
-            {loading ? 'Placing Bets...' : `Place Bets ($${totalWager})`}
+            {loading ? 'Placing Bets...' : `Place Bets (${totalWager})`}
           </Button>
           <Button
             variant="outline"

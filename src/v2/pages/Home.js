@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useUser } from '@clerk/clerk-react';
 import { useTheme } from '../contexts/ThemeContext';
 import Hero from '../components/sections/Hero';
 import Card, { CardHeader, CardTitle, CardDescription } from '../components/ui/Card';
@@ -9,6 +10,7 @@ import Badge from '../components/ui/Badge';
 const Home = () => {
   const { colors, isDark } = useTheme();
   const navigate = useNavigate();
+  const { isSignedIn } = useUser();
 
   const containerStyles = {
     maxWidth: '1536px',
@@ -188,7 +190,7 @@ const Home = () => {
             </Card>
 
             {/* Feature 5 */}
-            <Card padding="lg" hover>
+            {/* <Card padding="lg" hover>
               <div style={featureIconStyles}>
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M12 2L2 7l10 5 10-5-10-5z" />
@@ -202,10 +204,10 @@ const Home = () => {
               <p style={{ fontSize: '1rem', opacity: 0.8, lineHeight: 1.6 }}>
                 Football, basketball, baseball, hockey, and more. All your favorite sports in one place.
               </p>
-            </Card>
+            </Card> */}
 
             {/* Feature 6 */}
-            <Card padding="lg" hover>
+            {/* <Card padding="lg" hover>
               <div style={featureIconStyles}>
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
@@ -218,13 +220,13 @@ const Home = () => {
               <p style={{ fontSize: '1rem', opacity: 0.8, lineHeight: 1.6 }}>
                 Bank-level encryption and instant payouts. Your money is always safe and accessible.
               </p>
-            </Card>
+            </Card> */}
           </div>
         </div>
       </section>
 
       {/* Testimonials Section */}
-      <section style={{ ...sectionStyles, backgroundColor: isDark ? 'rgba(30, 39, 54, 0.3)' : 'rgba(250, 246, 242, 0.5)' }}>
+      {/* <section style={{ ...sectionStyles, backgroundColor: isDark ? 'rgba(30, 39, 54, 0.3)' : 'rgba(250, 246, 242, 0.5)' }}>
         <div style={containerStyles}>
           <h2 style={sectionTitleStyles}>Loved by Sports Fans</h2>
           <p style={sectionDescStyles}>
@@ -232,10 +234,9 @@ const Home = () => {
           </p>
 
           <div style={gridStyles}>
-            {/* Testimonial 1 */}
             <div style={testimonialStyles}>
               <div style={quoteStyles}>
-                "GOAT Sports Pools has completely changed how we do our office football pool.
+                "OKRNG has completely changed how we do our office football pool.
                 Everything is automated and transparent. Love it!"
               </div>
               <div style={authorStyles}>
@@ -247,7 +248,6 @@ const Home = () => {
               </div>
             </div>
 
-            {/* Testimonial 2 */}
             <div style={testimonialStyles}>
               <div style={quoteStyles}>
                 "The live updates during games are incredible. I can track all my bets and pools
@@ -262,7 +262,6 @@ const Home = () => {
               </div>
             </div>
 
-            {/* Testimonial 3 */}
             <div style={testimonialStyles}>
               <div style={quoteStyles}>
                 "Finally, a platform that makes it easy to run multiple pools at once.
@@ -278,7 +277,7 @@ const Home = () => {
             </div>
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* CTA Section */}
       <section style={sectionStyles}>
@@ -289,19 +288,34 @@ const Home = () => {
                 Ready to Get Started?
               </h2>
               <p style={{ ...sectionDescStyles, marginBottom: '2rem' }}>
-                Join thousands of sports fans who trust GOAT Sports Pools for their betting needs.
+                Trusted by sports fans for a smarter betting experience with OKRNG.
               </p>
               <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-                <Button variant="primary" size="xl" onClick={() => navigate('/v2/sign-up')}>
-                  Create Free Account
-                </Button>
-                <Button variant="outline" size="xl" onClick={() => navigate('/v2/demo')}>
-                  Schedule Demo
-                </Button>
+                {isSignedIn ? (
+                  <>
+                    <Button variant="primary" size="xl" onClick={() => navigate('/pools')}>
+                      Browse Pools
+                    </Button>
+                    <Button variant="outline" size="xl" onClick={() => navigate('/squares/admin')}>
+                      Create Pool
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button variant="primary" size="xl" onClick={() => navigate('/sign-up')}>
+                      Create Free Account
+                    </Button>
+                    <Button variant="outline" size="xl" onClick={() => navigate('/demo')}>
+                      Schedule Demo
+                    </Button>
+                  </>
+                )}
               </div>
-              <p style={{ fontSize: '0.875rem', marginTop: '1.5rem', opacity: 0.7 }}>
-                No credit card required • Free to start • Cancel anytime
-              </p>
+              {!isSignedIn && (
+                <p style={{ fontSize: '0.875rem', marginTop: '1.5rem', opacity: 0.7 }}>
+                  No credit card required • Free to start • Cancel anytime
+                </p>
+              )}
             </div>
           </Card>
         </div>

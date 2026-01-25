@@ -6,6 +6,7 @@ import { useUser } from '@clerk/clerk-react';
 import Layout from './components/layout/Layout';
 // Import fonts only - not the full globals.css to avoid conflicts with v1
 import './styles/v2-scoped.css';
+import { useTheme } from './contexts/ThemeContext';
 
 // Lazy load all page components for better performance
 const Home = lazy(() => import('./pages/Home'));
@@ -23,15 +24,27 @@ const SquaresJoin = lazy(() => import('./pages/SquaresJoin'));
 const CreateSquaresPool = lazy(() => import('./pages/CreateSquaresPool'));
 const SquaresAdminDashboard = lazy(() => import('./pages/SquaresAdminDashboard'));
 const ManageGames = lazy(() => import('./pages/ManageGames'));
+const ManageTeams = lazy(() => import('./pages/ManageTeams'));
+const ManageBanners = lazy(() => import('./pages/ManageBanners'));
 const AdminSettings = lazy(() => import('./pages/AdminSettings'));
 const CreditRequests = lazy(() => import('./pages/CreditRequests'));
+const About = lazy(() => import('./pages/About'));
+const Legal = lazy(() => import('./pages/Legal'));
+const Help = lazy(() => import('./pages/Help'));
+const ManageAuction = lazy(() => import('./pages/admin/ManageAuction'));
+const AdminBidding = lazy(() => import('./pages/admin/AdminBidding'));
+
+
 
 // Loading fallback component for lazy-loaded routes
-const LoadingFallback = () => (
+const LoadingFallback = () => {
+  const { colors } = useTheme();
+  return (
   <div style={{
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
+    flexDirection: 'column',
     minHeight: '100vh',
     backgroundColor: '#FAF6F2'
   }}>
@@ -67,7 +80,7 @@ const LoadingFallback = () => (
 
       {/* Logo */}
       <img
-        src="/assets/images/favicon.png"
+        src="/img/v2_logo.png"
         alt="Loading"
         style={{
           width: '64px',
@@ -78,8 +91,17 @@ const LoadingFallback = () => (
         }}
       />
     </div>
+    <div style={{
+      color: colors.text,
+      fontSize: '1.25rem',
+      fontWeight: 600,
+      fontFamily: '"Hubot Sans", sans-serif',
+    }}>
+      OKRNG
+    </div>
   </div>
-);
+  );
+};
 
 // Inner component that uses UserContext
 const V2AppContent = () => {
@@ -87,6 +109,7 @@ const V2AppContent = () => {
   const { user, loading } = useUserContext();
   const [pusher, setPusher] = useState(null);
   const [channel, setChannel] = useState(null);
+  const { colors } = useTheme();
 
   useEffect(() => {
     // Initialize Pusher for real-time auction updates when user is signed in
@@ -118,7 +141,7 @@ const V2AppContent = () => {
   }, [isSignedIn, user, pusher]);
 
   const handleSignOut = () => {
-    window.location.href = '/v2/sign-in';
+    window.location.href = '/sign-in';
   };
 
   if (loading) {
@@ -128,6 +151,7 @@ const V2AppContent = () => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
+          flexDirection: 'column',
           minHeight: '100vh',
           backgroundColor: '#FAF6F2'
         }}>
@@ -163,7 +187,7 @@ const V2AppContent = () => {
 
             {/* Logo */}
             <img
-              src="/assets/images/favicon.png"
+              src="/img/v2_logo.png"
               alt="Loading"
               style={{
                 width: '64px',
@@ -173,6 +197,14 @@ const V2AppContent = () => {
                 animation: 'bounce 1s ease-in-out infinite'
               }}
             />
+          </div>
+          <div style={{
+            color: colors.text,
+            fontSize: '1.25rem',
+            fontWeight: 600,
+            fontFamily: '"Hubot Sans", sans-serif',
+          }}>
+            OKRNG
           </div>
         </div>
       </Layout>
@@ -200,7 +232,9 @@ const V2AppContent = () => {
                 <Routes>
                   {/* Public Routes */}
                   <Route path="/" element={<Home />} />
-                  <Route path="/v2" element={<Home />} />
+                  <Route path="/about" element={<About />} />
+                  <Route path="/legal" element={<Legal />} />
+                  <Route path="/help" element={<Help />} />
 
                   {/* Protected Routes */}
                   <Route
@@ -209,7 +243,7 @@ const V2AppContent = () => {
                       isSignedIn ? (
                         <Dashboard user={user} />
                       ) : (
-                        <Navigate to="/v2/sign-in" replace />
+                        <Navigate to="/sign-in" replace />
                       )
                     }
                   />
@@ -223,7 +257,7 @@ const V2AppContent = () => {
                       isSignedIn ? (
                         <LiveAuction channel={channel} />
                       ) : (
-                        <Navigate to="/v2/sign-in" replace />
+                        <Navigate to="/sign-in" replace />
                       )
                     }
                   />
@@ -233,7 +267,7 @@ const V2AppContent = () => {
                       isSignedIn ? (
                         <NFLBetting />
                       ) : (
-                        <Navigate to="/v2/sign-in" replace />
+                        <Navigate to="/sign-in" replace />
                       )
                     }
                   />
@@ -252,7 +286,7 @@ const V2AppContent = () => {
                       isSignedIn ? (
                         <CreateSquaresPool />
                       ) : (
-                        <Navigate to="/v2/sign-in" replace />
+                        <Navigate to="/sign-in" replace />
                       )
                     }
                   />
@@ -262,7 +296,7 @@ const V2AppContent = () => {
                       isSignedIn ? (
                         <SquaresAdminDashboard />
                       ) : (
-                        <Navigate to="/v2/sign-in" replace />
+                        <Navigate to="/sign-in" replace />
                       )
                     }
                   />
@@ -272,7 +306,7 @@ const V2AppContent = () => {
                       isSignedIn ? (
                         <ManageGames />
                       ) : (
-                        <Navigate to="/v2/sign-in" replace />
+                        <Navigate to="/sign-in" replace />
                       )
                     }
                   />
@@ -284,7 +318,7 @@ const V2AppContent = () => {
                       isSignedIn && user?.role_id === 1 ? (
                         <AdminSettings />
                       ) : (
-                        <Navigate to="/v2" replace />
+                        <Navigate to="/" replace />
                       )
                     }
                   />
@@ -292,19 +326,29 @@ const V2AppContent = () => {
                     path="/admin/auction"
                     element={
                       isSignedIn && user?.role_id === 1 ? (
-                        <ComingSoon title="Manage Auction" />
+                        <ManageAuction />
                       ) : (
-                        <Navigate to="/v2" replace />
+                        <Navigate to="/" replace />
+                      )
+                    }
+                  />
+                  <Route
+                    path="/admin/auction/live"
+                    element={
+                      isSignedIn && user?.role_id === 1 ? (
+                        <AdminBidding channel={channel} />
+                      ) : (
+                        <Navigate to="/" replace />
                       )
                     }
                   />
                   <Route
                     path="/admin/teams"
                     element={
-                      isSignedIn && user?.role_id === 1 ? (
-                        <ComingSoon title="Manage Teams" />
+                      isSignedIn && user?.role_id <= 2 ? (
+                        <ManageTeams />
                       ) : (
-                        <Navigate to="/v2" replace />
+                        <Navigate to="/" replace />
                       )
                     }
                   />
@@ -314,18 +358,28 @@ const V2AppContent = () => {
                       isSignedIn && user?.role_id === 1 ? (
                         <ComingSoon title="User Management" />
                       ) : (
-                        <Navigate to="/v2" replace />
+                        <Navigate to="/" replace />
+                      )
+                    }
+                  />
+                  <Route
+                    path="/admin/banners"
+                    element={
+                      isSignedIn && user?.role_id === 1 ? (
+                        <ManageBanners />
+                      ) : (
+                        <Navigate to="/" replace />
                       )
                     }
                   />
 
                   {/* Placeholder routes for future pages */}
-                  <Route path="/betting" element={<ComingSoon title="Betting" />} />
+                  <Route path="/betting" element={<ComingSoon title="March Madness Auction" />} />
                   <Route path="/settings" element={<ComingSoon title="Settings" />} />
                   <Route path="/activity" element={<ComingSoon title="Activity" />} />
 
-                  {/* Catch all - redirect to v2 home */}
-                  <Route path="*" element={<Navigate to="/v2" replace />} />
+                  {/* Catch all - redirect to home */}
+                  <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
               </Layout>
             }
