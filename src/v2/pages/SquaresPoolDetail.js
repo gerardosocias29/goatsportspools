@@ -2286,7 +2286,7 @@ const SquaresPoolDetail = () => {
                         {winner.player?.name || 'Unknown'}
                       </div>
                       <div className="text-xs" style={{ color: colors.text, opacity: 0.6 }}>
-                        Square: ({winner.square?.x_coordinate}, {winner.square?.y_coordinate})
+                        Square: ({winner.square?.x_number}, {winner.square?.y_number})
                       </div>
                     </div>
                     <div className="text-right">
