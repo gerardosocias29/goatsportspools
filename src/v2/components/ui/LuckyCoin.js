@@ -93,14 +93,17 @@ const LuckyCoin = ({ onResultsChange }) => {
     left: '50%',
     transform: 'translateX(-50%)',
     marginTop: '8px',
-    padding: '6px 12px',
+    padding: '8px 14px',
     backgroundColor: colors.card,
     border: `1px solid ${colors.border}`,
-    borderRadius: '6px',
+    borderRadius: '8px',
     fontSize: '12px',
     fontWeight: 500,
     color: colors.text,
-    whiteSpace: 'nowrap',
+    whiteSpace: 'normal',
+    width: '220px',
+    textAlign: 'center',
+    lineHeight: '1.4',
     boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
     zIndex: 1000,
     opacity: showTooltip ? 1 : 0,
@@ -132,7 +135,7 @@ const LuckyCoin = ({ onResultsChange }) => {
 
       {/* Tooltip */}
       <div style={tooltipStyles}>
-        Press for luck!
+        Generate a random coin flip, color, number, and card suit for fun!
       </div>
     </div>
   );

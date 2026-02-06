@@ -269,7 +269,7 @@ const Pools = () => {
   };
 
   const handleMyPoolClick = (pool) => {
-    navigate(`/squares/pool/${pool.id}`);
+    navigate(`/squares/pool/${pool.pool_number}`);
   };
 
   const getLeagueEmoji = (league) => {

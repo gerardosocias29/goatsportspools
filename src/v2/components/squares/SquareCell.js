@@ -6,6 +6,7 @@ import React from 'react';
  */
 const SquareCell = ({
   square,
+  squareNumber,
   isSelected,
   isHovered,
   isOwned,
@@ -91,9 +92,9 @@ const SquareCell = ({
         </div>
       )}
 
-      {/* Empty square indicator */}
+      {/* Empty square indicator - show box number (1-100) */}
       {!square.playerInitials && !isOwned && (
-        <div className="text-gray-400 text-base sm:text-lg md:text-2xl font-light">+</div>
+        <div className="text-gray-400 text-[10px] sm:text-xs md:text-sm font-medium">{squareNumber}</div>
       )}
     </div>
   );

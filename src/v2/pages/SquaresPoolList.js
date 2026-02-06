@@ -75,8 +75,8 @@ const SquaresPoolList = () => {
     }
   };
 
-  const handlePoolClick = (poolId) => {
-    navigate(`/squares/pool/${poolId}`);
+  const handlePoolClick = (poolNumber) => {
+    navigate(`/squares/pool/${poolNumber}`);
   };
 
   const handleCreatePool = () => {
@@ -86,8 +86,8 @@ const SquaresPoolList = () => {
   const handleJoinSuccess = (pool) => {
     // Reload pools list and navigate to the joined pool
     loadPools();
-    if (pool && pool.id) {
-      navigate(`/squares/pool/${pool.id}`);
+    if (pool && pool.pool_number) {
+      navigate(`/squares/pool/${pool.pool_number}`);
     }
   };
 
@@ -306,7 +306,7 @@ const SquaresPoolList = () => {
                 key={pool.id}
                 pool={pool}
                 teams={teams}
-                onSelect={(p) => handlePoolClick(p.id)}
+                onSelect={(p) => handlePoolClick(p.pool_number)}
               />
             ))}
           </div>

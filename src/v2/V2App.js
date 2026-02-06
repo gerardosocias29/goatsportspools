@@ -278,7 +278,7 @@ const V2AppContent = () => {
                   {/* Squares Routes */}
                   <Route path="/squares" element={<SquaresPoolList />} />
                   <Route path="/squares/join" element={<SquaresJoin />} />
-                  <Route path="/squares/pool/:poolId" element={<SquaresPoolDetail />} />
+                  <Route path="/squares/pool/:poolNumber" element={<SquaresPoolDetail />} />
                   <Route path="/credit-requests" element={<CreditRequests />} />
                   <Route
                     path="/squares/create"

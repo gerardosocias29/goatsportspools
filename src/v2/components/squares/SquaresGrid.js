@@ -230,12 +230,12 @@ const SquaresGrid = ({
             {/* Top Numbers Row (X Axis) */}
             <div className="flex mb-1 sm:mb-2">
               {/* Spacer for corner - matches Y-axis label and numbers column widths */}
-              <div className="hidden md:flex items-center mr-2 max-h-10">
+              <div className="flex items-center mr-1 sm:mr-2 max-h-10">
                 <div
-                  className="invisible flex items-center justify-center border rounded-lg shadow-md px-2 py-6 bg-gradient-to-b from-green-600 to-green-500"
+                  className="invisible flex items-center justify-center border rounded-lg shadow-md px-1 sm:px-2 py-3 sm:py-6 bg-gradient-to-b from-green-600 to-green-500"
                   style={{ writingMode: 'vertical-rl', textOrientation: 'mixed', transform: 'rotate(180deg)' }}
                 >
-                  <p className="font-bold text-white select-none text-lg whitespace-nowrap">{visitorTeamName}</p>
+                  <p className="font-bold text-white select-none text-xs sm:text-sm md:text-lg whitespace-nowrap">{visitorTeamName}</p>
                 </div>
               </div>
               {/* Spacer for Y numbers column */}
@@ -273,12 +273,12 @@ const SquaresGrid = ({
             {/* Grid Rows with Y Numbers */}
             <div className="flex">
               {/* Y Axis Label - Visitor Team (positioned to the left/side of grid) */}
-              <div className="hidden md:flex items-center mr-2">
+              <div className="flex items-center mr-1 sm:mr-2">
                 <div
-                  className="flex items-center justify-center border rounded-lg shadow-md px-2 py-6 bg-gradient-to-b from-green-600 to-green-500"
+                  className="flex items-center justify-center border rounded-lg shadow-md px-1 sm:px-2 py-3 sm:py-6 bg-gradient-to-b from-green-600 to-green-500"
                   style={{ writingMode: 'vertical-rl', textOrientation: 'mixed', transform: 'rotate(180deg)' }}
                 >
-                  <p className="font-bold text-white select-none text-lg whitespace-nowrap">{visitorTeamName}</p>
+                  <p className="font-bold text-white select-none text-xs sm:text-sm md:text-lg whitespace-nowrap">{visitorTeamName}</p>
                 </div>
               </div>
 
@@ -315,6 +315,7 @@ const SquaresGrid = ({
                       <SquareCell
                         key={`${xIdx}-${yIdx}`}
                         square={square}
+                        squareNumber={yIdx * 10 + xIdx + 1}
                         isSelected={isSquareSelected(square)}
                         isHovered={hoveredSquare?.x_coordinate === xIdx && hoveredSquare?.y_coordinate === yIdx}
                         isOwned={isSquareOwned(square)}

@@ -113,7 +113,8 @@ const LoadingModal = ({ message, count, current, total }) => {
  */
 const SquaresPoolDetail = () => {
   const { colors, isDark } = useTheme();
-  const { poolId } = useParams();
+  const { poolNumber } = useParams();
+  const [poolId, setPoolId] = useState(null);
   const navigate = useNavigate();
   const { get, post, put, delete: del } = useAxios();
   const axiosService = useAxios();
@@ -237,19 +238,22 @@ const SquaresPoolDetail = () => {
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
       // Use query param for redirect so external links (from emails) work properly
-      const returnUrl = encodeURIComponent(`/squares/pool/${poolId}`);
+      const returnUrl = encodeURIComponent(`/squares/pool/${poolNumber}`);
       navigate(`/sign-in?redirect_url=${returnUrl}`);
     }
-  }, [isSignedIn, isLoaded, poolId, navigate]);
+  }, [isSignedIn, isLoaded, poolNumber, navigate]);
 
   useEffect(() => {
-    const initPage = async () => {
-      loadTeams();
-      loadPool(); // currentUser is available from context
+    loadTeams();
+    loadPool();
+  }, [poolNumber, currentUser]);
+
+  // Load winners after pool ID is available
+  useEffect(() => {
+    if (poolId) {
       loadWinners();
-    };
-    initPage();
-  }, [poolId, currentUser]);
+    }
+  }, [poolId]);
 
   const loadTeams = async () => {
     try {
@@ -265,7 +269,7 @@ const SquaresPoolDetail = () => {
       setLoading(true);
     }
     try {
-      const response = await axiosService.get(`/api/squares-pools/${poolId}`);
+      const response = await axiosService.get(`/api/squares-pools/${poolNumber}`);
       const poolData = response.data.data || response.data;
 
       // Debug: Log pool data
@@ -286,6 +290,7 @@ const SquaresPoolDetail = () => {
       console.log('Owned squares by current user:', ownedSquares);
 
       setPool(poolData);
+      setPoolId(poolData.id);
 
       // Use passed userData or fallback to state
       const user = userData || currentUser;
@@ -1724,39 +1729,7 @@ const SquaresPoolDetail = () => {
 
                           {/* Scores Display */}
                           <div className="flex items-center justify-center gap-3 mb-3">
-                            {/* Home Team */}
-                            <div className="flex flex-col items-center">
-                              {pool.game?.home_team_id && getTeamLogo(pool.game.home_team_id) ? (
-                                <img
-                                  src={getTeamLogo(pool.game.home_team_id)}
-                                  alt="Home"
-                                  className="w-8 h-8 object-contain mb-1"
-                                />
-                              ) : (
-                                <div
-                                  className="w-8 h-8 rounded-full flex items-center justify-center mb-1 text-xs font-bold"
-                                  style={{ backgroundColor: colors.brand.primary, color: '#fff' }}
-                                >
-                                  H
-                                </div>
-                              )}
-                              <div
-                                className="text-2xl font-bold"
-                                style={{ color: colors.text }}
-                              >
-                                {hasScores ? homeScore : '-'}
-                              </div>
-                            </div>
-
-                            {/* VS */}
-                            <div
-                              className="text-xs font-semibold px-2"
-                              style={{ color: colors.text, opacity: 0.4 }}
-                            >
-                              vs
-                            </div>
-
-                            {/* Visitor Team */}
+                            {/* Visitor/Away Team (listed first) */}
                             <div className="flex flex-col items-center">
                               {pool.game?.visitor_team_id && getTeamLogo(pool.game.visitor_team_id) ? (
                                 <img
@@ -1777,6 +1750,38 @@ const SquaresPoolDetail = () => {
                                 style={{ color: colors.text }}
                               >
                                 {hasScores ? visitorScore : '-'}
+                              </div>
+                            </div>
+
+                            {/* VS */}
+                            <div
+                              className="text-xs font-semibold px-2"
+                              style={{ color: colors.text, opacity: 0.4 }}
+                            >
+                              vs
+                            </div>
+
+                            {/* Home Team (listed second) */}
+                            <div className="flex flex-col items-center">
+                              {pool.game?.home_team_id && getTeamLogo(pool.game.home_team_id) ? (
+                                <img
+                                  src={getTeamLogo(pool.game.home_team_id)}
+                                  alt="Home"
+                                  className="w-8 h-8 object-contain mb-1"
+                                />
+                              ) : (
+                                <div
+                                  className="w-8 h-8 rounded-full flex items-center justify-center mb-1 text-xs font-bold"
+                                  style={{ backgroundColor: colors.brand.primary, color: '#fff' }}
+                                >
+                                  H
+                                </div>
+                              )}
+                              <div
+                                className="text-2xl font-bold"
+                                style={{ color: colors.text }}
+                              >
+                                {hasScores ? homeScore : '-'}
                               </div>
                             </div>
                           </div>

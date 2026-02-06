@@ -64,7 +64,7 @@ const SquaresJoin = () => {
       });
 
       // Redirect to pool detail
-      navigate(`/squares/pool/${pool.id}`);
+      navigate(`/squares/pool/${pool.pool_number}`);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to join pool');
       setJoining(false);

@@ -437,12 +437,12 @@ const CreateSquaresPool = () => {
       const response = await axiosService.post('/api/squares-pools', requestData);
       if (response.data?.status) {
         showToast({ severity: 'success', summary: 'Success', detail: 'Pool created successfully!' });
-        // API returns: { status: true, data: { id: ... }, pool_number: ... }
-        const poolId = response.data.data?.id || response.data.id;
-        if (poolId) {
-          navigate(`/squares/pool/${poolId}`);
+        // API returns: { status: true, data: { id: ..., pool_number: ... }, pool_number: ... }
+        const poolNumber = response.data.data?.pool_number || response.data.pool_number;
+        if (poolNumber) {
+          navigate(`/squares/pool/${poolNumber}`);
         } else {
-          // Fallback to squares list if no ID
+          // Fallback to squares list if no pool_number
           navigate('/squares');
         }
       }

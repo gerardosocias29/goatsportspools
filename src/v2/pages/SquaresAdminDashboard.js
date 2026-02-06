@@ -1082,7 +1082,7 @@ const SquaresAdminDashboard = () => {
                     key={pool.id}
                     pool={pool}
                     teams={teams}
-                    onSelect={(p) => navigate(`/squares/pool/${p.id}`)}
+                    onSelect={(p) => navigate(`/squares/pool/${p.pool_number}`)}
                   />
                 ))}
               </div>

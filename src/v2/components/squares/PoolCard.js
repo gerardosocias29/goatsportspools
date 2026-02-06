@@ -64,7 +64,7 @@ const PoolCard = ({
     if (onSelect) {
       onSelect(pool);
     } else {
-      navigate(`/squares/pool/${pool.id}`);
+      navigate(`/squares/pool/${pool.pool_number}`);
     }
   };
 
