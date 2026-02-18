@@ -8,6 +8,7 @@ import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
 import Input from '../../components/ui/Input';
 import moment from 'moment';
+import TournamentBracket from '../../../app/pages/screens/Bidding/TournamentBracket';
 
 const ManageAuction = () => {
   const { colors } = useTheme();
@@ -23,6 +24,7 @@ const ManageAuction = () => {
   // Modal states
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showStreamModal, setShowStreamModal] = useState(false);
+  const [showBracketModal, setShowBracketModal] = useState(false);
   const [selectedAuction, setSelectedAuction] = useState(null);
 
   // Team/User details states
@@ -256,6 +258,17 @@ const ManageAuction = () => {
                       </td>
                       <td style={{ ...tdStyles, textAlign: 'right' }}>
                         <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                          {/* Finalize Bracket (pending + not finalized) */}
+                          {auction.status === 'pending' && auction.is_finalized !== 1 && (
+                            <button
+                              style={{ ...actionButtonStyles, backgroundColor: '#F59E0B', color: '#fff' }}
+                              onClick={() => { setSelectedAuction(auction); setShowBracketModal(true); }}
+                              title="Finalize Team Bracket"
+                            >
+                              🏀
+                            </button>
+                          )}
+
                           {/* Team Details */}
                           <button
                             style={{ ...actionButtonStyles, backgroundColor: colors.highlight, color: colors.text }}
@@ -454,6 +467,15 @@ const ManageAuction = () => {
           colors={colors}
         />
       )}
+
+      {/* Tournament Bracket Modal */}
+      <TournamentBracket
+        auctionId={selectedAuction?.id}
+        data={selectedAuction}
+        visible={showBracketModal}
+        onHide={() => { setShowBracketModal(false); setSelectedAuction(null); }}
+        onSuccess={() => { setShowBracketModal(false); setSelectedAuction(null); setRefreshTable(prev => !prev); }}
+      />
     </div>
   );
 };

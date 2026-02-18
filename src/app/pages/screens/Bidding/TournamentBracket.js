@@ -64,6 +64,21 @@ const TournamentBracket = ({ visible, onHide, onSuccess = () => {}, data, auctio
     setSelectedTeams(Array(count).fill({ team: null, seed: "", region: "" }));
   };
 
+  const handleAutoFill = () => {
+    const sorted = [...teams].sort((a, b) => a.school.localeCompare(b.school));
+    const count = Math.min(teamCount, sorted.length);
+    setTeamCount(count);
+
+    const autoFilled = sorted.slice(0, count).map((t) => ({
+      team: t.id,
+      seed: t.seed?.toString() || "",
+      region: t.region || "",
+    }));
+
+    setSelectedTeams(autoFilled);
+    showToast({ severity: "info", summary: "Auto-Filled", detail: `${count} teams loaded. Set seed & region for each.` });
+  };
+
   const isFormComplete = selectedTeams.every(
     (entry) => entry.team && entry.seed && entry.region
   );
@@ -90,13 +105,16 @@ const TournamentBracket = ({ visible, onHide, onSuccess = () => {}, data, auctio
       <form onSubmit={handleSubmitBracket} className="p-4">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-2xl font-bold">Select Teams for the Tournament</h2>
-          <Dropdown
-            value={teamCount}
-            options={teamSizes.map((size) => ({ label: `${size} Teams`, value: size }))}
-            onChange={handleTeamCountChange}
-            placeholder="Select Number of Teams"
-            className="w-40"
-          />
+          <div className="flex gap-2 items-center">
+            <Button type="button" label="Auto Fill" icon="pi pi-bolt" className="p-button-warning p-button-sm" onClick={handleAutoFill} disabled={teams.length === 0} />
+            <Dropdown
+              value={teamCount}
+              options={teamSizes.map((size) => ({ label: `${size} Teams`, value: size }))}
+              onChange={handleTeamCountChange}
+              placeholder="Select Number of Teams"
+              className="w-40"
+            />
+          </div>
         </div>
         <p className="mb-4">Select up to {teamCount} teams with their seed and region.</p>
         <div className="grid grid-cols-4 gap-4">

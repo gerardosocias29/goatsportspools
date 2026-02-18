@@ -23,3 +23,6 @@ yarn-debug.log*
 yarn-error.log*
 
 .claude/settings.local.json
+
+goatsportspools-backend/
+free-react-tailwind-admin-dashboard-main/
