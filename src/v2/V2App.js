@@ -374,7 +374,7 @@ const V2AppContent = () => {
                   />
 
                   {/* Placeholder routes for future pages */}
-                  <Route path="/betting" element={<ComingSoon title="March Madness Auction" />} />
+                  <Route path="/betting" element={<NCAABasketballAuction />} />
                   <Route path="/settings" element={<ComingSoon title="Settings" />} />
                   <Route path="/activity" element={<ComingSoon title="Activity" />} />
 
