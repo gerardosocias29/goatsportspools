@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OKRNG Loader Preview</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #111827;
+      font-family: system-ui, sans-serif;
+    }
+
+    .loader-container {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 160px;
+      height: 160px;
+    }
+
+    .logo {
+      position: relative;
+      width: 64px;
+      height: 64px;
+      z-index: 10;
+      animation: logoPulse 2.5s infinite;
+    }
+
+    .emoji {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      pointer-events: none;
+      user-select: none;
+      z-index: 0;
+    }
+
+    @keyframes logoPulse {
+      0% {
+        transform: scale(0.9);
+        animation-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);
+      }
+      70% {
+        transform: scale(1.35);
+        animation-timing-function: cubic-bezier(0.7, 0, 1, 0.5);
+      }
+      88% {
+        transform: scale(0.82);
+        animation-timing-function: ease-out;
+      }
+      100% {
+        transform: scale(0.9);
+      }
+    }
+
+    @keyframes emojiThrow {
+      0% {
+        transform: translate(-50%, -50%) translate(0px, 0px) scale(0.3) rotate(0deg);
+        opacity: 0.85;
+      }
+      15% {
+        transform: translate(-50%, -50%) translate(calc(var(--throw-x) * 0.15), calc(var(--throw-y) * 0.15)) scale(1.1) rotate(calc(var(--spin) * 0.3));
+        opacity: 1;
+      }
+      60% {
+        opacity: 0.6;
+      }
+      100% {
+        transform: translate(-50%, -50%) translate(var(--throw-x), var(--throw-y)) scale(0.2) rotate(var(--spin));
+        opacity: 0;
+      }
+    }
+
+    .controls {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 12px;
+    }
+    .controls button {
+      padding: 8px 20px;
+      border-radius: 8px;
+      border: 1px solid #4b5563;
+      background: #1f2937;
+      color: #e5e7eb;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .controls button:hover { background: #374151; }
+  </style>
+</head>
+<body>
+  <div class="loader-container" id="loader">
+    <img src="public/img/v2_logo.png" alt="OKRNG" class="logo" id="logo" />
+  </div>
+
+  <div class="controls">
+    <button onclick="document.body.style.background = document.body.style.background === 'rgb(255, 255, 255)' ? '#111827' : '#ffffff'">
+      Toggle BG
+    </button>
+  </div>
+
+  <script>
+    const SPORTS_EMOJIS = ['\u{1F3C8}','\u{1F3C0}','\u{26BD}','\u{26BE}','\u{1F3BE}','\u{1F3D0}','\u{1F3C9}','\u{1F3B1}'];
+    const loader = document.getElementById('loader');
+
+    function spawnEmojis() {
+      const count = 5 + Math.floor(Math.random() * 4);
+      for (let i = 0; i < count; i++) {
+        const angle = Math.random() * 360;
+        const distance = 100 + Math.random() * 140;
+        const rad = (angle * Math.PI) / 180;
+        const x = Math.cos(rad) * distance;
+        const y = Math.sin(rad) * distance;
+        const emoji = SPORTS_EMOJIS[Math.floor(Math.random() * SPORTS_EMOJIS.length)];
+        const size = 28 + Math.random() * 16;
+        const duration = 0.7 + Math.random() * 0.5;
+        const rotation = Math.random() * 360;
+
+        const span = document.createElement('span');
+        span.className = 'emoji';
+        span.textContent = emoji;
+        span.style.fontSize = size + 'px';
+        span.style.setProperty('--throw-x', x + 'px');
+        span.style.setProperty('--throw-y', y + 'px');
+        span.style.setProperty('--spin', rotation + 'deg');
+        span.style.animation = `emojiThrow ${duration}s cubic-bezier(0.2, 0, 0.4, 1) forwards`;
+        loader.appendChild(span);
+
+        setTimeout(() => span.remove(), duration * 1000 + 200);
+      }
+    }
+
+    // Burst at PEAK of growth (70% of 2.5s cycle = 1750ms)
+    // First burst after first peak, then every 2.5s
+    const CYCLE_MS = 2500;
+    const PEAK_MS = CYCLE_MS * 0.7; // 1750ms
+
+    setTimeout(function fireBurst() {
+      spawnEmojis();
+      setTimeout(fireBurst, CYCLE_MS);
+    }, PEAK_MS);
+  </script>
+</body>
+</html>

@@ -2,6 +2,7 @@ import React from "react";
 import { BrowserRouter as Router, Route, Routes, Navigate } from "react-router-dom";
 import V2App from "../../v2/V2App";
 import V3App from "../../v3/V3App";
+import V4App from "../../v4/V4App";
 
 // ============================================
 // V1 ROUTES ARCHIVED - Now using V2 as default
@@ -23,6 +24,9 @@ const AppRouter = () => {
   return (
     <Router>
       <Routes>
+        {/* V4 - OKRNG redesign with TailAdmin template (accessible at /v4/*) */}
+        <Route path="/v4/*" element={<V4App />} />
+
         {/* V3 - New template with landing page style (accessible at /v3/*) */}
         <Route path="/v3/*" element={<V3App />} />
 
