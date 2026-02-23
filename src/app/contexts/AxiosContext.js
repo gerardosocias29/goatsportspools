@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useMemo, useRef, useEffect } from 'react';
 import axios from 'axios';
 import { AuthContext } from './AuthContext';
 import Cookies from 'js-cookie';
@@ -11,77 +11,61 @@ export const useAxios = () => {
 
 export const AxiosProvider = ({ children }) => {
   const { apiToken, logout } = useContext(AuthContext);
-  const [session, setSession] = useState(Cookies.get('__session'));
+  const apiTokenRef = useRef(apiToken);
+  apiTokenRef.current = apiToken;
 
-  useEffect(() => {
-    const checkSession = () => {
-      const sessionCookie = Cookies.get('__session');
-      if (sessionCookie) {
-        setSession(sessionCookie);
+  // Stable axios instance created once
+  const axiosInstance = useMemo(() => {
+    const instance = axios.create({
+      baseURL: process.env.REACT_APP_API_URL,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    instance.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (
+          error.response &&
+          error.response.status === 401 &&
+          error.response.data.message === 'Unauthenticated.'
+        ) {
+          logout();
+        }
+        return Promise.reject(error);
       }
-    };
+    );
 
-    checkSession();
-    const interval = setInterval(checkSession, 1000); // Retry every second
+    instance.interceptors.request.use((config) => {
+      let token;
+      if (config.token) {
+        token = config.token;
+      } else {
+        const sessionCookie = Cookies.get('__session');
+        token = sessionCookie && !apiTokenRef.current ? sessionCookie : apiTokenRef.current;
+      }
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      return config;
+    }, (error) => {
+      return Promise.reject(error);
+    });
 
-    return () => clearInterval(interval); // Cleanup on unmount
+    return instance;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const axiosInstance = axios.create({
-    baseURL: process.env.REACT_APP_API_URL,
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  });
-
-  axiosInstance.interceptors.response.use(
-    (response) => response,
-    (error) => {
-      if (
-        error.response &&
-        error.response.status === 401 &&
-        error.response.data.message === 'Unauthenticated.'
-      ) {
-        logout();
-      }
-
-      return Promise.reject(error);
-    }
-  );
-
-  // Interceptor to dynamically set the Authorization header
-  axiosInstance.interceptors.request.use((config) => {
-    let token;
-
-    if(config.token){
-      token = config.token
-      setSession(token);
-    } else {
-      token = session && !apiToken ? session : apiToken;
-    }
-
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  }, (error) => {
-    return Promise.reject(error);
-  });
-
-  const get = (url, config) => axiosInstance.get(url, config);
-  const post = (url, data, config) => axiosInstance.post(url, data, config);
-  const put = (url, data, config) => axiosInstance.put(url, data, config);
-  const patch = (url, data, config) => axiosInstance.patch(url, data, config);
-  const del = (url, config) => axiosInstance.delete(url, config);
-
-  const contextValue = {
+  // Stable context value — functions never change since axiosInstance is stable
+  const contextValue = useMemo(() => ({
     axios: axiosInstance,
-    get,
-    post,
-    put,
-    patch,
-    delete: del,
-  };
+    get: (url, config) => axiosInstance.get(url, config),
+    post: (url, data, config) => axiosInstance.post(url, data, config),
+    put: (url, data, config) => axiosInstance.put(url, data, config),
+    patch: (url, data, config) => axiosInstance.patch(url, data, config),
+    delete: (url, config) => axiosInstance.delete(url, config),
+  }), [axiosInstance]);
 
   return (
     <AxiosContext.Provider value={contextValue}>

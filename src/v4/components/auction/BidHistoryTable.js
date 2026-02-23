@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 
-const BidHistoryTable = ({
+const BidHistoryTable = React.memo(({
   bids = [],
   currentUserId,
   members = [],
@@ -120,6 +120,7 @@ const BidHistoryTable = ({
       </table>
     </div>
   );
-};
+});
 
+BidHistoryTable.displayName = 'BidHistoryTable';
 export default BidHistoryTable;

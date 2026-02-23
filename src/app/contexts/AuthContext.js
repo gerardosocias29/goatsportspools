@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect, useCallback, useMemo } from 'react';
 
 const AuthContext = createContext();
 
@@ -19,24 +19,27 @@ const AuthProvider = ({ children }) => {
     }
   }, []);
 
-
-  const login = (token) => {
+  const login = useCallback((token) => {
     setApiToken(token);
     setLoggedIn(true);
     localStorage.setItem('isLoggedIn', 'true');
     localStorage.setItem('apiToken', token);
-  };
+  }, []);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     setApiToken(null);
     setLoggedIn(false);
     localStorage.removeItem('isLoggedIn');
     localStorage.removeItem('apiToken');
     window.location.replace('/login');
-  };
+  }, []);
+
+  const value = useMemo(() => ({
+    isLoggedIn, login, logout, apiToken,
+  }), [isLoggedIn, login, logout, apiToken]);
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, login, logout, apiToken }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

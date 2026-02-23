@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useUser as useClerkUser } from '@clerk/clerk-react';
 import { useAxios } from '../../app/contexts/AxiosContext';
 import { AuthContext } from '../../app/contexts/AuthContext';
@@ -47,12 +47,12 @@ export const UserProvider = ({ children }) => {
     }
   }, [isSignedIn, isLoaded, clerkUser?.id, fetchUser]);
 
-  const getRoleLabel = () => {
+  const getRoleLabel = useCallback(() => {
     if (!user) return '';
     if (user.role_id === 1) return 'Superadmin';
     if (user.role_id === 2) return 'Square Admin';
     return 'Player';
-  };
+  }, [user]);
 
   const isSuperadmin = user?.role_id === 1;
   const isSquareAdmin = user?.role_id === 2;
@@ -64,18 +64,20 @@ export const UserProvider = ({ children }) => {
     }
   }, [isSignedIn, isLoaded, clerkUser?.id, fetchUser]);
 
+  const value = useMemo(() => ({
+    user,
+    clerkUser,
+    loading,
+    isSignedIn,
+    isLoaded,
+    getRoleLabel,
+    isSuperadmin,
+    isSquareAdmin,
+    refreshUser,
+  }), [user, clerkUser, loading, isSignedIn, isLoaded, getRoleLabel, isSuperadmin, isSquareAdmin, refreshUser]);
+
   return (
-    <UserContext.Provider value={{
-      user,
-      clerkUser,
-      loading,
-      isSignedIn,
-      isLoaded,
-      getRoleLabel,
-      isSuperadmin,
-      isSquareAdmin,
-      refreshUser,
-    }}>
+    <UserContext.Provider value={value}>
       {children}
     </UserContext.Provider>
   );

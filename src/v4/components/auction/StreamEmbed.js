@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactPlayer from 'react-player';
 
-const StreamEmbed = ({ url, showLiveBadge = false }) => {
+const StreamEmbed = React.memo(({ url, showLiveBadge = false }) => {
   return (
     <div className="relative rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 bg-black">
       {showLiveBadge && (
@@ -39,6 +39,7 @@ const StreamEmbed = ({ url, showLiveBadge = false }) => {
       )}
     </div>
   );
-};
+});
 
+StreamEmbed.displayName = 'StreamEmbed';
 export default StreamEmbed;

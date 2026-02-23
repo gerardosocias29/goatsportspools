@@ -8,8 +8,10 @@ export const PusherProvider = ({ children }) => {
   const [channel, setChannel] = useState(null);
   const pusherRef = useRef(null);
 
+  const userId = user?.id;
+
   useEffect(() => {
-    if (isSignedIn && user && !pusherRef.current) {
+    if (isSignedIn && userId && !pusherRef.current) {
       const initPusher = async () => {
         try {
           const Pusher = (await import('pusher-js')).default;
@@ -35,7 +37,7 @@ export const PusherProvider = ({ children }) => {
         setChannel(null);
       }
     };
-  }, [isSignedIn, user]);
+  }, [isSignedIn, userId]);
 
   return (
     <PusherContext.Provider value={{ channel }}>

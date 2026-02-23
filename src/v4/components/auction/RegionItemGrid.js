@@ -2,7 +2,7 @@ import React from 'react';
 
 const regions = ['East', 'West', 'Midwest', 'South'];
 
-const RegionItemGrid = ({
+const RegionItemGrid = React.memo(({
   items = [],
   activeItemId,
   onSelectItem,
@@ -75,6 +75,7 @@ const RegionItemGrid = ({
       )}
     </div>
   );
-};
+});
 
+RegionItemGrid.displayName = 'RegionItemGrid';
 export default RegionItemGrid;

@@ -82,13 +82,10 @@ const LiveBidding = () => {
     }
   }, [activeItem]);
 
-  // Pusher events
+  // Pusher events — only refetch the active item on bid, not the entire auction
   const handleNewBid = useCallback(async (data) => {
     const auction_item_id = data.auction_item_id || data.data;
     if (!auction_item_id) return;
-
-    const refreshed = await fetchAuctionById(auctionId);
-    setAuctionData(refreshed);
 
     const itemData = await fetchActiveItem(auctionId, auction_item_id);
     if (itemData) {
@@ -96,7 +93,7 @@ const LiveBidding = () => {
     } else {
       setActiveItem(null);
     }
-  }, [auctionId, fetchAuctionById, fetchActiveItem]);
+  }, [auctionId, fetchActiveItem]);
 
   const handleAuctionMembers = useCallback(async () => {
     const memberData = await fetchMembers(auctionId);
