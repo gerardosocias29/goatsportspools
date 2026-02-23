@@ -126,8 +126,18 @@ const AdminSidebar = () => {
   const subMenuRefs = useRef({});
 
   const isActive = useCallback(
-    (path) => location.pathname === path,
+    (path) => {
+      // Dashboard (/admin) is exact match only to avoid matching every admin route
+      if (path === '/admin') return location.pathname === '/admin';
+      return location.pathname === path || location.pathname.startsWith(path + '/');
+    },
     [location.pathname]
+  );
+
+  // Check if any child of a submenu group is active
+  const hasActiveChild = useCallback(
+    (subItems) => subItems?.some((sub) => isActive(sub.path)) || false,
+    [isActive]
   );
 
   // Auto-expand submenu for active route
@@ -141,13 +151,9 @@ const AdminSidebar = () => {
 
     allGroups.forEach(({ items, type }) => {
       items.forEach((nav, index) => {
-        if (nav.subItems) {
-          nav.subItems.forEach((subItem) => {
-            if (isActive(subItem.path)) {
-              setOpenSubmenu({ type, index });
-              submenuMatched = true;
-            }
-          });
+        if (nav.subItems && hasActiveChild(nav.subItems)) {
+          setOpenSubmenu({ type, index });
+          submenuMatched = true;
         }
       });
     });
@@ -155,7 +161,7 @@ const AdminSidebar = () => {
     if (!submenuMatched) {
       setOpenSubmenu(null);
     }
-  }, [location, isActive]);
+  }, [location, isActive, hasActiveChild]);
 
   // Calculate submenu heights for animation
   useEffect(() => {
@@ -183,89 +189,95 @@ const AdminSidebar = () => {
 
   const renderMenuItems = (items, menuType) => (
     <ul className="flex flex-col gap-1">
-      {items.map((nav, index) => (
-        <li key={nav.name}>
-          {nav.subItems ? (
-            <button
-              onClick={() => handleSubmenuToggle(index, menuType)}
-              className={`relative flex items-center w-full gap-3 px-3 py-2 font-medium rounded-lg text-sm cursor-pointer transition-colors ${
-                openSubmenu?.type === menuType && openSubmenu?.index === index
-                  ? 'bg-brand-50 text-brand-500 dark:bg-brand-500/[0.12]'
-                  : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'
-              } ${!isExpanded && !isHovered ? 'lg:justify-center' : 'lg:justify-start'}`}
-            >
-              <span className={`w-6 h-6 ${
-                openSubmenu?.type === menuType && openSubmenu?.index === index
-                  ? 'text-brand-500'
-                  : 'text-gray-500 dark:text-gray-400'
-              }`}>
-                {nav.icon}
-              </span>
-              {isVisible && <span className="flex-1 text-left">{nav.name}</span>}
-              {isVisible && (
-                <ChevronDownIcon
-                  className={`w-5 h-5 ml-auto transition-transform duration-200 ${
-                    openSubmenu?.type === menuType && openSubmenu?.index === index
-                      ? 'rotate-180 text-brand-500'
-                      : 'text-gray-400'
-                  }`}
-                />
-              )}
-            </button>
-          ) : (
-            nav.path && (
-              <Link
-                to={nav.path}
-                className={`relative flex items-center w-full gap-3 px-3 py-2 font-medium rounded-lg text-sm transition-colors ${
-                  isActive(nav.path)
-                    ? 'bg-brand-50 text-brand-500 dark:bg-brand-500/[0.12]'
+      {items.map((nav, index) => {
+        const isOpen = openSubmenu?.type === menuType && openSubmenu?.index === index;
+        const childActive = nav.subItems ? hasActiveChild(nav.subItems) : false;
+
+        return (
+          <li key={nav.name}>
+            {nav.subItems ? (
+              <button
+                onClick={() => handleSubmenuToggle(index, menuType)}
+                className={`relative flex items-center w-full gap-3 px-3 py-2 font-medium rounded-lg text-sm cursor-pointer transition-colors ${
+                  childActive
+                    ? 'bg-brand-50 text-brand-500 dark:bg-brand-500/[0.12] dark:text-brand-400'
+                    : isOpen
+                    ? 'text-brand-500 dark:text-brand-400'
                     : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'
-                }`}
+                } ${!isExpanded && !isHovered ? 'lg:justify-center' : 'lg:justify-start'}`}
               >
                 <span className={`w-6 h-6 ${
-                  isActive(nav.path)
-                    ? 'text-brand-500'
+                  childActive || isOpen
+                    ? 'text-brand-500 dark:text-brand-400'
                     : 'text-gray-500 dark:text-gray-400'
                 }`}>
                   {nav.icon}
                 </span>
-                {isVisible && <span>{nav.name}</span>}
-              </Link>
-            )
-          )}
-          {nav.subItems && isVisible && (
-            <div
-              ref={(el) => {
-                subMenuRefs.current[`${menuType}-${index}`] = el;
-              }}
-              className="overflow-hidden transition-all duration-300"
-              style={{
-                height:
-                  openSubmenu?.type === menuType && openSubmenu?.index === index
+                {isVisible && <span className="flex-1 text-left">{nav.name}</span>}
+                {isVisible && (
+                  <ChevronDownIcon
+                    className={`w-5 h-5 ml-auto transition-transform duration-200 ${
+                      isOpen
+                        ? 'rotate-180 text-brand-500 dark:text-brand-400'
+                        : 'text-gray-400'
+                    }`}
+                  />
+                )}
+              </button>
+            ) : (
+              nav.path && (
+                <Link
+                  to={nav.path}
+                  className={`relative flex items-center w-full gap-3 py-2 font-medium rounded-lg text-sm transition-colors ${
+                    isActive(nav.path)
+                      ? 'bg-brand-50 text-brand-500 dark:bg-brand-500/[0.12] dark:text-brand-400 border-l-[3px] border-brand-500 pl-2.5 pr-3'
+                      : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800 px-3'
+                  }`}
+                >
+                  <span className={`w-6 h-6 ${
+                    isActive(nav.path)
+                      ? 'text-brand-500 dark:text-brand-400'
+                      : 'text-gray-500 dark:text-gray-400'
+                  }`}>
+                    {nav.icon}
+                  </span>
+                  {isVisible && <span>{nav.name}</span>}
+                </Link>
+              )
+            )}
+            {nav.subItems && isVisible && (
+              <div
+                ref={(el) => {
+                  subMenuRefs.current[`${menuType}-${index}`] = el;
+                }}
+                className="overflow-hidden transition-all duration-300"
+                style={{
+                  height: isOpen
                     ? `${subMenuHeight[`${menuType}-${index}`]}px`
                     : '0px',
-              }}
-            >
-              <ul className="mt-2 space-y-1 ml-9">
-                {nav.subItems.map((subItem) => (
-                  <li key={subItem.name}>
-                    <Link
-                      to={subItem.path}
-                      className={`relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
-                        isActive(subItem.path)
-                          ? 'bg-brand-50 text-brand-500 dark:bg-brand-500/[0.12]'
-                          : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'
-                      }`}
-                    >
-                      {subItem.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </li>
-      ))}
+                }}
+              >
+                <ul className="mt-2 space-y-1 ml-9">
+                  {nav.subItems.map((subItem) => (
+                    <li key={subItem.name}>
+                      <Link
+                        to={subItem.path}
+                        className={`relative flex items-center gap-3 rounded-lg py-2.5 text-sm font-medium transition-colors ${
+                          isActive(subItem.path)
+                            ? 'bg-brand-50 text-brand-500 dark:bg-brand-500/[0.12] dark:text-brand-400 border-l-[3px] border-brand-500 pl-2.5 pr-3'
+                            : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800 px-3'
+                        }`}
+                      >
+                        {subItem.name}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </li>
+        );
+      })}
     </ul>
   );
 
