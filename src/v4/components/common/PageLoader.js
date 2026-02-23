@@ -14,7 +14,7 @@ const SPORTS_EMOJIS = [
 const CYCLE_MS = 2500;
 const PEAK_MS = CYCLE_MS * 0.7; // 1750ms — burst at peak of growth
 
-const PageLoader = () => {
+const PageLoader = ({ inline = false }) => {
   const [emojiBatches, setEmojiBatches] = useState([]);
   const batchIdRef = useRef(0);
 
@@ -56,7 +56,7 @@ const PageLoader = () => {
   }, [spawnEmojis]);
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-white dark:bg-gray-900">
+    <div className={`flex items-center justify-center ${inline ? 'py-32' : 'min-h-screen'} bg-white dark:bg-gray-900`}>
       <div className="relative flex items-center justify-center" style={{ width: 160, height: 160 }}>
         {/* Emoji particles — behind the logo */}
         {emojiBatches.map((batch) =>
