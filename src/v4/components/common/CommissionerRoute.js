@@ -7,8 +7,8 @@ const CommissionerRoute = ({ children }) => {
   const { user, loading, isSignedIn, isLoaded, isSquareAdmin, isSuperadmin } = useUserContext();
 
   if (!isLoaded || loading) return <PageLoader />;
-  if (!isSignedIn) return <Navigate to="/v4/sign-in" replace />;
-  if (!user || (!isSquareAdmin && !isSuperadmin)) return <Navigate to="/v4/commissioner" replace />;
+  if (!isSignedIn) return <Navigate to="/sign-in" replace />;
+  if (!user || (!isSquareAdmin && !isSuperadmin)) return <Navigate to="/commissioner" replace />;
 
   return children;
 };

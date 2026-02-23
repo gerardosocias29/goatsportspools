@@ -327,7 +327,7 @@ const ManageBanners = () => {
             </div>
             <div>
               <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Action URL</label>
-              <input type="text" value={form.action_url} onChange={(e) => setForm({ ...form, action_url: e.target.value })} className="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90" placeholder="/v4/pools" />
+              <input type="text" value={form.action_url} onChange={(e) => setForm({ ...form, action_url: e.target.value })} className="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90" placeholder="/pools" />
             </div>
           </div>
 

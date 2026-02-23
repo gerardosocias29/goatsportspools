@@ -24,7 +24,7 @@ const AdminUserDropdown = () => {
   }, []);
 
   const handleSignOut = () => {
-    signOut(() => { window.location.href = '/v4'; });
+    signOut(() => { window.location.href = '/'; });
   };
 
   return (
@@ -71,7 +71,7 @@ const AdminUserDropdown = () => {
           </div>
 
           <Link
-            to="/v4"
+            to="/"
             onClick={() => setIsOpen(false)}
             className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
           >

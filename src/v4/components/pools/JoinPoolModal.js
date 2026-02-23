@@ -33,7 +33,7 @@ const JoinPoolModal = ({ isOpen, onClose }) => {
         // Auto-redirect if already joined
         if (data.already_joined) {
           onClose();
-          navigate(`/v4/pools/${data.pool_number}`);
+          navigate(`/pools/${data.pool_number}`);
         }
       } catch (err) {
         setPoolPreview(null);
@@ -70,7 +70,7 @@ const JoinPoolModal = ({ isOpen, onClose }) => {
         password: password || undefined,
       });
       onClose();
-      navigate(`/v4/pools/${poolPreview.pool_number}`);
+      navigate(`/pools/${poolPreview.pool_number}`);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to join pool');
     } finally {

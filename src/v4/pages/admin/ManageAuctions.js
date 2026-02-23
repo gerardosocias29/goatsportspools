@@ -97,7 +97,7 @@ const ManageAuctions = () => {
     await setStreamUrl(selectedAuction.id, streamUrlInput);
     await startAuction(selectedAuction.id);
     setShowStreamModal(false);
-    navigate(`/v4/admin/auctions/live?auction_id=${selectedAuction.id}`);
+    navigate(`/admin/auctions/live?auction_id=${selectedAuction.id}`);
     setStartingAuction(false);
   };
 
@@ -242,7 +242,7 @@ const ManageAuctions = () => {
                             )}
                             {auction.status === 'live' && (
                               <>
-                                <button onClick={() => navigate(`/v4/admin/auctions/live?auction_id=${auction.id}`)} className="p-2 rounded-lg bg-brand-50 text-brand-600 hover:bg-brand-100 dark:bg-brand-500/10 dark:text-brand-400 transition-colors" title="Live Control">
+                                <button onClick={() => navigate(`/admin/auctions/live?auction_id=${auction.id}`)} className="p-2 rounded-lg bg-brand-50 text-brand-600 hover:bg-brand-100 dark:bg-brand-500/10 dark:text-brand-400 transition-colors" title="Live Control">
                                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
                                 </button>
                                 <button onClick={() => setConfirmModal({ open: true, type: 'end', auction })} className="p-2 rounded-lg bg-error-50 text-error-600 hover:bg-error-100 dark:bg-error-500/10 dark:text-error-400 transition-colors" title="End Auction">
@@ -288,7 +288,7 @@ const ManageAuctions = () => {
                         <button onClick={() => handleStartAuction(auction)} className="px-3 py-1.5 rounded-lg bg-success-50 text-success-600 text-xs font-medium dark:bg-success-500/10 dark:text-success-400">Start</button>
                       )}
                       {auction.status === 'live' && (
-                        <button onClick={() => navigate(`/v4/admin/auctions/live?auction_id=${auction.id}`)} className="px-3 py-1.5 rounded-lg bg-brand-50 text-brand-600 text-xs font-medium dark:bg-brand-500/10 dark:text-brand-400">Live Control</button>
+                        <button onClick={() => navigate(`/admin/auctions/live?auction_id=${auction.id}`)} className="px-3 py-1.5 rounded-lg bg-brand-50 text-brand-600 text-xs font-medium dark:bg-brand-500/10 dark:text-brand-400">Live Control</button>
                       )}
                       <button onClick={() => { setTeamDetails(auction.items); setAuctionDetails(auction); setActiveTab('teams'); }} className="px-3 py-1.5 rounded-lg bg-gray-100 text-gray-600 text-xs font-medium dark:bg-gray-700 dark:text-gray-300">Teams</button>
                       <button onClick={() => { setTeamDetails(auction.items); setAuctionDetails(auction); setActiveTab('users'); }} className="px-3 py-1.5 rounded-lg bg-gray-100 text-gray-600 text-xs font-medium dark:bg-gray-700 dark:text-gray-300">Users</button>

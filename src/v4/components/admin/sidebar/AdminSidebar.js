@@ -72,22 +72,22 @@ const menuItems = [
   {
     name: 'Dashboard',
     icon: <DashboardIcon />,
-    path: '/v4/admin',
+    path: '/admin',
   },
   {
     name: 'Pools',
     icon: <PoolsIcon />,
     subItems: [
-      { name: 'All Pools', path: '/v4/admin/pools' },
-      { name: 'Create Pool', path: '/v4/admin/pools/create' },
+      { name: 'All Pools', path: '/admin/pools' },
+      { name: 'Create Pool', path: '/admin/pools/create' },
     ],
   },
   {
     name: 'Auctions',
     icon: <AuctionIcon />,
     subItems: [
-      { name: 'Manage Auctions', path: '/v4/admin/auctions' },
-      { name: 'Live Bidding', path: '/v4/admin/auctions/live' },
+      { name: 'Manage Auctions', path: '/admin/auctions' },
+      { name: 'Live Bidding', path: '/admin/auctions/live' },
     ],
   },
 ];
@@ -105,16 +105,16 @@ const ApplicationsIcon = () => (
 );
 
 const managementItems = [
-  { name: 'Teams', icon: <TeamsIcon />, path: '/v4/admin/teams' },
-  { name: 'Games', icon: <GamesIcon />, path: '/v4/admin/games' },
-  { name: 'Users', icon: <UsersIcon />, path: '/v4/admin/users' },
-  { name: 'Applications', icon: <ApplicationsIcon />, path: '/v4/admin/applications' },
-  { name: 'Payouts', icon: <PayoutsIcon />, path: '/v4/admin/payouts' },
-  { name: 'Banners', icon: <BannersIcon />, path: '/v4/admin/banners' },
+  { name: 'Teams', icon: <TeamsIcon />, path: '/admin/teams' },
+  { name: 'Games', icon: <GamesIcon />, path: '/admin/games' },
+  { name: 'Users', icon: <UsersIcon />, path: '/admin/users' },
+  { name: 'Applications', icon: <ApplicationsIcon />, path: '/admin/applications' },
+  { name: 'Payouts', icon: <PayoutsIcon />, path: '/admin/payouts' },
+  { name: 'Banners', icon: <BannersIcon />, path: '/admin/banners' },
 ];
 
 const settingsItems = [
-  { name: 'Settings', icon: <SettingsIcon />, path: '/v4/admin/settings' },
+  { name: 'Settings', icon: <SettingsIcon />, path: '/admin/settings' },
 ];
 
 const AdminSidebar = () => {
@@ -293,7 +293,7 @@ const AdminSidebar = () => {
     >
       {/* Logo */}
       <div className={`py-8 flex ${!isExpanded && !isHovered ? 'lg:justify-center' : 'justify-start'}`}>
-        <Link to="/v4" className="flex items-center gap-2">
+        <Link to="/" className="flex items-center gap-2">
           <img src="/img/v2_logo.png" alt="OKRNG" className="h-8 w-auto" />
           {isVisible && (
             <span className="font-bold text-xl text-gray-900 dark:text-white">OKRNG</span>

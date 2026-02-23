@@ -35,13 +35,13 @@ const MarchMadness = () => {
 
   const handleJoinLive = async () => {
     if (!isSignedIn) {
-      navigate('/v4/sign-in?redirect_url=/v4/march-madness');
+      navigate('/sign-in?redirect_url=/march-madness');
       return;
     }
     if (!liveAuction) return;
     setJoining(true);
     await joinAuction(liveAuction.id);
-    navigate(`/v4/march-madness/live?auction_id=${liveAuction.id}`);
+    navigate(`/march-madness/live?auction_id=${liveAuction.id}`);
     setJoining(false);
   };
 
@@ -196,7 +196,7 @@ const MarchMadness = () => {
             Create an account or sign in to join auctions and bid on teams.
           </p>
           <button
-            onClick={() => navigate('/v4/sign-in?redirect_url=/v4/march-madness')}
+            onClick={() => navigate('/sign-in?redirect_url=/march-madness')}
             className="inline-flex items-center gap-2 rounded-lg px-6 py-3 text-sm font-medium !text-white bg-brand-500 hover:bg-brand-600 transition-colors"
           >
             Sign In

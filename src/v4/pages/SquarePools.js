@@ -102,7 +102,7 @@ const SquarePools = () => {
           <div className="flex items-center gap-2">
             {(isSuperadmin || isSquareAdmin) && (
               <button
-                onClick={() => navigate('/v4/pools/create')}
+                onClick={() => navigate('/pools/create')}
                 className="inline-flex items-center justify-center gap-2 rounded-lg px-5 py-2.5 text-sm font-medium text-gray-700 bg-white ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:ring-gray-700 dark:hover:bg-gray-700 transition"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

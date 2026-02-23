@@ -43,7 +43,7 @@ const Hero = () => {
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
-              to="/v4/sign-up"
+              to="/sign-up"
               className="group inline-flex items-center justify-center px-8 py-4 text-lg font-semibold !text-white bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-700 rounded-xl transition-all shadow-lg shadow-brand-500/25 hover:shadow-xl hover:shadow-brand-500/30 hover:-translate-y-0.5"
             >
               Get Started Free
@@ -52,7 +52,7 @@ const Hero = () => {
               </svg>
             </Link>
             <Link
-              to="/v4/pools"
+              to="/pools"
               className="inline-flex items-center justify-center px-8 py-4 text-lg font-semibold !text-white bg-gray-800 hover:bg-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-xl transition-all shadow-sm"
             >
               Browse Pools

@@ -22,13 +22,13 @@ const CTA = () => {
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link
-            to="/v4/sign-up"
+            to="/sign-up"
             className="inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-brand-600 bg-white hover:bg-gray-100 rounded-xl transition-all shadow-xl hover:shadow-2xl hover:-translate-y-0.5"
           >
             Create Free Account
           </Link>
           <Link
-            to="/v4/pools"
+            to="/pools"
             className="inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-white bg-white/20 hover:bg-white/30 backdrop-blur-sm border border-white/30 rounded-xl transition-all"
           >
             View Demo Pool

@@ -12,15 +12,15 @@ const PublicHeader = () => {
 
   const navItems = React.useMemo(() => {
     const base = [
-      { label: 'Home', path: '/v4' },
-      { label: 'Squares Pools', path: '/v4/pools' },
-      { label: 'March Madness', path: '/v4/march-madness' },
+      { label: 'Home', path: '/' },
+      { label: 'Squares Pools', path: '/pools' },
+      { label: 'March Madness', path: '/march-madness' },
     ];
     if (isSuperadmin || isSquareAdmin) {
-      base.push({ label: 'Commissioner Dashboard', path: '/v4/commissioner-dashboard' });
+      base.push({ label: 'Commissioner Dashboard', path: '/commissioner-dashboard' });
       return base;
     }
-    base.push({ label: 'Commissioner', path: '/v4/commissioner' });
+    base.push({ label: 'Commissioner', path: '/commissioner' });
     return base;
   }, [isSuperadmin, isSquareAdmin]);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -57,15 +57,15 @@ const PublicHeader = () => {
   }, []);
 
   const isActive = (path) => {
-    if (path === '/v4') return location.pathname === '/v4' || location.pathname === '/v4/';
+    if (path === '/') return location.pathname === '/';
     return location.pathname.startsWith(path);
   };
 
   const handleSignOut = () => {
-    signOut(() => { window.location.href = '/v4'; });
+    signOut(() => { window.location.href = '/'; });
   };
 
-  const dashboardPath = isSuperadmin ? '/v4/admin' : '/dashboard';
+  const dashboardPath = isSuperadmin ? '/admin' : '/dashboard';
   const avatarUrl = clerkUser?.imageUrl;
   const displayName = clerkUser?.firstName || user?.name || 'User';
   const roleLabel = getRoleLabel();
@@ -83,7 +83,7 @@ const PublicHeader = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo + I'm Feeling Lucky */}
           <div className="flex items-center gap-3">
-            <Link to="/v4" className="flex items-center gap-2">
+            <Link to="/" className="flex items-center gap-2">
               <img src="/img/v2_logo.png" alt="OKRNG" className="h-9 w-auto" />
               <span className="hidden sm:block font-bold text-xl text-gray-900 dark:text-white">
                 OKRNG
@@ -190,7 +190,7 @@ const PublicHeader = () => {
 
                       {isSuperadmin && (
                         <a
-                          href="/v4/admin"
+                          href="/admin"
                           className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -212,7 +212,7 @@ const PublicHeader = () => {
                       </button>
 
                       <Link
-                        to="/v4/settings/payment"
+                        to="/settings/payment"
                         className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -222,7 +222,7 @@ const PublicHeader = () => {
                       </Link>
 
                       <Link
-                        to="/v4/settings/winnings"
+                        to="/settings/winnings"
                         className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -249,13 +249,13 @@ const PublicHeader = () => {
             ) : isLoaded ? (
               <>
                 <Link
-                  to="/v4/sign-in"
+                  to="/sign-in"
                   className="hidden md:inline-flex items-center px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
                 >
                   Sign In
                 </Link>
                 <Link
-                  to="/v4/sign-up"
+                  to="/sign-up"
                   className="hidden md:inline-flex items-center px-4 py-2 text-sm font-medium !text-white bg-brand-500 hover:bg-brand-600 rounded-lg transition-colors"
                 >
                   Get Started
@@ -327,13 +327,13 @@ const PublicHeader = () => {
               ) : (
                 <>
                   <Link
-                    to="/v4/sign-in"
+                    to="/sign-in"
                     className="px-4 py-3 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                   >
                     Sign In
                   </Link>
                   <Link
-                    to="/v4/sign-up"
+                    to="/sign-up"
                     className="px-4 py-3 rounded-lg text-sm font-medium !text-white bg-brand-500 hover:bg-brand-600 transition-colors text-center"
                   >
                     Get Started

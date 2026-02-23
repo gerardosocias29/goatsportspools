@@ -84,10 +84,10 @@ const CreatePool = () => {
   // Auth guard
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
-      navigate('/v4/sign-in', { state: { returnTo: '/v4/pools/create' } });
+      navigate('/sign-in', { state: { returnTo: '/pools/create' } });
     }
     if (isLoaded && isSignedIn && !isSuperadmin && !isSquareAdmin) {
-      navigate('/v4/pools');
+      navigate('/pools');
     }
   }, [isLoaded, isSignedIn, isSuperadmin, isSquareAdmin, navigate]);
 
@@ -325,7 +325,7 @@ const CreatePool = () => {
       const response = await axios.post('/api/squares-pools', requestData);
       if (response.data?.status) {
         const poolNumber = response.data.data?.pool_number || response.data.pool_number;
-        navigate(poolNumber ? `/v4/pools/${poolNumber}` : '/v4/pools');
+        navigate(poolNumber ? `/pools/${poolNumber}` : '/pools');
       }
     } catch (error) {
       const errorMsg = error.response?.data?.message || error.response?.data?.errors || error.message;

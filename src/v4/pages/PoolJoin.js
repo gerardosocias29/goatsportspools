@@ -21,7 +21,7 @@ const PoolJoin = () => {
   // Auth guard
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
-      navigate(`/v4/sign-in?redirect_url=/v4/pools/join?pool=${poolCode}`);
+      navigate(`/sign-in?redirect_url=/pools/join?pool=${poolCode}`);
     }
   }, [isLoaded, isSignedIn, poolCode, navigate]);
 
@@ -39,7 +39,7 @@ const PoolJoin = () => {
 
         // Auto-redirect if already joined
         if (data.already_joined) {
-          navigate(`/v4/pools/${data.pool_number}`, { replace: true });
+          navigate(`/pools/${data.pool_number}`, { replace: true });
           return;
         }
       } catch (err) {
@@ -65,7 +65,7 @@ const PoolJoin = () => {
         pool_number: poolCode,
         password: password || undefined,
       });
-      navigate(`/v4/pools/${poolPreview.pool_number}`, { replace: true });
+      navigate(`/pools/${poolPreview.pool_number}`, { replace: true });
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to join pool');
     } finally {
@@ -86,7 +86,7 @@ const PoolJoin = () => {
         <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Invalid Link</h2>
         <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">No pool code was provided in this link.</p>
         <button
-          onClick={() => navigate('/v4/pools')}
+          onClick={() => navigate('/pools')}
           className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium !text-white bg-brand-500 hover:bg-brand-600 transition"
         >
           Browse Pools
@@ -120,7 +120,7 @@ const PoolJoin = () => {
               </div>
               <p className="text-sm text-error-600 dark:text-error-400 mb-4">{error}</p>
               <button
-                onClick={() => navigate('/v4/pools')}
+                onClick={() => navigate('/pools')}
                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium !text-white bg-brand-500 hover:bg-brand-600 transition"
               >
                 Browse Pools
@@ -192,7 +192,7 @@ const PoolJoin = () => {
               </button>
 
               <button
-                onClick={() => navigate('/v4/pools')}
+                onClick={() => navigate('/pools')}
                 className="w-full text-center text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition"
               >
                 Browse other pools instead

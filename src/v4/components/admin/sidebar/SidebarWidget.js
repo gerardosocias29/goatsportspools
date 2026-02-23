@@ -11,7 +11,7 @@ const SidebarWidget = () => {
         Manage your sports pools, auctions, and leagues.
       </p>
       <Link
-        to="/v4"
+        to="/"
         className="flex items-center justify-center p-3 font-medium !text-white rounded-lg bg-brand-500 text-sm hover:bg-brand-600"
       >
         Back to Site

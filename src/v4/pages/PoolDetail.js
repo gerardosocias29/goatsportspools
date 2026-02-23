@@ -54,7 +54,7 @@ const PoolDetail = () => {
 
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
-      navigate(`/v4/sign-in?redirect_url=/v4/pools/${poolNumber}`);
+      navigate(`/sign-in?redirect_url=/pools/${poolNumber}`);
     }
   }, [isLoaded, isSignedIn, poolNumber, navigate]);
 
@@ -88,7 +88,7 @@ const PoolDetail = () => {
   };
 
   const handleCopyLink = () => {
-    const url = `${window.location.origin}/v4/pools/join?pool=${pool.pool_number}`;
+    const url = `${window.location.origin}/pools/join?pool=${pool.pool_number}`;
     navigator.clipboard.writeText(url);
     setCopySuccess(true);
     setTimeout(() => setCopySuccess(false), 2000);
@@ -200,7 +200,7 @@ const PoolDetail = () => {
         </div>
         <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Pool Not Found</h2>
         <p className="text-gray-500 dark:text-gray-400 mb-4">{error}</p>
-        <button onClick={() => navigate('/v4/pools')} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium !text-white bg-brand-500 hover:bg-brand-600 transition">
+        <button onClick={() => navigate('/pools')} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium !text-white bg-brand-500 hover:bg-brand-600 transition">
           Back to Pools
         </button>
       </div>
@@ -286,7 +286,7 @@ const PoolDetail = () => {
 
       {/* Header Bar */}
       <div className="flex items-center gap-3 mb-5">
-        <button onClick={() => navigate('/v4/pools')} className="flex items-center justify-center w-10 h-10 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700 transition">
+        <button onClick={() => navigate('/pools')} className="flex items-center justify-center w-10 h-10 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700 transition">
           <svg className="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
         </button>
         <div className="flex-1 min-w-0">
@@ -423,7 +423,7 @@ const PoolDetail = () => {
                     Close
                   </button>
                   <Link
-                    to={`/v4/settings/payment?redirect_url=/v4/pools/${poolNumber}`}
+                    to={`/settings/payment?redirect_url=/pools/${poolNumber}`}
                     className="flex-1 px-4 py-3 rounded-xl font-bold text-sm text-center !text-white bg-brand-500 hover:bg-brand-600 transition"
                   >
                     Set Up Payment

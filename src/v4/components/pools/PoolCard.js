@@ -55,7 +55,7 @@ const PoolCard = ({ pool, teams }) => {
 
   return (
     <div
-      onClick={() => navigate(`/v4/pools/${poolNumber}`)}
+      onClick={() => navigate(`/pools/${poolNumber}`)}
       className="rounded-2xl border border-gray-200 bg-white cursor-pointer transition-all duration-200 hover:shadow-lg hover:border-brand-300 dark:border-gray-800 dark:bg-white/[0.03] dark:hover:border-brand-500/50 overflow-hidden"
     >
       {/* Status color bar */}

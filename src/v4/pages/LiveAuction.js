@@ -38,11 +38,11 @@ const LiveAuction = () => {
   // Initial data fetch
   useEffect(() => {
     if (!auctionId) {
-      navigate('/v4/march-madness');
+      navigate('/march-madness');
       return;
     }
     if (!isSignedIn) {
-      navigate(`/v4/sign-in?redirect_url=/v4/march-madness/live?auction_id=${auctionId}`);
+      navigate(`/sign-in?redirect_url=/march-madness/live?auction_id=${auctionId}`);
       return;
     }
 
@@ -143,7 +143,7 @@ const LiveAuction = () => {
 
     const handleAuctionEnd = (data) => {
       if (data.status !== 'live') {
-        navigate('/v4/march-madness');
+        navigate('/march-madness');
       }
     };
     channel.bind('active-auction-event-all', handleAuctionEnd);
@@ -170,7 +170,7 @@ const LiveAuction = () => {
     if (user?.id) {
       await leaveAuction(auctionId, user.id);
     }
-    navigate('/v4/march-madness');
+    navigate('/march-madness');
   };
 
   if (loading) return <PageLoader />;

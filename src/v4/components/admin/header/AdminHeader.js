@@ -49,7 +49,7 @@ const AdminHeader = () => {
           </button>
 
           {/* Mobile logo */}
-          <Link to="/v4" className="lg:hidden">
+          <Link to="/" className="lg:hidden">
             <img src="/img/v2_logo.png" alt="OKRNG" className="h-8" />
           </Link>
 

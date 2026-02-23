@@ -107,7 +107,7 @@ const SignIn = () => {
   const redirectUrl = searchParams.get('redirect_url');
   const returnTo = redirectUrl
     ? decodeURIComponent(redirectUrl)
-    : (location.state?.returnTo || '/v4');
+    : (location.state?.returnTo || '/');
 
   return (
     <div>
@@ -117,9 +117,9 @@ const SignIn = () => {
       </div>
 
       <ClerkSignIn
-        path="/v4/sign-in"
+        path="/sign-in"
         routing="path"
-        signUpUrl="/v4/sign-up"
+        signUpUrl="/sign-up"
         fallbackRedirectUrl={returnTo}
         appearance={getAppearance(isDark)}
       />

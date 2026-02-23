@@ -3,20 +3,20 @@ import { Link } from 'react-router-dom';
 
 const footerLinks = {
   product: [
-    { label: 'Squares Pools', path: '/v4/pools' },
-    { label: 'Live Auctions', path: '/v4/auction' },
-    { label: 'Leagues', path: '/v4/leagues' },
+    { label: 'Squares Pools', path: '/pools' },
+    { label: 'Live Auctions', path: '/auction' },
+    { label: 'Leagues', path: '/leagues' },
   ],
   company: [
-    { label: 'Home', path: '/v4' },
-    { label: 'About Us', path: '/v4/about' },
-    { label: 'Help', path: '/v4/help' },
-    { label: 'FAQ', path: '/v4/faq' },
+    { label: 'Home', path: '/' },
+    { label: 'About Us', path: '/about' },
+    { label: 'Help', path: '/help' },
+    { label: 'FAQ', path: '/faq' },
   ],
   legal: [
-    { label: 'Legal', path: '/v4/legal' },
-    { label: 'Privacy Policy', path: '/v4/privacy' },
-    { label: 'Terms of Service', path: '/v4/terms' },
+    { label: 'Legal', path: '/legal' },
+    { label: 'Privacy Policy', path: '/privacy' },
+    { label: 'Terms of Service', path: '/terms' },
   ],
 };
 
@@ -29,7 +29,7 @@ const Footer = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
           {/* Brand Column */}
           <div className="col-span-2 md:col-span-1">
-            <Link to="/v4" className="flex items-center gap-2 mb-4">
+            <Link to="/" className="flex items-center gap-2 mb-4">
               <img src="/img/v2_logo.png" alt="OKRNG" className="h-8 w-auto" />
               <span className="font-bold text-lg text-gray-900 dark:text-white">OKRNG</span>
             </Link>

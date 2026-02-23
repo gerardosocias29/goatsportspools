@@ -61,7 +61,7 @@ const PaymentSettings = () => {
 
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
-      navigate('/v4/sign-in', { replace: true });
+      navigate('/sign-in', { replace: true });
     }
   }, [isLoaded, isSignedIn, navigate]);
 

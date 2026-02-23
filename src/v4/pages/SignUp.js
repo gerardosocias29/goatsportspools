@@ -109,10 +109,10 @@ const SignUp = () => {
       </div>
 
       <ClerkSignUp
-        path="/v4/sign-up"
+        path="/sign-up"
         routing="path"
-        signInUrl="/v4/sign-in"
-        fallbackRedirectUrl="/v4"
+        signInUrl="/sign-in"
+        fallbackRedirectUrl="/"
         appearance={getAppearance(isDark)}
       />
     </div>

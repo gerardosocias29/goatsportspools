@@ -24,14 +24,14 @@ const AppRouter = () => {
   return (
     <Router>
       <Routes>
-        {/* V4 - OKRNG redesign with TailAdmin template (accessible at /v4/*) */}
-        <Route path="/v4/*" element={<V4App />} />
+        {/* V2 - legacy routes (accessible at /v2/*) */}
+        <Route path="/v2/*" element={<V2App />} />
 
-        {/* V3 - New template with landing page style (accessible at /v3/*) */}
+        {/* V3 - legacy template (accessible at /v3/*) */}
         <Route path="/v3/*" element={<V3App />} />
 
-        {/* V2 is the default root - all other routes handled by V2App */}
-        <Route path="/*" element={<V2App />} />
+        {/* V4 is the default root - OKRNG redesign with TailAdmin template */}
+        <Route path="/*" element={<V4App />} />
       </Routes>
     </Router>
   );

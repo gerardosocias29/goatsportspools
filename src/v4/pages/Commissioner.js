@@ -118,7 +118,7 @@ const Commissioner = () => {
             Sign in to apply and start creating your own sports pools.
           </p>
           <Link
-            to={`/v4/sign-in?redirect_url=${encodeURIComponent('/v4/commissioner')}`}
+            to={`/sign-in?redirect_url=${encodeURIComponent('/commissioner')}`}
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium !text-white bg-brand-500 hover:bg-brand-600 transition-colors"
           >
             Sign In to Apply
@@ -131,10 +131,10 @@ const Commissioner = () => {
   // State: Already approved — redirect to proper dashboard
   if (applicationStatus === 'approved') {
     if (isSquareAdmin) {
-      return <Navigate to="/v4/commissioner-dashboard" replace />;
+      return <Navigate to="/commissioner-dashboard" replace />;
     }
     if (isSuperadmin) {
-      return <Navigate to="/v4/commissioner-dashboard" replace />;
+      return <Navigate to="/commissioner-dashboard" replace />;
     }
 
     // Edge case: application approved but role not yet updated in user object
@@ -164,7 +164,7 @@ const Commissioner = () => {
           )}
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
             <Link
-              to="/v4/pools/create"
+              to="/pools/create"
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium !text-white bg-brand-500 hover:bg-brand-600 transition-colors"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -173,7 +173,7 @@ const Commissioner = () => {
               Create Your First Pool
             </Link>
             <Link
-              to="/v4/pools"
+              to="/pools"
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium text-gray-700 bg-white ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:ring-gray-700 transition"
             >
               View All Pools
@@ -209,7 +209,7 @@ const Commissioner = () => {
 
         <div className="mt-6 text-center">
           <Link
-            to="/v4"
+            to="/"
             className="inline-flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 hover:text-brand-500 transition-colors"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -255,7 +255,7 @@ const Commissioner = () => {
 
         <div className="mt-6 text-center">
           <Link
-            to="/v4"
+            to="/"
             className="inline-flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 hover:text-brand-500 transition-colors"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

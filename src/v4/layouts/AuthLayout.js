@@ -8,7 +8,7 @@ const AuthLayout = () => {
       {/* Left — Form content */}
       <div className="flex flex-col justify-center w-full px-6 py-12 lg:w-1/2 sm:px-12 lg:px-16 xl:px-24">
         <div className="w-full max-w-md mx-auto">
-          <Link to="/v4" className="inline-flex items-center gap-2 mb-8 text-sm text-gray-500 dark:text-gray-400 hover:text-brand-500 transition-colors">
+          <Link to="/" className="inline-flex items-center gap-2 mb-8 text-sm text-gray-500 dark:text-gray-400 hover:text-brand-500 transition-colors">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>

@@ -7,8 +7,8 @@ const AdminRoute = ({ children }) => {
   const { user, loading, isSignedIn, isLoaded, isSuperadmin } = useUserContext();
 
   if (!isLoaded || loading) return <PageLoader />;
-  if (!isSignedIn) return <Navigate to="/v4/sign-in" replace />;
-  if (!user || !isSuperadmin) return <Navigate to="/v4" replace />;
+  if (!isSignedIn) return <Navigate to="/sign-in" replace />;
+  if (!user || !isSuperadmin) return <Navigate to="/" replace />;
 
   return children;
 };

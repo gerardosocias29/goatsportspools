@@ -20,7 +20,7 @@ const PaymentHistory = () => {
   // Redirect if not signed in
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
-      navigate('/v4/sign-in', { replace: true });
+      navigate('/sign-in', { replace: true });
     }
   }, [isLoaded, isSignedIn, navigate]);
 
@@ -90,7 +90,7 @@ const PaymentHistory = () => {
             </p>
           </div>
           <Link
-            to="/v4/settings/payment"
+            to="/settings/payment"
             className="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-medium !text-white bg-warning-500 hover:bg-warning-600 transition"
           >
             Set Up Now
@@ -112,7 +112,7 @@ const PaymentHistory = () => {
             </p>
           </div>
           <Link
-            to="/v4/settings/payment"
+            to="/settings/payment"
             className="text-xs text-brand-500 hover:text-brand-600 font-medium transition-colors"
           >
             Edit
@@ -148,7 +148,7 @@ const PaymentHistory = () => {
               Join pools and match those winning numbers! Your prize history will appear here.
             </p>
             <Link
-              to="/v4/pools"
+              to="/pools"
               className="mt-4 inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium !text-white bg-brand-500 hover:bg-brand-600 transition"
             >
               Browse Pools
@@ -175,7 +175,7 @@ const PaymentHistory = () => {
                   <tr key={w.id}>
                     <td className="px-4 py-3 text-sm">
                       <Link
-                        to={`/v4/pools/${w.pool?.pool_number}`}
+                        to={`/pools/${w.pool?.pool_number}`}
                         className="font-medium text-gray-800 dark:text-white/90 hover:text-brand-500 transition-colors"
                       >
                         {w.pool?.pool_name || 'Pool'}
@@ -229,7 +229,7 @@ const PaymentHistory = () => {
                 <div className="flex items-start justify-between mb-2">
                   <div>
                     <Link
-                      to={`/v4/pools/${w.pool?.pool_number}`}
+                      to={`/pools/${w.pool?.pool_number}`}
                       className="font-medium text-sm text-gray-800 dark:text-white/90 hover:text-brand-500"
                     >
                       {w.pool?.pool_name || 'Pool'}

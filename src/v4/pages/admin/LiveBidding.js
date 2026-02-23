@@ -46,7 +46,7 @@ const LiveBidding = () => {
   // Load data
   useEffect(() => {
     if (!auctionId) {
-      navigate('/v4/admin/auctions');
+      navigate('/admin/auctions');
       return;
     }
 
@@ -171,7 +171,7 @@ const LiveBidding = () => {
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
         <button
-          onClick={() => navigate('/v4/admin/auctions')}
+          onClick={() => navigate('/admin/auctions')}
           className="p-2 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 transition-colors"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>

@@ -12,7 +12,7 @@ const CommissionerBreadcrumb = ({ pageTitle }) => {
           <li>
             <Link
               className="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400"
-              to="/v4/commissioner-dashboard"
+              to="/commissioner-dashboard"
             >
               Commissioner
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -145,7 +145,7 @@ const CommissionerDashboard = () => {
             <div className="flex items-center justify-between p-5 border-b border-gray-200 dark:border-gray-800">
               <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">My Pools</h3>
               <Link
-                to="/v4/pools/create"
+                to="/pools/create"
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium !text-white bg-brand-500 hover:bg-brand-600 transition-colors"
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -177,7 +177,7 @@ const CommissionerDashboard = () => {
                         return (
                           <tr key={pool.id} className="hover:bg-gray-50 dark:hover:bg-white/[0.02]">
                             <td className="px-5 py-3">
-                              <Link to={`/v4/pools/${pool.pool_number}`} className="text-sm font-medium text-gray-800 dark:text-white/90 hover:text-brand-500 transition-colors">
+                              <Link to={`/pools/${pool.pool_number}`} className="text-sm font-medium text-gray-800 dark:text-white/90 hover:text-brand-500 transition-colors">
                                 {pool.pool_name}
                               </Link>
                               <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">#{pool.pool_number}</p>
@@ -205,7 +205,7 @@ const CommissionerDashboard = () => {
                             <td className="px-4 py-3 text-right">
                               <div className="flex items-center justify-end gap-1">
                                 <Link
-                                  to={`/v4/pools/${pool.pool_number}`}
+                                  to={`/pools/${pool.pool_number}`}
                                   className="p-1.5 rounded-lg text-gray-400 hover:text-brand-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                                   title="View Pool"
                                 >
@@ -268,7 +268,7 @@ const CommissionerDashboard = () => {
                       <div key={pool.id} className="p-4">
                         <div className="flex items-start justify-between mb-3">
                           <div>
-                            <Link to={`/v4/pools/${pool.pool_number}`} className="text-sm font-medium text-gray-800 dark:text-white/90 hover:text-brand-500">
+                            <Link to={`/pools/${pool.pool_number}`} className="text-sm font-medium text-gray-800 dark:text-white/90 hover:text-brand-500">
                               {pool.pool_name}
                             </Link>
                             <p className="text-xs text-gray-400 dark:text-gray-500">#{pool.pool_number}</p>
@@ -293,7 +293,7 @@ const CommissionerDashboard = () => {
                         </div>
                         <div className="flex items-center gap-2">
                           <Link
-                            to={`/v4/pools/${pool.pool_number}`}
+                            to={`/pools/${pool.pool_number}`}
                             className="flex-1 py-2 rounded-lg text-xs font-medium text-center text-gray-700 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors"
                           >
                             View Pool
@@ -339,7 +339,7 @@ const CommissionerDashboard = () => {
                 <p className="text-gray-500 dark:text-gray-400 text-sm mb-1">No pools yet</p>
                 <p className="text-xs text-gray-400 dark:text-gray-500 mb-4">Create your first pool to get started!</p>
                 <Link
-                  to="/v4/pools/create"
+                  to="/pools/create"
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium !text-white bg-brand-500 hover:bg-brand-600 transition-colors"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -359,7 +359,7 @@ const CommissionerDashboard = () => {
             <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90 mb-4">Quick Actions</h3>
             <div className="space-y-3">
               <Link
-                to="/v4/pools/create"
+                to="/pools/create"
                 className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors border border-gray-200 dark:border-gray-700"
               >
                 <svg className="w-5 h-5 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -368,7 +368,7 @@ const CommissionerDashboard = () => {
                 Create New Pool
               </Link>
               <Link
-                to="/v4/pools"
+                to="/pools"
                 className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors border border-gray-200 dark:border-gray-700"
               >
                 <svg className="w-5 h-5 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
