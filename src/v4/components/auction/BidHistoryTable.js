@@ -33,9 +33,9 @@ const BidHistoryTable = React.memo(({
   }
 
   const getBidderName = (bid) => {
-    if (bid.user?.name) return bid.user.name;
-    const member = members.find((m) => m.user_id === bid.user_id);
-    return member?.user?.name || 'Unknown';
+    // eslint-disable-next-line eqeqeq
+    const member = members.find((m) => m.user_id == bid.user_id);
+    return member?.user?.name || '-';
   };
 
   return (
@@ -61,7 +61,8 @@ const BidHistoryTable = React.memo(({
         </thead>
         <tbody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
           {bids.map((bid, index) => {
-            const isCurrentUser = bid.user_id === currentUserId;
+            // eslint-disable-next-line eqeqeq
+            const isCurrentUser = bid.user_id == currentUserId;
             const isFlashing = flashBidId === bid.id;
 
             return (

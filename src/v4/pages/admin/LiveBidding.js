@@ -16,7 +16,7 @@ const LiveBidding = () => {
 
   const {
     fetchAuctionById,
-    fetchAllUsers,
+    fetchAuctionUsers,
     setActiveItemOnServer,
     endActiveItem,
     placeBidAdmin,
@@ -37,6 +37,7 @@ const LiveBidding = () => {
   const [currentBidAmount, setCurrentBidAmount] = useState(1);
   const [customBidAmount, setCustomBidAmount] = useState(1);
   const [isBidding, setIsBidding] = useState(false);
+  const [bidMessage, setBidMessage] = useState(null);
 
   // User state
   const [users, setUsers] = useState([]);
@@ -61,12 +62,12 @@ const LiveBidding = () => {
         if (matchedItem) setHasStarted(true);
       }
 
-      const allUsers = await fetchAllUsers();
+      const allUsers = await fetchAuctionUsers(auctionId);
       setUsers(allUsers);
       setLoading(false);
     };
     load();
-  }, [auctionId, fetchAuctionById, fetchAllUsers, navigate]);
+  }, [auctionId, fetchAuctionById, fetchAuctionUsers, navigate]);
 
   // Update bid amounts when active item changes
   useEffect(() => {
@@ -116,8 +117,13 @@ const LiveBidding = () => {
   const handlePlaceBid = async (customAmount = 0, userId = null) => {
     if (!activeItem) return;
     setIsBidding(true);
+    setBidMessage(null);
     const amount = customAmount || currentBidAmount;
-    await placeBidAdmin(auctionId, activeItem.id, amount, userId);
+    const result = await placeBidAdmin(auctionId, activeItem.id, amount, userId);
+    if (result.status === false) {
+      setBidMessage({ type: 'error', text: result.message });
+      setTimeout(() => setBidMessage(null), 5000);
+    }
     setIsBidding(false);
   };
 
@@ -158,6 +164,16 @@ const LiveBidding = () => {
   const filteredUsers = users.filter(
     (user) => user.name?.toLowerCase().includes(searchTerm.toLowerCase()) || user.id?.toString().includes(searchTerm)
   );
+
+  const getBidderName = (bid) => {
+    // eslint-disable-next-line eqeqeq
+    const member = (auctionData?.joined_users || []).find((m) => m.user_id == bid.user_id);
+    if (member?.user?.name) return member.user.name;
+    // Fallback to users list
+    // eslint-disable-next-line eqeqeq
+    const user = users.find((u) => u.id == bid.user_id);
+    return user?.name || '-';
+  };
 
   const canEnd = activeItem?.bids?.[0]?.user_id !== 1;
 
@@ -248,7 +264,8 @@ const LiveBidding = () => {
             {/* Member Grid */}
             <div className="grid grid-cols-2 gap-2 max-h-[400px] overflow-y-auto">
               {filteredUsers.length > 0 ? filteredUsers.map((member) => {
-                const isOnline = auctionData?.joined_users?.find((d) => d.user_id === member.id);
+                // eslint-disable-next-line eqeqeq
+                const isOnline = auctionData?.joined_users?.find((d) => d.user_id == member.id);
                 const isSelected = userOnBid?.id === member.id;
                 return (
                   <button
@@ -332,7 +349,7 @@ const LiveBidding = () => {
                     <div className="text-right">
                       <div className="text-xs text-gray-400 dark:text-gray-500 mb-1">Highest Bidder</div>
                       <div className="text-base font-semibold text-gray-700 dark:text-gray-300 mb-0.5">
-                        {activeItem.bids?.[0]?.user?.name || 'No Bids Yet'}
+                        {activeItem.bids?.[0] ? getBidderName(activeItem.bids[0]) : 'No Bids Yet'}
                       </div>
                       <div className="text-2xl font-extrabold text-success-500">
                         ${activeItem.bids?.[0] ? Number(activeItem.bids[0].bid_amount).toFixed(2) : '0.00'}
@@ -388,6 +405,20 @@ const LiveBidding = () => {
                     </div>
                   )}
                 </div>
+
+                {/* Bid Message */}
+                {bidMessage && (
+                  <div className={`flex items-center gap-2 p-3 mb-4 rounded-xl text-sm font-medium ${
+                    bidMessage.type === 'error'
+                      ? 'bg-error-50 text-error-600 border border-error-200 dark:bg-error-500/10 dark:text-error-400 dark:border-error-500/30'
+                      : 'bg-success-50 text-success-600 border border-success-200 dark:bg-success-500/10 dark:text-success-400 dark:border-success-500/30'
+                  }`}>
+                    <span>{bidMessage.text}</span>
+                    <button onClick={() => setBidMessage(null)} className="ml-auto text-current opacity-60 hover:opacity-100">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                  </div>
+                )}
 
                 {/* Bid History */}
                 <div>

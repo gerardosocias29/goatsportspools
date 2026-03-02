@@ -18,6 +18,7 @@ const ManageAuctions = () => {
     endAuction,
     cancelAuction,
     setStreamUrl,
+    setAmounts,
     fetchAuctionUsers,
   } = useAuction();
 
@@ -39,6 +40,10 @@ const ManageAuctions = () => {
   // Stream form
   const [streamUrlInput, setStreamUrlInput] = useState('');
   const [startingAuction, setStartingAuction] = useState(false);
+
+  // Budget modal
+  const [budgetModal, setBudgetModal] = useState({ open: false, user_id: 0, escrow_amount: '', total_budget: '' });
+  const [savingBudget, setSavingBudget] = useState(false);
 
   // Team/User details
   const [teamDetails, setTeamDetails] = useState(null);
@@ -107,6 +112,19 @@ const ManageAuctions = () => {
     if (type === 'cancel') await cancelAuction(auction.id);
     setConfirmModal({ open: false, type: '', auction: null });
     loadAuctions();
+  };
+
+  const handleSaveBudget = async (e) => {
+    e.preventDefault();
+    setSavingBudget(true);
+    await setAmounts(auctionDetails.id, {
+      user_id: budgetModal.user_id,
+      escrow_amount: budgetModal.escrow_amount || null,
+      total_budget: budgetModal.total_budget || null,
+    });
+    setBudgetModal({ open: false, user_id: 0, escrow_amount: '', total_budget: '' });
+    setSavingBudget(false);
+    fetchAuctionUsers(auctionDetails.id).then(setOwners);
   };
 
   if (loading) return <PageLoader />;
@@ -358,6 +376,7 @@ const ManageAuctions = () => {
                   <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Budget</th>
                   <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Spent</th>
                   <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Last Team</th>
+                  <th className="px-5 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
@@ -376,6 +395,22 @@ const ManageAuctions = () => {
                       {owner.auction_items?.length > 0 ? (
                         <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300">{owner.auction_items[0]?.name}</span>
                       ) : '-'}
+                    </td>
+                    <td className="px-5 py-3 text-right">
+                      <button
+                        onClick={() => setBudgetModal({
+                          open: true,
+                          user_id: owner.id,
+                          escrow_amount: owner.auctions?.[0]?.escrow_amount || '',
+                          total_budget: owner.auctions?.[0]?.total_budget || '',
+                        })}
+                        className="p-2 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 transition-colors"
+                        title="Edit Budget"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                        </svg>
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -428,6 +463,40 @@ const ManageAuctions = () => {
         confirmLabel={confirmModal.type === 'end' ? 'End Auction' : 'Cancel Auction'}
         variant="danger"
       />
+
+      {/* Budget Edit Modal */}
+      <Modal isOpen={budgetModal.open} onClose={() => setBudgetModal({ open: false, user_id: 0, escrow_amount: '', total_budget: '' })} title="Set Budget" maxWidth="max-w-sm">
+        <form onSubmit={handleSaveBudget}>
+          <div className="mb-4">
+            <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Escrowed Amount</label>
+            <input
+              type="number"
+              value={budgetModal.escrow_amount}
+              onChange={(e) => setBudgetModal((prev) => ({ ...prev, escrow_amount: e.target.value }))}
+              placeholder="Leave empty for unlimited"
+              step="any"
+              min="0"
+              className="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
+            />
+          </div>
+          <div className="mb-6">
+            <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Total Budget</label>
+            <input
+              type="number"
+              value={budgetModal.total_budget}
+              onChange={(e) => setBudgetModal((prev) => ({ ...prev, total_budget: e.target.value }))}
+              placeholder="Leave empty for unlimited"
+              step="any"
+              min="0"
+              className="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
+            />
+          </div>
+          <div className="flex justify-end gap-3">
+            <button type="button" onClick={() => setBudgetModal({ open: false, user_id: 0, escrow_amount: '', total_budget: '' })} className="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-700 bg-white ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-400 dark:ring-gray-700">Cancel</button>
+            <button type="submit" disabled={savingBudget} className="px-5 py-2.5 rounded-lg text-sm font-medium !text-white bg-brand-500 hover:bg-brand-600 transition disabled:opacity-50">{savingBudget ? 'Saving...' : 'Update'}</button>
+          </div>
+        </form>
+      </Modal>
 
       {/* Tournament Bracket Modal */}
       <TournamentBracket

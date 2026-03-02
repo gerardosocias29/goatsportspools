@@ -30,6 +30,7 @@ const LiveAuction = () => {
   const [currentBidAmount, setCurrentBidAmount] = useState(1);
   const [customBidAmount, setCustomBidAmount] = useState(1);
   const [isBidding, setIsBidding] = useState(false);
+  const [bidMessage, setBidMessage] = useState(null);
   const [isUserWinning, setIsUserWinning] = useState(false);
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -90,7 +91,8 @@ const LiveAuction = () => {
         const nextBid = activeItem.minimum_bid + (activeItem.bids[0]?.bid_amount || 0);
         setCurrentBidAmount(nextBid);
         setCustomBidAmount(nextBid);
-        setIsUserWinning(activeItem.bids[0].user_id === user?.id);
+        // eslint-disable-next-line eqeqeq
+        setIsUserWinning(activeItem.bids[0].user_id == user?.id);
       } else {
         setCurrentBidAmount(activeItem.starting_bid);
         setCustomBidAmount(activeItem.starting_bid);
@@ -118,7 +120,8 @@ const LiveAuction = () => {
     if (itemData) {
       setActiveItem(itemData);
       if (itemData.bids?.length > 0) {
-        setIsUserWinning(itemData.bids[0].user_id === user?.id);
+        // eslint-disable-next-line eqeqeq
+        setIsUserWinning(itemData.bids[0].user_id == user?.id);
       } else {
         setIsUserWinning(false);
       }
@@ -159,9 +162,15 @@ const LiveAuction = () => {
   // Place bid
   const handlePlaceBid = async (customAmount = 0) => {
     setIsBidding(true);
+    setBidMessage(null);
     const amount = customAmount || currentBidAmount;
     const result = await placeBid(auctionId, activeItem.id, amount);
-    if (result.winning) setIsUserWinning(true);
+    if (result.status === false) {
+      setBidMessage({ type: 'error', text: result.message });
+      setTimeout(() => setBidMessage(null), 5000);
+    } else if (result.winning) {
+      setIsUserWinning(true);
+    }
     setIsBidding(false);
   };
 
@@ -260,6 +269,20 @@ const LiveAuction = () => {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     <span className="font-bold text-success-700 dark:text-success-400">You are winning this item!</span>
+                  </div>
+                )}
+
+                {/* Bid Message */}
+                {bidMessage && (
+                  <div className={`flex items-center gap-2 p-3.5 mb-4 rounded-xl text-sm font-medium ${
+                    bidMessage.type === 'error'
+                      ? 'bg-error-50 text-error-600 border border-error-200 dark:bg-error-500/10 dark:text-error-400 dark:border-error-500/30'
+                      : 'bg-success-50 text-success-600 border border-success-200 dark:bg-success-500/10 dark:text-success-400 dark:border-success-500/30'
+                  }`}>
+                    <span>{bidMessage.text}</span>
+                    <button onClick={() => setBidMessage(null)} className="ml-auto text-current opacity-60 hover:opacity-100">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
                   </div>
                 )}
 

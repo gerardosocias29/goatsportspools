@@ -126,12 +126,18 @@ const useAuction = () => {
     }
   }, [axiosService]);
 
+  const setAmounts = useCallback(async (auctionId, data) => {
+    try {
+      const response = await axiosService.post(`/api/auctions/${auctionId}/set-amounts`, data);
+      return response.data;
+    } catch (err) {
+      return { status: false, message: err.response?.data?.message || 'Failed to set amounts' };
+    }
+  }, [axiosService]);
+
   const fetchAuctionUsers = useCallback(async (auctionId) => {
     try {
-      const q = process.env.REACT_APP_USER_QUERY || 0;
-      // eslint-disable-next-line eqeqeq
-      const param = q == 1 ? '?query=true' : '';
-      const response = await axiosService.get(`/api/auctions/${auctionId}/users${param}`);
+      const response = await axiosService.get(`/api/auctions/${auctionId}/users`);
       return response.data || [];
     } catch (err) {
       return [];
@@ -274,6 +280,7 @@ const useAuction = () => {
     endActiveItem,
     placeBidAdmin,
     removeBid,
+    setAmounts,
     fetchAuctionUsers,
     fetchAllUsers,
     // Player
