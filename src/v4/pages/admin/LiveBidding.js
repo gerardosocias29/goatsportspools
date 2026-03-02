@@ -166,10 +166,13 @@ const LiveBidding = () => {
   );
 
   const getBidderName = (bid) => {
+    // Primary: use bid's own user relation (loaded by API)
+    if (bid.user?.name) return bid.user.name;
+    // Fallback: joined_users lookup
     // eslint-disable-next-line eqeqeq
     const member = (auctionData?.joined_users || []).find((m) => m.user_id == bid.user_id);
     if (member?.user?.name) return member.user.name;
-    // Fallback to users list
+    // Fallback: users list
     // eslint-disable-next-line eqeqeq
     const user = users.find((u) => u.id == bid.user_id);
     return user?.name || '-';
@@ -435,6 +438,7 @@ const LiveBidding = () => {
                     members={auctionData?.joined_users || []}
                     showRemove
                     onRemoveBid={handleRemoveBid}
+                    isAdmin
                   />
                 </div>
               </>

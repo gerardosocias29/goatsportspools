@@ -6,6 +6,7 @@ const BidHistoryTable = React.memo(({
   members = [],
   showRemove = false,
   onRemoveBid,
+  isAdmin = false,
 }) => {
   const [flashBidId, setFlashBidId] = useState(null);
   const prevBidsLenRef = useRef(bids.length);
@@ -33,9 +34,17 @@ const BidHistoryTable = React.memo(({
   }
 
   const getBidderName = (bid) => {
+    // For non-admin viewers, hide superadmin identity
+    // eslint-disable-next-line eqeqeq
+    if (!isAdmin && bid.user?.role_id == 1) return '-';
+
+    // Primary: use bid's own user relation (loaded by API)
+    if (bid.user?.name) return bid.user.name;
+
+    // Fallback: members lookup
     // eslint-disable-next-line eqeqeq
     const member = members.find((m) => m.user_id == bid.user_id);
-    return member?.user?.name || '-';
+    return member?.user?.name || member?.name || '-';
   };
 
   return (
