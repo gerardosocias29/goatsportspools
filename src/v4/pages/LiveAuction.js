@@ -101,7 +101,7 @@ const LiveAuction = () => {
     }
   }, [activeItem, user?.id]);
 
-  // Handle active item event from Pusher
+  // Handle active item change from Pusher (item start/end — still needs API refetch)
   const handleActiveItem = useCallback(async (data) => {
     let auction_item_id = data.auction_item_id ?? data.data;
 
@@ -119,17 +119,31 @@ const LiveAuction = () => {
     const itemData = await fetchActiveItem(auctionId, auction_item_id);
     if (itemData) {
       setActiveItem(itemData);
-      if (itemData.bids?.length > 0) {
-        // eslint-disable-next-line eqeqeq
-        setIsUserWinning(itemData.bids[0].user_id == user?.id);
-      } else {
-        setIsUserWinning(false);
-      }
     } else {
       setActiveItem(null);
-      setIsUserWinning(false);
     }
-  }, [auctionId, user?.id, fetchAuctionById, fetchActiveItem]);
+  }, [auctionId, fetchAuctionById, fetchActiveItem]);
+
+  // Handle new bid from Pusher — use payload directly for instant updates (no API round-trip)
+  const handleNewBid = useCallback((data) => {
+    // data is the full bid object: { id, auction_item_id, user_id, bid_amount, user, created_at }
+    const newBid = data;
+    // eslint-disable-next-line eqeqeq
+    const itemId = newBid.auction_item_id || newBid.data;
+    if (!itemId) return;
+
+    setActiveItem((prev) => {
+      // eslint-disable-next-line eqeqeq
+      if (!prev || prev.id != itemId) return prev;
+      // Dedupe: skip if bid already exists
+      if (prev.bids?.some((b) => b.id === newBid.id)) return prev;
+      // Insert bid sorted by bid_amount desc
+      const updatedBids = [newBid, ...(prev.bids || [])].sort(
+        (a, b) => Number(b.bid_amount) - Number(a.bid_amount)
+      );
+      return { ...prev, bids: updatedBids };
+    });
+  }, []);
 
   const handleAuctionMembers = useCallback(async () => {
     const memberData = await fetchMembers(auctionId);
@@ -141,7 +155,7 @@ const LiveAuction = () => {
     if (!channel) return;
 
     channel.bind('active-item-event', handleActiveItem);
-    channel.bind('bid-event', handleActiveItem);
+    channel.bind('bid-event', handleNewBid);
     channel.bind('auction-members', handleAuctionMembers);
 
     const handleAuctionEnd = (data) => {
@@ -153,11 +167,11 @@ const LiveAuction = () => {
 
     return () => {
       channel.unbind('active-item-event', handleActiveItem);
-      channel.unbind('bid-event', handleActiveItem);
+      channel.unbind('bid-event', handleNewBid);
       channel.unbind('auction-members', handleAuctionMembers);
       channel.unbind('active-auction-event-all', handleAuctionEnd);
     };
-  }, [channel, handleActiveItem, handleAuctionMembers, navigate]);
+  }, [channel, handleActiveItem, handleNewBid, handleAuctionMembers, navigate]);
 
   // Place bid
   const handlePlaceBid = async (customAmount = 0) => {

@@ -83,18 +83,26 @@ const LiveBidding = () => {
     }
   }, [activeItem]);
 
-  // Pusher events — only refetch the active item on bid, not the entire auction
-  const handleNewBid = useCallback(async (data) => {
-    const auction_item_id = data.auction_item_id || data.data;
-    if (!auction_item_id) return;
+  // Pusher events — use bid payload directly for instant updates (no API round-trip)
+  const handleNewBid = useCallback((data) => {
+    // data is the full bid object from Pusher: { id, auction_item_id, user_id, bid_amount, user, created_at }
+    const newBid = data;
+    // eslint-disable-next-line eqeqeq
+    const itemId = newBid.auction_item_id || newBid.data;
+    if (!itemId) return;
 
-    const itemData = await fetchActiveItem(auctionId, auction_item_id);
-    if (itemData) {
-      setActiveItem(itemData);
-    } else {
-      setActiveItem(null);
-    }
-  }, [auctionId, fetchActiveItem]);
+    setActiveItem((prev) => {
+      // eslint-disable-next-line eqeqeq
+      if (!prev || prev.id != itemId) return prev;
+      // Dedupe: skip if bid already exists
+      if (prev.bids?.some((b) => b.id === newBid.id)) return prev;
+      // Insert bid sorted by bid_amount desc
+      const updatedBids = [newBid, ...(prev.bids || [])].sort(
+        (a, b) => Number(b.bid_amount) - Number(a.bid_amount)
+      );
+      return { ...prev, bids: updatedBids };
+    });
+  }, []);
 
   const handleAuctionMembers = useCallback(async () => {
     const memberData = await fetchMembers(auctionId);
@@ -148,6 +156,11 @@ const LiveBidding = () => {
 
   const handleRemoveBid = async (bidId) => {
     await removeBid(bidId);
+    // Refetch after removal since Pusher bid-event only covers new bids
+    if (activeItem) {
+      const itemData = await fetchActiveItem(auctionId, activeItem.id);
+      if (itemData) setActiveItem(itemData);
+    }
   };
 
   const handleSelectItem = (item) => {
