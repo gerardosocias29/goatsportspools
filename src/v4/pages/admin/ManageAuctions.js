@@ -408,8 +408,12 @@ const ManageAuctions = () => {
                       <div className="font-semibold text-gray-800 dark:text-white/90">#{owner.id} {owner.name}</div>
                       <div className="text-xs text-gray-400 dark:text-gray-500">{owner.email}</div>
                     </td>
-                    <td className="px-5 py-3 text-gray-500 dark:text-gray-400">{owner.auctions?.[0]?.escrow_amount || '---'}</td>
-                    <td className="px-5 py-3 text-gray-500 dark:text-gray-400">{owner.auctions?.[0]?.total_budget || '---'}</td>
+                    <td className="px-5 py-3 text-gray-500 dark:text-gray-400">
+                      {owner.auctions?.[0]?.escrow_amount ? `$${Number(owner.auctions[0].escrow_amount).toFixed(2)}` : <span className="text-lg" title="Unlimited">&#8734;</span>}
+                    </td>
+                    <td className="px-5 py-3 text-gray-500 dark:text-gray-400">
+                      {owner.auctions?.[0]?.total_budget ? `$${Number(owner.auctions[0].total_budget).toFixed(2)}` : <span className="text-lg" title="Unlimited">&#8734;</span>}
+                    </td>
                     <td className="px-5 py-3 font-semibold text-success-600 dark:text-success-400">
                       {owner.total_sold_amount ? `$${Number(owner.total_sold_amount).toFixed(2)}` : '-'}
                     </td>
@@ -538,7 +542,7 @@ const ManageAuctions = () => {
             </div>
           ) : (
             allUsers
-              .filter((u) => !u.auctions?.[0]?.escrow_amount || u.auctions[0].escrow_amount <= 0)
+              .filter((u) => !u.auctions || u.auctions.length === 0)
               .filter((u) => {
                 if (!addUserSearch) return true;
                 const q = addUserSearch.toLowerCase();
@@ -562,7 +566,7 @@ const ManageAuctions = () => {
                 </div>
               ))
           )}
-          {!loadingAllUsers && allUsers.filter((u) => !u.auctions?.[0]?.escrow_amount || u.auctions[0].escrow_amount <= 0).length === 0 && (
+          {!loadingAllUsers && allUsers.filter((u) => !u.auctions || u.auctions.length === 0).length === 0 && (
             <p className="text-center text-sm text-gray-400 dark:text-gray-500 py-8">All users already have escrow assigned.</p>
           )}
         </div>

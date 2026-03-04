@@ -162,6 +162,12 @@ const PublicHeader = () => {
                         </div>
                       )}
                     </div>
+                    {/* Mobile: show role badge */}
+                    {!loading && (
+                      <span className="md:hidden text-[10px] font-semibold text-brand-500 leading-none">
+                        {roleLabel}
+                      </span>
+                    )}
                     <svg className="hidden md:block w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
