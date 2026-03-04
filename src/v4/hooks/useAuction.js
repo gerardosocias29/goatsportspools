@@ -135,9 +135,9 @@ const useAuction = () => {
     }
   }, [axiosService]);
 
-  const fetchAuctionUsers = useCallback(async (auctionId) => {
+  const fetchAuctionUsers = useCallback(async (auctionId, filter = 'escrow') => {
     try {
-      const response = await axiosService.get(`/api/auctions/${auctionId}/users`);
+      const response = await axiosService.get(`/api/auctions/${auctionId}/users?filter=${filter}`);
       return response.data || [];
     } catch (err) {
       return [];

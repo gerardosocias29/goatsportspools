@@ -50,8 +50,12 @@ const LiveAuction = () => {
     const fetchData = async () => {
       setLoading(true);
 
-      // Join auction
-      await joinAuction(auctionId);
+      // Join auction (escrow gated — will return status:false if no escrow)
+      const joinResult = await joinAuction(auctionId);
+      if (joinResult.status === false) {
+        navigate('/march-madness');
+        return;
+      }
 
       // Get auction details
       const data = await fetchAuctionById(auctionId);

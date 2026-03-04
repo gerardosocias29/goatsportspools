@@ -45,6 +45,12 @@ const ManageAuctions = () => {
   const [budgetModal, setBudgetModal] = useState({ open: false, user_id: 0, escrow_amount: '', total_budget: '' });
   const [savingBudget, setSavingBudget] = useState(false);
 
+  // Add User modal
+  const [showAddUserModal, setShowAddUserModal] = useState(false);
+  const [allUsers, setAllUsers] = useState([]);
+  const [addUserSearch, setAddUserSearch] = useState('');
+  const [loadingAllUsers, setLoadingAllUsers] = useState(false);
+
   // Team/User details
   const [teamDetails, setTeamDetails] = useState(null);
   const [auctionDetails, setAuctionDetails] = useState(null);
@@ -112,6 +118,15 @@ const ManageAuctions = () => {
     if (type === 'cancel') await cancelAuction(auction.id);
     setConfirmModal({ open: false, type: '', auction: null });
     loadAuctions();
+  };
+
+  const handleOpenAddUser = async () => {
+    setShowAddUserModal(true);
+    setAddUserSearch('');
+    setLoadingAllUsers(true);
+    const users = await fetchAuctionUsers(auctionDetails.id, 'all');
+    setAllUsers(users);
+    setLoadingAllUsers(false);
   };
 
   const handleSaveBudget = async (e) => {
@@ -364,8 +379,15 @@ const ManageAuctions = () => {
       {/* User Details Tab */}
       {activeTab === 'users' && auctionDetails && (
         <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
-          <div className="p-5 border-b border-gray-100 dark:border-white/[0.05]">
+          <div className="flex items-center justify-between p-5 border-b border-gray-100 dark:border-white/[0.05]">
             <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">{auctionDetails?.name} — Users</h3>
+            <button
+              onClick={handleOpenAddUser}
+              className="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium !text-white bg-brand-500 hover:bg-brand-600 transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+              Add User
+            </button>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -496,6 +518,54 @@ const ManageAuctions = () => {
             <button type="submit" disabled={savingBudget} className="px-5 py-2.5 rounded-lg text-sm font-medium !text-white bg-brand-500 hover:bg-brand-600 transition disabled:opacity-50">{savingBudget ? 'Saving...' : 'Update'}</button>
           </div>
         </form>
+      </Modal>
+
+      {/* Add User Modal */}
+      <Modal isOpen={showAddUserModal} onClose={() => setShowAddUserModal(false)} title="Add User to Auction" maxWidth="max-w-lg">
+        <div className="mb-4">
+          <input
+            type="text"
+            value={addUserSearch}
+            onChange={(e) => setAddUserSearch(e.target.value)}
+            placeholder="Search by name or email..."
+            className="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
+          />
+        </div>
+        <div className="max-h-80 overflow-y-auto">
+          {loadingAllUsers ? (
+            <div className="flex justify-center py-8">
+              <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
+            </div>
+          ) : (
+            allUsers
+              .filter((u) => !u.auctions?.[0]?.escrow_amount || u.auctions[0].escrow_amount <= 0)
+              .filter((u) => {
+                if (!addUserSearch) return true;
+                const q = addUserSearch.toLowerCase();
+                return u.name?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q);
+              })
+              .map((user) => (
+                <div key={user.id} className="flex items-center justify-between py-3 border-b border-gray-100 dark:border-white/[0.05] last:border-0">
+                  <div>
+                    <div className="font-semibold text-gray-800 dark:text-white/90 text-sm">#{user.id} {user.name}</div>
+                    <div className="text-xs text-gray-400 dark:text-gray-500">{user.email}</div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setShowAddUserModal(false);
+                      setBudgetModal({ open: true, user_id: user.id, escrow_amount: '', total_budget: '' });
+                    }}
+                    className="px-3 py-1.5 rounded-lg bg-brand-500 !text-white text-xs font-medium hover:bg-brand-600 transition-colors"
+                  >
+                    Set Escrow
+                  </button>
+                </div>
+              ))
+          )}
+          {!loadingAllUsers && allUsers.filter((u) => !u.auctions?.[0]?.escrow_amount || u.auctions[0].escrow_amount <= 0).length === 0 && (
+            <p className="text-center text-sm text-gray-400 dark:text-gray-500 py-8">All users already have escrow assigned.</p>
+          )}
+        </div>
       </Modal>
 
       {/* Tournament Bracket Modal */}

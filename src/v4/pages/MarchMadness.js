@@ -106,6 +106,19 @@ const MarchMadness = () => {
         </div>
       )}
 
+      {/* No Auctions Available (signed in but no escrow assigned) */}
+      {isSignedIn && !liveAuction && upcomingAuctions.length === 0 && (
+        <div className="mb-10 rounded-2xl border border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-white/[0.03] p-8 text-center">
+          <svg className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+          </svg>
+          <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-2">No Auctions Available</h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            You currently don't have access to any auctions. Contact the admin to get started.
+          </p>
+        </div>
+      )}
+
       {/* Upcoming Auctions */}
       <div className="mb-10">
         <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-5">Upcoming Auctions</h2>
