@@ -8,41 +8,44 @@ import useAuction from '../hooks/useAuction';
 const MarchMadness = () => {
   const navigate = useNavigate();
   const { isSignedIn, isLoaded } = useUserContext();
-  const { fetchLiveAuction, fetchUpcoming, fetchMyItems, joinAuction } = useAuction();
+  const { fetchLiveAuctions, fetchUpcoming, fetchMyItems, joinAuction } = useAuction();
 
-  const [liveAuction, setLiveAuction] = useState(null);
+  const [liveAuctions, setLiveAuctions] = useState([]);
   const [upcomingAuctions, setUpcomingAuctions] = useState([]);
   const [myItems, setMyItems] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [joining, setJoining] = useState(false);
+  const [joiningId, setJoiningId] = useState(null);
 
   useEffect(() => {
     if (!isLoaded) return;
     const load = async () => {
       setLoading(true);
       const [live, upcoming, items] = await Promise.all([
-        fetchLiveAuction(),
+        fetchLiveAuctions(),
         fetchUpcoming(),
         isSignedIn ? fetchMyItems() : Promise.resolve([]),
       ]);
-      setLiveAuction(live);
+      setLiveAuctions(live || []);
       setUpcomingAuctions(upcoming || []);
       setMyItems(items || []);
       setLoading(false);
     };
     load();
-  }, [isLoaded, isSignedIn, fetchLiveAuction, fetchUpcoming, fetchMyItems]);
+  }, [isLoaded, isSignedIn, fetchLiveAuctions, fetchUpcoming, fetchMyItems]);
 
-  const handleJoinLive = async () => {
+  const handleJoinLive = async (auction) => {
     if (!isSignedIn) {
       navigate('/sign-in?redirect_url=/march-madness');
       return;
     }
-    if (!liveAuction) return;
-    setJoining(true);
-    await joinAuction(liveAuction.id);
-    navigate(`/march-madness/live?auction_id=${liveAuction.id}`);
-    setJoining(false);
+    setJoiningId(auction.id);
+    const joinResult = await joinAuction(auction.id);
+    if (joinResult.status === false) {
+      setJoiningId(null);
+      return;
+    }
+    navigate(`/march-madness/live?auction_id=${auction.id}`);
+    setJoiningId(null);
   };
 
   if (loading) return <PageLoader />;
@@ -59,55 +62,57 @@ const MarchMadness = () => {
         </p>
       </div>
 
-      {/* Live Auction Banner */}
-      {liveAuction && Object.keys(liveAuction).length > 0 && (
-        <div className="mb-10">
-          <div className="relative overflow-hidden rounded-2xl border-2 border-error-400 bg-gradient-to-r from-error-50 to-brand-50 dark:from-error-500/10 dark:to-brand-500/10 dark:border-error-500/50 p-6 md:p-8">
-            {/* Pulsing background glow */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-error-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+      {/* Live Auction Banners */}
+      {liveAuctions.length > 0 && (
+        <div className="mb-10 flex flex-col gap-5">
+          {liveAuctions.map((auction) => (
+            <div key={auction.id} className="relative overflow-hidden rounded-2xl border-2 border-error-400 bg-gradient-to-r from-error-50 to-brand-50 dark:from-error-500/10 dark:to-brand-500/10 dark:border-error-500/50 p-6 md:p-8">
+              {/* Pulsing background glow */}
+              <div className="absolute top-0 right-0 w-64 h-64 bg-error-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
 
-            <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-              <div>
-                <div className="flex items-center gap-3 mb-3">
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-error-600 px-3 py-1 text-xs font-bold !text-white uppercase tracking-wider shadow-lg">
-                    <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
-                    Live Now
-                  </span>
+              <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+                <div>
+                  <div className="flex items-center gap-3 mb-3">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-error-600 px-3 py-1 text-xs font-bold !text-white uppercase tracking-wider shadow-lg">
+                      <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
+                      Live Now
+                    </span>
+                  </div>
+                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">{auction.name}</h2>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                    {auction.event_date
+                      ? new Date(auction.event_date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
+                      : ''}
+                  </p>
+                  <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+                    <span className="flex items-center gap-1.5">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
+                      {auction.items?.length || 0} Teams
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" /></svg>
+                      {auction.members?.length || 0} Participants
+                    </span>
+                  </div>
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">{liveAuction.name}</h2>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-                  {liveAuction.event_date
-                    ? new Date(liveAuction.event_date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
-                    : ''}
-                </p>
-                <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
-                  <span className="flex items-center gap-1.5">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
-                    {liveAuction.items?.length || 0} Teams
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" /></svg>
-                    {liveAuction.members?.length || 0} Participants
-                  </span>
+                <div className="flex-shrink-0">
+                  <button
+                    onClick={() => handleJoinLive(auction)}
+                    disabled={joiningId === auction.id}
+                    className="w-full md:w-auto inline-flex items-center justify-center gap-2 rounded-xl px-8 py-4 text-base font-bold !text-white bg-error-600 hover:bg-error-700 shadow-lg shadow-error-500/30 transition-all hover:shadow-xl hover:shadow-error-500/40 disabled:opacity-50"
+                  >
+                    {joiningId === auction.id ? 'Joining...' : 'Join Live Auction'}
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
+                  </button>
                 </div>
-              </div>
-              <div className="flex-shrink-0">
-                <button
-                  onClick={handleJoinLive}
-                  disabled={joining}
-                  className="w-full md:w-auto inline-flex items-center justify-center gap-2 rounded-xl px-8 py-4 text-base font-bold !text-white bg-error-600 hover:bg-error-700 shadow-lg shadow-error-500/30 transition-all hover:shadow-xl hover:shadow-error-500/40 disabled:opacity-50"
-                >
-                  {joining ? 'Joining...' : 'Join Live Auction'}
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
-                </button>
               </div>
             </div>
-          </div>
+          ))}
         </div>
       )}
 
-      {/* No Auctions Available (signed in but no escrow assigned) */}
-      {isSignedIn && !liveAuction && upcomingAuctions.length === 0 && (
+      {/* No Auctions Available (signed in but no auctions assigned) */}
+      {isSignedIn && liveAuctions.length === 0 && upcomingAuctions.length === 0 && (
         <div className="mb-10 rounded-2xl border border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-white/[0.03] p-8 text-center">
           <svg className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />

@@ -8,7 +8,7 @@ const useAuction = () => {
   const [auction, setAuction] = useState(null);
   const [activeItem, setActiveItem] = useState(null);
   const [members, setMembers] = useState([]);
-  const [liveAuction, setLiveAuction] = useState(null);
+  const [liveAuctions, setLiveAuctions] = useState([]);
   const [upcomingAuctions, setUpcomingAuctions] = useState([]);
   const [myItems, setMyItems] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -158,14 +158,15 @@ const useAuction = () => {
 
   // ──── Player Methods ────
 
-  const fetchLiveAuction = useCallback(async () => {
+  const fetchLiveAuctions = useCallback(async () => {
     try {
       const response = await axiosService.get('/api/auctions/live');
-      setLiveAuction(response.data || null);
-      return response.data;
+      const data = response.data || [];
+      setLiveAuctions(data);
+      return data;
     } catch (err) {
-      setLiveAuction(null);
-      return null;
+      setLiveAuctions([]);
+      return [];
     }
   }, [axiosService]);
 
@@ -258,7 +259,7 @@ const useAuction = () => {
     auction,
     activeItem,
     members,
-    liveAuction,
+    liveAuctions,
     upcomingAuctions,
     myItems,
     loading,
@@ -284,7 +285,7 @@ const useAuction = () => {
     fetchAuctionUsers,
     fetchAllUsers,
     // Player
-    fetchLiveAuction,
+    fetchLiveAuctions,
     fetchUpcoming,
     fetchMyItems,
     joinAuction,
