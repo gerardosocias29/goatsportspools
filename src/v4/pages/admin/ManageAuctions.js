@@ -355,9 +355,9 @@ const ManageAuctions = () => {
             rows.push([
               t.region || '',
               t.seed || '',
-              t.ncaa_team?.school || t.name || '',
-              t.ncaa_team?.nickname || '',
-              t.owner?.name || '',
+              t.ncaa_team?.school || t.description || t.name || '',
+              t.ncaa_team?.nickname || t.name || '',
+              t.owner?.name || t.bids?.[0]?.user?.name || '',
               t.sold_amount ? Number(t.sold_amount).toFixed(2) : '',
             ]);
           });
@@ -434,9 +434,9 @@ const ManageAuctions = () => {
                       <tr key={team.id} className="hover:bg-gray-50/50 dark:hover:bg-white/[0.02]">
                         <td className="px-5 py-3 text-gray-600 dark:text-gray-400">{team.region}</td>
                         <td className="px-5 py-3 font-semibold text-gray-800 dark:text-white/90">#{team.seed}</td>
-                        <td className="px-5 py-3 text-gray-700 dark:text-gray-300">{team.ncaa_team?.school || team.name}</td>
-                        <td className="px-5 py-3 text-gray-500 dark:text-gray-400">{team.ncaa_team?.nickname || '-'}</td>
-                        <td className="px-5 py-3 text-gray-600 dark:text-gray-400">{team.owner?.name || '-'}</td>
+                        <td className="px-5 py-3 text-gray-700 dark:text-gray-300">{team.ncaa_team?.school || team.description || team.name}</td>
+                        <td className="px-5 py-3 text-gray-500 dark:text-gray-400">{team.ncaa_team?.nickname || team.name || '-'}</td>
+                        <td className="px-5 py-3 text-gray-600 dark:text-gray-400">{team.owner?.name || team.bids?.[0]?.user?.name || '-'}</td>
                         <td className={`px-5 py-3 text-right font-semibold ${team.sold_amount ? 'text-success-600 dark:text-success-400' : 'text-gray-400'}`}>
                           {team.sold_amount ? `$${Number(team.sold_amount).toFixed(2)}` : '-'}
                         </td>
