@@ -55,9 +55,9 @@ const ManageAuctions = () => {
   const [teamDetails, setTeamDetails] = useState(null);
   const [auctionDetails, setAuctionDetails] = useState(null);
   const [owners, setOwners] = useState([]);
-  const [selectedRegion, setSelectedRegion] = useState('East');
+  const [selectedRegion, setSelectedRegion] = useState('All');
 
-  const regions = ['East', 'West', 'Midwest', 'South'];
+  const regions = ['All', 'East', 'West', 'Midwest', 'South'];
 
   const loadAuctions = useCallback(async () => {
     setLoading(true);
@@ -335,46 +335,129 @@ const ManageAuctions = () => {
       )}
 
       {/* Team Details Tab */}
-      {activeTab === 'teams' && teamDetails && (
-        <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
-          <div className="flex flex-wrap items-center justify-between p-5 border-b border-gray-100 dark:border-white/[0.05] gap-3">
-            <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">{auctionDetails?.name} — Teams</h3>
-            <div className="flex gap-2">
-              {regions.map((r) => (
-                <button key={r} onClick={() => setSelectedRegion(r)} className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all ${selectedRegion === r ? 'bg-brand-500 !text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400'}`}>{r}</button>
+      {activeTab === 'teams' && teamDetails && (() => {
+        const filteredTeams = selectedRegion === 'All' ? teamDetails : teamDetails.filter((t) => t?.region === selectedRegion);
+        const soldTeams = filteredTeams.filter((t) => t.sold_amount && Number(t.sold_amount) > 0);
+        const totalBidAmount = soldTeams.reduce((sum, t) => sum + Number(t.sold_amount), 0);
+
+        // Per-region stats for summary cards
+        const regionStats = ['East', 'West', 'Midwest', 'South'].map((r) => {
+          const rTeams = teamDetails.filter((t) => t?.region === r);
+          const rSold = rTeams.filter((t) => t.sold_amount && Number(t.sold_amount) > 0);
+          return { region: r, total: rTeams.length, sold: rSold.length, amount: rSold.reduce((s, t) => s + Number(t.sold_amount), 0) };
+        });
+        const grandTotal = teamDetails.filter((t) => t.sold_amount && Number(t.sold_amount) > 0);
+        const grandAmount = grandTotal.reduce((s, t) => s + Number(t.sold_amount), 0);
+
+        const exportCSV = () => {
+          const rows = [['Region', 'Seed', 'School', 'Nickname', 'Owner', 'Price']];
+          teamDetails.forEach((t) => {
+            rows.push([
+              t.region || '',
+              t.seed || '',
+              t.ncaa_team?.school || t.name || '',
+              t.ncaa_team?.nickname || '',
+              t.owner?.name || '',
+              t.sold_amount ? Number(t.sold_amount).toFixed(2) : '',
+            ]);
+          });
+          rows.push([]);
+          rows.push(['--- SUMMARY ---']);
+          regionStats.forEach((rs) => {
+            rows.push([rs.region, `Sold: ${rs.sold} / ${rs.total}`, `Total: $${rs.amount.toFixed(2)}`]);
+          });
+          rows.push([]);
+          rows.push(['GRAND TOTAL', `Sold: ${grandTotal.length} / ${teamDetails.length}`, `Total: $${grandAmount.toFixed(2)}`]);
+
+          const csv = rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
+          const blob = new Blob([csv], { type: 'text/csv' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `${auctionDetails?.name || 'auction'}_teams.csv`;
+          a.click();
+          URL.revokeObjectURL(url);
+        };
+
+        return (
+          <div className="space-y-5">
+            {/* Region Summary Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+              {regionStats.map((rs) => (
+                <div key={rs.region} className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] p-4">
+                  <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-2">{rs.region}</div>
+                  <div className="text-lg font-bold text-gray-800 dark:text-white">{rs.sold} <span className="text-sm font-normal text-gray-400">/ {rs.total}</span></div>
+                  <div className="text-sm font-semibold text-success-600 dark:text-success-400">${rs.amount.toFixed(2)}</div>
+                </div>
               ))}
+              <div className="rounded-xl border-2 border-brand-500 bg-brand-50 dark:bg-brand-500/10 p-4">
+                <div className="text-xs font-semibold text-brand-600 dark:text-brand-400 uppercase mb-2">Grand Total</div>
+                <div className="text-lg font-bold text-gray-800 dark:text-white">{grandTotal.length} <span className="text-sm font-normal text-gray-400">/ {teamDetails.length}</span></div>
+                <div className="text-sm font-semibold text-success-600 dark:text-success-400">${grandAmount.toFixed(2)}</div>
+              </div>
+            </div>
+
+            {/* Teams Table */}
+            <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+              <div className="flex flex-wrap items-center justify-between p-5 border-b border-gray-100 dark:border-white/[0.05] gap-3">
+                <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">{auctionDetails?.name} — Teams</h3>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={exportCSV}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 transition-colors"
+                    title="Export CSV"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                    Export CSV
+                  </button>
+                  <div className="flex gap-1.5">
+                    {regions.map((r) => (
+                      <button key={r} onClick={() => setSelectedRegion(r)} className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all ${selectedRegion === r ? 'bg-brand-500 !text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400'}`}>{r}</button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-100 dark:border-white/[0.05]">
+                      <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Region</th>
+                      <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Seed</th>
+                      <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">School</th>
+                      <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Nickname</th>
+                      <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Owner</th>
+                      <th className="px-5 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Price</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
+                    {filteredTeams.map((team) => (
+                      <tr key={team.id} className="hover:bg-gray-50/50 dark:hover:bg-white/[0.02]">
+                        <td className="px-5 py-3 text-gray-600 dark:text-gray-400">{team.region}</td>
+                        <td className="px-5 py-3 font-semibold text-gray-800 dark:text-white/90">#{team.seed}</td>
+                        <td className="px-5 py-3 text-gray-700 dark:text-gray-300">{team.ncaa_team?.school || team.name}</td>
+                        <td className="px-5 py-3 text-gray-500 dark:text-gray-400">{team.ncaa_team?.nickname || '-'}</td>
+                        <td className="px-5 py-3 text-gray-600 dark:text-gray-400">{team.owner?.name || '-'}</td>
+                        <td className={`px-5 py-3 text-right font-semibold ${team.sold_amount ? 'text-success-600 dark:text-success-400' : 'text-gray-400'}`}>
+                          {team.sold_amount ? `$${Number(team.sold_amount).toFixed(2)}` : '-'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr className="border-t-2 border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-white/[0.02]">
+                      <td colSpan={4} className="px-5 py-3 text-sm font-bold text-gray-800 dark:text-white">
+                        {selectedRegion === 'All' ? 'Grand Total' : `${selectedRegion} Total`}
+                      </td>
+                      <td className="px-5 py-3 text-sm font-semibold text-gray-600 dark:text-gray-400">{soldTeams.length} / {filteredTeams.length} sold</td>
+                      <td className="px-5 py-3 text-right text-sm font-bold text-success-600 dark:text-success-400">${totalBidAmount.toFixed(2)}</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
             </div>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-gray-100 dark:border-white/[0.05]">
-                  <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Region</th>
-                  <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Seed</th>
-                  <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">School</th>
-                  <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Nickname</th>
-                  <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Owner</th>
-                  <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Price</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-                {teamDetails.filter((t) => t?.region === selectedRegion).map((team) => (
-                  <tr key={team.id} className="hover:bg-gray-50/50 dark:hover:bg-white/[0.02]">
-                    <td className="px-5 py-3 text-gray-600 dark:text-gray-400">{team.region}</td>
-                    <td className="px-5 py-3 font-semibold text-gray-800 dark:text-white/90">#{team.seed}</td>
-                    <td className="px-5 py-3 text-gray-700 dark:text-gray-300">{team.ncaa_team?.school || team.name}</td>
-                    <td className="px-5 py-3 text-gray-500 dark:text-gray-400">{team.ncaa_team?.nickname || '-'}</td>
-                    <td className="px-5 py-3 text-gray-600 dark:text-gray-400">{team.owner?.name || '-'}</td>
-                    <td className={`px-5 py-3 font-semibold ${team.sold_amount ? 'text-success-600 dark:text-success-400' : 'text-gray-400'}`}>
-                      {team.sold_amount ? `$${Number(team.sold_amount).toFixed(2)}` : '-'}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* User Details Tab */}
       {activeTab === 'users' && auctionDetails && (
