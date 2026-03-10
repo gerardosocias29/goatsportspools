@@ -21,7 +21,14 @@ const UserAuction = ({ channel, auctionId, currentUser }) => {
   const [isBidding, setIsBidding] = useState(false);
   const [bidHistory, setBidHistory] = useState([]);
   const [isUserWinning, setIsUserWinning] = useState(false);
+  const [balanceInfo, setBalanceInfo] = useState(null);
   
+  const fetchBalance = () => {
+    axiosService.get(`/api/auctions/${auctionId}/my-balance`)
+      .then((response) => setBalanceInfo(response.data))
+      .catch(() => setBalanceInfo(null));
+  };
+
   useEffect(() => {
     if(auctionId){
       axiosService
@@ -39,6 +46,8 @@ const UserAuction = ({ channel, auctionId, currentUser }) => {
         .catch((error) => {
           console.log(error);
         });
+
+      fetchBalance();
         
       // Get bid history
       // axiosService
@@ -135,7 +144,7 @@ const UserAuction = ({ channel, auctionId, currentUser }) => {
     axiosService.get(`/api/auctions/${auctionId}/${auction_id}/get-active-item`)
     .then((response) => {
       setActiveItem(response.data);
-      
+
       // Check if user is winning this item
       if(response.data && response.data.bids && response.data.bids.length > 0) {
         const highestBidder = response.data.bids[0];
@@ -143,7 +152,8 @@ const UserAuction = ({ channel, auctionId, currentUser }) => {
       } else {
         setIsUserWinning(false);
       }
-      setBidHistory(response.data.bids)
+      setBidHistory(response.data.bids);
+      fetchBalance();
     })
     .catch(() => {
       setActiveItem(null);
@@ -277,18 +287,34 @@ const UserAuction = ({ channel, auctionId, currentUser }) => {
               {activeItem ? (
                 <>
                   <h3 className="text-xl font-medium">#{activeItem.seed} {activeItem.description} {activeItem.name} - {activeItem.region}</h3>
-                  <div className="grid grid-cols-3 gap-3 mt-3">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3">
                     <div className="bg-gray-50 p-3 border rounded-md">
                       <p className="text-sm text-gray-500">Starting Bid</p>
                       <p className="text-lg font-semibold">{activeItem.starting_bid}</p>
                     </div>
                     <div className="bg-gray-50 p-3 border rounded-md">
-                      <p className="text-sm text-gray-500">Minimum Bid Increment</p>
+                      <p className="text-sm text-gray-500">Min Increment</p>
                       <p className="text-lg font-semibold">{activeItem.minimum_bid}</p>
                     </div>
                     <div className="bg-green-50 border-green-800 border p-3 rounded-md">
                       <p className="text-sm text-green-800">Current Bid</p>
                       <p className="text-lg text-green-800 font-semibold">{activeItem.bids?.length > 0 ? activeItem.bids[0].bid_amount : "-"}</p>
+                    </div>
+                    <div className={`p-3 border rounded-md ${
+                      balanceInfo?.total_budget == null
+                        ? 'bg-gray-50 border-gray-300'
+                        : balanceInfo?.remaining_balance <= 0
+                          ? 'bg-red-50 border-red-800'
+                          : 'bg-blue-50 border-blue-800'
+                    }`}>
+                      <p className={`text-sm ${
+                        balanceInfo?.total_budget == null ? 'text-gray-500' : balanceInfo?.remaining_balance <= 0 ? 'text-red-800' : 'text-blue-800'
+                      }`}>Your Max Bid</p>
+                      <p className={`text-lg font-semibold ${
+                        balanceInfo?.total_budget == null ? 'text-gray-500' : balanceInfo?.remaining_balance <= 0 ? 'text-red-800' : 'text-blue-800'
+                      }`}>
+                        {balanceInfo?.total_budget == null ? 'NA' : `$${Number(balanceInfo.remaining_balance).toFixed(2)}`}
+                      </p>
                     </div>
                   </div>
                 </>
