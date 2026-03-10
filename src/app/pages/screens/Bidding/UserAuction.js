@@ -313,7 +313,7 @@ const UserAuction = ({ channel, auctionId, currentUser }) => {
                       <p className={`text-lg font-semibold ${
                         balanceInfo?.total_budget == null ? 'text-gray-500' : balanceInfo?.remaining_balance <= 0 ? 'text-red-800' : 'text-blue-800'
                       }`}>
-                        {balanceInfo?.total_budget == null ? 'NA' : `$${Number(balanceInfo.remaining_balance).toFixed(2)}`}
+                        {balanceInfo?.total_budget == null ? '∞' : `$${Number(balanceInfo.remaining_balance).toFixed(2)}`}
                       </p>
                     </div>
                   </div>
