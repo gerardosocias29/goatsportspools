@@ -22,6 +22,7 @@ const LiveAuction = () => {
     placeBid,
     fetchActiveItem,
     fetchMembers,
+    fetchMyBalance,
   } = useAuction();
 
   // State
@@ -35,6 +36,7 @@ const LiveAuction = () => {
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedRegion, setSelectedRegion] = useState('East');
+  const [balanceInfo, setBalanceInfo] = useState(null);
 
   // Initial data fetch
   useEffect(() => {
@@ -69,6 +71,10 @@ const LiveAuction = () => {
       // Get members
       const memberData = await fetchMembers(auctionId);
       setMembers(memberData);
+
+      // Get balance
+      const balance = await fetchMyBalance(auctionId);
+      setBalanceInfo(balance);
 
       setLoading(false);
     };
@@ -147,7 +153,10 @@ const LiveAuction = () => {
       );
       return { ...prev, bids: updatedBids };
     });
-  }, []);
+
+    // Refresh balance after any bid
+    fetchMyBalance(auctionId).then((b) => setBalanceInfo(b));
+  }, [auctionId, fetchMyBalance]);
 
   const handleAuctionMembers = useCallback(async () => {
     const memberData = await fetchMembers(auctionId);
@@ -263,7 +272,7 @@ const LiveAuction = () => {
                 </h4>
 
                 {/* Bid Stats */}
-                <div className="grid grid-cols-3 gap-3 mb-5">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
                   <div className="rounded-xl bg-gray-50 dark:bg-gray-800/50 p-3 text-center">
                     <div className="text-[11px] font-medium text-gray-400 dark:text-gray-500 mb-1">Starting Bid</div>
                     <div className="text-base font-bold text-gray-800 dark:text-white/90">${Number(activeItem.starting_bid).toFixed(2)}</div>
@@ -276,6 +285,22 @@ const LiveAuction = () => {
                     <div className="text-[11px] font-semibold text-success-600 dark:text-success-400 mb-1">Current Bid</div>
                     <div className="text-base font-extrabold text-success-600 dark:text-success-400">
                       {activeItem.bids?.length > 0 ? `$${Number(activeItem.bids[0].bid_amount).toFixed(2)}` : '-'}
+                    </div>
+                  </div>
+                  <div className={`rounded-xl border p-3 text-center ${
+                    balanceInfo?.total_budget == null
+                      ? 'bg-gray-50 border-gray-200 dark:bg-gray-800/50 dark:border-gray-700'
+                      : balanceInfo?.remaining_balance <= 0
+                        ? 'bg-error-50 border-error-200 dark:bg-error-500/10 dark:border-error-500/30'
+                        : 'bg-blue-50 border-blue-200 dark:bg-blue-500/10 dark:border-blue-500/30'
+                  }`}>
+                    <div className={`text-[11px] font-semibold mb-1 ${
+                      balanceInfo?.total_budget == null ? 'text-gray-400 dark:text-gray-500' : balanceInfo?.remaining_balance <= 0 ? 'text-error-600 dark:text-error-400' : 'text-blue-600 dark:text-blue-400'
+                    }`}>Your Max Bid</div>
+                    <div className={`text-base font-extrabold ${
+                      balanceInfo?.total_budget == null ? 'text-gray-400 dark:text-gray-500' : balanceInfo?.remaining_balance <= 0 ? 'text-error-600 dark:text-error-400' : 'text-blue-600 dark:text-blue-400'
+                    }`}>
+                      {balanceInfo?.total_budget == null ? '∞' : `$${Number(balanceInfo.remaining_balance).toFixed(2)}`}
                     </div>
                   </div>
                 </div>

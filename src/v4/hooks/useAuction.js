@@ -253,6 +253,15 @@ const useAuction = () => {
     }
   }, [axiosService]);
 
+  const fetchMyBalance = useCallback(async (auctionId) => {
+    try {
+      const response = await axiosService.get(`/api/auctions/${auctionId}/my-balance`);
+      return response.data;
+    } catch (err) {
+      return null;
+    }
+  }, [axiosService]);
+
   return {
     // State
     auctions,
@@ -294,6 +303,7 @@ const useAuction = () => {
     fetchAuctionById,
     fetchActiveItem,
     fetchMembers,
+    fetchMyBalance,
   };
 };
 
