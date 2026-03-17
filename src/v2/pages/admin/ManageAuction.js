@@ -603,18 +603,17 @@ const StreamUrlModal = ({ auction, onClose, onSubmit, colors }) => {
           Start Auction
         </h2>
         <p style={{ color: colors.text, opacity: 0.7, marginBottom: '1.5rem' }}>
-          Set the livestream URL before starting the auction
+          Optionally set a livestream URL before starting the auction.
         </p>
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: '1.5rem' }}>
             <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: colors.text }}>
-              Stream URL (YouTube or Twitch)
+              Stream URL (Optional)
             </label>
             <Input
               type="url"
               value={streamUrl}
               onChange={(e) => setStreamUrl(e.target.value)}
-              required
               placeholder="https://youtube.com/watch?v=..."
             />
           </div>

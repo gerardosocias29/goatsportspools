@@ -324,20 +324,6 @@ const LiveBidding = () => {
 
         {/* ─── RIGHT COLUMN ─── */}
         <div className="flex flex-col gap-5">
-          {/* Stream */}
-          <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
-            <div className="flex items-center gap-2 mb-3">
-              <h3 className="text-base font-semibold text-gray-800 dark:text-white/90">Live Stream</h3>
-              {hasStarted && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-error-600 px-2 py-0.5 text-[10px] font-bold !text-white uppercase">
-                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                  Live
-                </span>
-              )}
-            </div>
-            <StreamEmbed url={auctionData?.stream_url} />
-          </div>
-
           {/* Bidding Details */}
           <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
             <div className="flex items-center gap-2 mb-4">
@@ -464,6 +450,22 @@ const LiveBidding = () => {
               </div>
             )}
           </div>
+
+          {/* Stream - only shown when stream URL exists */}
+          {auctionData?.stream_url && (
+            <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+              <div className="flex items-center gap-2 mb-3">
+                <h3 className="text-base font-semibold text-gray-800 dark:text-white/90">Live Stream</h3>
+                {hasStarted && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-error-600 px-2 py-0.5 text-[10px] font-bold !text-white uppercase">
+                    <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                    Live
+                  </span>
+                )}
+              </div>
+              <StreamEmbed url={auctionData.stream_url} />
+            </div>
+          )}
         </div>
       </div>
     </div>

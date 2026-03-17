@@ -549,11 +549,11 @@ const ManageAuctions = () => {
 
       {/* Stream URL + Start Modal */}
       <Modal isOpen={showStreamModal} onClose={() => setShowStreamModal(false)} title="Start Auction" maxWidth="max-w-md">
-        <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Set the livestream URL before starting the auction.</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Optionally set a livestream URL before starting the auction.</p>
         <form onSubmit={handleSetStreamAndStart}>
           <div className="mb-6">
-            <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Stream URL (YouTube or Twitch)</label>
-            <input type="url" value={streamUrlInput} onChange={(e) => setStreamUrlInput(e.target.value)} required placeholder="https://youtube.com/watch?v=..." className="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
+            <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Stream URL (Optional)</label>
+            <input type="url" value={streamUrlInput} onChange={(e) => setStreamUrlInput(e.target.value)} placeholder="https://youtube.com/watch?v=..." className="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
           </div>
           <div className="flex justify-end gap-3">
             <button type="button" onClick={() => setShowStreamModal(false)} className="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-700 bg-white ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-400 dark:ring-gray-700">Cancel</button>
