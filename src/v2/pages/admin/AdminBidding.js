@@ -446,39 +446,9 @@ const AdminBidding = ({ channel }) => {
           </Card>
         </div>
 
-        {/* ========== RIGHT COLUMN - Stream + Bidding ========== */}
-        <div>
+        {/* ========== RIGHT COLUMN - Bidding + Stream ========== */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <Card padding="lg" hover={false}>
-            {/* Live Stream Section */}
-            <div style={{ marginBottom: '1.5rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
-                <span style={{ color: '#EF4444' }}>📹</span>
-                <h2 style={{ margin: 0, fontSize: '1.375rem', fontWeight: 800, fontFamily: '"Hubot Sans", sans-serif', color: colors.text }}>
-                  Live Stream
-                </h2>
-                {hasStarted && <Badge variant="danger">LIVE</Badge>}
-              </div>
-              <div style={{ borderRadius: '0.5rem', overflow: 'hidden', border: `1px solid ${colors.border}` }}>
-                {auctionData?.stream_url ? (
-                  <ReactPlayer
-                    url={auctionData.stream_url}
-                    playing
-                    controls
-                    width="100%"
-                    height="300px"
-                    config={{ youtube: { playerVars: { showinfo: 1 } } }}
-                  />
-                ) : (
-                  <div style={{ height: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#000', color: '#fff', opacity: 0.5 }}>
-                    No stream URL set
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Divider */}
-            <div style={{ height: '1px', backgroundColor: colors.border, margin: '0 0 1.5rem 0' }} />
-
             {/* Bidding Details Section */}
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
@@ -707,6 +677,29 @@ const AdminBidding = ({ channel }) => {
               )}
             </div>
           </Card>
+
+          {/* Live Stream Section - only shown when stream URL exists */}
+          {auctionData?.stream_url && (
+            <Card padding="lg" hover={false}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                <span style={{ color: '#EF4444' }}>📹</span>
+                <h2 style={{ margin: 0, fontSize: '1.375rem', fontWeight: 800, fontFamily: '"Hubot Sans", sans-serif', color: colors.text }}>
+                  Live Stream
+                </h2>
+                {hasStarted && <Badge variant="danger">LIVE</Badge>}
+              </div>
+              <div style={{ borderRadius: '0.5rem', overflow: 'hidden', border: `1px solid ${colors.border}` }}>
+                <ReactPlayer
+                  url={auctionData.stream_url}
+                  playing
+                  controls
+                  width="100%"
+                  height="300px"
+                  config={{ youtube: { playerVars: { showinfo: 1 } } }}
+                />
+              </div>
+            </Card>
+          )}
         </div>
       </div>
 
