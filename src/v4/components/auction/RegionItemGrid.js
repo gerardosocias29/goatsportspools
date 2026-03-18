@@ -45,7 +45,7 @@ const RegionItemGrid = React.memo(({
               title={
                 isSold
                   ? `Sold to ${item.bids?.[0]?.user?.name || 'Unknown'} for $${Number(item.sold_amount || 0).toFixed(2)}`
-                  : `#${item.seed} ${item.description || ''} ${item.name}`
+                  : `#${item.seed} ${item.ncaa_team?.school || item.description || ''} ${item.ncaa_team?.nickname || item.name}`
               }
               className={`relative flex items-center justify-between gap-1.5 px-3 py-2.5 rounded-lg text-left text-xs font-semibold transition-all duration-200 ${
                 isActive
@@ -56,7 +56,7 @@ const RegionItemGrid = React.memo(({
               }`}
             >
               <span className="truncate">
-                #{item.seed} {item.description || ''} {item.name}
+                #{item.seed} {item.ncaa_team?.school || item.description || ''} {item.ncaa_team?.nickname || item.name}
               </span>
               {isSold && (
                 <svg className="w-4 h-4 text-success-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">

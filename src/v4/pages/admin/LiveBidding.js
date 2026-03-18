@@ -338,7 +338,7 @@ const LiveBidding = () => {
                     <div>
                       <div className="text-xs text-gray-400 dark:text-gray-500 mb-1">Current Item</div>
                       <div className="text-lg font-bold text-gray-800 dark:text-white/90 mb-1.5">
-                        #{activeItem.seed} {activeItem.description || ''} {activeItem.name} — {activeItem.region}
+                        #{activeItem.seed} {activeItem.ncaa_team?.school || activeItem.description || ''} {activeItem.ncaa_team?.nickname || activeItem.name} — {activeItem.region}
                       </div>
                       <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${
                         hasStarted

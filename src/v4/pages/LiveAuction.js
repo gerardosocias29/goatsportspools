@@ -268,7 +268,7 @@ const LiveAuction = () => {
               <div className="p-5">
                 {/* Active Item Name */}
                 <h4 className="text-lg font-bold text-gray-800 dark:text-white/90 mb-4">
-                  #{activeItem.seed} {activeItem.description || ''} {activeItem.name} — {activeItem.region}
+                  #{activeItem.seed} {activeItem.ncaa_team?.school || activeItem.description || ''} {activeItem.ncaa_team?.nickname || activeItem.name} — {activeItem.region}
                 </h4>
 
                 {/* Bid Stats */}
