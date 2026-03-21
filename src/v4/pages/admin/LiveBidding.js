@@ -100,7 +100,9 @@ const LiveBidding = () => {
       const updatedBids = [newBid, ...(prev.bids || [])].sort(
         (a, b) => Number(b.bid_amount) - Number(a.bid_amount)
       );
-      return { ...prev, bids: updatedBids };
+      // Update minimum_bid from Pusher event (tiered increment)
+      const updatedMinBid = newBid.minimum_bid != null ? Number(newBid.minimum_bid) : prev.minimum_bid;
+      return { ...prev, bids: updatedBids, minimum_bid: updatedMinBid };
     });
   }, []);
 
