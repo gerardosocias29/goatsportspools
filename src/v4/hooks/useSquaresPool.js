@@ -241,7 +241,7 @@ const useSquaresPool = (poolNumber) => {
 
   // Initial load
   useEffect(() => {
-    if (!poolNumber || !isLoaded) return;
+    if (!poolNumber || !isLoaded || !user) return;
 
     const init = async () => {
       setLoading(true);
@@ -249,7 +249,7 @@ const useSquaresPool = (poolNumber) => {
       setLoading(false);
     };
     init();
-  }, [poolNumber, isLoaded]);
+  }, [poolNumber, isLoaded, user]);
 
   // Load winners when pool is loaded
   useEffect(() => {

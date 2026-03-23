@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAxios } from '../../app/contexts/AxiosContext';
+import { useUserContext } from '../contexts/UserContext';
 
 const usePaymentMethod = () => {
   const axios = useAxios();
+  const { user } = useUserContext();
   const axiosRef = useRef(axios);
   axiosRef.current = axios;
 
@@ -48,13 +50,13 @@ const usePaymentMethod = () => {
     });
   }, []);
 
-  // Load once on mount
+  // Load once when user is authenticated
   useEffect(() => {
-    if (!loadedRef.current) {
+    if (!loadedRef.current && user) {
       loadedRef.current = true;
       loadPaymentMethod();
     }
-  }, [loadPaymentMethod]);
+  }, [loadPaymentMethod, user]);
 
   return {
     paymentMethod,

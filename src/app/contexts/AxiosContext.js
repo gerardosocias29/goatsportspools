@@ -31,7 +31,13 @@ export const AxiosProvider = ({ children }) => {
           error.response.status === 401 &&
           error.response.data.message === 'Unauthenticated.'
         ) {
-          logout();
+          // Only logout if there's no active Clerk session.
+          // If __session cookie exists, Clerk is still managing auth —
+          // redirecting now would cause a refresh loop on page reload.
+          const hasClerkSession = Cookies.get('__session');
+          if (!hasClerkSession) {
+            logout();
+          }
         }
         return Promise.reject(error);
       }

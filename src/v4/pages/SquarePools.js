@@ -41,16 +41,18 @@ const SquarePools = () => {
   // Filter pools client-side based on tab, league, and search
   const filteredPools = useMemo(() => {
     return pools.filter(pool => {
-      // Tab filter: Active = open/in_progress, History = closed/completed
+      // Tab filter: Active vs History
+      // A pool is "history" if its status is closed/completed OR the game date has passed
       const status = pool.pool_status;
+      const gameDate = pool.game?.game_datetime;
+      const isGamePast = gameDate && new Date(gameDate) < new Date();
+      const isActiveStatus = status === 'open' || status === 'SelectOpen' || status === 'in_progress' || status === 'GameStarted';
+      const isHistoryStatus = status === 'closed' || status === 'SelectClosed' || status === 'completed';
+
       if (tab === 'active') {
-        if (status !== 'open' && status !== 'SelectOpen' && status !== 'in_progress' && status !== 'GameStarted') {
-          return false;
-        }
+        if (!isActiveStatus || isGamePast) return false;
       } else {
-        if (status !== 'closed' && status !== 'SelectClosed' && status !== 'completed') {
-          return false;
-        }
+        if (!isHistoryStatus && !isGamePast) return false;
       }
 
       // League filter
