@@ -94,7 +94,7 @@ const LiveAuction = () => {
     window.addEventListener('beforeunload', handleUnload);
     return () => window.removeEventListener('beforeunload', handleUnload);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [auctionId]);
+  }, [auctionId, isLoaded, userLoading, isSignedIn]);
 
   // Update bid amounts when active item changes
   useEffect(() => {
