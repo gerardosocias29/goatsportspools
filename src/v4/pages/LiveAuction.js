@@ -12,7 +12,7 @@ const LiveAuction = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const auctionId = searchParams.get('auction_id');
-  const { user, isSignedIn } = useUserContext();
+  const { user, isSignedIn, isLoaded, loading: userLoading } = useUserContext();
   const { channel } = usePusher();
 
   const {
@@ -44,6 +44,8 @@ const LiveAuction = () => {
       navigate('/march-madness');
       return;
     }
+    // Wait for Clerk to finish loading before checking auth
+    if (!isLoaded || userLoading) return;
     if (!isSignedIn) {
       navigate(`/sign-in?redirect_url=/march-madness/live?auction_id=${auctionId}`);
       return;
