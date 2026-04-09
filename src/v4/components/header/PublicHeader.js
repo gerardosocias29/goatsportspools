@@ -13,7 +13,14 @@ const PublicHeader = () => {
   const navItems = React.useMemo(() => {
     const base = [
       { label: 'Home', path: '/' },
-      { label: 'Squares Pools', path: '/pools' },
+      {
+        label: 'Pools',
+        dropdown: true,
+        children: [
+          { label: 'Squares Pools', path: '/pools' },
+          { label: 'NBA Playoffs', path: '/playoffs' },
+        ],
+      },
       { label: 'March Madness', path: '/march-madness' },
     ];
     if (isSuperadmin || isSquareAdmin) {
@@ -26,6 +33,8 @@ const PublicHeader = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isPoolsOpen, setIsPoolsOpen] = useState(false);
+  const [isMobilePoolsOpen, setIsMobilePoolsOpen] = useState(false);
   const [luckyResults, setLuckyResults] = useState(() => {
     try {
       const saved = localStorage.getItem(LUCKY_RESULTS_KEY);
@@ -33,6 +42,7 @@ const PublicHeader = () => {
     } catch { return null; }
   });
   const dropdownRef = useRef(null);
+  const poolsDropdownRef = useRef(null);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 10);
@@ -43,13 +53,18 @@ const PublicHeader = () => {
   useEffect(() => {
     setIsMenuOpen(false);
     setIsDropdownOpen(false);
+    setIsPoolsOpen(false);
+    setIsMobilePoolsOpen(false);
   }, [location.pathname]);
 
-  // Close dropdown when clicking outside
+  // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
         setIsDropdownOpen(false);
+      }
+      if (poolsDropdownRef.current && !poolsDropdownRef.current.contains(e.target)) {
+        setIsPoolsOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -94,27 +109,66 @@ const PublicHeader = () => {
 
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-1">
-            {navItems.map((item) => (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`relative px-4 py-2 text-sm font-medium transition-colors group ${
-                  isActive(item.path)
-                    ? 'text-brand-500 dark:text-brand-400'
-                    : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
-                }`}
-              >
-                {item.label}
-                {/* Active: solid underline */}
-                {isActive(item.path) && (
-                  <span className="absolute bottom-0 left-0 w-full h-0.5 bg-brand-500 rounded-full" />
-                )}
-                {/* Hover: animated underline from center */}
-                {!isActive(item.path) && (
-                  <span className="absolute bottom-0 left-1/2 w-0 h-0.5 bg-brand-500/60 rounded-full transition-all duration-300 group-hover:w-full group-hover:left-0" />
-                )}
-              </Link>
-            ))}
+            {navItems.map((item) =>
+              item.dropdown ? (
+                <div key={item.label} className="relative" ref={poolsDropdownRef}>
+                  <button
+                    onClick={() => setIsPoolsOpen(!isPoolsOpen)}
+                    className={`relative px-4 py-2 text-sm font-medium transition-colors group flex items-center gap-1 ${
+                      item.children.some((c) => isActive(c.path))
+                        ? 'text-brand-500 dark:text-brand-400'
+                        : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
+                    }`}
+                  >
+                    {item.label}
+                    <svg className={`w-3.5 h-3.5 transition-transform ${isPoolsOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                    {item.children.some((c) => isActive(c.path)) && (
+                      <span className="absolute bottom-0 left-0 w-full h-0.5 bg-brand-500 rounded-full" />
+                    )}
+                    {!item.children.some((c) => isActive(c.path)) && (
+                      <span className="absolute bottom-0 left-1/2 w-0 h-0.5 bg-brand-500/60 rounded-full transition-all duration-300 group-hover:w-full group-hover:left-0" />
+                    )}
+                  </button>
+                  {isPoolsOpen && (
+                    <div className="absolute left-0 mt-1 w-48 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg py-1.5 z-50">
+                      {item.children.map((child) => (
+                        <Link
+                          key={child.path}
+                          to={child.path}
+                          className={`block px-4 py-2.5 text-sm font-medium transition-colors ${
+                            isActive(child.path)
+                              ? 'text-brand-500 bg-brand-50 dark:bg-brand-500/10 dark:text-brand-400'
+                              : 'text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700'
+                          }`}
+                        >
+                          {child.label}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={`relative px-4 py-2 text-sm font-medium transition-colors group ${
+                    isActive(item.path)
+                      ? 'text-brand-500 dark:text-brand-400'
+                      : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
+                  }`}
+                >
+                  {item.label}
+                  {isActive(item.path) && (
+                    <span className="absolute bottom-0 left-0 w-full h-0.5 bg-brand-500 rounded-full" />
+                  )}
+                  {!isActive(item.path) && (
+                    <span className="absolute bottom-0 left-1/2 w-0 h-0.5 bg-brand-500/60 rounded-full transition-all duration-300 group-hover:w-full group-hover:left-0" />
+                  )}
+                </Link>
+              )
+            )}
           </nav>
 
           {/* Right Actions */}
@@ -292,19 +346,54 @@ const PublicHeader = () => {
         {isMenuOpen && (
           <div className="md:hidden border-t border-gray-200 dark:border-gray-700 py-4">
             <nav className="flex flex-col gap-2">
-              {navItems.map((item) => (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={`px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
-                    isActive(item.path)
-                      ? 'bg-brand-500 !text-white'
-                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
-                  }`}
-                >
-                  {item.label}
-                </Link>
-              ))}
+              {navItems.map((item) =>
+                item.dropdown ? (
+                  <div key={item.label}>
+                    <button
+                      onClick={() => setIsMobilePoolsOpen(!isMobilePoolsOpen)}
+                      className={`w-full flex items-center justify-between px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+                        item.children.some((c) => isActive(c.path))
+                          ? 'text-brand-500 dark:text-brand-400 bg-brand-50 dark:bg-brand-500/10'
+                          : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+                      }`}
+                    >
+                      {item.label}
+                      <svg className={`w-4 h-4 transition-transform ${isMobilePoolsOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                    {isMobilePoolsOpen && (
+                      <div className="ml-4 mt-1 flex flex-col gap-1">
+                        {item.children.map((child) => (
+                          <Link
+                            key={child.path}
+                            to={child.path}
+                            className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                              isActive(child.path)
+                                ? 'bg-brand-500 !text-white'
+                                : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+                            }`}
+                          >
+                            {child.label}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    className={`px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+                      isActive(item.path)
+                        ? 'bg-brand-500 !text-white'
+                        : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+                    }`}
+                  >
+                    {item.label}
+                  </Link>
+                )
+              )}
               <hr className="my-2 border-gray-200 dark:border-gray-700" />
 
               {isSignedIn ? (

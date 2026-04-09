@@ -50,12 +50,15 @@ export const UserProvider = ({ children }) => {
   const getRoleLabel = useCallback(() => {
     if (!user) return '';
     if (user.role_id === 1) return 'Superadmin';
+    if (user.role_id === 2 && user.is_playoff_admin) return 'Commissioner';
     if (user.role_id === 2) return 'Square Admin';
+    if (user.is_playoff_admin) return 'Playoff Admin';
     return 'Player';
   }, [user]);
 
   const isSuperadmin = user?.role_id === 1;
   const isSquareAdmin = user?.role_id === 2;
+  const isPlayoffAdmin = !!user?.is_playoff_admin;
 
   // Allow manual re-fetch (e.g. after role change)
   const refreshUser = useCallback(() => {
@@ -73,8 +76,9 @@ export const UserProvider = ({ children }) => {
     getRoleLabel,
     isSuperadmin,
     isSquareAdmin,
+    isPlayoffAdmin,
     refreshUser,
-  }), [user, clerkUser, loading, isSignedIn, isLoaded, getRoleLabel, isSuperadmin, isSquareAdmin, refreshUser]);
+  }), [user, clerkUser, loading, isSignedIn, isLoaded, getRoleLabel, isSuperadmin, isSquareAdmin, isPlayoffAdmin, refreshUser]);
 
   return (
     <UserContext.Provider value={value}>

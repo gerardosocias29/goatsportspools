@@ -20,6 +20,9 @@ const Commissioner = lazy(() => import('./pages/Commissioner'));
 const CommissionerDashboard = lazy(() => import('./pages/CommissionerDashboard'));
 const PaymentSettings = lazy(() => import('./pages/PaymentSettings'));
 const PaymentHistory = lazy(() => import('./pages/PaymentHistory'));
+const NBAPlayoffs = lazy(() => import('./pages/NBAPlayoffs'));
+const PlayoffPoolDetail = lazy(() => import('./pages/PlayoffPoolDetail'));
+const PlayoffJoin = lazy(() => import('./pages/PlayoffJoin'));
 const SignIn = lazy(() => import('./pages/SignIn'));
 const SignUp = lazy(() => import('./pages/SignUp'));
 // Admin pages
@@ -36,6 +39,8 @@ const ManageUsers = lazy(() => import('./pages/admin/ManageUsers'));
 const ManageBanners = lazy(() => import('./pages/admin/ManageBanners'));
 const ManagePayouts = lazy(() => import('./pages/admin/ManagePayouts'));
 const ManageApplications = lazy(() => import('./pages/admin/ManageApplications'));
+const GlobalStandings = lazy(() => import('./pages/admin/GlobalStandings'));
+const ManagePlayoffs = lazy(() => import('./pages/admin/ManagePlayoffs'));
 const AdminSettings = lazy(() => import('./pages/admin/AdminSettings'));
 
 const V4App = () => {
@@ -53,6 +58,9 @@ const V4App = () => {
                 <Route path="pools/create" element={<CreatePool />} />
                 <Route path="pools/join" element={<PoolJoin />} />
                 <Route path="pools/:poolNumber" element={<PoolDetail />} />
+                <Route path="playoffs" element={<NBAPlayoffs />} />
+                <Route path="playoffs/join" element={<PlayoffJoin />} />
+                <Route path="playoffs/:poolNumber" element={<PlayoffPoolDetail />} />
                 <Route path="march-madness" element={<MarchMadness />} />
                 <Route path="march-madness/live" element={<LiveAuction />} />
                 <Route path="commissioner" element={<Commissioner />} />
@@ -80,6 +88,8 @@ const V4App = () => {
                 <Route path="banners" element={<ManageBanners />} />
                 <Route path="applications" element={<ManageApplications />} />
                 <Route path="payouts" element={<ManagePayouts />} />
+                <Route path="standings" element={<GlobalStandings />} />
+                <Route path="playoffs" element={<ManagePlayoffs />} />
                 <Route path="settings" element={<AdminSettings />} />
               </Route>
 

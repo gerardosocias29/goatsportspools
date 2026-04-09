@@ -1,16 +1,47 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate, Navigate } from 'react-router-dom';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Link, Navigate } from 'react-router-dom';
 import { useAxios } from '../../app/contexts/AxiosContext';
 import { useUserContext } from '../contexts/UserContext';
 import PageLoader from '../components/common/PageLoader';
 
-const Commissioner = () => {
-  const navigate = useNavigate();
-  const axiosService = useAxios();
-  const { user, clerkUser, isSignedIn, isLoaded, loading: userLoading, isSuperadmin, isSquareAdmin } = useUserContext();
+const POOL_TYPE_CONFIG = {
+  squares: {
+    label: 'Squares Pools',
+    heroDesc: 'Commissioners can create and manage their own squares pools. Apply now to get started.',
+    benefits: [
+      { icon: '\uD83C\uDFC8', title: 'Create Pools', desc: 'Set up custom squares pools for any sport or event' },
+      { icon: '\uD83D\uDC65', title: 'Invite Players', desc: 'Share pool codes and grow your community' },
+      { icon: '\uD83C\uDFC6', title: 'Manage Games', desc: 'Track scores, assign winners, and manage payouts' },
+      { icon: '\uD83D\uDCCA', title: 'Commissioner Dashboard', desc: 'Access tools to oversee all your pools and players' },
+    ],
+    endpoint: '/api/squares-admin-applications',
+    reasonPlaceholder: 'Tell us why you\'d like to create and manage squares pools...',
+    approvedLinks: { create: '/pools/create', list: '/pools', createLabel: 'Create Your First Pool', listLabel: 'View All Pools' },
+  },
+  playoffs: {
+    label: 'NBA Playoff Pools',
+    heroDesc: 'Run NBA Playoff Pools with bracket predictions. Apply to become a Playoff Commissioner.',
+    benefits: [
+      { icon: '\uD83C\uDFC0', title: 'Create Playoff Pools', desc: 'Set up bracket prediction pools for the NBA Playoffs' },
+      { icon: '\uD83D\uDC65', title: 'Invite Players', desc: 'Share pool codes and invite players to make bracket picks' },
+      { icon: '\uD83C\uDFC6', title: 'Enter Round Results', desc: 'Update scores after each round and track standings' },
+      { icon: '\uD83D\uDCCA', title: 'Commissioner Dashboard', desc: 'Access tools to manage your playoff pools' },
+    ],
+    endpoint: '/api/playoff-admin-applications',
+    reasonPlaceholder: 'Tell us why you\'d like to create and manage NBA playoff pools...',
+    approvedLinks: { create: '/playoffs', list: '/playoffs', createLabel: 'Go to Playoff Pools', listLabel: 'View Playoff Pools' },
+  },
+};
 
-  const [applicationStatus, setApplicationStatus] = useState(null); // null, 'pending', 'approved', 'denied'
-  const [applicationData, setApplicationData] = useState(null);
+const Commissioner = () => {
+  const axiosService = useAxios();
+  const { user, clerkUser, isSignedIn, isLoaded, loading: userLoading, isSuperadmin, isSquareAdmin, isPlayoffAdmin } = useUserContext();
+
+  const [poolType, setPoolType] = useState('squares');
+  const [squaresStatus, setSquaresStatus] = useState(null);
+  const [squaresData, setSquaresData] = useState(null);
+  const [playoffsStatus, setPlayoffsStatus] = useState(null);
+  const [playoffsData, setPlayoffsData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -23,6 +54,20 @@ const Commissioner = () => {
     agreeToTerms: false,
   });
 
+  const config = POOL_TYPE_CONFIG[poolType];
+
+  // Derived status for the currently-selected pool type
+  const applicationStatus = poolType === 'squares' ? squaresStatus : playoffsStatus;
+  const applicationData = poolType === 'squares' ? squaresData : playoffsData;
+
+  // Already-approved detection for the selected pool type
+  const isAlreadyApproved = useMemo(() => {
+    if (isSuperadmin) return true;
+    if (poolType === 'squares') return isSquareAdmin;
+    if (poolType === 'playoffs') return isPlayoffAdmin;
+    return false;
+  }, [poolType, isSuperadmin, isSquareAdmin, isPlayoffAdmin]);
+
   // Pre-fill form from Clerk user data
   useEffect(() => {
     if (clerkUser) {
@@ -34,7 +79,7 @@ const Commissioner = () => {
     }
   }, [clerkUser]);
 
-  // Check application status on mount
+  // Fetch application statuses for both pool types on mount
   useEffect(() => {
     if (!isLoaded || userLoading) return;
     if (!isSignedIn) {
@@ -42,29 +87,60 @@ const Commissioner = () => {
       return;
     }
 
-    // If already a Square Admin or Superadmin, show approved state
+    let completed = 0;
+    const checkDone = () => {
+      completed++;
+      if (completed >= 2) setLoading(false);
+    };
+
+    // Check squares status
     if (isSuperadmin || isSquareAdmin) {
-      setApplicationStatus('approved');
-      setLoading(false);
-      return;
+      setSquaresStatus('approved');
+      checkDone();
+    } else {
+      axiosService.get('/api/squares-admin-applications/my-status')
+        .then((response) => {
+          const data = response.data?.data || response.data;
+          if (data && data.status) {
+            setSquaresStatus(data.status);
+            setSquaresData(data);
+          }
+        })
+        .catch((err) => {
+          if (err.response?.status !== 404) {
+            console.error('Error checking squares application status:', err);
+          }
+        })
+        .finally(checkDone);
     }
 
-    axiosService.get('/api/squares-admin-applications/my-status')
-      .then((response) => {
-        const data = response.data?.data || response.data;
-        if (data && data.status) {
-          setApplicationStatus(data.status);
-          setApplicationData(data);
-        }
-      })
-      .catch((err) => {
-        // 404 means no application — that's fine
-        if (err.response?.status !== 404) {
-          console.error('Error checking application status:', err);
-        }
-      })
-      .finally(() => setLoading(false));
-  }, [isLoaded, isSignedIn, userLoading, isSuperadmin, isSquareAdmin]);
+    // Check playoffs status
+    if (isSuperadmin || isPlayoffAdmin) {
+      setPlayoffsStatus('approved');
+      checkDone();
+    } else {
+      axiosService.get('/api/playoff-admin-applications/my-status')
+        .then((response) => {
+          const data = response.data?.data || response.data;
+          if (data && data.status) {
+            setPlayoffsStatus(data.status);
+            setPlayoffsData(data);
+          }
+        })
+        .catch((err) => {
+          if (err.response?.status !== 404) {
+            console.error('Error checking playoff application status:', err);
+          }
+        })
+        .finally(checkDone);
+    }
+  }, [isLoaded, isSignedIn, userLoading, isSuperadmin, isSquareAdmin, isPlayoffAdmin]);
+
+  // Clear form errors when switching pool type
+  useEffect(() => {
+    setError('');
+    setSuccess('');
+  }, [poolType]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -82,13 +158,17 @@ const Commissioner = () => {
 
     setSubmitting(true);
     try {
-      await axiosService.post('/api/squares-admin-applications', {
+      await axiosService.post(config.endpoint, {
         full_name: form.full_name,
         email: form.email,
         reason: form.reason,
         experience: form.experience || null,
       });
-      setApplicationStatus('pending');
+      if (poolType === 'squares') {
+        setSquaresStatus('pending');
+      } else {
+        setPlayoffsStatus('pending');
+      }
       setSuccess('Application submitted successfully! We\'ll review it shortly.');
     } catch (err) {
       const msg = err.response?.data?.message || err.response?.data?.error || 'Failed to submit application. Please try again.';
@@ -128,18 +208,21 @@ const Commissioner = () => {
     );
   }
 
-  // State: Already approved — redirect to proper dashboard
-  if (applicationStatus === 'approved') {
-    if (isSquareAdmin) {
+  // State: Already approved for the selected pool type — redirect to dashboard
+  if (isAlreadyApproved || applicationStatus === 'approved') {
+    if (poolType === 'squares' && (isSquareAdmin || isSuperadmin)) {
       return <Navigate to="/commissioner-dashboard" replace />;
     }
-    if (isSuperadmin) {
+    if (poolType === 'playoffs' && (isPlayoffAdmin || isSuperadmin)) {
       return <Navigate to="/commissioner-dashboard" replace />;
     }
 
-    // Edge case: application approved but role not yet updated in user object
+    // Edge case: application approved but role/flag not yet updated in user object
     return (
       <div className="max-w-2xl mx-auto px-4 py-10">
+        {/* Pool type switcher — let user check the other type */}
+        <PoolTypeSwitcher poolType={poolType} setPoolType={setPoolType} />
+
         <div className="rounded-2xl border border-green-200 bg-green-50 dark:border-green-500/20 dark:bg-green-500/10 p-8 text-center">
           <div className="mx-auto w-16 h-16 rounded-full bg-green-100 dark:bg-green-500/20 flex items-center justify-center mb-4">
             <svg className="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -147,10 +230,10 @@ const Commissioner = () => {
             </svg>
           </div>
           <h2 className="text-xl font-bold text-green-800 dark:text-green-300 mb-2">
-            You're a Commissioner!
+            You're a {poolType === 'squares' ? 'Squares' : 'Playoff'} Commissioner!
           </h2>
           <p className="text-green-700 dark:text-green-400 mb-2">
-            Your application has been approved. You can now create and manage pools.
+            Your application has been approved. You can now create and manage {poolType === 'squares' ? 'squares pools' : 'NBA playoff pools'}.
           </p>
           {applicationData?.admin_note && (
             <p className="text-sm text-green-600 dark:text-green-500 mt-2 italic">
@@ -164,19 +247,19 @@ const Commissioner = () => {
           )}
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
             <Link
-              to="/pools/create"
+              to={config.approvedLinks.create}
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium !text-white bg-brand-500 hover:bg-brand-600 transition-colors"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
-              Create Your First Pool
+              {config.approvedLinks.createLabel}
             </Link>
             <Link
-              to="/pools"
+              to={config.approvedLinks.list}
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium text-gray-700 bg-white ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:ring-gray-700 transition"
             >
-              View All Pools
+              {config.approvedLinks.listLabel}
             </Link>
           </div>
         </div>
@@ -188,6 +271,11 @@ const Commissioner = () => {
   if (applicationStatus === 'pending') {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center px-4">
+        {/* Pool type switcher — let user check the other type */}
+        <div className="max-w-2xl w-full mb-6">
+          <PoolTypeSwitcher poolType={poolType} setPoolType={setPoolType} />
+        </div>
+
         <div className="max-w-2xl w-full rounded-2xl border border-amber-200 bg-amber-50 dark:border-amber-500/20 dark:bg-amber-500/10 p-8 text-center">
           <div className="mx-auto w-16 h-16 rounded-full bg-amber-100 dark:bg-amber-500/20 flex items-center justify-center mb-4">
             <svg className="w-8 h-8 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -195,7 +283,7 @@ const Commissioner = () => {
             </svg>
           </div>
           <h2 className="text-xl font-bold text-amber-800 dark:text-amber-300 mb-2">
-            Application Under Review
+            {poolType === 'squares' ? 'Squares Pools' : 'NBA Playoff Pools'} Application Under Review
           </h2>
           <p className="text-amber-700 dark:text-amber-400 mb-2">
             Your application has been submitted and is being reviewed. We'll notify you by email once a decision is made.
@@ -226,6 +314,9 @@ const Commissioner = () => {
   if (applicationStatus === 'denied') {
     return (
       <div className="max-w-2xl mx-auto px-4 py-10">
+        {/* Pool type switcher — let user check the other type */}
+        <PoolTypeSwitcher poolType={poolType} setPoolType={setPoolType} />
+
         <div className="rounded-2xl border border-red-200 bg-red-50 dark:border-red-500/20 dark:bg-red-500/10 p-8 text-center">
           <div className="mx-auto w-16 h-16 rounded-full bg-red-100 dark:bg-red-500/20 flex items-center justify-center mb-4">
             <svg className="w-8 h-8 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -233,7 +324,7 @@ const Commissioner = () => {
             </svg>
           </div>
           <h2 className="text-xl font-bold text-red-800 dark:text-red-300 mb-2">
-            Application Not Approved
+            {poolType === 'squares' ? 'Squares Pools' : 'NBA Playoff Pools'} Application Not Approved
           </h2>
           <p className="text-red-700 dark:text-red-400 mb-2">
             Your application was reviewed and was not approved at this time.
@@ -282,18 +373,13 @@ const Commissioner = () => {
           Become a Commissioner
         </h1>
         <p className="text-gray-500 dark:text-gray-400 max-w-lg mx-auto">
-          Commissioners can create and manage their own sports pools. Apply now to get started.
+          {config.heroDesc}
         </p>
       </div>
 
       {/* Benefits */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-10">
-        {[
-          { icon: '🏈', title: 'Create Pools', desc: 'Set up custom squares pools for any sport or event' },
-          { icon: '👥', title: 'Invite Players', desc: 'Share pool codes and grow your community' },
-          { icon: '🏆', title: 'Manage Games', desc: 'Track scores, assign winners, and manage payouts' },
-          { icon: '📊', title: 'Commissioner Dashboard', desc: 'Access tools to oversee all your pools and players' },
-        ].map((b) => (
+        {config.benefits.map((b) => (
           <div
             key={b.title}
             className="flex items-start gap-3 p-4 rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]"
@@ -323,6 +409,21 @@ const Commissioner = () => {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Pool Type Dropdown — first field */}
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+              What type of pools do you want to run? <span className="text-red-500">*</span>
+            </label>
+            <select
+              value={poolType}
+              onChange={(e) => setPoolType(e.target.value)}
+              className="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 pr-10 text-sm appearance-none focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90"
+            >
+              <option value="squares">Squares Pools</option>
+              <option value="playoffs">NBA Playoff Pools</option>
+            </select>
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
@@ -362,7 +463,7 @@ const Commissioner = () => {
               required
               rows={4}
               className="w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90"
-              placeholder="Tell us why you'd like to create and manage pools..."
+              placeholder={config.reasonPlaceholder}
             />
             <p className="mt-1 text-xs text-gray-400">Minimum 10 characters</p>
           </div>
@@ -417,5 +518,23 @@ const Commissioner = () => {
     </div>
   );
 };
+
+/**
+ * Small reusable switcher shown on status pages (pending/approved/denied)
+ * so a user who is already approved for squares can switch to see the playoffs form.
+ */
+const PoolTypeSwitcher = ({ poolType, setPoolType }) => (
+  <div className="flex items-center gap-2 mb-6">
+    <span className="text-sm text-gray-500 dark:text-gray-400">Viewing:</span>
+    <select
+      value={poolType}
+      onChange={(e) => setPoolType(e.target.value)}
+      className="h-9 rounded-lg border border-gray-300 bg-transparent px-3 py-1.5 pr-8 text-sm appearance-none focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90"
+    >
+      <option value="squares">Squares Pools</option>
+      <option value="playoffs">NBA Playoff Pools</option>
+    </select>
+  </div>
+);
 
 export default Commissioner;

@@ -105,8 +105,11 @@ const SignIn = () => {
   const location = useLocation();
 
   const redirectUrl = searchParams.get('redirect_url');
-  const returnTo = redirectUrl
-    ? decodeURIComponent(redirectUrl)
+  const decoded = redirectUrl ? decodeURIComponent(redirectUrl) : null;
+  // Prevent redirect loops — never redirect back to sign-in or sign-up
+  const isSafeRedirect = decoded && !decoded.startsWith('/sign-in') && !decoded.startsWith('/sign-up');
+  const returnTo = isSafeRedirect
+    ? decoded
     : (location.state?.returnTo || '/');
 
   return (
