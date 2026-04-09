@@ -107,7 +107,7 @@ const BracketSelector = ({
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
             <span className="text-sm font-semibold">
-              {creating ? 'Creating...' : '+ Create New Bracket'}
+              {creating ? 'Creating...' : 'Create New Bracket'}
             </span>
             {cost > 0 && canCreate && (
               <span className="text-[10px] text-gray-400 ml-auto">{cost} credits</span>

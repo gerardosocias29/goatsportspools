@@ -115,34 +115,6 @@ const PicksPage = ({ hook }) => {
         showToast={showToast}
       />
 
-      {/* Bracket Header */}
-      {activeBracket && (
-        <div className="flex items-center gap-3 mb-4 mt-4">
-          <div className="flex-1 min-w-0">
-            <input
-              type="text"
-              defaultValue={activeBracket.bracket_name}
-              onBlur={(e) => {
-                const val = e.target.value.trim();
-                if (val && val !== activeBracket.bracket_name) {
-                  renameBracket(val);
-                }
-              }}
-              disabled={readOnly}
-              className="text-lg font-bold text-gray-900 dark:text-white bg-transparent border-none outline-none w-full disabled:cursor-default"
-              maxLength={50}
-            />
-          </div>
-          <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${
-            isFinalized
-              ? 'bg-success-50 text-success-600 dark:bg-success-500/10 dark:text-success-400'
-              : 'bg-warning-50 text-warning-600 dark:bg-warning-500/10 dark:text-warning-400'
-          }`}>
-            {isFinalized ? 'Finalized' : 'Draft'}
-          </span>
-        </div>
-      )}
-
       {/* Finalized Celebration */}
       {justFinalized && isFinalized && (
         <FinalizedCelebration

@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAxios } from '../../../app/contexts/AxiosContext';
+import PageLoader from '../../components/common/PageLoader';
 
 const roundLabels = { 1: 'Round 1', 2: 'Round 2', 3: 'Conf Finals', 4: 'NBA Finals' };
 
@@ -69,6 +70,12 @@ function buildFinalsMatchup(playoffTeams) {
 const ManagePlayoffs = () => {
   const { get, post } = useAxios();
 
+  // Stable refs so callbacks don't cause re-render loops
+  const getRef = useRef(get);
+  const postRef = useRef(post);
+  getRef.current = get;
+  postRef.current = post;
+
   // Data
   const [playoffs, setPlayoffs] = useState([]);
   const [pools, setPools] = useState([]);
@@ -81,6 +88,7 @@ const ManagePlayoffs = () => {
 
   // State
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [saving, setSaving] = useState(null);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
@@ -93,62 +101,44 @@ const ManagePlayoffs = () => {
 
   const clearAlerts = () => { setError(null); setSuccess(null); };
 
-  // ─── Fetch data ────────────────────────────────────────
+  // ─── Fetch helpers (use refs to avoid dep loops) ────────
   const fetchPlayoffs = useCallback(async () => {
     try {
-      const res = await get('/api/admin/playoffs');
-      if (res?.data?.status) {
-        return res.data.data || [];
-      }
+      const res = await getRef.current('/api/admin/playoffs');
+      if (res?.data?.status) return res.data.data || [];
     } catch (err) {
       console.error('Failed to load playoffs', err);
     }
     return [];
-  }, [get]);
+  }, []);
 
   const fetchPools = useCallback(async () => {
     try {
-      const res = await get('/api/playoff-pools/list');
-      if (res?.data?.status) {
-        setPools(res.data.data || []);
-      }
+      const res = await getRef.current('/api/playoff-pools/list');
+      if (res?.data?.status) setPools(res.data.data || []);
     } catch (err) {
       console.error('Failed to load pools', err);
     }
-  }, [get]);
+  }, []);
 
   const fetchNbaTeams = useCallback(async () => {
     try {
-      const res = await get('/api/admin/playoffs/nba-teams');
-      if (res?.data?.status) {
-        setNbaTeams(res.data.data || []);
-      }
+      const res = await getRef.current('/api/admin/playoffs/nba-teams');
+      if (res?.data?.status) setNbaTeams(res.data.data || []);
     } catch (err) {
       console.error('Failed to load NBA teams', err);
     }
-  }, [get]);
-
-  useEffect(() => {
-    const init = async () => {
-      const [playoffList] = await Promise.all([fetchPlayoffs(), fetchPools(), fetchNbaTeams()]);
-      setPlayoffs(playoffList);
-      if (playoffList.length > 0) {
-        setSelectedPlayoff(playoffList[0]);
-      }
-      setLoading(false);
-    };
-    init();
   }, []);
 
-  // Refresh playoff detail when selection changes
   const refreshPlayoff = useCallback(async (playoffId) => {
     if (!playoffId) return;
+    setRefreshing(true);
     try {
-      const res = await get(`/api/admin/playoffs/${playoffId}`);
+      const res = await getRef.current(`/api/admin/playoffs/${playoffId}`);
       if (res?.data?.status) {
         const data = res.data.data;
         const allTeams = [...(data.east || []), ...(data.west || [])];
-        setSelectedPlayoff((prev) => prev ? ({
+        setSelectedPlayoff((prev) => prev?.id === playoffId ? ({
           ...prev,
           ...data.playoff,
           teams: allTeams,
@@ -156,14 +146,28 @@ const ManagePlayoffs = () => {
       }
     } catch (err) {
       console.error('Failed to refresh playoff', err);
+    } finally {
+      setRefreshing(false);
     }
-  }, [get]);
+  }, []);
 
+  // Initial load — runs once
+  useEffect(() => {
+    const init = async () => {
+      const [playoffList] = await Promise.all([fetchPlayoffs(), fetchPools(), fetchNbaTeams()]);
+      setPlayoffs(playoffList);
+      if (playoffList.length > 0) setSelectedPlayoff(playoffList[0]);
+      setLoading(false);
+    };
+    init();
+  }, [fetchPlayoffs, fetchPools, fetchNbaTeams]);
+
+  // Refresh playoff detail when selection changes
   useEffect(() => {
     if (selectedPlayoff?.id) {
       refreshPlayoff(selectedPlayoff.id);
     }
-  }, [selectedPlayoff?.id]);
+  }, [selectedPlayoff?.id, refreshPlayoff]);
 
   // ─── Submit series result ──────────────────────────────
   const submitResult = async (teamId, round, beatSeed, games) => {
@@ -172,7 +176,7 @@ const ManagePlayoffs = () => {
     setSaving(key);
     clearAlerts();
     try {
-      const res = await post(`/api/admin/playoffs/${selectedPlayoff.id}/results`, {
+      const res = await postRef.current(`/api/admin/playoffs/${selectedPlayoff.id}/results`, {
         team_id: parseInt(teamId),
         round: parseInt(round),
         beat_seed: parseInt(beatSeed),
@@ -196,7 +200,7 @@ const ManagePlayoffs = () => {
     if (!selectedPool) return;
     clearAlerts();
     try {
-      const res = await post(`/api/admin/playoffs/pools/${selectedPool.pool_number}/lock`);
+      const res = await postRef.current(`/api/admin/playoffs/pools/${selectedPool.pool_number}/lock`);
       if (res?.data?.status) {
         setSuccess('Pool locked!');
         fetchPools();
@@ -211,7 +215,7 @@ const ManagePlayoffs = () => {
     if (!selectedPool) return;
     clearAlerts();
     try {
-      const res = await post(`/api/admin/playoffs/pools/${selectedPool.pool_number}/recalculate`);
+      const res = await postRef.current(`/api/admin/playoffs/pools/${selectedPool.pool_number}/recalculate`);
       if (res?.data?.status) {
         setSuccess(res.data.message || 'Scores recalculated!');
       }
@@ -228,7 +232,7 @@ const ManagePlayoffs = () => {
     }
     clearAlerts();
     try {
-      const res = await post('/api/admin/playoffs/create', createForm);
+      const res = await postRef.current('/api/admin/playoffs/create', createForm);
       if (res?.data?.status) {
         setSuccess('Playoff year created!');
         setShowCreatePlayoff(false);
@@ -257,7 +261,7 @@ const ManagePlayoffs = () => {
     clearAlerts();
     setSavingTeams(true);
     try {
-      const res = await post(`/api/admin/playoffs/${selectedPlayoff.id}/teams`, {
+      const res = await postRef.current(`/api/admin/playoffs/${selectedPlayoff.id}/teams`, {
         teams: teamAssignments.filter((t) => t.team_id).map((t) => ({
           team_id: parseInt(t.team_id),
           conference: t.conference,
@@ -297,18 +301,14 @@ const ManagePlayoffs = () => {
         setTeamAssignments(slots);
       }
     }
-  }, [activeTab, selectedPlayoff?.id]);
+  }, [activeTab, selectedPlayoff?.id, selectedPlayoff?.teams?.length]);
 
   // ─── Derived data ──────────────────────────────────────
   const playoffTeams = selectedPlayoff?.teams || [];
   const currentPools = pools.filter((p) => p.playoff?.id === selectedPlayoff?.id);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-16">
-        <div className="w-8 h-8 border-4 border-brand-500 border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
+    return <PageLoader inline />;
   }
 
   return (
@@ -323,7 +323,8 @@ const ManagePlayoffs = () => {
         </div>
         <button
           onClick={() => setShowCreatePlayoff(true)}
-          className="px-4 py-2 rounded-lg text-sm font-medium !text-white bg-brand-500 hover:bg-brand-600 transition-colors"
+          disabled={refreshing}
+          className="px-4 py-2 rounded-lg text-sm font-medium !text-white bg-brand-500 hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           + New Playoff Year
         </button>
@@ -395,8 +396,9 @@ const ManagePlayoffs = () => {
           {playoffs.map((p) => (
             <button
               key={p.id}
-              onClick={() => { setSelectedPlayoff(p); clearAlerts(); }}
-              className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-colors border ${
+              disabled={refreshing}
+              onClick={() => { setSelectedPlayoff({ ...p, teams: [] }); setSelectedPool(null); clearAlerts(); }}
+              className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-colors border disabled:opacity-50 disabled:cursor-not-allowed ${
                 selectedPlayoff?.id === p.id
                   ? 'bg-brand-500 !text-white border-brand-500'
                   : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-brand-300'
@@ -426,8 +428,9 @@ const ManagePlayoffs = () => {
           ].map((tab) => (
             <button
               key={tab.key}
+              disabled={refreshing}
               onClick={() => { setActiveTab(tab.key); clearAlerts(); }}
-              className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${
+              className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px disabled:opacity-50 disabled:cursor-not-allowed ${
                 activeTab === tab.key
                   ? 'border-brand-500 text-brand-500'
                   : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
@@ -439,8 +442,11 @@ const ManagePlayoffs = () => {
         </div>
       )}
 
+      {/* Loading overlay when switching playoff years */}
+      {refreshing && <PageLoader inline />}
+
       {/* ═══════ TAB: Series Results ═══════ */}
-      {selectedPlayoff && activeTab === 'results' && (
+      {selectedPlayoff && !refreshing && activeTab === 'results' && (
         <div className="space-y-6">
           {playoffTeams.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 p-10 text-center">
@@ -516,7 +522,7 @@ const ManagePlayoffs = () => {
       )}
 
       {/* ═══════ TAB: Pools ═══════ */}
-      {selectedPlayoff && activeTab === 'pools' && (
+      {selectedPlayoff && !refreshing && activeTab === 'pools' && (
         <div className="space-y-4">
           <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] p-5">
             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
@@ -594,7 +600,7 @@ const ManagePlayoffs = () => {
       )}
 
       {/* ═══════ TAB: Team Setup ═══════ */}
-      {selectedPlayoff && activeTab === 'setup' && (
+      {selectedPlayoff && !refreshing && activeTab === 'setup' && (
         <div className="space-y-4">
           <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] p-5">
             <div className="flex items-center justify-between mb-4">
@@ -735,17 +741,21 @@ const MatchupResultCard = ({ matchup, round, playoffTeams, onSubmit, saving }) =
         ? 'border-success-200 dark:border-success-500/30 bg-success-50/50 dark:bg-success-500/5'
         : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800/50'
     }`}>
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 mb-3">
+        <div className="flex-1 min-w-0">
           <TeamBadge name={teamAName} seed={seedADisplay} img={teamAImg} isWinner={aWon} conf={isFinals ? matchup.confA : null} />
-          <span className="text-xs font-bold text-gray-400">vs</span>
+        </div>
+        <div className="flex flex-col items-center shrink-0 px-1">
+          <span className="text-xs font-bold text-gray-400 dark:text-gray-500">VS</span>
+          {isCompleted && actualGames && (
+            <span className="text-xs font-semibold text-success-600 dark:text-success-400 mt-0.5">
+              4-{actualGames - 4}
+            </span>
+          )}
+        </div>
+        <div className="flex-1 min-w-0">
           <TeamBadge name={teamBName} seed={seedBDisplay} img={teamBImg} isWinner={bWon} conf={isFinals ? matchup.confB : null} />
         </div>
-        {isCompleted && actualGames && (
-          <span className="text-xs font-semibold text-success-600 dark:text-success-400 bg-success-100 dark:bg-success-500/20 px-2 py-0.5 rounded">
-            4-{actualGames - 4}
-          </span>
-        )}
       </div>
 
       <div className="flex items-end gap-3">
@@ -797,20 +807,38 @@ const MatchupResultCard = ({ matchup, round, playoffTeams, onSubmit, saving }) =
 // ─── Team Badge ──────────────────────────────────────────
 const TeamBadge = ({ name, seed, img, isWinner, conf }) => {
   if (!name || name === 'TBD') {
-    return <span className="text-sm text-gray-400 dark:text-gray-500 italic">TBD</span>;
+    return (
+      <div className="flex items-center justify-between px-3 py-2 rounded-lg bg-gray-50 dark:bg-gray-800/60 border border-dashed border-gray-300 dark:border-gray-600">
+        <span className="text-sm text-gray-400 dark:text-gray-500 italic">TBD</span>
+      </div>
+    );
   }
   return (
-    <div className={`flex items-center gap-2 ${isWinner ? 'font-bold' : ''}`}>
-      {img && <img src={img} alt="" className="w-6 h-6 rounded-full object-cover" />}
-      {seed && <span className="text-xs text-gray-400 dark:text-gray-500">({seed})</span>}
-      <span className={`text-sm ${
-        isWinner
-          ? 'text-success-600 dark:text-success-400 font-semibold'
-          : 'text-gray-700 dark:text-gray-300'
-      }`}>
-        {name}
-      </span>
-      {conf && <span className="text-xs text-gray-400 ml-1">{conf}</span>}
+    <div className={`flex items-center justify-between px-3 py-2 rounded-lg border ${
+      isWinner
+        ? 'border-success-300 dark:border-success-500/40 bg-success-50 dark:bg-success-500/10'
+        : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/60'
+    }`}>
+      <div className="flex items-center gap-2">
+        {img && <img src={img} alt="" className="w-7 h-7 rounded-full object-cover" />}
+        <span className={`text-sm ${
+          isWinner
+            ? 'text-success-600 dark:text-success-400 font-semibold'
+            : 'text-gray-700 dark:text-gray-300'
+        }`}>
+          {name}
+        </span>
+        {conf && <span className="text-xs text-gray-400 dark:text-gray-500 ml-1">{conf}</span>}
+      </div>
+      {seed && (
+        <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+          isWinner
+            ? 'bg-success-100 dark:bg-success-500/20 text-success-700 dark:text-success-300'
+            : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
+        }`}>
+          {seed}
+        </span>
+      )}
     </div>
   );
 };

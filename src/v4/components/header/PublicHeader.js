@@ -5,6 +5,12 @@ import ThemeToggleButton from '../common/ThemeToggleButton';
 import LuckyCoin, { LUCKY_RESULTS_KEY } from '../common/LuckyCoin';
 import { useUserContext } from '../../contexts/UserContext';
 
+const BROWN = '#D47A3E';
+const GRAY = '#9ca3af';
+const FONT = { fontFamily: "'Oswald', sans-serif" };
+const STYLE_INACTIVE = { ...FONT, color: GRAY };
+const STYLE_ACTIVE = { ...FONT, color: BROWN, textShadow: '0 0 8px rgba(212,122,62,0.35)' };
+
 const PublicHeader = () => {
   const location = useLocation();
   const { signOut, openUserProfile } = useClerk();
@@ -14,24 +20,25 @@ const PublicHeader = () => {
     const base = [
       { label: 'Home', path: '/' },
       {
-        label: 'Pools',
+        label: 'My Pools',
         dropdown: true,
         children: [
-          { label: 'Squares Pools', path: '/pools' },
-          { label: 'NBA Playoffs', path: '/playoffs' },
+          { label: 'NBA Playoff Pool', path: '/playoffs' },
+          { label: 'Squares Pool', path: '/pools' },
         ],
       },
-      { label: 'March Madness', path: '/march-madness' },
+      { label: 'Freeroll League', path: '/freeroll' },
+      { label: 'Auction Madness', path: '/march-madness' },
     ];
     if (isSuperadmin || isSquareAdmin) {
-      base.push({ label: 'Commissioner Dashboard', path: '/commissioner-dashboard' });
+      base.push({ label: 'Commissioner', path: '/commissioner-dashboard' });
       return base;
     }
     base.push({ label: 'Commissioner', path: '/commissioner' });
     return base;
   }, [isSuperadmin, isSquareAdmin]);
+
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isPoolsOpen, setIsPoolsOpen] = useState(false);
   const [isMobilePoolsOpen, setIsMobilePoolsOpen] = useState(false);
@@ -45,19 +52,12 @@ const PublicHeader = () => {
   const poolsDropdownRef = useRef(null);
 
   useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 10);
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  useEffect(() => {
     setIsMenuOpen(false);
     setIsDropdownOpen(false);
     setIsPoolsOpen(false);
     setIsMobilePoolsOpen(false);
   }, [location.pathname]);
 
-  // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
@@ -85,22 +85,90 @@ const PublicHeader = () => {
   const displayName = clerkUser?.firstName || user?.name || 'User';
   const roleLabel = getRoleLabel();
 
+  /* ═══════════════════════════════════════════════════
+     POOLS DROPDOWN
+     ═══════════════════════════════════════════════════ */
+  const renderPoolsDropdown = (item) => {
+    const childActive = item.children.some((c) => isActive(c.path));
+    return (
+      <div key={item.label} className="relative" ref={poolsDropdownRef}>
+        <button
+          onClick={() => setIsPoolsOpen(!isPoolsOpen)}
+          className={`relative px-1 py-1 text-[15px] font-semibold uppercase tracking-[0.15em] transition-colors flex items-center gap-1 ${
+            childActive ? '' : 'hover:text-white'
+          }`}
+          style={childActive ? STYLE_ACTIVE : STYLE_INACTIVE}
+        >
+          {item.label}
+          <svg className={`w-3.5 h-3.5 transition-transform ${isPoolsOpen ? 'rotate-180' : ''} text-current`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+          {childActive && (
+            <span className="absolute -bottom-1 left-0 w-full h-[3px] bg-brand-500 rounded-full" />
+          )}
+        </button>
+        {isPoolsOpen && (
+          <div className="absolute left-0 mt-1 w-52 rounded-xl shadow-lg py-1.5 z-50 bg-[#0f1a35] border border-white/10">
+            {item.children.map((child) => (
+              <Link
+                key={child.path}
+                to={child.path}
+                style={isActive(child.path) ? { ...FONT, color: BROWN } : { ...FONT, color: '#d1d5db' }}
+                className={`block px-4 py-2.5 text-[14px] font-semibold uppercase tracking-[0.1em] transition-colors ${
+                  isActive(child.path)
+                    ? 'bg-white/5'
+                    : 'hover:text-white hover:bg-white/5'
+                }`}
+              >
+                {child.label}
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  /* ═══════════════════════════════════════════════════
+     DESKTOP NAV
+     ═══════════════════════════════════════════════════ */
+  const renderNav = () => (
+    <nav className="hidden md:flex items-center gap-10 lg:gap-14">
+      {navItems.map((item) => {
+        if (item.dropdown) return renderPoolsDropdown(item);
+        const active = isActive(item.path);
+        return (
+          <Link
+            key={item.path}
+            to={item.path}
+            style={active ? STYLE_ACTIVE : STYLE_INACTIVE}
+            className={`relative px-1 py-1 text-[15px] font-semibold uppercase tracking-[0.15em] transition-colors ${
+              active ? '' : 'hover:text-white'
+            }`}
+          >
+            {item.label}
+            {active && (
+              <span className="absolute -bottom-1 left-0 w-full h-[3px] bg-brand-500 rounded-full" />
+            )}
+          </Link>
+        );
+      })}
+    </nav>
+  );
+
   return (
     <>
-    <header
-      className={`sticky top-0 z-[99999] w-full transition-all duration-300 ${
-        isScrolled
-          ? 'bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm shadow-md'
-          : 'bg-white dark:bg-gray-900'
-      }`}
-    >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+    <header className="sticky top-0 z-[99999] w-full transition-all duration-300 bg-[#0a1128] shadow-lg">
+      <div className="mx-auto max-w-full px-6 sm:px-10 lg:px-16">
+        <div className="flex items-center justify-between h-[72px]">
           {/* Logo + I'm Feeling Lucky */}
           <div className="flex items-center gap-3">
             <Link to="/" className="flex items-center gap-2">
-              <img src="/img/v2_logo.png" alt="OKRNG" className="h-9 w-auto" />
-              <span className="hidden sm:block font-bold text-xl text-gray-900 dark:text-white">
+              <img src="/img/v2_logo.png" alt="OKRNG" className="h-11 w-auto" />
+              <span
+                className="hidden sm:block font-bold text-2xl text-white"
+                style={{ fontFamily: "'Oswald', sans-serif", letterSpacing: '0.05em' }}
+              >
                 OKRNG
               </span>
             </Link>
@@ -108,68 +176,7 @@ const PublicHeader = () => {
           </div>
 
           {/* Desktop Nav */}
-          <nav className="hidden md:flex items-center gap-1">
-            {navItems.map((item) =>
-              item.dropdown ? (
-                <div key={item.label} className="relative" ref={poolsDropdownRef}>
-                  <button
-                    onClick={() => setIsPoolsOpen(!isPoolsOpen)}
-                    className={`relative px-4 py-2 text-sm font-medium transition-colors group flex items-center gap-1 ${
-                      item.children.some((c) => isActive(c.path))
-                        ? 'text-brand-500 dark:text-brand-400'
-                        : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
-                    }`}
-                  >
-                    {item.label}
-                    <svg className={`w-3.5 h-3.5 transition-transform ${isPoolsOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                    {item.children.some((c) => isActive(c.path)) && (
-                      <span className="absolute bottom-0 left-0 w-full h-0.5 bg-brand-500 rounded-full" />
-                    )}
-                    {!item.children.some((c) => isActive(c.path)) && (
-                      <span className="absolute bottom-0 left-1/2 w-0 h-0.5 bg-brand-500/60 rounded-full transition-all duration-300 group-hover:w-full group-hover:left-0" />
-                    )}
-                  </button>
-                  {isPoolsOpen && (
-                    <div className="absolute left-0 mt-1 w-48 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg py-1.5 z-50">
-                      {item.children.map((child) => (
-                        <Link
-                          key={child.path}
-                          to={child.path}
-                          className={`block px-4 py-2.5 text-sm font-medium transition-colors ${
-                            isActive(child.path)
-                              ? 'text-brand-500 bg-brand-50 dark:bg-brand-500/10 dark:text-brand-400'
-                              : 'text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700'
-                          }`}
-                        >
-                          {child.label}
-                        </Link>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={`relative px-4 py-2 text-sm font-medium transition-colors group ${
-                    isActive(item.path)
-                      ? 'text-brand-500 dark:text-brand-400'
-                      : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
-                  }`}
-                >
-                  {item.label}
-                  {isActive(item.path) && (
-                    <span className="absolute bottom-0 left-0 w-full h-0.5 bg-brand-500 rounded-full" />
-                  )}
-                  {!isActive(item.path) && (
-                    <span className="absolute bottom-0 left-1/2 w-0 h-0.5 bg-brand-500/60 rounded-full transition-all duration-300 group-hover:w-full group-hover:left-0" />
-                  )}
-                </Link>
-              )
-            )}
-          </nav>
+          {renderNav()}
 
           {/* Right Actions */}
           <div className="flex items-center gap-2">
@@ -177,7 +184,6 @@ const PublicHeader = () => {
 
             {isLoaded && isSignedIn ? (
               <>
-                {/* Dashboard Button — Superadmin only */}
                 {isSuperadmin && (
                   <a
                     href={dashboardPath}
@@ -191,68 +197,44 @@ const PublicHeader = () => {
                 <div className="relative" ref={dropdownRef}>
                   <button
                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                    className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                    className="flex items-center gap-2 px-2 py-1.5 rounded-lg transition-colors hover:bg-white/10"
                   >
                     {avatarUrl ? (
-                      <img
-                        src={avatarUrl}
-                        alt={displayName}
-                        className="w-8 h-8 rounded-full object-cover border-2 border-brand-500"
-                      />
+                      <img src={avatarUrl} alt={displayName} className="w-8 h-8 rounded-full object-cover border-2 border-brand-500" />
                     ) : (
                       <div className="w-8 h-8 rounded-full bg-brand-500 flex items-center justify-center text-white text-sm font-bold">
                         {displayName.charAt(0).toUpperCase()}
                       </div>
                     )}
                     <div className="hidden md:block text-left">
-                      <div className="text-sm font-medium text-gray-900 dark:text-white leading-tight">
-                        {displayName}
-                      </div>
+                      <div className="text-sm font-medium leading-tight text-white">{displayName}</div>
                       {loading ? (
                         <div className="h-3 w-16 mt-1 rounded bg-gray-200 dark:bg-gray-700 animate-pulse" />
                       ) : (
-                        <div className="text-xs font-medium text-brand-500 leading-tight">
-                          {roleLabel}
-                        </div>
+                        <div className="text-xs font-medium text-brand-500 leading-tight">{roleLabel}</div>
                       )}
                     </div>
-                    {/* Mobile: show role badge */}
                     {!loading && (
-                      <span className="md:hidden text-[10px] font-semibold text-brand-500 leading-none">
-                        {roleLabel}
-                      </span>
+                      <span className="md:hidden text-[10px] font-semibold text-brand-500 leading-none">{roleLabel}</span>
                     )}
                     <svg className="hidden md:block w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
                   </button>
 
-                  {/* User Dropdown Menu */}
                   {isDropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-56 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg py-2 z-50">
-                      <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700 md:hidden">
-                        <div className="text-sm font-medium text-gray-900 dark:text-white">{displayName}</div>
+                    <div className="absolute right-0 mt-2 w-56 rounded-xl bg-[#0f1a35] border border-white/10 shadow-lg py-2 z-50" style={FONT}>
+                      <div className="px-4 py-2 border-b border-white/10 md:hidden">
+                        <div className="text-sm font-semibold text-white uppercase tracking-wide">{displayName}</div>
                         {loading ? (
-                          <div className="h-3 w-16 mt-1 rounded bg-gray-200 dark:bg-gray-700 animate-pulse" />
+                          <div className="h-3 w-16 mt-1 rounded bg-white/10 animate-pulse" />
                         ) : (
-                          <div className="text-xs text-brand-500 font-medium">{roleLabel}</div>
+                          <div className="text-xs font-medium text-brand-500">{roleLabel}</div>
                         )}
                       </div>
 
                       {isSuperadmin && (
-                        <a
-                          href={dashboardPath}
-                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                        >
-                          Admin
-                        </a>
-                      )}
-
-                      {isSuperadmin && (
-                        <a
-                          href="/admin"
-                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                        >
+                        <a href={dashboardPath} className="flex items-center gap-3 px-4 py-2.5 text-[13px] font-semibold uppercase tracking-wide text-gray-300 hover:text-white hover:bg-white/5 transition-colors">
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -263,7 +245,7 @@ const PublicHeader = () => {
 
                       <button
                         onClick={() => { setIsDropdownOpen(false); openUserProfile(); }}
-                        className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                        className="flex items-center gap-3 w-full px-4 py-2.5 text-[13px] font-semibold uppercase tracking-wide text-gray-300 hover:text-white hover:bg-white/5 transition-colors"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -271,31 +253,25 @@ const PublicHeader = () => {
                         Account Center
                       </button>
 
-                      <Link
-                        to="/settings/payment"
-                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                      >
+                      <Link to="/settings/payment" className="flex items-center gap-3 px-4 py-2.5 text-[13px] font-semibold uppercase tracking-wide text-gray-300 hover:text-white hover:bg-white/5 transition-colors">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                         </svg>
                         Payment Settings
                       </Link>
 
-                      <Link
-                        to="/settings/winnings"
-                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                      >
+                      <Link to="/settings/winnings" className="flex items-center gap-3 px-4 py-2.5 text-[13px] font-semibold uppercase tracking-wide text-gray-300 hover:text-white hover:bg-white/5 transition-colors">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                         My Winnings
                       </Link>
 
-                      <hr className="my-1 border-gray-100 dark:border-gray-700" />
+                      <hr className="my-1 border-white/10" />
 
                       <button
                         onClick={handleSignOut}
-                        className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                        className="flex items-center gap-3 w-full px-4 py-2.5 text-[13px] font-semibold uppercase tracking-wide text-red-400 hover:text-red-300 hover:bg-red-900/20 transition-colors"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -308,16 +284,10 @@ const PublicHeader = () => {
               </>
             ) : isLoaded ? (
               <>
-                <Link
-                  to="/sign-in"
-                  className="hidden md:inline-flex items-center px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-                >
+                <Link to="/sign-in" className="hidden md:inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors text-gray-300 hover:text-white hover:bg-white/10">
                   Sign In
                 </Link>
-                <Link
-                  to="/sign-up"
-                  className="hidden md:inline-flex items-center px-4 py-2 text-sm font-medium !text-white bg-brand-500 hover:bg-brand-600 rounded-lg transition-colors"
-                >
+                <Link to="/sign-up" className="hidden md:inline-flex items-center px-4 py-2 text-sm font-medium !text-white bg-brand-500 hover:bg-brand-600 rounded-lg transition-colors">
                   Get Started
                 </Link>
               </>
@@ -326,7 +296,7 @@ const PublicHeader = () => {
             {/* Mobile Hamburger */}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="md:hidden p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              className="md:hidden p-2 rounded-lg transition-colors text-gray-300 hover:bg-white/10"
               aria-label="Toggle menu"
             >
               {isMenuOpen ? (
@@ -344,7 +314,7 @@ const PublicHeader = () => {
 
         {/* Mobile Menu */}
         {isMenuOpen && (
-          <div className="md:hidden border-t border-gray-200 dark:border-gray-700 py-4">
+          <div className="md:hidden border-t border-white/10 py-4">
             <nav className="flex flex-col gap-2">
               {navItems.map((item) =>
                 item.dropdown ? (
@@ -353,11 +323,11 @@ const PublicHeader = () => {
                       onClick={() => setIsMobilePoolsOpen(!isMobilePoolsOpen)}
                       className={`w-full flex items-center justify-between px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
                         item.children.some((c) => isActive(c.path))
-                          ? 'text-brand-500 dark:text-brand-400 bg-brand-50 dark:bg-brand-500/10'
-                          : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+                          ? 'text-brand-500 bg-brand-500/10'
+                          : 'text-gray-300 hover:bg-white/10'
                       }`}
                     >
-                      {item.label}
+                      <span>{item.label}</span>
                       <svg className={`w-4 h-4 transition-transform ${isMobilePoolsOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                       </svg>
@@ -371,7 +341,7 @@ const PublicHeader = () => {
                             className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                               isActive(child.path)
                                 ? 'bg-brand-500 !text-white'
-                                : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+                                : 'text-gray-300 hover:bg-white/10'
                             }`}
                           >
                             {child.label}
@@ -387,50 +357,41 @@ const PublicHeader = () => {
                     className={`px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
                       isActive(item.path)
                         ? 'bg-brand-500 !text-white'
-                        : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+                        : 'text-gray-300 hover:bg-white/10'
                     }`}
                   >
                     {item.label}
                   </Link>
                 )
               )}
-              <hr className="my-2 border-gray-200 dark:border-gray-700" />
+              <hr className="my-2 border-white/10" />
 
               {isSignedIn ? (
                 <>
                   {isSuperadmin && (
-                    <a
-                      href={dashboardPath}
-                      className="px-4 py-3 rounded-lg text-sm font-medium !text-white bg-brand-500 hover:bg-brand-600 transition-colors text-center"
-                    >
+                    <a href={dashboardPath} className="px-4 py-3 rounded-lg text-sm font-medium !text-white bg-brand-500 hover:bg-brand-600 transition-colors text-center">
                       Dashboard
                     </a>
                   )}
                   <button
                     onClick={() => { setIsMenuOpen(false); openUserProfile(); }}
-                    className="px-4 py-3 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-left"
+                    className="px-4 py-3 rounded-lg text-sm font-medium text-gray-300 hover:bg-white/10 transition-colors text-left"
                   >
                     Account Center
                   </button>
                   <button
                     onClick={handleSignOut}
-                    className="px-4 py-3 rounded-lg text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-left"
+                    className="px-4 py-3 rounded-lg text-sm font-medium text-red-400 hover:bg-red-900/20 transition-colors text-left"
                   >
                     Sign Out
                   </button>
                 </>
               ) : (
                 <>
-                  <Link
-                    to="/sign-in"
-                    className="px-4 py-3 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                  >
+                  <Link to="/sign-in" className="px-4 py-3 rounded-lg text-sm font-medium text-gray-300 hover:bg-white/10 transition-colors">
                     Sign In
                   </Link>
-                  <Link
-                    to="/sign-up"
-                    className="px-4 py-3 rounded-lg text-sm font-medium !text-white bg-brand-500 hover:bg-brand-600 transition-colors text-center"
-                  >
+                  <Link to="/sign-up" className="px-4 py-3 rounded-lg text-sm font-medium !text-white bg-brand-500 hover:bg-brand-600 transition-colors text-center">
                     Get Started
                   </Link>
                 </>
@@ -443,7 +404,7 @@ const PublicHeader = () => {
 
     {/* Sports Betting Ticker — Results Bar */}
     {luckyResults && (
-      <div className="sticky top-16 z-[99998] bg-[#1a1f2e] border-b border-brand-500/30 py-1 px-2 sm:px-4 flex justify-center">
+      <div className="sticky top-[72px] z-[99998] bg-[#1a1f2e] border-b border-brand-500/30 py-1 px-2 sm:px-4 flex justify-center">
         <div className="flex items-center justify-center w-full max-w-5xl gap-1 sm:gap-1.5">
           <div className="flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-1.5 px-1.5 sm:px-3 py-0.5 rounded bg-white/[0.06] border border-white/[0.08] min-w-0 sm:min-w-[60px]">
             <span className="text-[7px] sm:text-[8px] font-semibold text-brand-500 uppercase tracking-wider">#</span>

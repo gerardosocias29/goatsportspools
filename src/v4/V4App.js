@@ -15,6 +15,7 @@ const SquarePools = lazy(() => import('./pages/SquarePools'));
 const PoolDetail = lazy(() => import('./pages/PoolDetail'));
 const PoolJoin = lazy(() => import('./pages/PoolJoin'));
 const MarchMadness = lazy(() => import('./pages/MarchMadness'));
+const FreerollLeague = lazy(() => import('./pages/FreerollLeague'));
 const LiveAuction = lazy(() => import('./pages/LiveAuction'));
 const Commissioner = lazy(() => import('./pages/Commissioner'));
 const CommissionerDashboard = lazy(() => import('./pages/CommissionerDashboard'));
@@ -61,6 +62,7 @@ const V4App = () => {
                 <Route path="playoffs" element={<NBAPlayoffs />} />
                 <Route path="playoffs/join" element={<PlayoffJoin />} />
                 <Route path="playoffs/:poolNumber" element={<PlayoffPoolDetail />} />
+                <Route path="freeroll" element={<FreerollLeague />} />
                 <Route path="march-madness" element={<MarchMadness />} />
                 <Route path="march-madness/live" element={<LiveAuction />} />
                 <Route path="commissioner" element={<Commissioner />} />

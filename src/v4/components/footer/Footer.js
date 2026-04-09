@@ -3,13 +3,14 @@ import { Link } from 'react-router-dom';
 
 const footerLinks = {
   product: [
-    { label: 'Squares Pools', path: '/pools' },
-    { label: 'Live Auctions', path: '/auction' },
-    { label: 'Leagues', path: '/leagues' },
+    { label: 'NBA Playoff Pool', path: '/playoffs' },
+    { label: 'Squares Pool', path: '/pools' },
+    { label: 'Freeroll League', path: '/freeroll' },
+    { label: 'Auction Madness', path: '/march-madness' },
   ],
   company: [
     { label: 'Home', path: '/' },
-    { label: 'About Us', path: '/about' },
+    { label: 'Commissioner', path: '/commissioner' },
     { label: 'Help', path: '/help' },
     { label: 'FAQ', path: '/faq' },
   ],
