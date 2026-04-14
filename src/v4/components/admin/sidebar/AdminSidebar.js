@@ -1,51 +1,85 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useSidebar } from '../../../contexts/SidebarContext';
 import SidebarWidget from './SidebarWidget';
 
-// --- Inline SVG Icons ---
+// ─── Inline SVG Icons (all 24x24, stroke-based for crisp light/dark) ────────
 const DashboardIcon = () => (
   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
   </svg>
 );
 
+// Squares grid — represents pools
 const PoolsIcon = () => (
   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zM14 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
+    <rect x="3.5" y="3.5" width="7" height="7" rx="1.2" strokeWidth={1.5} />
+    <rect x="13.5" y="3.5" width="7" height="7" rx="1.2" strokeWidth={1.5} />
+    <rect x="3.5" y="13.5" width="7" height="7" rx="1.2" strokeWidth={1.5} />
+    <rect x="13.5" y="13.5" width="7" height="7" rx="1.2" strokeWidth={1.5} />
+    <path strokeLinecap="round" strokeWidth={1.5} d="M7 7v0M17 7v0M7 17v0M17 17v0" />
   </svg>
 );
 
+// Gavel — auctions
 const AuctionIcon = () => (
   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14.5 4.5l5 5M11 8l5 5M8 11l5 5M4.5 18.5l7-7M13 21h8" />
   </svg>
 );
 
+// Bracket/tournament tree — playoffs
+const PlayoffsIcon = () => (
+  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 5h4v4H3zM3 15h4v4H3zM17 10h4v4h-4zM7 7h4v5h6M7 17h4v-5" />
+  </svg>
+);
+
+// Shield — teams
 const TeamsIcon = () => (
   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 3l8 3v6c0 4.5-3.2 8.3-8 9-4.8-.7-8-4.5-8-9V6l8-3z" />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.5 12l2 2 3.5-4" />
   </svg>
 );
 
+// Basketball — games
 const GamesIcon = () => (
   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+    <circle cx="12" cy="12" r="9" strokeWidth={1.5} />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 12h18M12 3v18M5.6 5.6c3.5 3.5 9.3 3.5 12.8 0M5.6 18.4c3.5-3.5 9.3-3.5 12.8 0" />
   </svg>
 );
 
+// Person — users
 const UsersIcon = () => (
   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
   </svg>
 );
 
-const BannersIcon = () => (
+// Clipboard-check — applications
+const ApplicationsIcon = () => (
   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 012-2h2a2 2 0 012 2M9 5a2 2 0 002 2h2a2 2 0 002-2m-5 8l2 2 4-4" />
   </svg>
 );
 
+// Wallet — payouts
+const PayoutsIcon = () => (
+  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V8zM3 8l3-3h10M17 13h2" />
+  </svg>
+);
+
+// Megaphone — banners
+const BannersIcon = () => (
+  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5L6 9H3v6h3l5 4V5zM15 9a4 4 0 010 6M18 6a8 8 0 010 12" />
+  </svg>
+);
+
+// Gear — settings
 const SettingsIcon = () => (
   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
@@ -67,13 +101,12 @@ const DotsIcon = () => (
   </svg>
 );
 
-// --- Menu Data ---
-const menuItems = [
-  {
-    name: 'Dashboard',
-    icon: <DashboardIcon />,
-    path: '/admin',
-  },
+// ─── Menu Groups ────────────────────────────────────────────────
+const mainItems = [
+  { name: 'Dashboard', icon: <DashboardIcon />, path: '/admin' },
+];
+
+const competitionItems = [
   {
     name: 'Pools',
     icon: <PoolsIcon />,
@@ -90,45 +123,42 @@ const menuItems = [
       { name: 'Live Bidding', path: '/admin/auctions/live' },
     ],
   },
+  {
+    name: 'NBA Playoffs',
+    icon: <PlayoffsIcon />,
+    subItems: [
+      { name: 'All Playoffs', path: '/admin/playoffs' },
+      { name: 'Standings', path: '/admin/playoffs/standings' },
+    ],
+  },
 ];
 
-const PayoutsIcon = () => (
-  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-  </svg>
-);
-
-const ApplicationsIcon = () => (
-  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-  </svg>
-);
-
-const StandingsIcon = () => (
-  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-  </svg>
-);
-
-const PlayoffsIcon = () => (
-  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-  </svg>
-);
-
-const managementItems = [
+const sportsDataItems = [
   { name: 'Teams', icon: <TeamsIcon />, path: '/admin/teams' },
   { name: 'Games', icon: <GamesIcon />, path: '/admin/games' },
-  { name: 'Playoffs', icon: <PlayoffsIcon />, path: '/admin/playoffs' },
+];
+
+const membersItems = [
   { name: 'Users', icon: <UsersIcon />, path: '/admin/users' },
-  { name: 'Standings', icon: <StandingsIcon />, path: '/admin/standings' },
   { name: 'Applications', icon: <ApplicationsIcon />, path: '/admin/applications' },
   { name: 'Payouts', icon: <PayoutsIcon />, path: '/admin/payouts' },
+];
+
+const contentItems = [
   { name: 'Banners', icon: <BannersIcon />, path: '/admin/banners' },
 ];
 
-const settingsItems = [
+const systemItems = [
   { name: 'Settings', icon: <SettingsIcon />, path: '/admin/settings' },
+];
+
+const MENU_GROUPS = [
+  { key: 'main', label: 'Main', items: mainItems },
+  { key: 'competitions', label: 'Pools & Competitions', items: competitionItems },
+  { key: 'sports', label: 'Sports Data', items: sportsDataItems },
+  { key: 'members', label: 'Members', items: membersItems },
+  { key: 'content', label: 'Content', items: contentItems },
+  { key: 'system', label: 'System', items: systemItems },
 ];
 
 const AdminSidebar = () => {
@@ -140,44 +170,31 @@ const AdminSidebar = () => {
   const subMenuRefs = useRef({});
 
   const isActive = useCallback(
-    (path) => {
-      // Dashboard (/admin) is exact match only to avoid matching every admin route
-      if (path === '/admin') return location.pathname === '/admin';
+    (path, { exact = false } = {}) => {
+      if (path === '/admin' || exact) return location.pathname === path;
       return location.pathname === path || location.pathname.startsWith(path + '/');
     },
     [location.pathname]
   );
 
-  // Check if any child of a submenu group is active
   const hasActiveChild = useCallback(
-    (subItems) => subItems?.some((sub) => isActive(sub.path)) || false,
+    (subItems) => subItems?.some((sub) => isActive(sub.path, { exact: true })) || false,
     [isActive]
   );
 
-  // Auto-expand submenu for active route
   useEffect(() => {
-    let submenuMatched = false;
-    const allGroups = [
-      { items: menuItems, type: 'menu' },
-      { items: managementItems, type: 'management' },
-      { items: settingsItems, type: 'settings' },
-    ];
-
-    allGroups.forEach(({ items, type }) => {
+    let matched = false;
+    MENU_GROUPS.forEach(({ key, items }) => {
       items.forEach((nav, index) => {
         if (nav.subItems && hasActiveChild(nav.subItems)) {
-          setOpenSubmenu({ type, index });
-          submenuMatched = true;
+          setOpenSubmenu({ type: key, index });
+          matched = true;
         }
       });
     });
-
-    if (!submenuMatched) {
-      setOpenSubmenu(null);
-    }
+    if (!matched) setOpenSubmenu(null);
   }, [location, isActive, hasActiveChild]);
 
-  // Calculate submenu heights for animation
   useEffect(() => {
     if (openSubmenu !== null) {
       const key = `${openSubmenu.type}-${openSubmenu.index}`;
@@ -192,9 +209,7 @@ const AdminSidebar = () => {
 
   const handleSubmenuToggle = (index, menuType) => {
     setOpenSubmenu((prev) => {
-      if (prev && prev.type === menuType && prev.index === index) {
-        return null;
-      }
+      if (prev && prev.type === menuType && prev.index === index) return null;
       return { type: menuType, index };
     });
   };
@@ -277,7 +292,7 @@ const AdminSidebar = () => {
                       <Link
                         to={subItem.path}
                         className={`relative flex items-center gap-3 rounded-lg py-2.5 text-sm font-medium transition-colors ${
-                          isActive(subItem.path)
+                          isActive(subItem.path, { exact: true })
                             ? 'bg-brand-50 text-brand-500 dark:bg-brand-500/[0.12] dark:text-brand-400 border-l-[3px] border-brand-500 pl-2.5 pr-3'
                             : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800 px-3'
                         }`}
@@ -317,7 +332,6 @@ const AdminSidebar = () => {
       onMouseEnter={() => !isExpanded && setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Logo */}
       <div className={`py-8 flex ${!isExpanded && !isHovered ? 'lg:justify-center' : 'justify-start'}`}>
         <Link to="/" className="flex items-center gap-2">
           <img src="/img/v2_logo.png" alt="OKRNG" className="h-8 w-auto" />
@@ -327,27 +341,15 @@ const AdminSidebar = () => {
         </Link>
       </div>
 
-      {/* Menu */}
       <div className="flex flex-col overflow-y-auto duration-300 ease-linear" style={{ scrollbarWidth: 'none' }}>
         <nav className="mb-6">
           <div className="flex flex-col gap-3">
-            {/* MENU category */}
-            <div>
-              {renderCategoryHeading('Menu')}
-              {renderMenuItems(menuItems, 'menu')}
-            </div>
-
-            {/* MANAGEMENT category */}
-            <div>
-              {renderCategoryHeading('Management')}
-              {renderMenuItems(managementItems, 'management')}
-            </div>
-
-            {/* SETTINGS category */}
-            <div>
-              {renderCategoryHeading('Settings')}
-              {renderMenuItems(settingsItems, 'settings')}
-            </div>
+            {MENU_GROUPS.map(({ key, label, items }) => (
+              <div key={key}>
+                {renderCategoryHeading(label)}
+                {renderMenuItems(items, key)}
+              </div>
+            ))}
           </div>
         </nav>
         {isVisible ? <SidebarWidget /> : null}

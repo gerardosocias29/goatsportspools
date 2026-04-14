@@ -90,8 +90,8 @@ const V4App = () => {
                 <Route path="banners" element={<ManageBanners />} />
                 <Route path="applications" element={<ManageApplications />} />
                 <Route path="payouts" element={<ManagePayouts />} />
-                <Route path="standings" element={<GlobalStandings />} />
                 <Route path="playoffs" element={<ManagePlayoffs />} />
+                <Route path="playoffs/standings" element={<GlobalStandings />} />
                 <Route path="settings" element={<AdminSettings />} />
               </Route>
 
