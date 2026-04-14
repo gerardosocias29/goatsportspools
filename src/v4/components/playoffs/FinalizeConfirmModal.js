@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 const ROUND_LABELS = { 1: 'R1', 2: 'R2', 3: 'Conf. Finals', 4: 'Champion' };
 const GAMES_LABELS = { 4: '4-0', 5: '4-1', 6: '4-2', 7: '4-3' };
 
-const FinalizeConfirmModal = ({ picks, seeds, seedMap, onConfirm, onCancel }) => {
+const FinalizeConfirmModal = ({ picks, seeds, seedMap, bracket, onConfirm, onCancel }) => {
+  const [name, setName] = useState(bracket?.bracket_name || '');
   const getTeam = (teamId) => {
     const seed = seeds.find((s) => (s.team_id || s.team?.id) === teamId);
     return seed?.team || seed || {};
@@ -41,6 +42,20 @@ const FinalizeConfirmModal = ({ picks, seeds, seedMap, onConfirm, onCancel }) =>
           <p className="text-sm text-gray-500 dark:text-gray-400">
             Review your picks below. <strong className="text-error-500">This cannot be undone.</strong>
           </p>
+        </div>
+
+        {/* Bracket name (editable — must be globally unique) */}
+        <div className="mb-4">
+          <label className="block text-xs font-semibold uppercase text-gray-500 dark:text-gray-400 mb-1.5">Bracket Name</label>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            maxLength={50}
+            placeholder="Give your bracket a name"
+            className="w-full h-11 rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-white focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+          />
+          <p className="text-[11px] text-gray-400 mt-1">Locked in when you finalize. Must be unique.</p>
         </div>
 
         {/* Picks grid */}
@@ -108,8 +123,8 @@ const FinalizeConfirmModal = ({ picks, seeds, seedMap, onConfirm, onCancel }) =>
             Cancel
           </button>
           <button
-            onClick={onConfirm}
-            disabled={missingGames.length > 0 || picks.length !== 15}
+            onClick={() => onConfirm(name.trim() && name.trim() !== bracket?.bracket_name ? name.trim() : undefined)}
+            disabled={missingGames.length > 0 || picks.length !== 15 || !name.trim()}
             className="flex-1 px-4 py-3 rounded-xl font-bold text-sm !text-white bg-brand-500 hover:bg-brand-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Finalize Bracket

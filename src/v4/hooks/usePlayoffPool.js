@@ -166,14 +166,17 @@ const usePlayoffPool = (poolNumber) => {
   );
 
   // ─── Finalize bracket ─────────────────────────────────────
-  const finalizeBracket = useCallback(async () => {
+  // Optional `bracketName` renames the bracket at finalize time (backend validates uniqueness)
+  const finalizeBracket = useCallback(async (bracketName) => {
     if (!poolNumber || !activeBracketId) return { success: false };
     // Save first
     const saveResult = await savePicks();
     if (!saveResult.success) return saveResult;
     try {
+      const body = bracketName ? { bracket_name: bracketName } : {};
       const res = await axios.post(
-        `/api/playoff-pools/${poolNumber}/brackets/${activeBracketId}/finalize`
+        `/api/playoff-pools/${poolNumber}/brackets/${activeBracketId}/finalize`,
+        body
       );
       await loadBrackets();
       return { success: true, data: res.data.data };

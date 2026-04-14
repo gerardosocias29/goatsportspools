@@ -1002,6 +1002,9 @@ const MatchupResultCard = ({ matchup, round, playoffTeams, onSubmit, saving }) =
       <span className="text-sm text-gray-400 italic">Waiting for earlier results...</span></div>;
   }
 
+  // Only one team known — show matchup preview but don't allow entering a result yet
+  const bothPresent = !!teamA && !!teamB;
+
   const handleSubmit = () => {
     if (!winnerId || !games) return;
     const winnerIsA = String(winnerId) === String(teamAId);
@@ -1028,32 +1031,38 @@ const MatchupResultCard = ({ matchup, round, playoffTeams, onSubmit, saving }) =
           <TeamBadge name={teamBName} seed={seedBDisplay} img={teamBImg} isWinner={bWon} conf={isFinals ? matchup.confB : null} />
         </div>
       </div>
-      <div className="flex items-end gap-3">
-        <div className="flex-1">
-          <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Winner</label>
-          <select value={winnerId} onChange={(e) => setWinnerId(e.target.value)} disabled={isSaving}
-            className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm px-3 py-2 text-gray-900 dark:text-white focus:border-brand-500 focus:ring-1 focus:ring-brand-500 disabled:opacity-50">
-            <option value="">Select winner...</option>
-            {teamAId && <option value={teamAId}>({seedADisplay}) {teamAName}</option>}
-            {teamBId && <option value={teamBId}>({seedBDisplay}) {teamBName}</option>}
-          </select>
+      {bothPresent ? (
+        <div className="flex items-end gap-3">
+          <div className="flex-1">
+            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Winner</label>
+            <select value={winnerId} onChange={(e) => setWinnerId(e.target.value)} disabled={isSaving}
+              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm px-3 py-2 text-gray-900 dark:text-white focus:border-brand-500 focus:ring-1 focus:ring-brand-500 disabled:opacity-50">
+              <option value="">Select winner...</option>
+              {teamAId && <option value={teamAId}>({seedADisplay}) {teamAName}</option>}
+              {teamBId && <option value={teamBId}>({seedBDisplay}) {teamBName}</option>}
+            </select>
+          </div>
+          <div className="w-24">
+            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Games</label>
+            <select value={games} onChange={(e) => setGames(e.target.value)} disabled={isSaving}
+              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm px-3 py-2 text-gray-900 dark:text-white focus:border-brand-500 focus:ring-1 focus:ring-brand-500 disabled:opacity-50">
+              <option value="">--</option>
+              <option value="4">4 (sweep)</option><option value="5">5</option>
+              <option value="6">6</option><option value="7">7</option>
+            </select>
+          </div>
+          <button onClick={handleSubmit} disabled={!winnerId || !games || isSaving}
+            className="px-4 py-2 rounded-lg text-sm font-medium !text-white bg-brand-500 hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors whitespace-nowrap">
+            {isSaving ? <span className="flex items-center gap-1.5">
+              <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />Saving</span>
+              : isCompleted ? 'Update' : 'Save'}
+          </button>
         </div>
-        <div className="w-24">
-          <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Games</label>
-          <select value={games} onChange={(e) => setGames(e.target.value)} disabled={isSaving}
-            className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm px-3 py-2 text-gray-900 dark:text-white focus:border-brand-500 focus:ring-1 focus:ring-brand-500 disabled:opacity-50">
-            <option value="">--</option>
-            <option value="4">4 (sweep)</option><option value="5">5</option>
-            <option value="6">6</option><option value="7">7</option>
-          </select>
-        </div>
-        <button onClick={handleSubmit} disabled={!winnerId || !games || isSaving}
-          className="px-4 py-2 rounded-lg text-sm font-medium !text-white bg-brand-500 hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors whitespace-nowrap">
-          {isSaving ? <span className="flex items-center gap-1.5">
-            <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />Saving</span>
-            : isCompleted ? 'Update' : 'Save'}
-        </button>
-      </div>
+      ) : (
+        <p className="text-xs text-gray-400 italic text-center py-1">
+          Waiting for opponent — enter the prior round's result first.
+        </p>
+      )}
     </div>
   );
 };

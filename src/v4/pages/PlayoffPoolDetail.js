@@ -56,7 +56,7 @@ const PlayoffPoolDetail = () => {
   if (!pool) return null;
 
   const tabs = [
-    { key: 'picks', label: 'My Picks' },
+    { key: 'picks', label: 'My Brackets' },
     { key: 'standings', label: 'Standings' },
     { key: 'info', label: 'Pool Info' },
   ];

@@ -1,20 +1,20 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useAxios } from '../../../app/contexts/AxiosContext';
 import SharedModal from '../admin/common/Modal';
-
-const roundLabels = { 1: 'Round 1', 2: 'Round 2', 3: 'Conference Finals', 4: 'NBA Finals' };
+import BracketEditor from './BracketEditor';
+import * as bracketUtils from './bracketUtils';
 
 /**
- * Read-only bracket view. Works for:
- * - Owner of the bracket
- * - Superadmin
- * - Other pool participants once the pool is locked / past close_datetime
+ * Read-only bracket view using the same BracketEditor layout users see while picking.
  *
- * Backend enforces the gate; frontend simply surfaces errors.
+ * Access rules (backend enforced):
+ * - Owner / superadmin: always
+ * - Other pool participants: only after pool is locked / past close_datetime
  */
 const BracketViewModal = ({ poolNumber, bracketId, onClose, title }) => {
   const { get } = useAxios();
   const [bracket, setBracket] = useState(null);
+  const [seeds, setSeeds] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -26,8 +26,12 @@ const BracketViewModal = ({ poolNumber, bracketId, onClose, title }) => {
       try {
         const res = await get(`/api/playoff-pools/${poolNumber}/brackets/${bracketId}`);
         if (ignore) return;
-        if (res?.data?.status) setBracket(res.data.data);
-        else setError(res?.data?.message || 'Failed to load bracket');
+        if (res?.data?.status) {
+          setBracket(res.data.data);
+          setSeeds(res.data.seeds || []);
+        } else {
+          setError(res?.data?.message || 'Failed to load bracket');
+        }
       } catch (err) {
         if (!ignore) setError(err?.response?.data?.message || 'Failed to load bracket');
       } finally {
@@ -37,24 +41,38 @@ const BracketViewModal = ({ poolNumber, bracketId, onClose, title }) => {
     return () => { ignore = true; };
   }, [poolNumber, bracketId, get]);
 
-  const picks = bracket?.picks || [];
-  const owner = bracket?.participant?.user;
+  // Build a minimal read-only hook shim that satisfies BracketEditor's needs
+  const readonlyHook = useMemo(() => {
+    const picks = (bracket?.picks || []).map((p) => ({
+      ...p,
+      picked_team_id: p.picked_team_id,
+      round: p.round,
+      conference: p.conference,
+      picked_games: p.picked_games,
+    }));
+    return {
+      readOnly: true,
+      getMatchups: (round, conference) => bracketUtils.getMatchups(round, conference, picks, seeds),
+      getPicksForRound: (round, conference) => {
+        if (round === 4) return picks.filter((p) => p.round === 4);
+        return picks.filter((p) => p.round === round && p.conference === conference);
+      },
+      seeds,
+      picks,
+    };
+  }, [bracket, seeds]);
 
-  const byRound = [1, 2, 3, 4].map((r) => ({
-    round: r,
-    label: roundLabels[r],
-    east: picks.filter((p) => p.round === r && p.conference === 'East'),
-    west: picks.filter((p) => p.round === r && p.conference === 'West'),
-    all: picks.filter((p) => p.round === r && !p.conference),
-  }));
+  const owner = bracket?.participant?.user;
+  const hasBracket = bracket && (bracket.picks?.length ?? 0) > 0 && seeds.length > 0;
 
   return (
-    <SharedModal isOpen onClose={onClose} title={title || bracket?.bracket_name || 'Bracket'} maxWidth="max-w-3xl">
+    <SharedModal isOpen onClose={onClose} title={title || bracket?.bracket_name || 'Bracket'} maxWidth="max-w-[min(1500px,95vw)]">
       {owner && (
         <p className="text-xs text-gray-500 dark:text-gray-400 -mt-4 mb-5">
           by {owner.name || owner.username}{owner.username ? ` · @${owner.username}` : ''}
           {bracket?.status && <span className="ml-2 capitalize">· {bracket.status}</span>}
           {bracket?.is_paid && <span className="ml-2 text-success-600 dark:text-success-400 font-semibold">· PAID</span>}
+          {bracket?.total_points > 0 && <span className="ml-2 font-semibold text-brand-500">· {bracket.total_points} pts</span>}
         </p>
       )}
 
@@ -66,60 +84,18 @@ const BracketViewModal = ({ poolNumber, bracketId, onClose, title }) => {
         <div className="rounded-lg bg-error-50 dark:bg-error-500/10 border border-error-200 dark:border-error-500/20 p-4 text-sm text-error-600 dark:text-error-400">
           {error}
         </div>
-      ) : picks.length === 0 ? (
+      ) : !hasBracket ? (
         <p className="text-sm text-gray-500 dark:text-gray-400 italic py-8 text-center">No picks recorded for this bracket.</p>
       ) : (
-        <div className="space-y-5">
-          {byRound.map(({ round, label, east, west, all }) => (
-            <div key={round}>
-              <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wide">{label}</h4>
-              {all.length > 0 && (
-                <ul className="space-y-1.5">
-                  {all.map((p) => <PickRow key={p.id} pick={p} />)}
-                </ul>
-              )}
-              {(east.length > 0 || west.length > 0) && (
-                <div className="grid sm:grid-cols-2 gap-4">
-                  {east.length > 0 && <div>
-                    <div className="text-[10px] font-bold text-gray-400 uppercase mb-1.5">East</div>
-                    <ul className="space-y-1.5">{east.map((p) => <PickRow key={p.id} pick={p} />)}</ul>
-                  </div>}
-                  {west.length > 0 && <div>
-                    <div className="text-[10px] font-bold text-gray-400 uppercase mb-1.5">West</div>
-                    <ul className="space-y-1.5">{west.map((p) => <PickRow key={p.id} pick={p} />)}</ul>
-                  </div>}
-                </div>
-              )}
-            </div>
-          ))}
+        <div className="-mx-6 px-6 overflow-x-auto">
+          <BracketEditor
+            hook={readonlyHook}
+            onSelectMatchupWinner={() => {}}
+            onSetGames={() => {}}
+          />
         </div>
       )}
     </SharedModal>
-  );
-};
-
-const PickRow = ({ pick }) => {
-  const team = pick.picked_team;
-  const correct = (pick.base_points || 0) > 0;
-  return (
-    <li className={`flex items-center gap-2.5 rounded-lg border px-3 py-2 ${
-      correct
-        ? 'border-success-200 dark:border-success-500/30 bg-success-50/50 dark:bg-success-500/5'
-        : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800/40'
-    }`}>
-      {team?.image_url && <img src={team.image_url} alt="" className="w-6 h-6 rounded-full object-cover shrink-0" />}
-      <span className="text-sm text-gray-800 dark:text-gray-200 truncate flex-1">
-        {team?.nickname || team?.name || 'TBD'}
-      </span>
-      {pick.picked_games && (
-        <span className="text-xs text-gray-400 shrink-0">in {pick.picked_games}</span>
-      )}
-      {correct && (
-        <span className="text-xs font-semibold text-success-600 dark:text-success-400 shrink-0">
-          +{(pick.base_points || 0) + (pick.games_bonus || 0) + (pick.seed_bonus || 0)}
-        </span>
-      )}
-    </li>
   );
 };
 

@@ -8,6 +8,28 @@ const ROUND_LABELS = {
   4: 'NBA Finals',
 };
 
+// NBA-0008 — Display picked champion between the trophy and the Finals matchup
+const ChampionCard = ({ team }) => {
+  if (!team) {
+    return (
+      <div className="mb-2 px-3 py-2 rounded-lg border border-dashed border-gray-300 dark:border-gray-700 bg-gray-50/60 dark:bg-gray-800/40 text-center min-w-[140px]">
+        <div className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">Champion</div>
+        <div className="text-xs text-gray-400 dark:text-gray-500 italic mt-0.5">Pick to set</div>
+      </div>
+    );
+  }
+  const name = team.nickname || team.name || 'Champion';
+  return (
+    <div className="mb-2 px-3 py-2 rounded-lg border border-yellow-300 dark:border-yellow-500/40 bg-gradient-to-b from-yellow-50 to-amber-50 dark:from-yellow-500/10 dark:to-amber-500/5 text-center min-w-[140px] shadow-sm">
+      <div className="text-[10px] font-bold uppercase tracking-wider text-yellow-700 dark:text-yellow-400">Champion</div>
+      <div className="flex items-center justify-center gap-1.5 mt-1">
+        {team.image_url && <img src={team.image_url} alt="" className="w-5 h-5 object-contain" />}
+        <div className="text-sm font-bold text-gray-900 dark:text-white truncate">{name}</div>
+      </div>
+    </div>
+  );
+};
+
 // ─── Recursive Bracket Pair ──────────────────────────────────
 // Renders two children → connector bracket → result
 // Handles both LTR (East) and RTL (West) via flex-row-reverse.
@@ -107,6 +129,18 @@ const BracketEditor = ({ hook, onSelectMatchupWinner, onSetGames }) => {
     return pick?.picked_games || null;
   };
 
+  // Champion (NBA-0008) — resolve the winner of the Finals matchup to a team object
+  const championTeam = (() => {
+    const finalsMatchup = finals[0];
+    if (!finalsMatchup) return null;
+    const winnerId = getWinnerId(4, null, finalsMatchup);
+    if (!winnerId) return null;
+    const side = [finalsMatchup.teamA, finalsMatchup.teamB].find(
+      (t) => t && (t.team_id === winnerId || t.team?.id === winnerId)
+    );
+    return side?.team || side || null;
+  })();
+
   const renderMatchup = (matchup, round, conference) => {
     const winnerId = getWinnerId(round, conference, matchup);
     const selectedGames = getSelectedGames(round, conference, matchup);
@@ -191,6 +225,7 @@ const BracketEditor = ({ hook, onSelectMatchupWinner, onSetGames }) => {
           {/* Finals */}
           <div className="flex flex-col items-center justify-center px-2">
             <div className="text-xl mb-1">🏆</div>
+            <ChampionCard team={championTeam} />
             {finals[0] && (
               <MatchupCard
                 teamA={finals[0].teamA}
@@ -226,6 +261,7 @@ const BracketEditor = ({ hook, onSelectMatchupWinner, onSetGames }) => {
           westR2={westR2}
           westR3={westR3}
           finals={finals}
+          championTeam={championTeam}
           readOnly={readOnly}
           onSelectMatchupWinner={onSelectMatchupWinner}
           onSetGames={onSetGames}
@@ -243,6 +279,7 @@ const MobileBracketView = ({
   eastR1, eastR2, eastR3,
   westR1, westR2, westR3,
   finals,
+  championTeam,
   readOnly,
   onSelectMatchupWinner,
   onSetGames,
@@ -329,6 +366,7 @@ const MobileBracketView = ({
           {renderRoundHeader(ROUND_LABELS[4])}
           <div className="flex flex-col items-center">
             <div className="text-2xl mb-2">🏆</div>
+            <ChampionCard team={championTeam} />
             {finals[0] && (
               <MatchupCard
                 teamA={finals[0].teamA}

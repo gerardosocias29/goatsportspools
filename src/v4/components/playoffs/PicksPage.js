@@ -65,9 +65,9 @@ const PicksPage = ({ hook }) => {
     setShowFinalizeModal(true);
   };
 
-  const handleConfirmFinalize = async () => {
+  const handleConfirmFinalize = async (bracketName) => {
     setShowFinalizeModal(false);
-    const result = await finalizeBracket();
+    const result = await finalizeBracket(bracketName);
     if (result.success) {
       setJustFinalized(true);
       showToast('Bracket finalized!', 'success');
@@ -109,6 +109,7 @@ const PicksPage = ({ hook }) => {
         activeBracketId={hook.activeBracketId}
         onSelect={selectBracket}
         onCreate={createBracket}
+        onRename={hook.renameBracket}
         pool={pool}
         participant={participant}
         isLocked={isLocked}
@@ -198,6 +199,7 @@ const PicksPage = ({ hook }) => {
           picks={picks}
           seeds={hook.seeds}
           seedMap={seedMap}
+          bracket={activeBracket}
           onConfirm={handleConfirmFinalize}
           onCancel={() => setShowFinalizeModal(false)}
         />

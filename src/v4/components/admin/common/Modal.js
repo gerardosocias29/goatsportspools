@@ -13,7 +13,7 @@ const Modal = ({ isOpen, onClose, title, children, maxWidth = 'max-w-2xl' }) => 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[99999] flex items-center justify-center overflow-y-auto p-4">
+    <div className="fixed inset-0 z-[99999] flex items-start justify-center overflow-y-auto p-4 sm:p-6">
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm"
@@ -21,7 +21,7 @@ const Modal = ({ isOpen, onClose, title, children, maxWidth = 'max-w-2xl' }) => 
       />
 
       {/* Modal */}
-      <div className={`relative w-full ${maxWidth} rounded-3xl bg-white p-6 dark:bg-gray-900 shadow-xl`}>
+      <div className={`relative w-full ${maxWidth} rounded-3xl bg-white p-6 dark:bg-gray-900 shadow-xl my-auto`}>
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
