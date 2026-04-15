@@ -107,12 +107,12 @@ const PublicHeader = () => {
           <div className="flex items-center justify-between">
             {/* Logo */}
             <div className="flex items-center gap-4">
-              <Link to="/" className="flex items-center gap-2 group">
-                <div className="relative">
-                  <div className="absolute inset-0 bg-brand-500 blur-lg opacity-0 group-hover:opacity-40 transition-opacity" />
-                  <img src="/img/v2_logo.png" alt="OKRNG" className="h-10 w-auto relative z-10" />
+              <Link to="/" className="flex items-center gap-3 group">
+                <div className="relative w-12 h-12 flex items-center justify-center">
+                  <div className="absolute inset-0 bg-brand-500 blur-xl opacity-0 group-hover:opacity-30 transition-opacity" />
+                  <img src="/img/okrng.png" alt="OKRNG" className="h-auto w-full relative z-10 transition-transform duration-300 group-hover:scale-110" />
                 </div>
-                <span className="hidden sm:block font-outfit font-black text-2xl tracking-tighter text-gray-900 dark:text-white">
+                <span className="hidden sm:block font-outfit font-black text-2xl tracking-tighter text-gray-900 dark:text-white uppercase leading-none">
                   OK<span className="text-brand-500">RNG</span>
                 </span>
               </Link>
@@ -360,9 +360,12 @@ const PublicHeader = () => {
             className="fixed inset-0 z-[100000] bg-white dark:bg-gray-950 p-6 flex flex-col"
           >
             <div className="flex items-center justify-between mb-12">
-              <span className="font-outfit font-black text-2xl tracking-tighter text-gray-900 dark:text-white">
-                OK<span className="text-brand-500">RNG</span>
-              </span>
+              <div className="flex items-center gap-3">
+                <img src="/img/okrng.png" alt="OKRNG" className="w-full h-auto object-contain" />
+                <span className="font-outfit font-black text-2xl tracking-tighter text-gray-900 dark:text-white uppercase leading-none">
+                  OK<span className="text-brand-500">RNG</span>
+                </span>
+              </div>
               <button
                 onClick={() => setIsMenuOpen(false)}
                 className="p-3 rounded-2xl bg-gray-100 dark:bg-gray-800"

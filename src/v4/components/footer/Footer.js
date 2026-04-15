@@ -34,27 +34,27 @@ const Footer = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8">
-          
+
           {/* Brand & Newsletter Section */}
           <div className="lg:col-span-5 space-y-8">
-            <Link to="/" className="flex items-center gap-2 group">
-              <img src="/img/v2_logo.png" alt="OKRNG" className="h-10 w-auto group-hover:rotate-12 transition-transform duration-500" />
-              <span className="font-black text-3xl tracking-tighter">
+            <Link to="/" className="flex items-center gap-3 group">
+              <img src="/img/okrng.png" alt="OKRNG" className="h-12 w-auto group-hover:scale-110 group-hover:rotate-6 transition-all duration-500" />
+              <span className="font-black text-3xl tracking-tighter uppercase">
                 OK<span className="text-brand-500">RNG</span>
               </span>
             </Link>
-            
+
             <p className="text-gray-400 text-lg leading-relaxed max-w-md">
-              The ultimate platform for sports enthusiasts. 
+              The ultimate platform for sports enthusiasts.
               Host pools, join auctions, and compete with friends in a premium social betting environment.
             </p>
 
             <div className="space-y-4">
               <h4 className="text-sm font-black uppercase tracking-widest text-brand-500">Stay Updated</h4>
               <div className="flex gap-2 max-w-md">
-                <input 
-                  type="email" 
-                  placeholder="Enter your email" 
+                <input
+                  type="email"
+                  placeholder="Enter your email"
                   className="flex-1 bg-white/5 border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:border-brand-500 transition-colors"
                 />
                 <button className="bg-brand-500 hover:bg-brand-600 px-6 py-4 rounded-2xl font-bold transition-all hover:scale-105 active:scale-95">
@@ -111,9 +111,9 @@ const Footer = () => {
         {/* Bottom Section */}
         <div className="mt-24 pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex gap-6">
-             <SocialLink href="https://x.com/okrngonx" icon={<XIcon />} />
-             <SocialLink href="https://www.instagram.com/weareokrng/" icon={<InstagramIcon />} />
-             <SocialLink href="https://www.facebook.com/profile.php?id=61585452525518" icon={<FacebookIcon />} />
+            <SocialLink href="https://x.com/okrngonx" icon={<XIcon />} />
+            <SocialLink href="https://www.instagram.com/weareokrng/" icon={<InstagramIcon />} />
+            <SocialLink href="https://www.facebook.com/profile.php?id=61585452525518" icon={<FacebookIcon />} />
           </div>
 
           <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">
@@ -121,7 +121,7 @@ const Footer = () => {
           </p>
 
           <div className="flex gap-4">
-             <img src="/img/payment_gateways.png" alt="Payments" className="h-6 w-auto opacity-50 grayscale hover:grayscale-0 transition-all cursor-not-allowed" title="Coming Soon" />
+            <img src="/img/payment_gateways.png" alt="Payments" className="h-6 w-auto opacity-50 grayscale hover:grayscale-0 transition-all cursor-not-allowed" title="Coming Soon" />
           </div>
         </div>
       </div>
@@ -148,17 +148,17 @@ const XIcon = () => (
 );
 
 const InstagramIcon = () => (
-<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-  <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
-  <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
-  <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
-</svg>
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+  </svg>
 );
 
 const FacebookIcon = () => (
-<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-  <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
-</svg>
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
+  </svg>
 );
 
 export default Footer;

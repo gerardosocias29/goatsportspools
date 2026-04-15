@@ -26,8 +26,8 @@ const AuthLayout = () => {
         }} />
 
         <div className="relative z-10 text-center px-12">
-          <img src="/img/v2_logo.png" alt="OKRNG" className="h-16 w-auto mx-auto mb-6 brightness-0 invert" />
-          <h2 className="text-3xl font-bold text-white mb-4">
+          <img src="/img/okrng.png" alt="OKRNG" className="h-24 w-auto mx-auto mb-6" />
+          <h2 className="text-3xl font-black text-white mb-4 uppercase tracking-tighter">
             Welcome to OKRNG
           </h2>
           <p className="text-lg text-white/80 max-w-sm mx-auto">

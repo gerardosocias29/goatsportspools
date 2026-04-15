@@ -50,7 +50,7 @@ const AdminHeader = () => {
 
           {/* Mobile logo */}
           <Link to="/" className="lg:hidden">
-            <img src="/img/v2_logo.png" alt="OKRNG" className="h-8" />
+            <img src="/img/okrng.png" alt="OKRNG" className="h-8 w-auto" />
           </Link>
 
           {/* Mobile app menu toggle */}
@@ -71,9 +71,8 @@ const AdminHeader = () => {
 
         {/* Right section */}
         <div
-          className={`${
-            isApplicationMenuOpen ? 'flex' : 'hidden'
-          } items-center justify-between w-full gap-4 px-5 py-4 lg:flex shadow-theme-md lg:justify-end lg:px-0 lg:shadow-none`}
+          className={`${isApplicationMenuOpen ? 'flex' : 'hidden'
+            } items-center justify-between w-full gap-4 px-5 py-4 lg:flex shadow-theme-md lg:justify-end lg:px-0 lg:shadow-none`}
         >
           <div className="flex items-center gap-2">
             <ThemeToggleButton />
