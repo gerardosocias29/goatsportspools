@@ -98,11 +98,10 @@ const PublicHeader = () => {
   return (
     <>
       <header
-        className={`fixed top-0 left-0 right-0 z-[99999] transition-all duration-500 py-4 ${
-          isScrolled 
-            ? 'bg-white/80 dark:bg-gray-950/80 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-800/50 shadow-2xl shadow-black/5' 
-            : 'bg-transparent'
-        }`}
+        className={`fixed top-0 left-0 right-0 z-[99999] transition-all duration-500 py-2 ${isScrolled
+          ? 'bg-white/80 dark:bg-gray-950/80 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-800/50 shadow-2xl shadow-black/5'
+          : 'bg-transparent'
+          }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
@@ -126,72 +125,69 @@ const PublicHeader = () => {
             <nav className="hidden md:flex items-center bg-gray-100/50 dark:bg-gray-800/50 backdrop-blur-md p-1 rounded-2xl border border-white/20 dark:border-gray-700/30">
               {navItems.map((item) =>
                 item.dropdown ? (
-                    <div 
-                      key={item.label} 
-                      className="relative" 
-                      ref={poolsDropdownRef}
-                      onMouseEnter={() => setIsPoolsOpen(true)}
-                      onMouseLeave={() => setIsPoolsOpen(false)}
-                    >
-                      <button
-                        onClick={() => setIsPoolsOpen(!isPoolsOpen)}
-                        className={`relative px-5 py-2 text-sm font-semibold transition-all flex items-center gap-1.5 rounded-xl ${
-                          item.children.some((c) => isActive(c.path))
-                            ? 'text-brand-500 bg-white dark:bg-gray-900 shadow-sm'
-                            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                  <div
+                    key={item.label}
+                    className="relative"
+                    ref={poolsDropdownRef}
+                    onMouseEnter={() => setIsPoolsOpen(true)}
+                    onMouseLeave={() => setIsPoolsOpen(false)}
+                  >
+                    <button
+                      onClick={() => setIsPoolsOpen(!isPoolsOpen)}
+                      className={`relative px-5 py-2 text-sm font-semibold transition-all flex items-center gap-1.5 rounded-xl ${item.children.some((c) => isActive(c.path))
+                        ? 'text-brand-500 bg-white dark:bg-gray-900 shadow-sm'
+                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                         }`}
+                    >
+                      {item.label}
+                      <motion.svg
+                        animate={{ rotate: isPoolsOpen ? 180 : 0 }}
+                        className="w-3.5 h-3.5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
                       >
-                        {item.label}
-                        <motion.svg 
-                          animate={{ rotate: isPoolsOpen ? 180 : 0 }}
-                          className="w-3.5 h-3.5" 
-                          fill="none" 
-                          stroke="currentColor" 
-                          viewBox="0 0 24 24"
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </motion.svg>
+                    </button>
+
+                    <AnimatePresence>
+                      {isPoolsOpen && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                          className="absolute left-0 mt-2 w-72 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-2xl p-2 z-50 overflow-hidden"
                         >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </motion.svg>
-                      </button>
-                      
-                      <AnimatePresence>
-                        {isPoolsOpen && (
-                          <motion.div 
-                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                            className="absolute left-0 mt-2 w-72 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-2xl p-2 z-50 overflow-hidden"
-                          >
-                            <div className="bg-gray-50/50 dark:bg-gray-800/50 p-3 mb-2 rounded-xl">
-                              <h4 className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Available Pools</h4>
-                            </div>
-                            {item.children.map((child) => (
-                              <Link
-                                key={child.path}
-                                to={child.path}
-                                onClick={() => setIsPoolsOpen(false)}
-                                className={`flex flex-col gap-0.5 px-4 py-3 rounded-xl transition-all ${
-                                  isActive(child.path)
-                                    ? 'bg-brand-50 dark:bg-brand-500/10 text-brand-600 dark:text-brand-400'
-                                    : 'text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'
+                          <div className="bg-gray-50/50 dark:bg-gray-800/50 p-3 mb-2 rounded-xl">
+                            <h4 className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Available Pools</h4>
+                          </div>
+                          {item.children.map((child) => (
+                            <Link
+                              key={child.path}
+                              to={child.path}
+                              onClick={() => setIsPoolsOpen(false)}
+                              className={`flex flex-col gap-0.5 px-4 py-3 rounded-xl transition-all ${isActive(child.path)
+                                ? 'bg-brand-50 dark:bg-brand-500/10 text-brand-600 dark:text-brand-400'
+                                : 'text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'
                                 }`}
-                              >
-                                <span className="text-sm font-bold">{child.label}</span>
-                                <span className="text-[11px] opacity-60 font-medium">{child.description}</span>
-                              </Link>
-                            ))}
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
+                            >
+                              <span className="text-sm font-bold">{child.label}</span>
+                              <span className="text-[11px] opacity-60 font-medium">{child.description}</span>
+                            </Link>
+                          ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
                 ) : (
                   <Link
                     key={item.path}
                     to={item.path}
-                    className={`relative px-5 py-2 text-sm font-semibold transition-all rounded-xl ${
-                      isActive(item.path)
-                        ? 'text-brand-500 bg-white dark:bg-gray-900 shadow-sm'
-                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                    }`}
+                    className={`relative px-5 py-2 text-sm font-semibold transition-all rounded-xl ${isActive(item.path)
+                      ? 'text-brand-500 bg-white dark:bg-gray-900 shadow-sm'
+                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                      }`}
                   >
                     {item.label}
                   </Link>
@@ -233,11 +229,11 @@ const PublicHeader = () => {
                         {roleLabel}
                       </div>
                     </div>
-                    <motion.svg 
+                    <motion.svg
                       animate={{ rotate: isDropdownOpen ? 180 : 0 }}
-                      className="w-4 h-4 text-gray-400 group-hover:text-brand-500 transition-colors" 
-                      fill="none" 
-                      stroke="currentColor" 
+                      className="w-4 h-4 text-gray-400 group-hover:text-brand-500 transition-colors"
+                      fill="none"
+                      stroke="currentColor"
                       viewBox="0 0 24 24"
                     >
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -246,7 +242,7 @@ const PublicHeader = () => {
 
                   <AnimatePresence>
                     {isDropdownOpen && (
-                      <motion.div 
+                      <motion.div
                         initial={{ opacity: 0, y: 10, scale: 0.95 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
@@ -398,11 +394,10 @@ const PublicHeader = () => {
                     <Link
                       to={item.path}
                       onClick={() => setIsMenuOpen(false)}
-                      className={`px-6 py-4 rounded-3xl text-3xl font-black transition-colors ${
-                        isActive(item.path) 
-                          ? 'text-brand-500 bg-brand-500/5' 
-                          : 'text-gray-900 dark:text-white'
-                      }`}
+                      className={`px-6 py-4 rounded-3xl text-3xl font-black transition-colors ${isActive(item.path)
+                        ? 'text-brand-500 bg-brand-500/5'
+                        : 'text-gray-900 dark:text-white'
+                        }`}
                     >
                       {item.label}
                     </Link>
@@ -431,25 +426,25 @@ const PublicHeader = () => {
       </AnimatePresence>
 
       {/* Spacing for fixed header and ticker */}
-      <div className={luckyResults ? 'h-[136px]' : 'h-20'} />
+      {/* <div className={luckyResults ? 'h-[136px]' : 'h-20'} /> */}
 
       {/* Lucky Ticker Redesign */}
       {luckyResults && (
         <div className="fixed top-20 left-0 right-0 z-[99998] px-4 pb-4">
-           <div className="max-w-4xl mx-auto overflow-hidden bg-gray-900/90 dark:bg-black/80 backdrop-blur-md rounded-2xl border border-white/5 shadow-2xl flex items-center h-10 divide-x divide-white/10">
-              <div className="flex items-center px-4 gap-2 whitespace-nowrap">
-                <div className="w-2 h-2 rounded-full bg-brand-500 animate-pulse" />
-                <span className="text-[10px] font-black uppercase tracking-tighter text-white/50">Live Results</span>
-              </div>
-              <div className="flex-1 flex items-center justify-around px-4">
-                <TickerItem label="#" value={luckyResults.num10} />
-                <TickerItem label="Color" value={luckyResults.color} color={luckyResults.color === 'Red' ? 'text-red-500' : 'text-blue-400'} />
-                <TickerItem label="Num" value={luckyResults.num100} />
-                <TickerItem label="Flip" value={luckyResults.coin} color={luckyResults.coin === 'Heads' ? 'text-green-500' : 'text-amber-400'} />
-                <TickerItem label="Triple" value={luckyResults.num1000} />
-                <TickerItem label="Suit" value={luckyResults.suit} color={(luckyResults.suit === '♥' || luckyResults.suit === '♦') ? 'text-red-500' : 'text-white'} />
-              </div>
-           </div>
+          <div className="max-w-4xl mx-auto overflow-hidden bg-gray-900/90 dark:bg-black/80 backdrop-blur-md rounded-2xl border border-white/5 shadow-2xl flex items-center h-10 divide-x divide-white/10">
+            <div className="flex items-center px-4 gap-2 whitespace-nowrap">
+              <div className="w-2 h-2 rounded-full bg-brand-500 animate-pulse" />
+              <span className="text-[10px] font-black uppercase tracking-tighter text-white/50">Live Results</span>
+            </div>
+            <div className="flex-1 flex items-center justify-around px-4">
+              <TickerItem label="#" value={luckyResults.num10} />
+              <TickerItem label="Color" value={luckyResults.color} color={luckyResults.color === 'Red' ? 'text-red-500' : 'text-blue-400'} />
+              <TickerItem label="Num" value={luckyResults.num100} />
+              <TickerItem label="Flip" value={luckyResults.coin} color={luckyResults.coin === 'Heads' ? 'text-green-500' : 'text-amber-400'} />
+              <TickerItem label="Triple" value={luckyResults.num1000} />
+              <TickerItem label="Suit" value={luckyResults.suit} color={(luckyResults.suit === '♥' || luckyResults.suit === '♦') ? 'text-red-500' : 'text-white'} />
+            </div>
+          </div>
         </div>
       )}
     </>
