@@ -430,7 +430,7 @@ const PublicHeader = () => {
 
       {/* Lucky Ticker Redesign */}
       {luckyResults && (
-        <div className="fixed top-20 left-0 right-0 z-[99998] px-4 pb-4">
+        <div className="fixed top-[61px] left-0 right-0 z-[99998] px-4 pb-4">
           <div className="max-w-4xl mx-auto overflow-hidden bg-gray-900/90 dark:bg-black/80 backdrop-blur-md rounded-2xl border border-white/5 shadow-2xl flex items-center h-10 divide-x divide-white/10">
             <div className="flex items-center px-4 gap-2 whitespace-nowrap">
               <div className="w-2 h-2 rounded-full bg-brand-500 animate-pulse" />

@@ -7,7 +7,7 @@ const PublicLayout = () => {
   return (
     <>
       <PublicHeader />
-      <div className="min-h-screen flex flex-col bg-white dark:bg-gray-900 mt-[81px]">
+      <div className="min-h-screen flex flex-col bg-white dark:bg-gray-900 mt-[61px]">
 
         <main className="flex-1">
           <Outlet />
