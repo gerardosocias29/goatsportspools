@@ -112,8 +112,8 @@ const PublicHeader = () => {
                   <div className="absolute inset-0 bg-brand-500 blur-lg opacity-0 group-hover:opacity-40 transition-opacity" />
                   <img src="/img/v2_logo.png" alt="OKRNG" className="h-10 w-auto relative z-10" />
                 </div>
-                <span className="hidden sm:block font-black text-2xl tracking-tighter text-gray-900 dark:text-white">
-                  OK<span className="text-brand-500">RNG</span>
+                <span className="hidden sm:block font-outfit font-black text-2xl tracking-tighter text-gray-900 dark:text-white">
+                   OK<span className="text-brand-500">RNG</span>
                 </span>
               </Link>
               <div className="hidden lg:block">
@@ -336,12 +336,12 @@ const PublicHeader = () => {
               {/* Mobile Toggle */}
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="md:hidden p-2 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white"
+                className="md:hidden w-11 h-11 flex items-center justify-center rounded-2xl bg-gray-100/50 dark:bg-gray-800/50 border border-white/20 dark:border-gray-700/30 text-gray-900 dark:text-white transition-all active:scale-90"
               >
-                <div className="w-6 h-5 relative flex flex-col justify-between">
-                  <span className={`w-full h-0.5 bg-current transition-all ${isMenuOpen ? 'rotate-45 translate-y-2.5' : ''}`} />
-                  <span className={`w-full h-0.5 bg-current transition-all ${isMenuOpen ? 'opacity-0' : ''}`} />
-                  <span className={`w-full h-0.5 bg-current transition-all ${isMenuOpen ? '-rotate-45 -translate-y-2' : ''}`} />
+                <div className="w-5 h-4 relative flex flex-col justify-between">
+                  <span className={`w-full h-0.5 bg-current rounded-full transition-all ${isMenuOpen ? 'rotate-45 translate-y-1.5' : ''}`} />
+                  <span className={`w-full h-0.5 bg-current rounded-full transition-all ${isMenuOpen ? 'opacity-0' : ''}`} />
+                  <span className={`w-full h-0.5 bg-current rounded-full transition-all ${isMenuOpen ? '-rotate-45 -translate-y-2' : ''}`} />
                 </div>
               </button>
             </div>
@@ -360,8 +360,8 @@ const PublicHeader = () => {
             className="fixed inset-0 z-[100000] bg-white dark:bg-gray-950 p-6 flex flex-col"
           >
             <div className="flex items-center justify-between mb-12">
-              <span className="font-black text-2xl tracking-tighter text-gray-900 dark:text-white">
-                OK<span className="text-brand-500">RNG</span>
+              <span className="font-outfit font-black text-2xl tracking-tighter text-gray-900 dark:text-white">
+                 OK<span className="text-brand-500">RNG</span>
               </span>
               <button
                 onClick={() => setIsMenuOpen(false)}
@@ -373,33 +373,36 @@ const PublicHeader = () => {
               </button>
             </div>
 
-            <nav className="flex flex-col gap-2">
+            <nav className="flex flex-col gap-1">
               {navItems.map((item) => (
-                <div key={item.label}>
+                <div key={item.label} className="flex flex-col">
                   {item.dropdown ? (
-                    <div className="flex flex-col gap-2">
-                      <div className="px-4 py-2 text-[10px] font-black uppercase tracking-widest text-gray-400">Pools & Leagues</div>
-                      {item.children.map((child) => (
-                        <Link
-                          key={child.path}
-                          to={child.path}
-                          onClick={() => setIsMenuOpen(false)}
-                          className="px-6 py-4 rounded-3xl text-xl font-black text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-900 transition-colors"
-                        >
-                          {child.label}
-                        </Link>
-                      ))}
-                    </div>
+                    <>
+                       <div className="px-6 py-4 pb-1 text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 font-outfit">Pools & Leagues</div>
+                       {item.children.map((child) => (
+                         <Link
+                           key={child.path}
+                           to={child.path}
+                           onClick={() => setIsMenuOpen(false)}
+                           className={`px-6 py-3 rounded-2xl text-xl font-black transition-colors font-outfit ${isActive(child.path)
+                             ? 'text-brand-500 bg-brand-500/5'
+                             : 'text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-900'
+                             }`}
+                         >
+                           {child.label}
+                         </Link>
+                       ))}
+                    </>
                   ) : (
                     <Link
-                      to={item.path}
-                      onClick={() => setIsMenuOpen(false)}
-                      className={`px-6 py-4 rounded-3xl text-3xl font-black transition-colors ${isActive(item.path)
-                        ? 'text-brand-500 bg-brand-500/5'
-                        : 'text-gray-900 dark:text-white'
-                        }`}
+                       to={item.path}
+                       onClick={() => setIsMenuOpen(false)}
+                       className={`px-6 py-3 rounded-2xl text-xl font-black transition-colors font-outfit ${isActive(item.path)
+                         ? 'text-brand-500 bg-brand-500/5'
+                         : 'text-gray-900 dark:text-white'
+                         }`}
                     >
-                      {item.label}
+                       {item.label}
                     </Link>
                   )}
                 </div>
@@ -417,8 +420,8 @@ const PublicHeader = () => {
                 </Link>
               )}
               <div className="flex items-center justify-between p-4 bg-gray-100 dark:bg-gray-900 rounded-3xl">
-                <span className="text-sm font-bold text-gray-500">Appearance</span>
-                <ThemeToggleButton />
+                 <span className="text-sm font-bold text-gray-500 font-outfit tracking-tight">Appearance</span>
+                 <ThemeToggleButton />
               </div>
             </div>
           </motion.div>
@@ -432,10 +435,6 @@ const PublicHeader = () => {
       {luckyResults && (
         <div className="fixed top-[61px] left-0 right-0 z-[99998] px-4 pb-4">
           <div className="max-w-4xl mx-auto overflow-hidden bg-gray-900/90 dark:bg-black/80 backdrop-blur-md rounded-2xl border border-white/5 shadow-2xl flex items-center h-10 divide-x divide-white/10">
-            <div className="flex items-center px-4 gap-2 whitespace-nowrap">
-              <div className="w-2 h-2 rounded-full bg-brand-500 animate-pulse" />
-              <span className="text-[10px] font-black uppercase tracking-tighter text-white/50">Live Results</span>
-            </div>
             <div className="flex-1 flex items-center justify-around px-4">
               <TickerItem label="#" value={luckyResults.num10} />
               <TickerItem label="Color" value={luckyResults.color} color={luckyResults.color === 'Red' ? 'text-red-500' : 'text-blue-400'} />
@@ -453,7 +452,7 @@ const PublicHeader = () => {
 
 const TickerItem = ({ label, value, color = "text-white" }) => (
   <div className="flex items-center gap-1.5">
-    <span className="text-[8px] font-black uppercase tracking-widest text-white/30">{label}</span>
+    <span className="text-[8px] font-black uppercase tracking-widest text-white/30 font-outfit">{label}</span>
     <span className={`text-xs font-black font-mono tracking-tighter ${color}`}>{value}</span>
   </div>
 );
