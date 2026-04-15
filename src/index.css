@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;300;400;500;600;700;800&family=Outfit:wght@100;200;300;400;500;600;700;800;900&display=swap');
+
 @layer tailwind-base, primereact, tailwind-utilities;
 
 @layer tailwind-base {
@@ -9,21 +11,22 @@
   @tailwind utilities;
 }
 
+:root {
+  --font-jakarta: 'Plus Jakarta Sans', sans-serif;
+  --font-outfit: 'Outfit', sans-serif;
+}
+
 body {
   margin: 0;
-  font-family: 'Inter';
+  font-family: var(--font-jakarta);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  color: #080A0D;
+  @apply text-slate-900 bg-white dark:bg-gray-950 dark:text-gray-100 selection:bg-brand-500 selection:text-white;
 }
 
-*{
-  font-family: "Inter", sans-serif;
-  font-optical-sizing: auto;
-}
-
-label, .main, a {
-  color: #453f65;
+/* Heading styles for that premium look */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-outfit);
 }
 
 .p-toast .p-toast-message .p-toast-message-content {
@@ -32,6 +35,56 @@ label, .main, a {
 
 .p-column-header-content {
   text-align: center !important;
-  display: flex;
-  justify-content: center;
+  display: flex !important;
+  justify-content: center !important;
 }
+
+/* Custom Scrollbar for premium feel */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-200 dark:bg-gray-800 rounded-full border-4 border-solid border-white dark:border-gray-950 hover:bg-gray-300 dark:hover:bg-gray-700;
+}
+
+/* Site content preview + Quill editor — player-facing HTML typography */
+.site-content-preview h1,
+.site-content-preview h2,
+.site-content-preview h3,
+.site-content-rendered h1,
+.site-content-rendered h2,
+.site-content-rendered h3 {
+  @apply font-bold text-gray-900 dark:text-white mt-4 mb-2;
+}
+.site-content-preview h3,
+.site-content-rendered h3 { @apply text-base; }
+.site-content-preview h2,
+.site-content-rendered h2 { @apply text-lg; }
+.site-content-preview p,
+.site-content-rendered p {
+  @apply text-sm text-gray-700 dark:text-gray-300 leading-relaxed mb-3;
+}
+.site-content-preview ul,
+.site-content-rendered ul { @apply list-disc pl-5 text-sm text-gray-700 dark:text-gray-300 mb-3 space-y-1; }
+.site-content-preview ol,
+.site-content-rendered ol { @apply list-decimal pl-5 text-sm text-gray-700 dark:text-gray-300 mb-3 space-y-1; }
+.site-content-preview a,
+.site-content-rendered a { @apply text-brand-500 underline; }
+
+/* Quill dark-mode friendliness */
+.content-editor-quill .ql-toolbar {
+  @apply bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-t-lg;
+}
+.content-editor-quill .ql-container {
+  @apply bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-b-lg text-sm;
+}
+.content-editor-quill .ql-editor { min-height: 280px; @apply text-gray-900 dark:text-gray-100; }
+.content-editor-quill .ql-editor.ql-blank::before { @apply text-gray-400 dark:text-gray-500; font-style: normal; }
+.dark .content-editor-quill .ql-stroke { stroke: #cbd5e1; }
+.dark .content-editor-quill .ql-fill { fill: #cbd5e1; }
+.dark .content-editor-quill .ql-picker-label { color: #cbd5e1; }

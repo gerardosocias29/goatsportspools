@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useClerk } from '@clerk/clerk-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import ThemeToggleButton from '../common/ThemeToggleButton';
 import LuckyCoin, { LUCKY_RESULTS_KEY } from '../common/LuckyCoin';
 import { useUserContext } from '../../contexts/UserContext';
@@ -17,8 +18,8 @@ const PublicHeader = () => {
         label: 'Pools',
         dropdown: true,
         children: [
-          { label: 'Squares Pools', path: '/pools' },
-          { label: 'NBA Playoffs', path: '/playoffs' },
+          { label: 'Squares Pools', path: '/pools', description: 'Classic box pools for any game' },
+          { label: 'NBA Playoffs', path: '/playoffs', description: 'Draft teams for the post-season' },
         ],
       },
       { label: 'March Madness', path: '/march-madness' },
@@ -30,22 +31,23 @@ const PublicHeader = () => {
     base.push({ label: 'Commissioner', path: '/commissioner' });
     return base;
   }, [isSuperadmin, isSquareAdmin]);
+
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isPoolsOpen, setIsPoolsOpen] = useState(false);
-  const [isMobilePoolsOpen, setIsMobilePoolsOpen] = useState(false);
   const [luckyResults, setLuckyResults] = useState(() => {
     try {
       const saved = localStorage.getItem(LUCKY_RESULTS_KEY);
       return saved ? JSON.parse(saved) : null;
     } catch { return null; }
   });
+
   const dropdownRef = useRef(null);
   const poolsDropdownRef = useRef(null);
 
   useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 10);
+    const handleScroll = () => setIsScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
@@ -54,10 +56,8 @@ const PublicHeader = () => {
     setIsMenuOpen(false);
     setIsDropdownOpen(false);
     setIsPoolsOpen(false);
-    setIsMobilePoolsOpen(false);
   }, [location.pathname]);
 
-  // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
@@ -67,8 +67,18 @@ const PublicHeader = () => {
         setIsPoolsOpen(false);
       }
     };
+    const handleBlur = () => {
+      setIsDropdownOpen(false);
+      setIsPoolsOpen(false);
+      setIsMenuOpen(false);
+    };
+
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    window.addEventListener('blur', handleBlur);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      window.removeEventListener('blur', handleBlur);
+    };
   }, []);
 
   const isActive = (path) => {
@@ -87,411 +97,370 @@ const PublicHeader = () => {
 
   return (
     <>
-    <header
-      className={`sticky top-0 z-[99999] w-full transition-all duration-300 ${
-        isScrolled
-          ? 'bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm shadow-md'
-          : 'bg-white dark:bg-gray-900'
-      }`}
-    >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo + I'm Feeling Lucky */}
-          <div className="flex items-center gap-3">
-            <Link to="/" className="flex items-center gap-2">
-              <img src="/img/v2_logo.png" alt="OKRNG" className="h-9 w-auto" />
-              <span className="hidden sm:block font-bold text-xl text-gray-900 dark:text-white">
-                OKRNG
-              </span>
-            </Link>
-            <LuckyCoin onResultsChange={setLuckyResults} />
-          </div>
-
-          {/* Desktop Nav */}
-          <nav className="hidden md:flex items-center gap-1">
-            {navItems.map((item) =>
-              item.dropdown ? (
-                <div key={item.label} className="relative" ref={poolsDropdownRef}>
-                  <button
-                    onClick={() => setIsPoolsOpen(!isPoolsOpen)}
-                    className={`relative px-4 py-2 text-sm font-medium transition-colors group flex items-center gap-1 ${
-                      item.children.some((c) => isActive(c.path))
-                        ? 'text-brand-500 dark:text-brand-400'
-                        : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
-                    }`}
-                  >
-                    {item.label}
-                    <svg className={`w-3.5 h-3.5 transition-transform ${isPoolsOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                    {item.children.some((c) => isActive(c.path)) && (
-                      <span className="absolute bottom-0 left-0 w-full h-0.5 bg-brand-500 rounded-full" />
-                    )}
-                    {!item.children.some((c) => isActive(c.path)) && (
-                      <span className="absolute bottom-0 left-1/2 w-0 h-0.5 bg-brand-500/60 rounded-full transition-all duration-300 group-hover:w-full group-hover:left-0" />
-                    )}
-                  </button>
-                  {isPoolsOpen && (
-                    <div className="absolute left-0 mt-1 w-48 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg py-1.5 z-50">
-                      {item.children.map((child) => (
-                        <Link
-                          key={child.path}
-                          to={child.path}
-                          className={`block px-4 py-2.5 text-sm font-medium transition-colors ${
-                            isActive(child.path)
-                              ? 'text-brand-500 bg-brand-50 dark:bg-brand-500/10 dark:text-brand-400'
-                              : 'text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700'
-                          }`}
-                        >
-                          {child.label}
-                        </Link>
-                      ))}
-                    </div>
-                  )}
+      <header
+        className={`fixed top-0 left-0 right-0 z-[99999] transition-all duration-500 py-4 ${
+          isScrolled 
+            ? 'bg-white/80 dark:bg-gray-950/80 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-800/50 shadow-2xl shadow-black/5' 
+            : 'bg-transparent'
+        }`}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between">
+            {/* Logo */}
+            <div className="flex items-center gap-4">
+              <Link to="/" className="flex items-center gap-2 group">
+                <div className="relative">
+                  <div className="absolute inset-0 bg-brand-500 blur-lg opacity-0 group-hover:opacity-40 transition-opacity" />
+                  <img src="/img/v2_logo.png" alt="OKRNG" className="h-10 w-auto relative z-10" />
                 </div>
-              ) : (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={`relative px-4 py-2 text-sm font-medium transition-colors group ${
-                    isActive(item.path)
-                      ? 'text-brand-500 dark:text-brand-400'
-                      : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
-                  }`}
-                >
-                  {item.label}
-                  {isActive(item.path) && (
-                    <span className="absolute bottom-0 left-0 w-full h-0.5 bg-brand-500 rounded-full" />
-                  )}
-                  {!isActive(item.path) && (
-                    <span className="absolute bottom-0 left-1/2 w-0 h-0.5 bg-brand-500/60 rounded-full transition-all duration-300 group-hover:w-full group-hover:left-0" />
-                  )}
-                </Link>
-              )
-            )}
-          </nav>
+                <span className="hidden sm:block font-black text-2xl tracking-tighter text-gray-900 dark:text-white">
+                  OK<span className="text-brand-500">RNG</span>
+                </span>
+              </Link>
+              <div className="hidden lg:block">
+                <LuckyCoin onResultsChange={setLuckyResults} />
+              </div>
+            </div>
 
-          {/* Right Actions */}
-          <div className="flex items-center gap-2">
-            <ThemeToggleButton />
-
-            {isLoaded && isSignedIn ? (
-              <>
-                {/* Dashboard Button — Superadmin only */}
-                {isSuperadmin && (
-                  <a
-                    href={dashboardPath}
-                    className="hidden md:inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium !text-white bg-brand-500 hover:bg-brand-600 rounded-lg transition-colors shadow-sm"
-                  >
-                    Admin
-                  </a>
-                )}
-
-                {/* Avatar + Name/Role Dropdown */}
-                <div className="relative" ref={dropdownRef}>
-                  <button
-                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                    className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                  >
-                    {avatarUrl ? (
-                      <img
-                        src={avatarUrl}
-                        alt={displayName}
-                        className="w-8 h-8 rounded-full object-cover border-2 border-brand-500"
-                      />
-                    ) : (
-                      <div className="w-8 h-8 rounded-full bg-brand-500 flex items-center justify-center text-white text-sm font-bold">
-                        {displayName.charAt(0).toUpperCase()}
-                      </div>
-                    )}
-                    <div className="hidden md:block text-left">
-                      <div className="text-sm font-medium text-gray-900 dark:text-white leading-tight">
-                        {displayName}
-                      </div>
-                      {loading ? (
-                        <div className="h-3 w-16 mt-1 rounded bg-gray-200 dark:bg-gray-700 animate-pulse" />
-                      ) : (
-                        <div className="text-xs font-medium text-brand-500 leading-tight">
-                          {roleLabel}
-                        </div>
-                      )}
-                    </div>
-                    {/* Mobile: show role badge */}
-                    {!loading && (
-                      <span className="md:hidden text-[10px] font-semibold text-brand-500 leading-none">
-                        {roleLabel}
-                      </span>
-                    )}
-                    <svg className="hidden md:block w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-
-                  {/* User Dropdown Menu */}
-                  {isDropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-56 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg py-2 z-50">
-                      <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700 md:hidden">
-                        <div className="text-sm font-medium text-gray-900 dark:text-white">{displayName}</div>
-                        {loading ? (
-                          <div className="h-3 w-16 mt-1 rounded bg-gray-200 dark:bg-gray-700 animate-pulse" />
-                        ) : (
-                          <div className="text-xs text-brand-500 font-medium">{roleLabel}</div>
-                        )}
-                      </div>
-
-                      {isSuperadmin && (
-                        <a
-                          href={dashboardPath}
-                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                        >
-                          Admin
-                        </a>
-                      )}
-
-                      {isSuperadmin && (
-                        <a
-                          href="/admin"
-                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                          </svg>
-                          Admin Panel
-                        </a>
-                      )}
-
-                      <button
-                        onClick={() => { setIsDropdownOpen(false); openUserProfile(); }}
-                        className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                        </svg>
-                        Account Center
-                      </button>
-
-                      <Link
-                        to="/settings/payment"
-                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                        </svg>
-                        Payment Settings
-                      </Link>
-
-                      <Link
-                        to="/settings/winnings"
-                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        My Winnings
-                      </Link>
-
-                      <hr className="my-1 border-gray-100 dark:border-gray-700" />
-
-                      <button
-                        onClick={handleSignOut}
-                        className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                        </svg>
-                        Sign Out
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </>
-            ) : isLoaded ? (
-              <>
-                <Link
-                  to="/sign-in"
-                  className="hidden md:inline-flex items-center px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-                >
-                  Sign In
-                </Link>
-                <Link
-                  to="/sign-up"
-                  className="hidden md:inline-flex items-center px-4 py-2 text-sm font-medium !text-white bg-brand-500 hover:bg-brand-600 rounded-lg transition-colors"
-                >
-                  Get Started
-                </Link>
-              </>
-            ) : null}
-
-            {/* Mobile Hamburger */}
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="md:hidden p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-              aria-label="Toggle menu"
-            >
-              {isMenuOpen ? (
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              ) : (
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              )}
-            </button>
-          </div>
-        </div>
-
-        {/* Mobile Menu */}
-        {isMenuOpen && (
-          <div className="md:hidden border-t border-gray-200 dark:border-gray-700 py-4">
-            <nav className="flex flex-col gap-2">
+            {/* Desktop Nav */}
+            <nav className="hidden md:flex items-center bg-gray-100/50 dark:bg-gray-800/50 backdrop-blur-md p-1 rounded-2xl border border-white/20 dark:border-gray-700/30">
               {navItems.map((item) =>
                 item.dropdown ? (
-                  <div key={item.label}>
-                    <button
-                      onClick={() => setIsMobilePoolsOpen(!isMobilePoolsOpen)}
-                      className={`w-full flex items-center justify-between px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
-                        item.children.some((c) => isActive(c.path))
-                          ? 'text-brand-500 dark:text-brand-400 bg-brand-50 dark:bg-brand-500/10'
-                          : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
-                      }`}
+                    <div 
+                      key={item.label} 
+                      className="relative" 
+                      ref={poolsDropdownRef}
+                      onMouseEnter={() => setIsPoolsOpen(true)}
+                      onMouseLeave={() => setIsPoolsOpen(false)}
                     >
-                      {item.label}
-                      <svg className={`w-4 h-4 transition-transform ${isMobilePoolsOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </button>
-                    {isMobilePoolsOpen && (
-                      <div className="ml-4 mt-1 flex flex-col gap-1">
-                        {item.children.map((child) => (
-                          <Link
-                            key={child.path}
-                            to={child.path}
-                            className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                              isActive(child.path)
-                                ? 'bg-brand-500 !text-white'
-                                : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
-                            }`}
+                      <button
+                        onClick={() => setIsPoolsOpen(!isPoolsOpen)}
+                        className={`relative px-5 py-2 text-sm font-semibold transition-all flex items-center gap-1.5 rounded-xl ${
+                          item.children.some((c) => isActive(c.path))
+                            ? 'text-brand-500 bg-white dark:bg-gray-900 shadow-sm'
+                            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                        }`}
+                      >
+                        {item.label}
+                        <motion.svg 
+                          animate={{ rotate: isPoolsOpen ? 180 : 0 }}
+                          className="w-3.5 h-3.5" 
+                          fill="none" 
+                          stroke="currentColor" 
+                          viewBox="0 0 24 24"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </motion.svg>
+                      </button>
+                      
+                      <AnimatePresence>
+                        {isPoolsOpen && (
+                          <motion.div 
+                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                            className="absolute left-0 mt-2 w-72 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-2xl p-2 z-50 overflow-hidden"
                           >
-                            {child.label}
-                          </Link>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                            <div className="bg-gray-50/50 dark:bg-gray-800/50 p-3 mb-2 rounded-xl">
+                              <h4 className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Available Pools</h4>
+                            </div>
+                            {item.children.map((child) => (
+                              <Link
+                                key={child.path}
+                                to={child.path}
+                                onClick={() => setIsPoolsOpen(false)}
+                                className={`flex flex-col gap-0.5 px-4 py-3 rounded-xl transition-all ${
+                                  isActive(child.path)
+                                    ? 'bg-brand-50 dark:bg-brand-500/10 text-brand-600 dark:text-brand-400'
+                                    : 'text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'
+                                }`}
+                              >
+                                <span className="text-sm font-bold">{child.label}</span>
+                                <span className="text-[11px] opacity-60 font-medium">{child.description}</span>
+                              </Link>
+                            ))}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
                 ) : (
                   <Link
                     key={item.path}
                     to={item.path}
-                    className={`px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+                    className={`relative px-5 py-2 text-sm font-semibold transition-all rounded-xl ${
                       isActive(item.path)
-                        ? 'bg-brand-500 !text-white'
-                        : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+                        ? 'text-brand-500 bg-white dark:bg-gray-900 shadow-sm'
+                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                     }`}
                   >
                     {item.label}
                   </Link>
                 )
               )}
-              <hr className="my-2 border-gray-200 dark:border-gray-700" />
+            </nav>
 
-              {isSignedIn ? (
-                <>
-                  {isSuperadmin && (
-                    <a
-                      href={dashboardPath}
-                      className="px-4 py-3 rounded-lg text-sm font-medium !text-white bg-brand-500 hover:bg-brand-600 transition-colors text-center"
+            {/* Right Actions */}
+            <div className="flex items-center gap-3">
+              <div className="hidden sm:flex items-center gap-1.5 p-1 bg-gray-100/50 dark:bg-gray-800/50 rounded-xl border border-white/20 dark:border-gray-700/30">
+                <ThemeToggleButton />
+              </div>
+
+              {isLoaded && isSignedIn ? (
+                <div className="relative" ref={dropdownRef}>
+                  <button
+                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                    className="flex items-center gap-2.5 pl-1 pr-3 py-1 bg-gray-100/50 dark:bg-gray-800/50 rounded-2xl border border-white/20 dark:border-gray-700/30 hover:border-brand-500/30 transition-all group"
+                  >
+                    <div className="relative">
+                      {avatarUrl ? (
+                        <img
+                          src={avatarUrl}
+                          alt={displayName}
+                          className="w-9 h-9 rounded-xl object-cover border-2 border-white dark:border-gray-900 shadow-sm"
+                        />
+                      ) : (
+                        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-500 to-violet-600 flex items-center justify-center text-white text-sm font-black shadow-sm">
+                          {displayName.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                      <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white dark:border-gray-900 rounded-full" />
+                    </div>
+                    <div className="hidden lg:block text-left">
+                      <div className="text-xs font-bold text-gray-900 dark:text-white truncate max-w-[100px]">
+                        {displayName}
+                      </div>
+                      <div className="text-[10px] font-black uppercase tracking-wider text-brand-500">
+                        {roleLabel}
+                      </div>
+                    </div>
+                    <motion.svg 
+                      animate={{ rotate: isDropdownOpen ? 180 : 0 }}
+                      className="w-4 h-4 text-gray-400 group-hover:text-brand-500 transition-colors" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
                     >
-                      Dashboard
-                    </a>
-                  )}
-                  <button
-                    onClick={() => { setIsMenuOpen(false); openUserProfile(); }}
-                    className="px-4 py-3 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-left"
-                  >
-                    Account Center
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </motion.svg>
                   </button>
-                  <button
-                    onClick={handleSignOut}
-                    className="px-4 py-3 rounded-lg text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-left"
-                  >
-                    Sign Out
-                  </button>
-                </>
-              ) : (
-                <>
+
+                  <AnimatePresence>
+                    {isDropdownOpen && (
+                      <motion.div 
+                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                        className="absolute right-0 mt-3 w-64 rounded-3xl bg-white dark:bg-gray-950 border border-gray-100 dark:border-gray-800 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.2)] p-2 z-50"
+                      >
+                        <div className="px-4 py-4 mb-2 bg-gray-50 dark:bg-gray-900/50 rounded-2xl">
+                          <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Signed in as</p>
+                          <p className="text-sm font-bold text-gray-900 dark:text-white truncate">{displayName}</p>
+                          <div className="mt-2 inline-flex px-2 py-0.5 bg-brand-500/10 text-brand-500 text-[10px] font-bold rounded-full uppercase tracking-widest">
+                            {roleLabel}
+                          </div>
+                        </div>
+
+                        <div className="space-y-1">
+                          {isSuperadmin && (
+                            <Link
+                              to={dashboardPath}
+                              onClick={() => setIsDropdownOpen(false)}
+                              className="flex items-center gap-3 px-4 py-3 text-sm font-bold text-gray-700 dark:text-gray-200 hover:bg-brand-50 dark:hover:bg-brand-500/10 hover:text-brand-600 dark:hover:text-brand-400 rounded-xl transition-all"
+                            >
+                              <div className="w-8 h-8 rounded-lg bg-brand-500/10 text-brand-500 flex items-center justify-center">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                              </div>
+                              Admin Control
+                            </Link>
+                          )}
+
+                          <button
+                            onClick={() => { setIsDropdownOpen(false); openUserProfile(); }}
+                            className="flex items-center gap-3 w-full px-4 py-3 text-sm font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl transition-all"
+                          >
+                            <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-500 flex items-center justify-center">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                              </svg>
+                            </div>
+                            Profile Hub
+                          </button>
+
+                          <Link
+                            to="/settings/payment"
+                            onClick={() => setIsDropdownOpen(false)}
+                            className="flex items-center gap-3 px-4 py-3 text-sm font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl transition-all"
+                          >
+                            <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-500 flex items-center justify-center">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                              </svg>
+                            </div>
+                            Billing
+                          </Link>
+                        </div>
+
+                        <div className="mt-2 pt-2 border-t border-gray-100 dark:border-gray-800">
+                          <button
+                            onClick={handleSignOut}
+                            className="flex items-center gap-3 w-full px-4 py-3 text-sm font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-all"
+                          >
+                            <div className="w-8 h-8 rounded-lg bg-red-500/10 text-red-500 flex items-center justify-center">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                              </svg>
+                            </div>
+                            Sign Out
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              ) : isLoaded ? (
+                <div className="flex items-center gap-1.5">
                   <Link
                     to="/sign-in"
-                    className="px-4 py-3 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                    className="hidden sm:inline-flex px-5 py-2.5 text-sm font-bold text-gray-600 dark:text-gray-300 hover:text-brand-500 transition-colors"
                   >
-                    Sign In
+                    Login
                   </Link>
                   <Link
                     to="/sign-up"
-                    className="px-4 py-3 rounded-lg text-sm font-medium !text-white bg-brand-500 hover:bg-brand-600 transition-colors text-center"
+                    className="inline-flex px-6 py-2.5 text-sm font-bold !text-white bg-brand-500 hover:bg-brand-600 rounded-2xl shadow-lg shadow-brand-500/25 transition-all hover:scale-105 active:scale-95"
                   >
-                    Get Started
+                    Join OKRNG
                   </Link>
-                </>
-              )}
-            </nav>
-          </div>
-        )}
-      </div>
-    </header>
+                </div>
+              ) : null}
 
-    {/* Sports Betting Ticker — Results Bar */}
-    {luckyResults && (
-      <div className="sticky top-16 z-[99998] bg-[#1a1f2e] border-b border-brand-500/30 py-1 px-2 sm:px-4 flex justify-center">
-        <div className="flex items-center justify-center w-full max-w-5xl gap-1 sm:gap-1.5">
-          <div className="flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-1.5 px-1.5 sm:px-3 py-0.5 rounded bg-white/[0.06] border border-white/[0.08] min-w-0 sm:min-w-[60px]">
-            <span className="text-[7px] sm:text-[8px] font-semibold text-brand-500 uppercase tracking-wider">#</span>
-            <span className="text-[10px] sm:text-xs font-extrabold text-white font-mono">{luckyResults.num10}</span>
-          </div>
-          <div className="hidden sm:block w-px h-4 bg-white/10 shrink-0" />
-          <div className="flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-1.5 px-1.5 sm:px-3 py-0.5 rounded bg-white/[0.06] border border-white/[0.08] min-w-0 sm:min-w-[60px]">
-            <span className="text-[7px] sm:text-[8px] font-semibold text-brand-500 uppercase tracking-wider hidden sm:inline">Color</span>
-            <span className={`text-[10px] sm:text-xs font-extrabold font-mono ${luckyResults.color === 'Red' ? 'text-red-500' : 'text-gray-200'}`}>
-              {luckyResults.color}
-            </span>
-          </div>
-          <div className="hidden sm:block w-px h-4 bg-white/10 shrink-0" />
-          <div className="flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-1.5 px-1.5 sm:px-3 py-0.5 rounded bg-white/[0.06] border border-white/[0.08] min-w-0 sm:min-w-[60px]">
-            <span className="text-[7px] sm:text-[8px] font-semibold text-brand-500 uppercase tracking-wider">
-              <span className="sm:hidden">##</span>
-              <span className="hidden sm:inline">Num</span>
-            </span>
-            <span className="text-[10px] sm:text-xs font-extrabold text-white font-mono">{luckyResults.num100}</span>
-          </div>
-          <div className="hidden sm:block w-px h-4 bg-white/10 shrink-0" />
-          <div className="flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-1.5 px-1.5 sm:px-3 py-0.5 rounded bg-white/[0.06] border border-white/[0.08] min-w-0 sm:min-w-[60px]">
-            <span className="text-[7px] sm:text-[8px] font-semibold text-brand-500 uppercase tracking-wider">Flip</span>
-            <span className={`text-[10px] sm:text-xs font-extrabold font-mono ${luckyResults.coin === 'Heads' ? 'text-green-500' : 'text-amber-400'}`}>
-              <span className="sm:hidden">{luckyResults.coin === 'Heads' ? 'H' : 'T'}</span>
-              <span className="hidden sm:inline">{luckyResults.coin}</span>
-            </span>
-          </div>
-          <div className="hidden sm:block w-px h-4 bg-white/10 shrink-0" />
-          <div className="flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-1.5 px-1.5 sm:px-3 py-0.5 rounded bg-white/[0.06] border border-white/[0.08] min-w-0 sm:min-w-[60px]">
-            <span className="text-[7px] sm:text-[8px] font-semibold text-brand-500 uppercase tracking-wider">
-              <span className="sm:hidden">###</span>
-              <span className="hidden sm:inline">Triple</span>
-            </span>
-            <span className="text-[10px] sm:text-xs font-extrabold text-white font-mono">{luckyResults.num1000}</span>
-          </div>
-          <div className="hidden sm:block w-px h-4 bg-white/10 shrink-0" />
-          <div className="flex-1 sm:flex-none flex items-center justify-center gap-1 px-1.5 sm:px-3 py-0.5 rounded bg-white/[0.06] border border-white/[0.08] min-w-0 sm:min-w-[60px]">
-            <span className="text-[7px] sm:text-[8px] font-semibold text-brand-500 uppercase tracking-wider hidden sm:inline">Suit</span>
-            <span className={`text-xs sm:text-sm font-extrabold ${(luckyResults.suit === '♥' || luckyResults.suit === '♦') ? 'text-red-500' : 'text-gray-200'}`}>
-              {luckyResults.suit}
-            </span>
+              {/* Mobile Toggle */}
+              <button
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="md:hidden p-2 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white"
+              >
+                <div className="w-6 h-5 relative flex flex-col justify-between">
+                  <span className={`w-full h-0.5 bg-current transition-all ${isMenuOpen ? 'rotate-45 translate-y-2.5' : ''}`} />
+                  <span className={`w-full h-0.5 bg-current transition-all ${isMenuOpen ? 'opacity-0' : ''}`} />
+                  <span className={`w-full h-0.5 bg-current transition-all ${isMenuOpen ? '-rotate-45 -translate-y-2' : ''}`} />
+                </div>
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-    )}
+      </header>
+
+      {/* Mobile Menu Overlay */}
+      <AnimatePresence>
+        {isMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, x: '100%' }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: '100%' }}
+            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            className="fixed inset-0 z-[100000] bg-white dark:bg-gray-950 p-6 flex flex-col"
+          >
+            <div className="flex items-center justify-between mb-12">
+              <span className="font-black text-2xl tracking-tighter text-gray-900 dark:text-white">
+                OK<span className="text-brand-500">RNG</span>
+              </span>
+              <button
+                onClick={() => setIsMenuOpen(false)}
+                className="p-3 rounded-2xl bg-gray-100 dark:bg-gray-800"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <nav className="flex flex-col gap-2">
+              {navItems.map((item) => (
+                <div key={item.label}>
+                  {item.dropdown ? (
+                    <div className="flex flex-col gap-2">
+                      <div className="px-4 py-2 text-[10px] font-black uppercase tracking-widest text-gray-400">Pools & Leagues</div>
+                      {item.children.map((child) => (
+                        <Link
+                          key={child.path}
+                          to={child.path}
+                          onClick={() => setIsMenuOpen(false)}
+                          className="px-6 py-4 rounded-3xl text-xl font-black text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-900 transition-colors"
+                        >
+                          {child.label}
+                        </Link>
+                      ))}
+                    </div>
+                  ) : (
+                    <Link
+                      to={item.path}
+                      onClick={() => setIsMenuOpen(false)}
+                      className={`px-6 py-4 rounded-3xl text-3xl font-black transition-colors ${
+                        isActive(item.path) 
+                          ? 'text-brand-500 bg-brand-500/5' 
+                          : 'text-gray-900 dark:text-white'
+                      }`}
+                    >
+                      {item.label}
+                    </Link>
+                  )}
+                </div>
+              ))}
+            </nav>
+
+            <div className="mt-auto pt-8 flex flex-col gap-4">
+              {!isSignedIn && (
+                <Link
+                  to="/sign-up"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="w-full py-5 rounded-3xl bg-brand-500 text-white text-center text-xl font-black shadow-xl shadow-brand-500/25"
+                >
+                  Get Started Free
+                </Link>
+              )}
+              <div className="flex items-center justify-between p-4 bg-gray-100 dark:bg-gray-900 rounded-3xl">
+                <span className="text-sm font-bold text-gray-500">Appearance</span>
+                <ThemeToggleButton />
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Spacing for fixed header and ticker */}
+      <div className={luckyResults ? 'h-[136px]' : 'h-20'} />
+
+      {/* Lucky Ticker Redesign */}
+      {luckyResults && (
+        <div className="fixed top-20 left-0 right-0 z-[99998] px-4 pb-4">
+           <div className="max-w-4xl mx-auto overflow-hidden bg-gray-900/90 dark:bg-black/80 backdrop-blur-md rounded-2xl border border-white/5 shadow-2xl flex items-center h-10 divide-x divide-white/10">
+              <div className="flex items-center px-4 gap-2 whitespace-nowrap">
+                <div className="w-2 h-2 rounded-full bg-brand-500 animate-pulse" />
+                <span className="text-[10px] font-black uppercase tracking-tighter text-white/50">Live Results</span>
+              </div>
+              <div className="flex-1 flex items-center justify-around px-4">
+                <TickerItem label="#" value={luckyResults.num10} />
+                <TickerItem label="Color" value={luckyResults.color} color={luckyResults.color === 'Red' ? 'text-red-500' : 'text-blue-400'} />
+                <TickerItem label="Num" value={luckyResults.num100} />
+                <TickerItem label="Flip" value={luckyResults.coin} color={luckyResults.coin === 'Heads' ? 'text-green-500' : 'text-amber-400'} />
+                <TickerItem label="Triple" value={luckyResults.num1000} />
+                <TickerItem label="Suit" value={luckyResults.suit} color={(luckyResults.suit === '♥' || luckyResults.suit === '♦') ? 'text-red-500' : 'text-white'} />
+              </div>
+           </div>
+        </div>
+      )}
     </>
   );
 };
+
+const TickerItem = ({ label, value, color = "text-white" }) => (
+  <div className="flex items-center gap-1.5">
+    <span className="text-[8px] font-black uppercase tracking-widest text-white/30">{label}</span>
+    <span className={`text-xs font-black font-mono tracking-tighter ${color}`}>{value}</span>
+  </div>
+);
 
 export default PublicHeader;

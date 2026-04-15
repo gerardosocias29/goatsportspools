@@ -1,42 +1,68 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 
 const CTA = () => {
   return (
-    <section className="py-24 relative overflow-hidden">
-      {/* Gradient background */}
-      <div className="absolute inset-0 bg-gradient-to-r from-brand-600 via-brand-500 to-orange-500" />
+    <section className="min-h-[calc(100vh-80px)] flex items-center py-16 relative overflow-hidden bg-white dark:bg-gray-950">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
+          className="relative rounded-[64px] bg-gray-900 border border-white/10 p-12 lg:p-24 overflow-hidden text-center shadow-[0_64px_128px_-32px_rgba(0,0,0,0.5)]"
+        >
+          {/* Background Gradient */}
+          <div className="absolute inset-0 bg-gradient-to-br from-brand-600 via-violet-600 to-indigo-900 opacity-90" />
+          
+          {/* Animated Glow */}
+          <motion.div 
+            animate={{ 
+              scale: [1, 1.2, 1],
+              opacity: [0.3, 0.5, 0.3] 
+            }}
+            transition={{ repeat: Infinity, duration: 8 }}
+            className="absolute -top-1/2 -left-1/4 w-full h-full bg-brand-400/20 blur-[120px] rounded-full"
+          />
 
-      {/* Pattern overlay */}
-      <div className="absolute inset-0 opacity-10" style={{
-        backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.3'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-      }} />
+          <div className="relative z-10 max-w-3xl mx-auto">
+            <motion.h4 
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              className="text-xs font-black uppercase tracking-[0.4em] text-white/50 mb-8"
+            >
+              Exclusive Community
+            </motion.h4>
+            
+            <h2 className="text-4xl sm:text-6xl font-black text-white tracking-tighter leading-tight mb-8">
+              THE SEASON NEVER ENDS AT OKRNG
+            </h2>
+            
+            <p className="text-xl text-white/60 font-medium mb-12 leading-relaxed">
+              Join thousands of commissioners and players who have already leveled up 
+              their sports pool experience. Free for basics, premium for the pros.
+            </p>
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
-        <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-6">
-          Ready to Start Your Pool?
-        </h2>
-        <p className="text-lg sm:text-xl text-white/80 mb-10 max-w-2xl mx-auto">
-          Trusted by sports fans for a smarter betting experience with OKRNG.
-          Create your account in seconds and start inviting friends.
-        </p>
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link
-            to="/sign-up"
-            className="inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-brand-600 bg-white hover:bg-gray-100 rounded-xl transition-all shadow-xl hover:shadow-2xl hover:-translate-y-0.5"
-          >
-            Create Free Account
-          </Link>
-          <Link
-            to="/pools"
-            className="inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-white bg-white/20 hover:bg-white/30 backdrop-blur-sm border border-white/30 rounded-xl transition-all"
-          >
-            View Demo Pool
-          </Link>
-        </div>
-        <p className="text-sm text-white/60 mt-6">
-          No credit card required &middot; Free to start &middot; Cancel anytime
-        </p>
+            <div className="flex flex-col sm:flex-row gap-6 justify-center">
+              <Link
+                to="/sign-up"
+                className="px-12 py-6 bg-white text-gray-900 rounded-[32px] font-black text-lg uppercase tracking-wider shadow-2xl transition-all hover:scale-105 active:scale-95"
+              >
+                Create Hub
+              </Link>
+              <Link
+                to="/pools"
+                className="px-12 py-6 bg-transparent border-2 border-white/20 text-white rounded-[32px] font-black text-lg uppercase tracking-wider backdrop-blur-md transition-all hover:bg-white/5 hover:border-white"
+              >
+                View Brackets
+              </Link>
+            </div>
+            
+            <p className="mt-12 text-[10px] font-black uppercase tracking-[0.3em] text-white/30">
+              No credit card required • Instant Pool Setup • Social-First Design
+            </p>
+          </div>
+        </motion.div>
       </div>
     </section>
   );

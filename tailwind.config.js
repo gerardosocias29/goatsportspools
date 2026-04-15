@@ -15,17 +15,18 @@ module.exports = {
 
         // Brand colors
         'brand': {
-          25: '#FFF9F5',
-          50: '#FFF3EB',
-          100: '#FFE5D4',
-          200: '#FFC9A8',
-          300: '#FFAB7D',
-          400: '#FF8D51',
-          500: '#D47A3E', // Primary brand color
-          600: '#C46B2F',
-          700: '#B45C20',
-          800: '#8F4A1A',
-          900: '#6A3813',
+          25: '#F8F7FF',
+          50: '#F0EFFF',
+          100: '#E1DFFF',
+          200: '#C7C2FF',
+          300: '#A197FF',
+          400: '#7B6BFF',
+          500: '#6366F1', // Primary brand color (Electric Indigo)
+          600: '#4F46E5',
+          700: '#4338CA',
+          800: '#3730A3',
+          900: '#312E81',
+          950: '#1E1B4B',
         },
 
         // Success colors

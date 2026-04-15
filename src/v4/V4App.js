@@ -43,6 +43,7 @@ const ManageApplications = lazy(() => import('./pages/admin/ManageApplications')
 const GlobalStandings = lazy(() => import('./pages/admin/GlobalStandings'));
 const ManagePlayoffs = lazy(() => import('./pages/admin/ManagePlayoffs'));
 const AdminSettings = lazy(() => import('./pages/admin/AdminSettings'));
+const ContentEditor = lazy(() => import('./pages/admin/ContentEditor'));
 
 const V4App = () => {
   return (
@@ -93,6 +94,7 @@ const V4App = () => {
                 <Route path="playoffs" element={<ManagePlayoffs />} />
                 <Route path="playoffs/standings" element={<GlobalStandings />} />
                 <Route path="settings" element={<AdminSettings />} />
+                <Route path="content" element={<ContentEditor />} />
               </Route>
 
               {/* Catch-all */}
