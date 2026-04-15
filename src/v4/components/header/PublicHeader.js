@@ -113,7 +113,7 @@ const PublicHeader = () => {
                   <img src="/img/v2_logo.png" alt="OKRNG" className="h-10 w-auto relative z-10" />
                 </div>
                 <span className="hidden sm:block font-outfit font-black text-2xl tracking-tighter text-gray-900 dark:text-white">
-                   OK<span className="text-brand-500">RNG</span>
+                  OK<span className="text-brand-500">RNG</span>
                 </span>
               </Link>
               <div className="hidden lg:block">
@@ -361,7 +361,7 @@ const PublicHeader = () => {
           >
             <div className="flex items-center justify-between mb-12">
               <span className="font-outfit font-black text-2xl tracking-tighter text-gray-900 dark:text-white">
-                 OK<span className="text-brand-500">RNG</span>
+                OK<span className="text-brand-500">RNG</span>
               </span>
               <button
                 onClick={() => setIsMenuOpen(false)}
@@ -378,31 +378,31 @@ const PublicHeader = () => {
                 <div key={item.label} className="flex flex-col">
                   {item.dropdown ? (
                     <>
-                       <div className="px-6 py-4 pb-1 text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 font-outfit">Pools & Leagues</div>
-                       {item.children.map((child) => (
-                         <Link
-                           key={child.path}
-                           to={child.path}
-                           onClick={() => setIsMenuOpen(false)}
-                           className={`px-6 py-3 rounded-2xl text-xl font-black transition-colors font-outfit ${isActive(child.path)
-                             ? 'text-brand-500 bg-brand-500/5'
-                             : 'text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-900'
-                             }`}
-                         >
-                           {child.label}
-                         </Link>
-                       ))}
+                      <div className="px-6 py-4 pb-1 text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 font-outfit">Pools & Leagues</div>
+                      {item.children.map((child) => (
+                        <Link
+                          key={child.path}
+                          to={child.path}
+                          onClick={() => setIsMenuOpen(false)}
+                          className={`px-6 py-3 rounded-2xl text-xl font-black transition-colors font-outfit ${isActive(child.path)
+                            ? 'text-brand-500 bg-brand-500/5'
+                            : 'text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-900'
+                            }`}
+                        >
+                          {child.label}
+                        </Link>
+                      ))}
                     </>
                   ) : (
                     <Link
-                       to={item.path}
-                       onClick={() => setIsMenuOpen(false)}
-                       className={`px-6 py-3 rounded-2xl text-xl font-black transition-colors font-outfit ${isActive(item.path)
-                         ? 'text-brand-500 bg-brand-500/5'
-                         : 'text-gray-900 dark:text-white'
-                         }`}
+                      to={item.path}
+                      onClick={() => setIsMenuOpen(false)}
+                      className={`px-6 py-3 rounded-2xl text-xl font-black transition-colors font-outfit ${isActive(item.path)
+                        ? 'text-brand-500 bg-brand-500/5'
+                        : 'text-gray-900 dark:text-white'
+                        }`}
                     >
-                       {item.label}
+                      {item.label}
                     </Link>
                   )}
                 </div>
@@ -420,8 +420,8 @@ const PublicHeader = () => {
                 </Link>
               )}
               <div className="flex items-center justify-between p-4 bg-gray-100 dark:bg-gray-900 rounded-3xl">
-                 <span className="text-sm font-bold text-gray-500 font-outfit tracking-tight">Appearance</span>
-                 <ThemeToggleButton />
+                <span className="text-sm font-bold text-gray-500 font-outfit tracking-tight">Appearance</span>
+                <ThemeToggleButton />
               </div>
             </div>
           </motion.div>

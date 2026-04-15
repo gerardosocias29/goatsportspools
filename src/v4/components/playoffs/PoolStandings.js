@@ -69,11 +69,52 @@ const PoolStandings = ({ poolNumber }) => {
 
   return (
     <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] overflow-hidden">
-      <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800">
-        <h3 className="text-base font-bold text-gray-900 dark:text-white">Standings</h3>
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-          {standings.length} bracket{standings.length !== 1 ? 's' : ''}
-        </p>
+      <div className="px-5 py-6 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/20">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div>
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white">Standings</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              Tracking {standings.length} {standings.length === 1 ? 'active bracket' : 'active brackets'} in the pool.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-4">
+            {/* Prize Pool Card */}
+            <div className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 shadow-sm">
+              <div className="w-10 h-10 rounded-full bg-brand-500/10 text-brand-500 flex items-center justify-center">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Prize Pool</p>
+                <p className="text-lg font-black text-gray-900 dark:text-white">
+                  ${(standings.length * 20).toLocaleString()}
+                </p>
+              </div>
+            </div>
+
+            {/* Winners Count Card */}
+            <div className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 shadow-sm">
+              <div className="w-10 h-10 rounded-full bg-success-500/10 text-success-500 flex items-center justify-center">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Payout Slots</p>
+                <p className="text-lg font-black text-gray-900 dark:text-white leading-none">
+                  {Math.floor(standings.length / 10)} {Math.floor(standings.length / 10) === 1 ? 'Winner' : 'Winners'}
+                </p>
+                {standings.length % 10 !== 0 && (
+                  <p className="text-[9px] font-bold text-gray-400 mt-1 uppercase tracking-tight">
+                    +{10 - (standings.length % 10)} entries for next slot
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="overflow-x-auto">
@@ -82,6 +123,7 @@ const PoolStandings = ({ poolNumber }) => {
             <tr className="border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50">
               <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase w-10">#</th>
               <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Bracket</th>
+              <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Champion Pick</th>
               <th className="text-center px-3 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Total Pts</th>
               <th className="text-center px-3 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase hidden sm:table-cell">R1</th>
               <th className="text-center px-3 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase hidden sm:table-cell">R2</th>
@@ -133,6 +175,20 @@ const PoolStandings = ({ poolNumber }) => {
                           </p>
                         </div>
                       </button>
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700 mx-auto">
+                        {entry.champion ? (
+                          <>
+                            <img src={entry.champion.image_url} alt="" className="w-5 h-5 object-contain" />
+                            <span className="text-xs font-black text-gray-900 dark:text-white uppercase tracking-tighter">
+                              {entry.champion.nickname}
+                            </span>
+                          </>
+                        ) : (
+                          <span className="text-xs text-gray-400">?</span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-3 py-3 text-center">
                       <span className="text-sm font-bold text-gray-900 dark:text-white">{entry.total_points || 0}</span>
