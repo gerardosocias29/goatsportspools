@@ -8,7 +8,6 @@ import PageLoader from '../../components/common/PageLoader';
 
 const SECTIONS = [
   { key: 'playoff_how_this_works', title: 'Playoff — How this Works' },
-  { key: 'playoff_points_system', title: 'Playoff — Points System' },
   { key: 'playoff_faqs', title: 'Playoff — FAQs' },
 ];
 
