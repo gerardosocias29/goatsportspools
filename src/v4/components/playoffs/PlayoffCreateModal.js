@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAxios } from '../../../app/contexts/AxiosContext';
 import Modal from '../admin/common/Modal';
 
-const PlayoffCreateModal = ({ isOpen, onClose }) => {
+const PlayoffCreateModal = ({ isOpen, onClose, onCreated }) => {
   const navigate = useNavigate();
   const axios = useAxios();
 
@@ -79,7 +79,11 @@ const PlayoffCreateModal = ({ isOpen, onClose }) => {
       const res = await axios.post('/api/admin/playoffs/pools', payload);
       const pool = res.data.data;
       onClose();
-      navigate(`/playoffs/${pool.pool_number}`);
+      if (onCreated) {
+        onCreated({ poolNumber: pool?.pool_number, pool });
+      } else {
+        navigate(`/playoffs/${pool.pool_number}`);
+      }
     } catch (err) {
       setError(err.response?.data?.message || err.response?.data?.errors?.pool_name?.[0] || 'Failed to create pool');
     } finally {

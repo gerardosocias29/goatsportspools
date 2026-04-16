@@ -59,6 +59,7 @@ const PlayoffPoolDetail = () => {
   const tabs = [
     { key: 'picks', label: 'My Brackets' },
     { key: 'how', label: 'How this Works' },
+    { key: 'points', label: 'Points System' },
     { key: 'faq', label: 'FAQ' },
     { key: 'standings', label: 'Standings' },
   ];
@@ -161,6 +162,15 @@ const PlayoffPoolDetail = () => {
         <div className="rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/[0.03]">
           <SiteContent 
             contentKey="playoff_how_this_works" 
+            className="prose prose-sm dark:prose-invert max-w-none"
+          />
+        </div>
+      )}
+
+      {activeTab === 'points' && (
+        <div className="rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/[0.03]">
+          <SiteContent
+            contentKey="playoff_points_system"
             className="prose prose-sm dark:prose-invert max-w-none"
           />
         </div>
