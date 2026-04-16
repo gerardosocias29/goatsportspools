@@ -114,11 +114,6 @@ const SignIn = () => {
 
   return (
     <div>
-      <div className="flex items-center gap-2 mb-6">
-        <img src="/img/v2_logo.png" alt="OKRNG" className="h-10 w-auto" />
-        <span className="text-2xl font-bold text-gray-900 dark:text-white">OKRNG</span>
-      </div>
-
       <ClerkSignIn
         path="/sign-in"
         routing="path"
