@@ -158,10 +158,13 @@ const ManagePools = () => {
           {!loading && currentList.length > 0 && tab === 'playoffs' && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {playoffPools.map((pool) => (
-                <button
+                <div
                   key={pool.id}
-                  onClick={() => navigate(`/playoffs/${pool.pool_number}`)}
-                  className="text-left rounded-2xl border border-gray-200 bg-white p-5 hover:border-brand-300 hover:shadow-md transition dark:border-gray-800 dark:bg-white/[0.02] dark:hover:border-brand-500/40"
+                  onClick={() => navigate('/admin/playoffs')}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => { if (e.key === 'Enter') navigate('/admin/playoffs'); }}
+                  className="relative cursor-pointer text-left rounded-2xl border border-gray-200 bg-white p-5 hover:border-brand-300 hover:shadow-md transition dark:border-gray-800 dark:bg-white/[0.02] dark:hover:border-brand-500/40"
                 >
                   <div className="flex items-start justify-between gap-2 mb-3">
                     <h3 className="text-base font-bold text-gray-900 dark:text-white truncate">
@@ -187,12 +190,26 @@ const ManagePools = () => {
                       {pool.playoff.name || `${pool.playoff.year} NBA Playoffs`}
                     </div>
                   )}
-                  {pool.admin && (
-                    <div className="mt-2 pt-2 border-t border-gray-100 dark:border-gray-800 text-xs text-gray-400 dark:text-gray-500">
-                      Commissioner: {pool.admin.name || pool.admin.username}
-                    </div>
-                  )}
-                </button>
+                  <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
+                    {pool.admin ? (
+                      <span className="text-xs text-gray-400 dark:text-gray-500 truncate">
+                        Commissioner: {pool.admin.name || pool.admin.username}
+                      </span>
+                    ) : <span />}
+                    <a
+                      href={`/playoffs/${pool.pool_number}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="shrink-0 inline-flex items-center gap-1 text-xs font-medium text-brand-500 hover:text-brand-600 hover:underline"
+                    >
+                      Preview
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      </svg>
+                    </a>
+                  </div>
+                </div>
               ))}
             </div>
           )}

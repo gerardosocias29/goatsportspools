@@ -38,7 +38,7 @@ const Footer = () => {
           {/* Brand & Newsletter Section */}
           <div className="lg:col-span-5 space-y-8">
             <Link to="/" className="flex items-center gap-3 group">
-              <img src="/img/okrng.png" alt="OKRNG" className="h-12 w-auto group-hover:scale-110 group-hover:rotate-6 transition-all duration-500" />
+              <img src="/img/v2_logo.png" alt="OKRNG" className="h-12 w-auto group-hover:scale-110 group-hover:rotate-6 transition-all duration-500" />
               <span className="font-black text-3xl tracking-tighter uppercase">
                 OK<span className="text-brand-500">RNG</span>
               </span>

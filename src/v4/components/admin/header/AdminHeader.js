@@ -50,7 +50,7 @@ const AdminHeader = () => {
 
           {/* Mobile logo */}
           <Link to="/" className="lg:hidden">
-            <img src="/img/okrng.png" alt="OKRNG" className="h-8 w-auto" />
+            <img src="/img/v2_logo.png" alt="OKRNG" className="h-8 w-auto" />
           </Link>
 
           {/* Mobile app menu toggle */}

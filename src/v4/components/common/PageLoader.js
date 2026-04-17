@@ -11,7 +11,7 @@ const PageLoader = ({ inline = false, message = "Loading..." }) => {
         <div className="relative flex flex-col items-center">
           <div className="relative w-28 h-28 flex items-center justify-center animate-loader-pulse">
             <img
-              src="/img/okrng.png"
+              src="/img/v2_logo.png"
               alt="OKRNG"
               className="w-full h-full object-contain relative z-10"
             />
