@@ -1,44 +1,76 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import SharedModal from '../../admin/common/Modal';
 import { useAxios } from '../../../../app/contexts/AxiosContext';
 
-const inputCls =
-  'h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 focus:border-brand-500 focus:ring-1 focus:ring-brand-500';
+const inputClass =
+  'h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-gray-500';
 
-const Field = ({ label, children }) => (
-  <div>
-    <label className="block text-xs font-medium text-gray-700 dark:text-gray-400 mb-1">{label}</label>
-    {children}
-  </div>
-);
+const emptyForm = {
+  pool_name: '',
+  pool_description: '',
+  password: '',
+  initial_credits: 0,
+  close_datetime: '',
+};
 
 const PlayoffPoolEditModal = ({ isOpen, pool, onClose, onSaved, onError }) => {
   const { patch } = useAxios();
-  const [form, setForm] = useState(() => ({
-    pool_name: pool?.pool_name || '',
-    pool_description: pool?.pool_description || '',
-    initial_credits: pool?.initial_credits ?? 0,
-    credit_cost_per_bracket: pool?.credit_cost_per_bracket ?? 0,
-    max_brackets_per_user: pool?.max_brackets_per_user ?? 8,
-    close_datetime: pool?.close_datetime ? pool.close_datetime.substring(0, 16) : '',
-    password: pool?.password || '',
-  }));
+  const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  // Sync form when a new pool is passed in (lazy useState doesn't re-run on prop change).
+  useEffect(() => {
+    if (!isOpen || !pool) {
+      setForm(emptyForm);
+      setError('');
+      return;
+    }
+    setForm({
+      pool_name: pool.pool_name || '',
+      pool_description: pool.pool_description || '',
+      password: '',
+      initial_credits: pool.initial_credits ?? 0,
+      close_datetime: pool.close_datetime ? pool.close_datetime.substring(0, 16) : '',
+    });
+    setError('');
+  }, [isOpen, pool]);
 
   if (!isOpen || !pool) return null;
 
+  const handleChange = (field, value) => setForm((f) => ({ ...f, [field]: value }));
+
   const save = async () => {
+    if (!form.pool_name.trim()) {
+      setError('Pool name is required.');
+      return;
+    }
     setSaving(true);
+    setError('');
     try {
-      const res = await patch(`/api/admin/playoffs/pools/${pool.pool_number}`, {
-        ...form,
+      // Payload mirrors Create: cost_per_bracket and max_brackets_per_user are fixed and omitted.
+      const payload = {
+        pool_name: form.pool_name,
+        pool_description: form.pool_description || null,
+        initial_credits: Number(form.initial_credits) || 0,
         close_datetime: form.close_datetime || null,
-        password: form.password || null,
-      });
-      if (res?.data?.status) onSaved?.(res.data.data || form);
-      else onError?.(res?.data?.message || 'Failed to update pool');
+      };
+      if (form.password) payload.password = form.password;
+
+      const res = await patch(`/api/admin/playoffs/pools/${pool.pool_number}`, payload);
+      if (res?.data?.status) {
+        onSaved?.(res.data.data || form);
+      } else {
+        setError(res?.data?.message || 'Failed to update pool');
+        onError?.(res?.data?.message || 'Failed to update pool');
+      }
     } catch (err) {
-      onError?.(err?.response?.data?.message || 'Failed to update pool');
+      const msg =
+        err?.response?.data?.message ||
+        err?.response?.data?.errors?.pool_name?.[0] ||
+        'Failed to update pool';
+      setError(msg);
+      onError?.(msg);
     } finally {
       setSaving(false);
     }
@@ -49,77 +81,116 @@ const PlayoffPoolEditModal = ({ isOpen, pool, onClose, onSaved, onError }) => {
       isOpen={isOpen}
       onClose={onClose}
       title={`Edit Pool #${pool.pool_number}`}
-      maxWidth="max-w-2xl"
+      maxWidth="max-w-lg"
     >
       <div className="space-y-4">
-        <div className="grid md:grid-cols-2 gap-4">
-          <Field label="Pool Name">
-            <input
-              type="text"
-              value={form.pool_name}
-              onChange={(e) => setForm((f) => ({ ...f, pool_name: e.target.value }))}
-              className={inputCls}
-            />
-          </Field>
-          <Field label="Password (optional)">
-            <input
-              type="text"
-              value={form.password}
-              onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
-              placeholder="Leave blank for open"
-              className={inputCls}
-            />
-          </Field>
-        </div>
-        <Field label="Description">
-          <textarea
-            rows={2}
-            value={form.pool_description}
-            onChange={(e) => setForm((f) => ({ ...f, pool_description: e.target.value }))}
-            className={`${inputCls} h-auto py-2`}
+        {/* Pool Name */}
+        <div>
+          <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+            Pool Name *
+          </label>
+          <input
+            type="text"
+            value={form.pool_name}
+            onChange={(e) => handleChange('pool_name', e.target.value)}
+            placeholder="e.g. Office Bracket Challenge"
+            className={inputClass}
+            maxLength={100}
           />
-        </Field>
-        <div className="grid md:grid-cols-3 gap-4">
-          <Field label="Initial Credits">
+        </div>
+
+        {/* Description */}
+        <div>
+          <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+            Description
+          </label>
+          <textarea
+            value={form.pool_description}
+            onChange={(e) => handleChange('pool_description', e.target.value)}
+            placeholder="Optional pool description..."
+            rows={2}
+            className="w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-gray-500 resize-none"
+            maxLength={500}
+          />
+        </div>
+
+        {/* Password */}
+        <div>
+          <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+            Password (optional)
+          </label>
+          <input
+            type="text"
+            value={form.password}
+            onChange={(e) => handleChange('password', e.target.value)}
+            placeholder={pool.password ? 'Leave blank to keep current password' : 'Leave blank for no password'}
+            className={inputClass}
+          />
+        </div>
+
+        {/* Credits + Cost/Max Row */}
+        <div className="grid grid-cols-3 gap-3">
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+              Initial Credits
+            </label>
             <input
               type="number"
               value={form.initial_credits}
-              onChange={(e) => setForm((f) => ({ ...f, initial_credits: e.target.value }))}
-              className={inputCls}
+              onChange={(e) => handleChange('initial_credits', e.target.value)}
+              min={0}
+              className={inputClass}
             />
-          </Field>
-          <Field label="Cost per Bracket">
+          </div>
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+              Cost / Bracket
+            </label>
             <input
               type="number"
-              value={form.credit_cost_per_bracket}
-              onChange={(e) => setForm((f) => ({ ...f, credit_cost_per_bracket: e.target.value }))}
-              className={inputCls}
+              value={pool.credit_cost_per_bracket ?? 0}
+              disabled
+              className={`${inputClass} cursor-not-allowed opacity-60`}
             />
-          </Field>
-          <Field label="Max Brackets / User">
+          </div>
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+              Max Brackets
+            </label>
             <input
               type="number"
-              value={form.max_brackets_per_user}
-              onChange={(e) => setForm((f) => ({ ...f, max_brackets_per_user: e.target.value }))}
-              className={inputCls}
+              value={pool.max_brackets_per_user ?? 8}
+              disabled
+              className={`${inputClass} cursor-not-allowed opacity-60`}
             />
-          </Field>
+          </div>
         </div>
-        <Field label="Close Date/Time">
+
+        {/* Close Date */}
+        <div>
+          <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+            Close Date/Time
+          </label>
           <input
             type="datetime-local"
             value={form.close_datetime}
-            onChange={(e) => setForm((f) => ({ ...f, close_datetime: e.target.value }))}
-            className={inputCls}
+            onChange={(e) => handleChange('close_datetime', e.target.value)}
+            className={inputClass}
           />
-        </Field>
+        </div>
 
-        <div className="flex justify-end gap-2 pt-3 border-t border-gray-200 dark:border-gray-800">
+        {error && (
+          <div className="rounded-lg border border-error-300 bg-error-50 p-3 text-sm text-error-600 dark:border-error-500/30 dark:bg-error-500/10 dark:text-error-400">
+            {error}
+          </div>
+        )}
+
+        <div className="flex items-center gap-3 pt-2">
           <button
             type="button"
             onClick={onClose}
             disabled={saving}
-            className="inline-flex items-center justify-center px-5 py-2.5 text-sm font-medium rounded-lg text-gray-700 bg-white ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-400 dark:ring-gray-700 transition disabled:opacity-50"
+            className="flex-1 rounded-lg px-4 py-2.5 text-sm font-medium text-gray-700 bg-white ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-400 dark:ring-gray-700 dark:hover:bg-gray-700 transition disabled:opacity-50"
           >
             Cancel
           </button>
@@ -127,7 +198,7 @@ const PlayoffPoolEditModal = ({ isOpen, pool, onClose, onSaved, onError }) => {
             type="button"
             onClick={save}
             disabled={saving}
-            className="inline-flex items-center justify-center px-5 py-2.5 text-sm font-medium rounded-lg bg-brand-500 hover:bg-brand-600 !text-white transition disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 rounded-lg px-4 py-2.5 text-sm font-medium !text-white bg-brand-500 hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed transition"
           >
             {saving ? 'Saving...' : 'Save Pool'}
           </button>
