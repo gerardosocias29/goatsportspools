@@ -2,6 +2,9 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAxios } from '../../../app/contexts/AxiosContext';
 import PageLoader from '../../components/common/PageLoader';
 import SharedModal from '../../components/admin/common/Modal';
+import ConfirmModal from '../../components/common/ConfirmModal';
+import PlayoffPoolEditModal from '../../components/playoffs/admin/PlayoffPoolEditModal';
+import PlayoffPoolBracketsModal from '../../components/playoffs/admin/PlayoffPoolBracketsModal';
 
 const roundLabels = { 1: 'Round 1', 2: 'Round 2', 3: 'Conf Finals', 4: 'NBA Finals' };
 const R1_PAIRS = [[1, 8], [4, 5], [3, 6], [2, 7]];
@@ -693,10 +696,10 @@ const TeamSetupModal = ({ playoff, nbaTeams, onClose, onSaved, onError, postRef,
 const PoolsModal = ({ playoff, pools, onClose, onRefresh, onError, onSuccess, postRef, patchRef, delRef, getRef }) => {
   const [busyPool, setBusyPool] = useState(null);
   const [editingPool, setEditingPool] = useState(null);
-  const [viewingBracketsOf, setViewingBracketsOf] = useState(null);
+  const [bracketsPool, setBracketsPool] = useState(null);
+  const [confirmState, setConfirmState] = useState(null); // { pool, action, title, message, confirmLabel, confirmVariant }
 
-  const act = async (pool, action, confirmMsg) => {
-    if (confirmMsg && !window.confirm(confirmMsg)) return;
+  const runAction = async (pool, action) => {
     setBusyPool(`${pool.pool_number}-${action}`);
     try {
       let res;
@@ -707,258 +710,121 @@ const PoolsModal = ({ playoff, pools, onClose, onRefresh, onError, onSuccess, po
       else onError(res?.data?.message || 'Action failed');
     } catch (err) {
       onError(err?.response?.data?.message || 'Action failed');
-    } finally { setBusyPool(null); }
+    } finally {
+      setBusyPool(null);
+      setConfirmState(null);
+    }
+  };
+
+  const askConfirm = (pool, action) => {
+    const configs = {
+      lock: {
+        title: 'Lock Pool',
+        message: `Lock pool "${pool.pool_name}"? This stops bracket edits.`,
+        confirmLabel: 'Lock Pool',
+        confirmVariant: 'warn',
+      },
+      recalc: {
+        title: 'Recalculate Scores',
+        message: `Recalculate scores for "${pool.pool_name}"?`,
+        confirmLabel: 'Recalculate',
+        confirmVariant: 'brand',
+      },
+      delete: {
+        title: 'Delete Pool',
+        message: `Delete pool "${pool.pool_name}"? This cannot be undone from this UI.`,
+        confirmLabel: 'Delete',
+        confirmVariant: 'danger',
+      },
+    };
+    setConfirmState({ pool, action, ...configs[action] });
   };
 
   return (
-    <Modal title="Pools" subtitle={`${playoff.year} — ${playoff.name}`} onClose={onClose} size="xl">
-      {viewingBracketsOf ? (
-        <BracketsPanel pool={viewingBracketsOf} onBack={() => setViewingBracketsOf(null)}
-          onError={onError} onSuccess={onSuccess} getRef={getRef} patchRef={patchRef} />
-      ) : editingPool ? (
-        <EditPoolForm pool={editingPool} onCancel={() => setEditingPool(null)}
-          onSaved={() => { setEditingPool(null); onSuccess('Pool updated.'); onRefresh(); }}
-          onError={onError} patchRef={patchRef} />
-      ) : pools.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 p-10 text-center">
-          <p className="text-gray-500 dark:text-gray-400">No pools created for this playoff year.</p>
-        </div>
-      ) : (
-        <div className="overflow-x-auto -mx-5">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 dark:bg-gray-800/50">
-              <tr className="text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                <th className="px-5 py-3">Pool #</th>
-                <th className="px-5 py-3">Name</th>
-                <th className="px-5 py-3">Participants</th>
-                <th className="px-5 py-3">Status</th>
-                <th className="px-5 py-3 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-              {pools.map((pool) => {
-                const locked = pool.pool_status === 'locked';
-                return (
-                  <tr key={pool.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/40">
-                    <td className="px-5 py-4 font-mono text-gray-900 dark:text-white">{pool.pool_number}</td>
-                    <td className="px-5 py-4">
-                      <div className="font-medium text-gray-900 dark:text-white">{pool.pool_name}</div>
-                      {pool.pool_description && <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-1">{pool.pool_description}</div>}
-                    </td>
-                    <td className="px-5 py-4 text-gray-700 dark:text-gray-300">{pool.participants_count || 0}</td>
-                    <td className="px-5 py-4"><StatusBadge status={pool.pool_status} /></td>
-                    <td className="px-5 py-4">
-                      <div className="flex justify-end gap-2 flex-wrap">
-                        <ActionBtn onClick={() => act(pool, 'lock', `Lock pool "${pool.pool_name}"? This stops bracket edits.`)}
-                          variant="warn" disabled={locked || busyPool === `${pool.pool_number}-lock`}>
-                          {locked ? 'Locked' : busyPool === `${pool.pool_number}-lock` ? 'Locking...' : 'Lock Pool'}
-                        </ActionBtn>
-                        <ActionBtn onClick={() => act(pool, 'recalc')}
-                          variant="brand" disabled={busyPool === `${pool.pool_number}-recalc`}>
-                          {busyPool === `${pool.pool_number}-recalc` ? 'Scoring...' : 'Recalculate'}
-                        </ActionBtn>
-                        <ActionBtn onClick={() => setViewingBracketsOf(pool)} variant="default">View Brackets</ActionBtn>
-                        <ActionBtn onClick={() => setEditingPool(pool)} variant="default">Edit</ActionBtn>
-                        <ActionBtn onClick={() => act(pool, 'delete', `Delete pool "${pool.pool_name}"? This cannot be undone from this UI.`)}
-                          variant="danger" disabled={busyPool === `${pool.pool_number}-delete`}>
-                          {busyPool === `${pool.pool_number}-delete` ? 'Deleting...' : 'Delete'}
-                        </ActionBtn>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </Modal>
-  );
-};
+    <>
+      <Modal title="Pools" subtitle={`${playoff.year} — ${playoff.name}`} onClose={onClose} size="xl">
+        {pools.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 p-10 text-center">
+            <p className="text-gray-500 dark:text-gray-400">No pools created for this playoff year.</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto -mx-5">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 dark:bg-gray-800/50">
+                <tr className="text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                  <th className="px-5 py-3">Pool #</th>
+                  <th className="px-5 py-3">Name</th>
+                  <th className="px-5 py-3">Participants</th>
+                  <th className="px-5 py-3">Status</th>
+                  <th className="px-5 py-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                {pools.map((pool) => {
+                  const locked = pool.pool_status === 'locked';
+                  return (
+                    <tr key={pool.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/40">
+                      <td className="px-5 py-4 font-mono text-gray-900 dark:text-white">{pool.pool_number}</td>
+                      <td className="px-5 py-4">
+                        <div className="font-medium text-gray-900 dark:text-white">{pool.pool_name}</div>
+                        {pool.pool_description && <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-1">{pool.pool_description}</div>}
+                      </td>
+                      <td className="px-5 py-4 text-gray-700 dark:text-gray-300">{pool.participants_count || 0}</td>
+                      <td className="px-5 py-4"><StatusBadge status={pool.pool_status} /></td>
+                      <td className="px-5 py-4">
+                        <div className="flex justify-end gap-2 flex-wrap">
+                          <ActionBtn onClick={() => askConfirm(pool, 'lock')}
+                            variant="warn" disabled={locked || busyPool === `${pool.pool_number}-lock`}>
+                            {locked ? 'Locked' : busyPool === `${pool.pool_number}-lock` ? 'Locking...' : 'Lock Pool'}
+                          </ActionBtn>
+                          <ActionBtn onClick={() => askConfirm(pool, 'recalc')}
+                            variant="brand" disabled={busyPool === `${pool.pool_number}-recalc`}>
+                            {busyPool === `${pool.pool_number}-recalc` ? 'Scoring...' : 'Recalculate'}
+                          </ActionBtn>
+                          <ActionBtn onClick={() => setBracketsPool(pool)} variant="default">View Brackets</ActionBtn>
+                          <ActionBtn onClick={() => setEditingPool(pool)} variant="default">Edit</ActionBtn>
+                          <ActionBtn onClick={() => askConfirm(pool, 'delete')}
+                            variant="danger" disabled={busyPool === `${pool.pool_number}-delete`}>
+                            {busyPool === `${pool.pool_number}-delete` ? 'Deleting...' : 'Delete'}
+                          </ActionBtn>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Modal>
 
-const EditPoolForm = ({ pool, onCancel, onSaved, onError, patchRef }) => {
-  const [form, setForm] = useState({
-    pool_name: pool.pool_name || '',
-    pool_description: pool.pool_description || '',
-    initial_credits: pool.initial_credits ?? 0,
-    credit_cost_per_bracket: pool.credit_cost_per_bracket ?? 0,
-    max_brackets_per_user: pool.max_brackets_per_user ?? 8,
-    close_datetime: pool.close_datetime ? pool.close_datetime.substring(0, 16) : '',
-    password: pool.password || '',
-  });
-  const [saving, setSaving] = useState(false);
+      <PlayoffPoolEditModal
+        isOpen={!!editingPool}
+        pool={editingPool}
+        onClose={() => setEditingPool(null)}
+        onSaved={() => { setEditingPool(null); onSuccess('Pool updated.'); onRefresh(); }}
+        onError={onError}
+      />
 
-  const save = async () => {
-    setSaving(true);
-    try {
-      const res = await patchRef.current(`/api/admin/playoffs/pools/${pool.pool_number}`, {
-        ...form,
-        close_datetime: form.close_datetime || null,
-        password: form.password || null,
-      });
-      if (res?.data?.status) onSaved();
-      else onError(res?.data?.message || 'Failed to update pool');
-    } catch (err) {
-      onError(err?.response?.data?.message || 'Failed to update pool');
-    } finally { setSaving(false); }
-  };
+      <PlayoffPoolBracketsModal
+        isOpen={!!bracketsPool}
+        pool={bracketsPool}
+        onClose={() => setBracketsPool(null)}
+        onError={onError}
+        onSuccess={onSuccess}
+      />
 
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-        <button onClick={onCancel} className="hover:text-brand-500">← Back to pools</button>
-        <span>/</span>
-        <span className="font-medium text-gray-900 dark:text-white">Edit Pool #{pool.pool_number}</span>
-      </div>
-      <div className="grid md:grid-cols-2 gap-4">
-        <Field label="Pool Name"><input type="text" value={form.pool_name}
-          onChange={(e) => setForm((f) => ({ ...f, pool_name: e.target.value }))} className={inputCls} /></Field>
-        <Field label="Password (optional)"><input type="text" value={form.password}
-          onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))} placeholder="Leave blank for open" className={inputCls} /></Field>
-      </div>
-      <Field label="Description"><textarea rows={2} value={form.pool_description}
-        onChange={(e) => setForm((f) => ({ ...f, pool_description: e.target.value }))}
-        className={`${inputCls} h-auto py-2`} /></Field>
-      <div className="grid md:grid-cols-3 gap-4">
-        <Field label="Initial Credits"><input type="number" value={form.initial_credits}
-          onChange={(e) => setForm((f) => ({ ...f, initial_credits: e.target.value }))} className={inputCls} /></Field>
-        <Field label="Cost per Bracket"><input type="number" value={form.credit_cost_per_bracket}
-          onChange={(e) => setForm((f) => ({ ...f, credit_cost_per_bracket: e.target.value }))} className={inputCls} /></Field>
-        <Field label="Max Brackets / User"><input type="number" value={form.max_brackets_per_user}
-          onChange={(e) => setForm((f) => ({ ...f, max_brackets_per_user: e.target.value }))} className={inputCls} /></Field>
-      </div>
-      <Field label="Close Date/Time"><input type="datetime-local" value={form.close_datetime}
-        onChange={(e) => setForm((f) => ({ ...f, close_datetime: e.target.value }))} className={inputCls} /></Field>
-      <div className="flex justify-end gap-3 pt-3 border-t border-gray-200 dark:border-gray-800">
-        <ActionBtn onClick={onCancel} variant="default" size="md">Cancel</ActionBtn>
-        <ActionBtn onClick={save} variant="brand" size="md" disabled={saving}>
-          {saving ? 'Saving...' : 'Save Pool'}
-        </ActionBtn>
-      </div>
-    </div>
-  );
-};
-
-// ═══════════════════════════════════════════════════════════════════
-//   Brackets Panel — list all brackets in a pool w/ PAID toggle
-// ═══════════════════════════════════════════════════════════════════
-const BracketsPanel = ({ pool, onBack, onError, onSuccess, getRef, patchRef }) => {
-  const [brackets, setBrackets] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [busyId, setBusyId] = useState(null);
-  const [search, setSearch] = useState('');
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await getRef.current(`/api/admin/playoffs/pools/${pool.pool_number}/brackets`);
-      if (res?.data?.status) setBrackets(res.data.data || []);
-      else onError(res?.data?.message || 'Failed to load brackets');
-    } catch (err) {
-      onError(err?.response?.data?.message || 'Failed to load brackets');
-    } finally { setLoading(false); }
-  }, [pool.pool_number, getRef, onError]);
-
-  useEffect(() => { load(); }, [load]);
-
-  const togglePaid = async (bracket, nextPaid) => {
-    setBusyId(bracket.id);
-    try {
-      const res = await patchRef.current(`/api/admin/playoffs/brackets/${bracket.id}/paid`, { is_paid: nextPaid });
-      if (res?.data?.status) {
-        onSuccess(res.data.message);
-        setBrackets((prev) => prev.map((b) => b.id === bracket.id ? { ...b, ...res.data.data } : b));
-      } else onError(res?.data?.message || 'Failed to update paid status');
-    } catch (err) {
-      onError(err?.response?.data?.message || 'Failed to update paid status');
-    } finally { setBusyId(null); }
-  };
-
-  const filtered = brackets.filter((b) => {
-    if (!search) return true;
-    const q = search.toLowerCase();
-    return (b.bracket_name || '').toLowerCase().includes(q)
-      || (b.participant?.user?.name || '').toLowerCase().includes(q)
-      || (b.participant?.user?.username || '').toLowerCase().includes(q);
-  });
-
-  const paidCount = brackets.filter((b) => b.is_paid).length;
-
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-          <button onClick={onBack} className="hover:text-brand-500">← Back to pools</button>
-          <span>/</span>
-          <span className="font-medium text-gray-900 dark:text-white">Brackets — #{pool.pool_number}</span>
-        </div>
-        <div className="text-xs text-gray-500 dark:text-gray-400">
-          <span className="font-semibold text-success-600 dark:text-success-400">{paidCount}</span>
-          {' '}of {brackets.length} paid
-        </div>
-      </div>
-
-      <input type="text" value={search} onChange={(e) => setSearch(e.target.value)}
-        placeholder="Search by bracket name or player..."
-        className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white focus:border-brand-500 focus:ring-1 focus:ring-brand-500" />
-
-      {loading ? <div className="py-10"><PageLoader inline /></div> : filtered.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 p-10 text-center">
-          <p className="text-gray-500 dark:text-gray-400">
-            {brackets.length === 0 ? 'No brackets in this pool yet.' : 'No brackets match your search.'}
-          </p>
-        </div>
-      ) : (
-        <div className="overflow-x-auto -mx-5">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 dark:bg-gray-800/50">
-              <tr className="text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                <th className="px-5 py-3">Bracket</th>
-                <th className="px-5 py-3">Player</th>
-                <th className="px-5 py-3">Status</th>
-                <th className="px-5 py-3 text-center">Points</th>
-                <th className="px-5 py-3 text-center">Paid</th>
-                <th className="px-5 py-3 text-right">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-              {filtered.map((b) => {
-                const user = b.participant?.user;
-                return (
-                  <tr key={b.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/40">
-                    <td className="px-5 py-3 font-medium text-gray-900 dark:text-white">{b.bracket_name}</td>
-                    <td className="px-5 py-3">
-                      <div className="text-sm text-gray-700 dark:text-gray-300">{user?.name || '—'}</div>
-                      {user?.username && <div className="text-xs text-gray-400">@{user.username}</div>}
-                    </td>
-                    <td className="px-5 py-3"><StatusBadge status={b.status} /></td>
-                    <td className="px-5 py-3 text-center font-semibold text-gray-900 dark:text-white">{b.total_points || 0}</td>
-                    <td className="px-5 py-3 text-center">
-                      {b.is_paid ? (
-                        <span className="inline-flex items-center gap-1 text-xs font-semibold text-success-600 dark:text-success-400">
-                          <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/></svg>
-                          PAID
-                        </span>
-                      ) : (
-                        <span className="text-xs text-gray-400">Unpaid</span>
-                      )}
-                    </td>
-                    <td className="px-5 py-3 text-right">
-                      <ActionBtn
-                        onClick={() => togglePaid(b, !b.is_paid)}
-                        variant={b.is_paid ? 'default' : 'brand'}
-                        disabled={busyId === b.id}>
-                        {busyId === b.id ? '...' : b.is_paid ? 'Mark Unpaid' : 'Mark PAID'}
-                      </ActionBtn>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </div>
+      <ConfirmModal
+        isOpen={!!confirmState}
+        onClose={() => setConfirmState(null)}
+        onConfirm={() => confirmState && runAction(confirmState.pool, confirmState.action)}
+        title={confirmState?.title}
+        message={confirmState?.message}
+        confirmLabel={confirmState?.confirmLabel}
+        confirmVariant={confirmState?.confirmVariant}
+        busy={!!busyPool}
+      />
+    </>
   );
 };
 

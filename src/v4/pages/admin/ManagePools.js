@@ -2,6 +2,9 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAxios } from '../../../app/contexts/AxiosContext';
 import PageBreadcrumb from '../../components/admin/common/PageBreadcrumb';
+import ConfirmModal from '../../components/common/ConfirmModal';
+import PlayoffPoolEditModal from '../../components/playoffs/admin/PlayoffPoolEditModal';
+import PlayoffPoolBracketsModal from '../../components/playoffs/admin/PlayoffPoolBracketsModal';
 
 const TABS = [
   { key: 'squares', label: 'Squares Pools' },
@@ -31,8 +34,12 @@ const ManagePools = () => {
   const [squaresPools, setSquaresPools] = useState([]);
   const [playoffPools, setPlayoffPools] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [busy, setBusy] = useState(null); // `${pool_number}-${action}`
-  const [alert, setAlert] = useState(null); // { kind: 'success'|'error', msg }
+  const [busy, setBusy] = useState(null);
+  const [alert, setAlert] = useState(null);
+
+  const [editPool, setEditPool] = useState(null);
+  const [bracketsPool, setBracketsPool] = useState(null);
+  const [confirmState, setConfirmState] = useState(null);
 
   const flash = (kind, msg) => {
     setAlert({ kind, msg });
@@ -62,15 +69,7 @@ const ManagePools = () => {
     fetchPools();
   }, [fetchPools]);
 
-  const handlePoolAction = async (pool, action) => {
-    const confirmMsg =
-      action === 'lock'
-        ? `Lock pool "${pool.pool_name}"? This stops bracket edits.`
-        : action === 'recalc'
-        ? `Recalculate scores for "${pool.pool_name}"?`
-        : null;
-    if (confirmMsg && !window.confirm(confirmMsg)) return;
-
+  const runPoolAction = async (pool, action) => {
     const key = `${pool.pool_number}-${action}`;
     setBusy(key);
     try {
@@ -89,7 +88,26 @@ const ManagePools = () => {
       flash('error', err?.response?.data?.message || 'Action failed');
     } finally {
       setBusy(null);
+      setConfirmState(null);
     }
+  };
+
+  const askConfirm = (pool, action) => {
+    const configs = {
+      lock: {
+        title: 'Lock Pool',
+        message: `Lock pool "${pool.pool_name}"? This stops bracket edits.`,
+        confirmLabel: 'Lock Pool',
+        confirmVariant: 'warn',
+      },
+      recalc: {
+        title: 'Recalculate Scores',
+        message: `Recalculate scores for "${pool.pool_name}"?`,
+        confirmLabel: 'Recalculate',
+        confirmVariant: 'brand',
+      },
+    };
+    setConfirmState({ pool, action, ...configs[action] });
   };
 
   const currentList = tab === 'squares' ? squaresPools : playoffPools;
@@ -242,27 +260,27 @@ const ManagePools = () => {
                     {/* Action buttons */}
                     <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-800 grid grid-cols-2 gap-2">
                       <button
-                        onClick={() => handlePoolAction(pool, 'lock')}
+                        onClick={() => askConfirm(pool, 'lock')}
                         disabled={locked || busy === lockKey}
                         className="inline-flex items-center justify-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg bg-warning-500 text-white hover:bg-warning-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {locked ? 'Locked' : busy === lockKey ? 'Locking...' : 'Lock Pool'}
                       </button>
                       <button
-                        onClick={() => handlePoolAction(pool, 'recalc')}
+                        onClick={() => askConfirm(pool, 'recalc')}
                         disabled={busy === recalcKey}
                         className="inline-flex items-center justify-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg bg-brand-500 text-white hover:bg-brand-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {busy === recalcKey ? 'Scoring...' : 'Recalculate'}
                       </button>
                       <button
-                        onClick={() => navigate('/admin/playoffs')}
+                        onClick={() => setBracketsPool(pool)}
                         className="inline-flex items-center justify-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
                       >
                         View Brackets
                       </button>
                       <button
-                        onClick={() => navigate('/admin/playoffs')}
+                        onClick={() => setEditPool(pool)}
                         className="inline-flex items-center justify-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
                       >
                         Edit
@@ -289,6 +307,33 @@ const ManagePools = () => {
           )}
         </div>
       </div>
+
+      <PlayoffPoolEditModal
+        isOpen={!!editPool}
+        pool={editPool}
+        onClose={() => setEditPool(null)}
+        onSaved={() => { setEditPool(null); flash('success', 'Pool updated.'); fetchPools(); }}
+        onError={(msg) => flash('error', msg)}
+      />
+
+      <PlayoffPoolBracketsModal
+        isOpen={!!bracketsPool}
+        pool={bracketsPool}
+        onClose={() => setBracketsPool(null)}
+        onError={(msg) => flash('error', msg)}
+        onSuccess={(msg) => flash('success', msg)}
+      />
+
+      <ConfirmModal
+        isOpen={!!confirmState}
+        onClose={() => setConfirmState(null)}
+        onConfirm={() => confirmState && runPoolAction(confirmState.pool, confirmState.action)}
+        title={confirmState?.title}
+        message={confirmState?.message}
+        confirmLabel={confirmState?.confirmLabel}
+        confirmVariant={confirmState?.confirmVariant}
+        busy={!!busy}
+      />
     </>
   );
 };
