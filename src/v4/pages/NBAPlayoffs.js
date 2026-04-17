@@ -7,15 +7,22 @@ import PlayoffCreateModal from '../components/playoffs/PlayoffCreateModal';
 
 const NBAPlayoffs = () => {
   const { user, isSignedIn, isLoaded, isSuperadmin, isPlayoffAdmin } = useUserContext();
-  const { get } = useAxios();
+  const { get, post } = useAxios();
   const navigate = useNavigate();
 
   const [joinModalOpen, setJoinModalOpen] = useState(false);
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [pools, setPools] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [busy, setBusy] = useState(null);
+  const [alert, setAlert] = useState(null);
 
   const canCreate = isSuperadmin || isPlayoffAdmin;
+
+  const flash = (kind, msg) => {
+    setAlert({ kind, msg });
+    setTimeout(() => setAlert(null), 4000);
+  };
 
   // Wait for backend user to be loaded (not just Clerk) so the auth token is ready
   const authReady = isLoaded && isSignedIn && !!user;
@@ -34,6 +41,39 @@ const NBAPlayoffs = () => {
       setLoading(false);
     }
   }, [authReady, get]);
+
+  const canManagePool = (pool) =>
+    isSuperadmin || (pool.admin && user && pool.admin.id === user.id);
+
+  const handlePoolAction = async (pool, action) => {
+    const confirmMsg =
+      action === 'lock'
+        ? `Lock pool "${pool.pool_name}"? This stops bracket edits.`
+        : action === 'recalc'
+        ? `Recalculate scores for "${pool.pool_name}"?`
+        : null;
+    if (confirmMsg && !window.confirm(confirmMsg)) return;
+
+    const key = `${pool.pool_number}-${action}`;
+    setBusy(key);
+    try {
+      const url =
+        action === 'lock'
+          ? `/api/admin/playoffs/pools/${pool.pool_number}/lock`
+          : `/api/admin/playoffs/pools/${pool.pool_number}/recalculate`;
+      const res = await post(url);
+      if (res?.data?.status) {
+        flash('success', res.data.message || 'Done');
+        fetchPools();
+      } else {
+        flash('error', res?.data?.message || 'Action failed');
+      }
+    } catch (err) {
+      flash('error', err?.response?.data?.message || 'Action failed');
+    } finally {
+      setBusy(null);
+    }
+  };
 
   useEffect(() => {
     fetchPools();
@@ -99,58 +139,116 @@ const NBAPlayoffs = () => {
         </div>
       )}
 
+      {isSignedIn && alert && (
+        <div
+          className={`mb-4 rounded-lg border px-4 py-3 text-sm ${
+            alert.kind === 'success'
+              ? 'border-success-200 bg-success-50 text-success-700 dark:border-success-500/30 dark:bg-success-500/10 dark:text-success-400'
+              : 'border-error-200 bg-error-50 text-error-700 dark:border-error-500/30 dark:bg-error-500/10 dark:text-error-400'
+          }`}
+        >
+          {alert.msg}
+        </div>
+      )}
+
       {isSignedIn && !loading && pools.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {pools.map((pool) => (
-            <button
-              key={pool.id}
-              onClick={() => navigate(`/playoffs/${pool.pool_number}`)}
-              className="text-left rounded-2xl border border-gray-200 bg-white p-5 hover:border-brand-300 hover:shadow-md transition dark:border-gray-800 dark:bg-white/[0.03] dark:hover:border-brand-500/40"
-            >
-              <div className="flex items-start justify-between gap-2 mb-3">
-                <h3 className="text-base font-bold text-gray-900 dark:text-white truncate">
-                  {pool.pool_name}
-                </h3>
-                <span className={`shrink-0 inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold capitalize ${statusColor(pool.pool_status)}`}>
-                  {pool.pool_status}
-                </span>
-              </div>
-
-              <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400 mb-3">
-                <span className="inline-flex items-center gap-1">
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                  {pool.participants_count} participant{pool.participants_count !== 1 ? 's' : ''}
-                </span>
-                <span className="text-gray-300 dark:text-gray-600">|</span>
-                <span>#{pool.pool_number}</span>
-                {pool.is_locked && (
-                  <>
-                    <span className="text-gray-300 dark:text-gray-600">|</span>
-                    <span className="inline-flex items-center gap-1 text-warning-500">
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                      </svg>
-                      Locked
+          {pools.map((pool) => {
+            const canManage = canManagePool(pool);
+            const locked = pool.pool_status === 'locked' || pool.is_locked;
+            const lockKey = `${pool.pool_number}-lock`;
+            const recalcKey = `${pool.pool_number}-recalc`;
+            return (
+              <div
+                key={pool.id}
+                className="flex flex-col rounded-2xl border border-gray-200 bg-white p-5 transition dark:border-gray-800 dark:bg-white/[0.03]"
+              >
+                <button
+                  onClick={() => navigate(`/playoffs/${pool.pool_number}`)}
+                  className="text-left group"
+                >
+                  <div className="flex items-start justify-between gap-2 mb-3">
+                    <h3 className="text-base font-bold text-gray-900 dark:text-white truncate group-hover:text-brand-500 transition">
+                      {pool.pool_name}
+                    </h3>
+                    <span className={`shrink-0 inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold capitalize ${statusColor(pool.pool_status)}`}>
+                      {pool.pool_status}
                     </span>
-                  </>
+                  </div>
+
+                  <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400 mb-3">
+                    <span className="inline-flex items-center gap-1">
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      {pool.participants_count} participant{pool.participants_count !== 1 ? 's' : ''}
+                    </span>
+                    <span className="text-gray-300 dark:text-gray-600">|</span>
+                    <span>#{pool.pool_number}</span>
+                    {pool.is_locked && (
+                      <>
+                        <span className="text-gray-300 dark:text-gray-600">|</span>
+                        <span className="inline-flex items-center gap-1 text-warning-500">
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                          </svg>
+                          Locked
+                        </span>
+                      </>
+                    )}
+                  </div>
+
+                  {pool.playoff && (
+                    <div className="text-xs text-gray-400 dark:text-gray-500">
+                      {pool.playoff.name || `${pool.playoff.year} NBA Playoffs`}
+                    </div>
+                  )}
+
+                  {pool.admin && (
+                    <div className="mt-2 pt-2 border-t border-gray-100 dark:border-gray-800 text-xs text-gray-400 dark:text-gray-500">
+                      Commissioner: {pool.admin.name || pool.admin.username}
+                    </div>
+                  )}
+                </button>
+
+                {canManage && (
+                  <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-800">
+                    <div className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
+                      Admin controls
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        onClick={() => handlePoolAction(pool, 'lock')}
+                        disabled={locked || busy === lockKey}
+                        className="inline-flex items-center justify-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg bg-warning-500 text-white hover:bg-warning-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {locked ? 'Locked' : busy === lockKey ? 'Locking...' : 'Lock Pool'}
+                      </button>
+                      <button
+                        onClick={() => handlePoolAction(pool, 'recalc')}
+                        disabled={busy === recalcKey}
+                        className="inline-flex items-center justify-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg bg-brand-500 text-white hover:bg-brand-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {busy === recalcKey ? 'Scoring...' : 'Recalculate'}
+                      </button>
+                      <button
+                        onClick={() => navigate(isSuperadmin ? '/admin/playoffs' : '/commissioner-dashboard')}
+                        className="inline-flex items-center justify-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                      >
+                        View Brackets
+                      </button>
+                      <button
+                        onClick={() => navigate(isSuperadmin ? '/admin/playoffs' : '/commissioner-dashboard')}
+                        className="inline-flex items-center justify-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                      >
+                        Edit
+                      </button>
+                    </div>
+                  </div>
                 )}
               </div>
-
-              {pool.playoff && (
-                <div className="text-xs text-gray-400 dark:text-gray-500">
-                  {pool.playoff.name || `${pool.playoff.year} NBA Playoffs`}
-                </div>
-              )}
-
-              {pool.admin && (
-                <div className="mt-2 pt-2 border-t border-gray-100 dark:border-gray-800 text-xs text-gray-400 dark:text-gray-500">
-                  Commissioner: {pool.admin.name || pool.admin.username}
-                </div>
-              )}
-            </button>
-          ))}
+            );
+          })}
         </div>
       )}
 

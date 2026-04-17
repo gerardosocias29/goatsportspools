@@ -24,13 +24,20 @@ const statusColor = (status) => {
 };
 
 const ManagePools = () => {
-  const { get } = useAxios();
+  const { get, post } = useAxios();
   const navigate = useNavigate();
 
   const [tab, setTab] = useState('squares');
   const [squaresPools, setSquaresPools] = useState([]);
   const [playoffPools, setPlayoffPools] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [busy, setBusy] = useState(null); // `${pool_number}-${action}`
+  const [alert, setAlert] = useState(null); // { kind: 'success'|'error', msg }
+
+  const flash = (kind, msg) => {
+    setAlert({ kind, msg });
+    setTimeout(() => setAlert(null), 4000);
+  };
 
   const fetchPools = useCallback(async () => {
     setLoading(true);
@@ -55,11 +62,53 @@ const ManagePools = () => {
     fetchPools();
   }, [fetchPools]);
 
+  const handlePoolAction = async (pool, action) => {
+    const confirmMsg =
+      action === 'lock'
+        ? `Lock pool "${pool.pool_name}"? This stops bracket edits.`
+        : action === 'recalc'
+        ? `Recalculate scores for "${pool.pool_name}"?`
+        : null;
+    if (confirmMsg && !window.confirm(confirmMsg)) return;
+
+    const key = `${pool.pool_number}-${action}`;
+    setBusy(key);
+    try {
+      const url =
+        action === 'lock'
+          ? `/api/admin/playoffs/pools/${pool.pool_number}/lock`
+          : `/api/admin/playoffs/pools/${pool.pool_number}/recalculate`;
+      const res = await post(url);
+      if (res?.data?.status) {
+        flash('success', res.data.message || 'Done');
+        fetchPools();
+      } else {
+        flash('error', res?.data?.message || 'Action failed');
+      }
+    } catch (err) {
+      flash('error', err?.response?.data?.message || 'Action failed');
+    } finally {
+      setBusy(null);
+    }
+  };
+
   const currentList = tab === 'squares' ? squaresPools : playoffPools;
 
   return (
     <>
       <PageBreadcrumb pageTitle="Manage Pools" />
+
+      {alert && (
+        <div
+          className={`mb-4 rounded-lg border px-4 py-3 text-sm ${
+            alert.kind === 'success'
+              ? 'border-success-200 bg-success-50 text-success-700 dark:border-success-500/30 dark:bg-success-500/10 dark:text-success-400'
+              : 'border-error-200 bg-error-50 text-error-700 dark:border-error-500/30 dark:bg-error-500/10 dark:text-error-400'
+          }`}
+        >
+          {alert.msg}
+        </div>
+      )}
 
       <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
         {/* Header with tabs + create button */}
@@ -157,60 +206,85 @@ const ManagePools = () => {
 
           {!loading && currentList.length > 0 && tab === 'playoffs' && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {playoffPools.map((pool) => (
-                <div
-                  key={pool.id}
-                  onClick={() => navigate('/admin/playoffs')}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => { if (e.key === 'Enter') navigate('/admin/playoffs'); }}
-                  className="relative cursor-pointer text-left rounded-2xl border border-gray-200 bg-white p-5 hover:border-brand-300 hover:shadow-md transition dark:border-gray-800 dark:bg-white/[0.02] dark:hover:border-brand-500/40"
-                >
-                  <div className="flex items-start justify-between gap-2 mb-3">
-                    <h3 className="text-base font-bold text-gray-900 dark:text-white truncate">
-                      {pool.pool_name}
-                    </h3>
-                    <span className={`shrink-0 inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold capitalize ${statusColor(pool.pool_status)}`}>
-                      {pool.pool_status}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mb-2">
-                    <span>{pool.participants_count} participant{pool.participants_count !== 1 ? 's' : ''}</span>
-                    <span className="text-gray-300 dark:text-gray-600">|</span>
-                    <span>#{pool.pool_number}</span>
-                    {pool.is_locked && (
-                      <>
-                        <span className="text-gray-300 dark:text-gray-600">|</span>
-                        <span className="text-warning-500">Locked</span>
-                      </>
-                    )}
-                  </div>
-                  {pool.playoff && (
-                    <div className="text-xs text-gray-400 dark:text-gray-500">
-                      {pool.playoff.name || `${pool.playoff.year} NBA Playoffs`}
-                    </div>
-                  )}
-                  <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
-                    {pool.admin ? (
-                      <span className="text-xs text-gray-400 dark:text-gray-500 truncate">
-                        Commissioner: {pool.admin.name || pool.admin.username}
+              {playoffPools.map((pool) => {
+                const locked = pool.pool_status === 'locked' || pool.is_locked;
+                const lockKey = `${pool.pool_number}-lock`;
+                const recalcKey = `${pool.pool_number}-recalc`;
+                return (
+                  <div
+                    key={pool.id}
+                    className="relative rounded-2xl border border-gray-200 bg-white p-5 transition dark:border-gray-800 dark:bg-white/[0.02]"
+                  >
+                    <div className="flex items-start justify-between gap-2 mb-3">
+                      <h3 className="text-base font-bold text-gray-900 dark:text-white truncate">
+                        {pool.pool_name}
+                      </h3>
+                      <span className={`shrink-0 inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold capitalize ${statusColor(pool.pool_status)}`}>
+                        {pool.pool_status}
                       </span>
-                    ) : <span />}
-                    <a
-                      href={`/playoffs/${pool.pool_number}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
-                      className="shrink-0 inline-flex items-center gap-1 text-xs font-medium text-brand-500 hover:text-brand-600 hover:underline"
-                    >
-                      Preview
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                      </svg>
-                    </a>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mb-2">
+                      <span>{pool.participants_count} participant{pool.participants_count !== 1 ? 's' : ''}</span>
+                      <span className="text-gray-300 dark:text-gray-600">|</span>
+                      <span>#{pool.pool_number}</span>
+                    </div>
+                    {pool.playoff && (
+                      <div className="text-xs text-gray-400 dark:text-gray-500 mb-3">
+                        {pool.playoff.name || `${pool.playoff.year} NBA Playoffs`}
+                      </div>
+                    )}
+                    {pool.admin && (
+                      <div className="text-xs text-gray-400 dark:text-gray-500 mb-3">
+                        Commissioner: {pool.admin.name || pool.admin.username}
+                      </div>
+                    )}
+
+                    {/* Action buttons */}
+                    <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-800 grid grid-cols-2 gap-2">
+                      <button
+                        onClick={() => handlePoolAction(pool, 'lock')}
+                        disabled={locked || busy === lockKey}
+                        className="inline-flex items-center justify-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg bg-warning-500 text-white hover:bg-warning-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {locked ? 'Locked' : busy === lockKey ? 'Locking...' : 'Lock Pool'}
+                      </button>
+                      <button
+                        onClick={() => handlePoolAction(pool, 'recalc')}
+                        disabled={busy === recalcKey}
+                        className="inline-flex items-center justify-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg bg-brand-500 text-white hover:bg-brand-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {busy === recalcKey ? 'Scoring...' : 'Recalculate'}
+                      </button>
+                      <button
+                        onClick={() => navigate('/admin/playoffs')}
+                        className="inline-flex items-center justify-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                      >
+                        View Brackets
+                      </button>
+                      <button
+                        onClick={() => navigate('/admin/playoffs')}
+                        className="inline-flex items-center justify-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                      >
+                        Edit
+                      </button>
+                    </div>
+
+                    <div className="mt-2 flex justify-end">
+                      <a
+                        href={`/playoffs/${pool.pool_number}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-xs font-medium text-brand-500 hover:text-brand-600 hover:underline"
+                      >
+                        Preview as player
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                      </a>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
