@@ -51,20 +51,20 @@ const Hero = () => {
             </p>
 
             {/* Actions */}
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Link 
-                to="/sign-up" 
-                className="relative group overflow-hidden px-10 py-5 bg-brand-500 rounded-3xl transition-all hover:scale-105 active:scale-95 shadow-xl shadow-brand-500/25 text-center"
+            <div className="flex flex-col items-start gap-4">
+              <Link
+                to="/sign-up"
+                className="relative group overflow-hidden px-10 py-5 bg-brand-500 rounded-3xl transition-all hover:scale-105 active:scale-95 shadow-xl shadow-brand-500/25 text-center w-full sm:w-auto"
               >
-                 <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
-                 <span className="relative text-lg font-black text-white uppercase tracking-wider">Start Winning Now</span>
+                <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+                <span className="relative text-lg font-black text-white uppercase tracking-wider">Start Winning Now</span>
               </Link>
-              <Link 
-                to="/pools" 
-                className="px-10 py-5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-3xl font-black text-lg uppercase tracking-wider transition-all hover:bg-gray-800 dark:hover:bg-gray-100 shadow-xl text-center"
-              >
-                Join a Pool
-              </Link>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Already a member?{' '}
+                <Link to="/sign-in" className="font-bold text-brand-500 hover:text-brand-600 hover:underline">
+                  Log in
+                </Link>
+              </p>
             </div>
           </motion.div>
 
