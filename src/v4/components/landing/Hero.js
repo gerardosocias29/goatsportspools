@@ -51,7 +51,7 @@ const Hero = () => {
             </p>
 
             {/* Actions */}
-            <div className="flex flex-col items-start gap-4">
+            <div className="flex flex-col items-center sm:items-start gap-4">
               <Link
                 to="/sign-up"
                 className="relative group overflow-hidden px-10 py-5 bg-brand-500 rounded-3xl transition-all hover:scale-105 active:scale-95 shadow-xl shadow-brand-500/25 text-center w-full sm:w-auto"
