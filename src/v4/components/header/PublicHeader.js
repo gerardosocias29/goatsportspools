@@ -361,7 +361,7 @@ const PublicHeader = () => {
           >
             <div className="flex items-center justify-between mb-12">
               <div className="flex items-center gap-3">
-                <img src="/img/v2_logo.png" alt="OKRNG" className="w-full h-auto object-contain" />
+                <img src="/img/v2_logo.png" alt="OKRNG" className="h-10 w-auto object-contain" />
                 <span className="font-outfit font-black text-2xl tracking-tighter text-gray-900 dark:text-white uppercase leading-none">
                   OK<span className="text-brand-500">RNG</span>
                 </span>
@@ -414,13 +414,22 @@ const PublicHeader = () => {
 
             <div className="mt-auto pt-8 flex flex-col gap-4">
               {!isSignedIn && (
-                <Link
-                  to="/sign-up"
-                  onClick={() => setIsMenuOpen(false)}
-                  className="w-full py-5 rounded-3xl bg-brand-500 text-white text-center text-xl font-black shadow-xl shadow-brand-500/25"
-                >
-                  Get Started Free
-                </Link>
+                <>
+                  <Link
+                    to="/sign-up"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="w-full py-5 rounded-3xl bg-brand-500 text-white text-center text-xl font-black shadow-xl shadow-brand-500/25"
+                  >
+                    Get Started Free
+                  </Link>
+                  <Link
+                    to="/sign-in"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="w-full py-4 rounded-3xl bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white text-center text-lg font-black"
+                  >
+                    Sign In
+                  </Link>
+                </>
               )}
               <div className="flex items-center justify-between p-4 bg-gray-100 dark:bg-gray-900 rounded-3xl">
                 <span className="text-sm font-bold text-gray-500 font-outfit tracking-tight">Appearance</span>
