@@ -27,7 +27,14 @@ const SiteContent = ({ contentKey, className = '' }) => {
     return () => { ignore = true; };
   }, [contentKey, get]);
 
-  const safe = useMemo(() => DOMPurify.sanitize(html || ''), [html]);
+  const safe = useMemo(
+    () => DOMPurify.sanitize(html || '', {
+      ADD_TAGS: ['img'],
+      ADD_ATTR: ['src', 'alt', 'width', 'height'],
+      ALLOWED_URI_REGEXP: /^(?:(?:https?|mailto|tel|data):|[^a-z]|[a-z+.-]+(?:[^a-z+.\-:]|$))/i,
+    }),
+    [html]
+  );
 
   if (loading) {
     return (

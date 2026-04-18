@@ -53,6 +53,30 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* Site content preview + Quill editor — player-facing HTML typography */
+.site-content-preview,
+.site-content-rendered {
+  @apply min-w-0 max-w-full;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+.site-content-preview a,
+.site-content-rendered a {
+  /* Only break on long URLs, not prose */
+  overflow-wrap: anywhere;
+}
+.site-content-preview table,
+.site-content-rendered table {
+  display: block;
+  overflow-x: auto;
+  max-width: 100%;
+  width: fit-content;
+  border-collapse: collapse;
+}
+.site-content-preview pre,
+.site-content-rendered pre {
+  max-width: 100%;
+  overflow-x: auto;
+}
 .site-content-preview h1,
 .site-content-preview h2,
 .site-content-preview h3,
@@ -75,6 +99,11 @@ h1, h2, h3, h4, h5, h6 {
 .site-content-rendered ol { @apply list-decimal pl-5 text-sm text-gray-700 dark:text-gray-300 mb-3 space-y-1; }
 .site-content-preview a,
 .site-content-rendered a { @apply text-brand-500 underline; }
+.site-content-preview img,
+.site-content-rendered img,
+.content-editor-quill .ql-editor img {
+  @apply max-w-full h-auto rounded-md my-2;
+}
 
 /* Quill dark-mode friendliness */
 .content-editor-quill .ql-toolbar {

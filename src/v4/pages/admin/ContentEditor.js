@@ -11,21 +11,20 @@ const SECTIONS = [
   { key: 'playoff_faqs', title: 'Playoff — FAQs' },
 ];
 
-const QUILL_MODULES = {
-  toolbar: [
-    [{ header: [2, 3, false] }],
-    ['bold', 'italic', 'underline', 'strike'],
-    [{ list: 'ordered' }, { list: 'bullet' }],
-    ['link'],
-    [{ align: [] }],
-    ['clean'],
-  ],
-};
-
 const QUILL_FORMATS = [
   'header', 'bold', 'italic', 'underline', 'strike',
-  'list', 'bullet', 'link', 'align',
+  'list', 'bullet', 'link', 'image', 'align',
 ];
+
+const MAX_IMAGE_BYTES = 2 * 1024 * 1024; // 2 MB soft cap — data URIs bloat the body
+
+const readFileAsDataUrl = (file) =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
 
 const ContentEditor = () => {
   const { get, put } = useAxios();
@@ -41,10 +40,62 @@ const ContentEditor = () => {
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState(null);
 
-  const flashToast = (kind, msg) => {
+  const quillRef = useRef(null);
+
+  const flashToast = useCallback((kind, msg) => {
     setToast({ kind, msg });
     setTimeout(() => setToast(null), 3500);
-  };
+  }, []);
+
+  const insertImageFromFile = useCallback(async (file) => {
+    if (!file) return;
+    if (!file.type?.startsWith('image/')) {
+      flashToast('error', 'Please choose an image file.');
+      return;
+    }
+    if (file.size > MAX_IMAGE_BYTES) {
+      flashToast('error', `Image too large (max ${MAX_IMAGE_BYTES / 1024 / 1024}MB).`);
+      return;
+    }
+    try {
+      const dataUrl = await readFileAsDataUrl(file);
+      const editor = quillRef.current?.getEditor?.();
+      if (!editor) return;
+      const range = editor.getSelection(true);
+      editor.insertEmbed(range.index, 'image', dataUrl, 'user');
+      editor.setSelection(range.index + 1, 0);
+    } catch {
+      flashToast('error', 'Failed to read image.');
+    }
+  }, [flashToast]);
+
+  const imageHandler = useCallback(() => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = () => {
+      if (input.files && input.files[0]) {
+        insertImageFromFile(input.files[0]);
+      }
+    };
+    input.click();
+  }, [insertImageFromFile]);
+
+  const quillModules = useMemo(() => ({
+    toolbar: {
+      container: [
+        [{ header: [2, 3, false] }],
+        ['bold', 'italic', 'underline', 'strike'],
+        [{ list: 'ordered' }, { list: 'bullet' }],
+        ['link', 'image'],
+        [{ align: [] }],
+        ['clean'],
+      ],
+      handlers: {
+        image: imageHandler,
+      },
+    },
+  }), [imageHandler]);
 
   const loadAll = useCallback(async () => {
     setLoading(true);
@@ -97,7 +148,11 @@ const ContentEditor = () => {
   };
 
   const sanitizedPreview = useMemo(
-    () => DOMPurify.sanitize(currentBody || ''),
+    () => DOMPurify.sanitize(currentBody || '', {
+      ADD_TAGS: ['img'],
+      ADD_ATTR: ['src', 'alt', 'width', 'height'],
+      ALLOWED_URI_REGEXP: /^(?:(?:https?|mailto|tel|data):|[^a-z]|[a-z+.-]+(?:[^a-z+.\-:]|$))/i,
+    }),
     [currentBody]
   );
 
@@ -147,10 +202,11 @@ const ContentEditor = () => {
           <div className="p-5 content-editor-quill">
             <ReactQuill
               key={activeKey}
+              ref={quillRef}
               theme="snow"
               value={currentBody}
               onChange={onChange}
-              modules={QUILL_MODULES}
+              modules={quillModules}
               formats={QUILL_FORMATS}
             />
           </div>
