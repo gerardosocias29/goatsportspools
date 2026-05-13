@@ -58,6 +58,17 @@ const PublicHeader = () => {
     setIsPoolsOpen(false);
   }, [location.pathname]);
 
+  // Reserve vertical space below the fixed header when the lucky ticker is showing
+  useEffect(() => {
+    const root = document.documentElement;
+    if (luckyResults) {
+      root.style.setProperty('--lucky-ticker-h', '56px');
+    } else {
+      root.style.removeProperty('--lucky-ticker-h');
+    }
+    return () => root.style.removeProperty('--lucky-ticker-h');
+  }, [luckyResults]);
+
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
